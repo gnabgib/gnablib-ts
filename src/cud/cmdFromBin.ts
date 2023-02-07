@@ -1,0 +1,110 @@
+import { DateTime } from '../primitive/DateTime';
+import { FromBinResult } from '../primitive/FromBinResult';
+import { uintFromScaleBytes } from '../primitive/IntExt';
+import { TableName } from './TableName';
+import { Plane } from './types/Plane';
+import { ACmdData } from './CommandData';
+import type { ACmd } from './ACmd';
+import { ACmdCtrl } from './CommandCtrl';
+import { Uint64 } from '../primitive/Uint64';
+
+export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
+	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)
+	let s: DateTime;
+	let ptr = pos;
+	try {
+		//Bytes->u64 will work, but DateTime may through if byte values
+		// are invalid.. leap seconds, and some other holes in the ranges
+		s = DateTime.deserialize(Uint64.fromBytes(bin, ptr));
+	} catch {
+		return new FromBinResult<ACmd>(
+			0,
+			undefined,
+			'cmdFromBin failed to parse DateTime'
+		);
+	}
+	ptr += 8;
+
+	const pFrom = Plane.fromBin(bin, ptr);
+	if (!pFrom.success)
+		return new FromBinResult<ACmd>(
+			0,
+			undefined,
+			'cmdFromBin missing plane: ' + pFrom.reason
+		);
+	ptr += pFrom.byteLen;
+
+	//Parse later
+	const cByte = bin[ptr];
+	ptr += 1;
+
+	const uFrom = uintFromScaleBytes(bin, ptr);
+	if (!uFrom.success)
+		return new FromBinResult<ACmd>(
+			0,
+			undefined,
+			'cmdFromBin missing userId: ' + uFrom.reason
+		);
+	ptr += uFrom.byteLen;
+
+	const tFrom = TableName.fromBin(bin, ptr);
+	if (!tFrom.success)
+		return new FromBinResult<ACmd>(
+			0,
+			undefined,
+			'cmdFromBin missing table: ' + tFrom.reason
+		);
+	ptr += tFrom.byteLen;
+
+	const eFrom = uintFromScaleBytes(bin, ptr);
+	if (!eFrom.success)
+		return new FromBinResult<ACmd>(
+			0,
+			undefined,
+			'cmdFromBin missing extra: ' + eFrom.reason
+		);
+	ptr += eFrom.byteLen;
+
+	if (pFrom.value!.isCtrl) {
+		return ACmdCtrl.fromBinSub(
+			s,
+			cByte,
+			uFrom.value!,
+			tFrom.value!,
+			eFrom.value!,
+			bin,
+			ptr - pos,
+			ptr
+		);
+	} else {
+		return ACmdData.fromBinSub(
+			s,
+			cByte,
+			uFrom.value!,
+			tFrom.value!,
+			eFrom.value!,
+			bin,
+			ptr - pos,
+			ptr
+		);
+	}
+
+	// let cFrom:FromBinResult<Command>;
+	// if (pFrom.value.isCtrl) {
+	//     cFrom=CommandCtrl.fromBin(bin,ptr);
+	// } else {
+	//     cFrom=CommandData.fromBin(bin,ptr);
+	// }
+	// if (!cFrom.success) return new FromBinResult(0);
+	// ptr+=cFrom.bytes;
+	// //todo: extra
+	// if (pFrom.value.isCtrl) {
+	//     const c=cFrom.value as CommandCtrl;
+	//     if (c.isCreate) {
+	//         return new FromBinResult(ptr-pos,new CmdCtrlCreate(uFrom.value,s,tFrom.value));
+	//     }
+	//     if (c.isDrop) {
+	//         return new FromBinResult(ptr-pos,new CmdCtrlDrop(uFrom.value,s,tFrom.value));
+	//     }
+	// }
+}
