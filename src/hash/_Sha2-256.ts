@@ -1,8 +1,6 @@
-import * as bigEndian from '../endian/big';
-import * as bitExt from '../primitive/BitExt';
-import { iv512, k, pad } from './_Sha2';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as hex from '../encoding/Hex';
+import * as bigEndian from '../endian/big.js';
+import * as bitExt from '../primitive/BitExt.js';
+import { iv512, k, pad } from './_Sha2.js';
 
 const digestSizeBytes = bitExt.size32Bytes * 8; //32 bytes, 256 bits
 const blockSizeBytes = 64; //512 bits

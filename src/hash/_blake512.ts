@@ -1,10 +1,8 @@
-import * as bigEndian from '../endian/big';
-import * as bitExt from '../primitive/BitExt';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as hex from '../encoding/Hex';
-import { SizeError } from '../primitive/ErrorExt';
-import { Uint64 } from '../primitive/Uint64';
-import { iv, n, sigmas } from './_blake';
+import * as bigEndian from '../endian/big.js';
+import * as bitExt from '../primitive/BitExt.js';
+import { SizeError } from '../primitive/ErrorExt.js';
+import { Uint64 } from '../primitive/Uint64.js';
+import { iv, n, sigmas } from './_blake.js';
 
 const digestSizeBytes = 64; //512 bits
 const blockSizeBytes = 128; //1024bits

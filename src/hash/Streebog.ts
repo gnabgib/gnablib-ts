@@ -1,4 +1,4 @@
-import * as intExt from '../primitive/IntExt';
+import * as intExt from '../primitive/IntExt.js';
 
 const blockSize256Bytes = 32; //512bits
 const blockSize512Bytes = 64; //512bits

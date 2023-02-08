@@ -1,6 +1,6 @@
-import { LogField } from './LogField';
-import type { LogLevel } from './LogLevel';
-import * as objExt from '../primitive/ObjExt';
+import { LogField } from './LogField.js';
+import type { LogLevel } from './LogLevel.js';
+import * as objExt from '../primitive/ObjExt.js';
 
 /**
  * A complete log entry

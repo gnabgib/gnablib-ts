@@ -1,6 +1,6 @@
-import { NotEnoughSpaceError, NotSupported } from './ErrorExt';
-import { strictParseDecUint } from './IntExt';
-import type { IReadArray, IReadWriteArray } from './IRWArray';
+import { NotEnoughSpaceError, NotSupported } from './ErrorExt.js';
+import { strictParseDecUint } from './IntExt.js';
+import type { IReadArray, IReadWriteArray } from './IRWArray.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 // Because the interfaces, functions and SharedType<T> are not exported
@@ -46,23 +46,23 @@ interface IReadTyped<T> extends IBufferer {
 	entries(): IterableIterator<[number, number]>;
 	every(
 		predicate: (value: number, index: number, array: T) => unknown,
-		thisArg?: any
+		thisArg?: unknown
 	): boolean;
 	filter(
-		predicate: (value: number, index: number, array: T) => any,
-		thisArg?: any
+		predicate: (value: number, index: number, array: T) => unknown,
+		thisArg?: unknown
 	): T;
 	find(
 		predicate: (value: number, index: number, obj: T) => boolean,
-		thisArg?: any
+		thisArg?: unknown
 	): number | undefined;
 	findIndex(
 		predicate: (value: number, index: number, obj: T) => boolean,
-		thisArg?: any
+		thisArg?: unknown
 	): number;
 	forEach(
 		action: (value: number, index: number, array: T) => void,
-		thisArg?: any
+		thisArg?: unknown
 	): void;
 	includes(searchElement: number, fromIndex?: number | undefined): boolean;
 	indexOf(searchElement: number, fromIndex?: number | undefined): number;
@@ -71,11 +71,11 @@ interface IReadTyped<T> extends IBufferer {
 	lastIndexOf(searchElement: number, fromIndex?: number | undefined): number;
 	map(
 		callbackfn: (value: number, index: number, array: T) => number,
-		thisArg?: any
+		thisArg?: unknown
 	): T;
 	some(
 		predicate: (value: number, index: number, array: T) => unknown,
-		thisArg?: any
+		thisArg?: unknown
 	): boolean;
 	values(): IterableIterator<number>;
 	[Symbol.iterator](): IterableIterator<number>;
@@ -183,7 +183,7 @@ function fill<T extends IWriteTyped<T>>(
 	//If start is still negative (invalid), or length is less than/equal zero (invalid),
 	// then there's nothing to do. TypedArray.fill doesn't throw, so we won't either
 	if (start < 0 || length <= 0) return;
-	let end = start + length;
+	const end = start + length;
 	//JS auto handles end being too large, so no need to fix
 	view.fill(value, start, end);
 }
@@ -273,7 +273,7 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 */
 	every(
 		predicate: (value: number, index: number) => unknown,
-		thisArg?: any
+		thisArg?: unknown
 	): boolean {
 		//We have to wrap the predicate to stop someone ignoring TS2345, or using JS from providing a third
 		// argument (array) and gaining access
@@ -291,9 +291,9 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 * @param thisArg An object to which the this keyword can refer in the predicate function. If thisArg is omitted, undefined is used as the this value.
 	 * @returns
 	 */
-	filter(predicate: (value: number, index: number) => any, thisArg?: any): T {
+	filter(predicate: (value: number, index: number) => unknown, thisArg?: unknown): T {
 		const p = predicate.bind(thisArg);
-		function wrapped(v: number, i: number): any {
+		function wrapped(v: number, i: number): unknown {
 			return p(v, i);
 		}
 		return this._view.filter(wrapped);
@@ -308,7 +308,7 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 */
 	find(
 		predicate: (value: number, index: number) => boolean,
-		thisArg?: any
+		thisArg?: unknown
 	): number | undefined {
 		const p = predicate.bind(thisArg);
 		function wrapped(v: number, i: number): boolean {
@@ -327,7 +327,7 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 */
 	findIndex(
 		predicate: (value: number, index: number) => boolean,
-		thisArg?: any
+		thisArg?: unknown
 	): number {
 		const p = predicate.bind(thisArg);
 		function wrapped(v: number, i: number): boolean {
@@ -342,7 +342,7 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 * @param action A function that accepts up to two arguments. forEach calls the callbackfn function one time for each element in the array.
 	 * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
 	 */
-	forEach(action: (value: number, index: number) => void, thisArg?: any): void {
+	forEach(action: (value: number, index: number) => void, thisArg?: unknown): void {
 		const a = action.bind(thisArg);
 		function wrapped(v: number, i: number) {
 			a(v, i);
@@ -423,7 +423,7 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
 	 * @returns
 	 */
-	map(callBack: (value: number, index: number) => number, thisArg?: any): T {
+	map(callBack: (value: number, index: number) => number, thisArg?: unknown): T {
 		//Should a Readonly<T> yield a T (existing) or another Readonly<T>? - :deep_thought:
 		const c = callBack.bind(thisArg);
 		function wrapped(v: number, i: number): number {
@@ -447,7 +447,7 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 */
 	some(
 		predicate: (value: number, index: number) => unknown,
-		thisArg?: any
+		thisArg?: unknown
 	): boolean {
 		const p = predicate.bind(thisArg);
 		function wrapped(v: number, i: number): unknown {
@@ -539,6 +539,7 @@ export class ReadonlyTyped<T extends IReadTyped<T>>
 		return new Proxy(this, {
 			get(target, prop) {
 				if (prop in target) {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					return target[prop as any];
 				}
 
@@ -610,6 +611,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 		return new Proxy(this, {
 			get(target, prop) {
 				if (prop in target) {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					return target[prop as any];
 				}
 
@@ -764,6 +766,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 		return new Proxy(this, {
 			get(target, prop) {
 				if (prop in target) {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					return target[prop as any];
 				}
 
@@ -772,6 +775,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 			},
 			set(target, prop, value): boolean {
 				if (prop in target) {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					target[prop as any] = value;
 					return true;
 				}
@@ -800,7 +804,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 		} else {
 			//Upsize
 			const b = new ArrayBuffer(dataSizeBytes);
-			var v = new this.base(b, 0, viewSizeEls); //this._view.length);
+			const v = new this.base(b, 0, viewSizeEls); //this._view.length);
 			v.set(this._view);
 			this._data = b;
 			this._view = v;

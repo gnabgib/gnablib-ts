@@ -1,19 +1,19 @@
-import type { ACudColType } from './types/CudColType';
-import { ColName } from './ColName';
-import { FromBinResult } from '../primitive/FromBinResult';
-import { cudColTypeFromBin } from './types/cudColTypeFromBin';
+import type { ACudColType } from './types/CudColType.js';
+import { ColName } from './ColName.js';
+import { FromBinResult } from '../primitive/FromBinResult.js';
+import { cudColTypeFromBin } from './types/cudColTypeFromBin.js';
 
 export class InsertColDef {
 	readonly name: ColName;
 	readonly type: ACudColType;
-	readonly default: unknown|undefined;
+	readonly default: unknown | undefined;
 
 	public constructor(name: ColName, type: ACudColType, defValue?: unknown) {
 		this.name = name;
 		this.type = type;
-        if (defValue!==null || defValue!==undefined) {
-            this.default=defValue;
-        }
+		if (defValue !== null || defValue !== undefined) {
+			this.default = defValue;
+		}
 	}
 
 	toBin(): Uint8Array {
@@ -25,37 +25,54 @@ export class InsertColDef {
 		const t = this.type.toBin();
 		const d = this.type.unknownBin(this.default);
 
-        const ret= new Uint8Array(n.length + t.length + d.length);
-        ret.set(n);
-        let ptr=n.length;
-        ret.set(t,ptr);
-        ptr+=t.length;
-        ret.set(d,ptr);
-        return ret;
+		const ret = new Uint8Array(n.length + t.length + d.length);
+		ret.set(n);
+		let ptr = n.length;
+		ret.set(t, ptr);
+		ptr += t.length;
+		ret.set(d, ptr);
+		return ret;
 	}
 
 	toJSON(): Record<string, unknown> {
-        interface retType extends Record<string, unknown> {}
-		const c:retType = {};
+		const c: Record<string, unknown> = {};
 		c[this.name.name] = this.type.cudType + (this.type.nullable ? '?' : '');
 		if (this.default !== undefined) c.default = this.default;
 		return c;
 	}
 
-    static fromBin(bin:Uint8Array,pos=0):FromBinResult<InsertColDef> {
-        let ptr=pos;
-        const nFrom=ColName.fromBin(bin,pos);
-        if (!nFrom.success) return new FromBinResult<InsertColDef>(0,undefined,'InsertColDef.fromBin missing name: '+nFrom.reason);
-        ptr+=nFrom.byteLen;
+	static fromBin(bin: Uint8Array, pos = 0): FromBinResult<InsertColDef> {
+		let ptr = pos;
+		const nFrom = ColName.fromBin(bin, pos);
+		if (!nFrom.success)
+			return new FromBinResult<InsertColDef>(
+				0,
+				undefined,
+				'InsertColDef.fromBin missing name: ' + nFrom.reason
+			);
+		ptr += nFrom.byteLen;
 
-        const tFrom=cudColTypeFromBin(bin,ptr);
-        if (!tFrom.success) return new FromBinResult<InsertColDef>(0,undefined,'InsertColDef.fromBin missing type: '+tFrom.reason);
-        ptr+=tFrom.byteLen;
+		const tFrom = cudColTypeFromBin(bin, ptr);
+		if (!tFrom.success)
+			return new FromBinResult<InsertColDef>(
+				0,
+				undefined,
+				'InsertColDef.fromBin missing type: ' + tFrom.reason
+			);
+		ptr += tFrom.byteLen;
 
-        const dFrom=tFrom.value!.binUnknown(bin,ptr);
-        if (!dFrom.success) return new FromBinResult<InsertColDef>(0,undefined,'InsertColDef.fromBin missing default: '+dFrom.reason);
-        ptr+=dFrom.byteLen;
+		const dFrom = tFrom.value!.binUnknown(bin, ptr);
+		if (!dFrom.success)
+			return new FromBinResult<InsertColDef>(
+				0,
+				undefined,
+				'InsertColDef.fromBin missing default: ' + dFrom.reason
+			);
+		ptr += dFrom.byteLen;
 
-        return new FromBinResult(ptr-pos,new InsertColDef(nFrom.value!,tFrom.value!,dFrom.value));
-    }
+		return new FromBinResult(
+			ptr - pos,
+			new InsertColDef(nFrom.value!, tFrom.value!, dFrom.value)
+		);
+	}
 }

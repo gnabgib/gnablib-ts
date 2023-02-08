@@ -1,4 +1,4 @@
-import { sha1 } from '../hash/Sha1';
+import { sha1 } from '../hash/Sha1.js';
 
 /**
  * Same as SHA1

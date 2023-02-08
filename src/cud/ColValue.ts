@@ -1,16 +1,16 @@
-import type { ACudColType } from './types/CudColType';
-import { ColName } from './ColName';
-import { FromBinResult } from '../primitive/FromBinResult';
-import { cudColTypeFromBin } from './types/cudColTypeFromBin';
+import type { ACudColType } from './types/CudColType.js';
+import { ColName } from './ColName.js';
+import { FromBinResult } from '../primitive/FromBinResult.js';
+import { cudColTypeFromBin } from './types/cudColTypeFromBin.js';
 
 export class ColValue {
 	readonly name: ColName;
 	readonly type: ACudColType;
 	readonly value: unknown;
 
-	public constructor(name: ColName, type: ACudColType,value: unknown) {
+	public constructor(name: ColName, type: ACudColType, value: unknown) {
 		this.name = name;
-		this.type=type;
+		this.type = type;
 		this.value = value;
 	}
 
@@ -20,40 +20,57 @@ export class ColValue {
 		// t = type (1-N bytes)
 		// v = value (1-n bytes)
 
-		const n=this.name.toBin();
-		const t=this.type.toBin();
-		const v=this.type.unknownBin(this.value);
+		const n = this.name.toBin();
+		const t = this.type.toBin();
+		const v = this.type.unknownBin(this.value);
 
-        const ret= new Uint8Array(n.length + t.length + v.length);
-        ret.set(n);
-        let ptr=n.length;
-        ret.set(t,ptr);
-        ptr+=t.length;
-        ret.set(v,ptr);
-        return ret;
+		const ret = new Uint8Array(n.length + t.length + v.length);
+		ret.set(n);
+		let ptr = n.length;
+		ret.set(t, ptr);
+		ptr += t.length;
+		ret.set(v, ptr);
+		return ret;
 	}
 
 	toJSON(): Record<string, unknown> {
-		interface retType extends Record<string, unknown> {}
-		const c:retType = {};
+		const c: Record<string, unknown> = {};
 		c[this.name.name] = this.value;
 		return c;
 	}
 
-	static fromBin(bin:Uint8Array,pos=0):FromBinResult<ColValue> {
-        let ptr=pos;
-        const nFrom=ColName.fromBin(bin,ptr);
-        if (!nFrom.success) return new FromBinResult<ColValue>(0,undefined,'ColValue.fromBin Missing name: '+nFrom.reason);
-        ptr+=nFrom.byteLen;
+	static fromBin(bin: Uint8Array, pos = 0): FromBinResult<ColValue> {
+		let ptr = pos;
+		const nFrom = ColName.fromBin(bin, ptr);
+		if (!nFrom.success)
+			return new FromBinResult<ColValue>(
+				0,
+				undefined,
+				'ColValue.fromBin Missing name: ' + nFrom.reason
+			);
+		ptr += nFrom.byteLen;
 
-        const tFrom=cudColTypeFromBin(bin,ptr);
-        if (!tFrom.success) return new FromBinResult<ColValue>(0,undefined,'ColValue.fromBin Missing type: '+tFrom.reason);
-        ptr+=tFrom.byteLen;
+		const tFrom = cudColTypeFromBin(bin, ptr);
+		if (!tFrom.success)
+			return new FromBinResult<ColValue>(
+				0,
+				undefined,
+				'ColValue.fromBin Missing type: ' + tFrom.reason
+			);
+		ptr += tFrom.byteLen;
 
-        const vFrom=tFrom.value!.binUnknown(bin,ptr);
-        if (!vFrom.success) return new FromBinResult<ColValue>(0,undefined,'ColValue.fromBin Missing value: '+vFrom.reason);
-        ptr+=vFrom.byteLen;
-		
-        return new FromBinResult(ptr-pos,new ColValue(nFrom.value!,tFrom.value!,vFrom.value!));
-    }
+		const vFrom = tFrom.value!.binUnknown(bin, ptr);
+		if (!vFrom.success)
+			return new FromBinResult<ColValue>(
+				0,
+				undefined,
+				'ColValue.fromBin Missing value: ' + vFrom.reason
+			);
+		ptr += vFrom.byteLen;
+
+		return new FromBinResult(
+			ptr - pos,
+			new ColValue(nFrom.value!, tFrom.value!, vFrom.value!)
+		);
+	}
 }

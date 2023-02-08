@@ -1,9 +1,9 @@
-import { NullError } from '../../primitive/ErrorExt';
-import { DateTime } from '../../primitive/DateTime';
-import { ColType } from './ColType';
-import { ACudColType } from './CudColType';
-import type { Valid } from './Valid';
-import { FromBinResult } from '../../primitive/FromBinResult';
+import { NullError } from '../../primitive/ErrorExt.js';
+import { DateTime } from '../../primitive/DateTime.js';
+import { ColType } from './ColType.js';
+import { ACudColType } from './CudColType.js';
+import type { Valid } from './Valid.js';
+import { FromBinResult } from '../../primitive/FromBinResult.js';
 
 export class DateTimeCol extends ACudColType implements Valid<DateTime> {
 	/*MySQL supports microsecond res, but only for years 1000-9999 which is smaller than -4713-294276 (doh)*/
@@ -40,27 +40,50 @@ export class DateTimeCol extends ACudColType implements Valid<DateTime> {
 		return ret;
 	}
 
-	binUnknown(bin: Uint8Array, pos: number): FromBinResult<DateTime | undefined> {
+	binUnknown(
+		bin: Uint8Array,
+		pos: number
+	): FromBinResult<DateTime | undefined> {
 		if (pos + 1 > bin.length)
-			return new FromBinResult(0, undefined, 'DateTimeCol.binUnknown unable to find length');
+			return new FromBinResult(
+				0,
+				undefined,
+				'DateTimeCol.binUnknown unable to find length'
+			);
 
 		const l = bin[pos++];
 		if (l === 0) {
 			if (!this.nullable)
-				return new FromBinResult(0, undefined, 'DateTimeCol.binUnknown cannot be null');
+				return new FromBinResult(
+					0,
+					undefined,
+					'DateTimeCol.binUnknown cannot be null'
+				);
 			return new FromBinResult(1, undefined);
 		}
 		if (l !== 8) {
-			return new FromBinResult(0, undefined, `DateTimeCol.binUnknown invalid length (8 got ${l})`);
+			return new FromBinResult(
+				0,
+				undefined,
+				`DateTimeCol.binUnknown invalid length (8 got ${l})`
+			);
 		}
 
 		const end = pos + l;
 		if (end > bin.length)
-			return new FromBinResult(0, undefined, 'DateTimeCol.binUnknown missing data');
+			return new FromBinResult(
+				0,
+				undefined,
+				'DateTimeCol.binUnknown missing data'
+			);
 
 		const dFrom = DateTime.fromBin(bin, pos);
 		if (!dFrom.success)
-			return new FromBinResult(0, undefined, 'DateTimeCol.binUnknown bad value: ' + dFrom.reason);
+			return new FromBinResult(
+				0,
+				undefined,
+				'DateTimeCol.binUnknown bad value: ' + dFrom.reason
+			);
 		return new FromBinResult(1 + l, dFrom.value);
 	}
 }

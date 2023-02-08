@@ -1,6 +1,6 @@
-import { ContentError } from '../primitive/ErrorExt';
-import { inRangeInclusive } from '../primitive/IntExt';
-import * as hex from './Hex';
+import { ContentError } from '../primitive/ErrorExt.js';
+import { inRangeInclusive } from '../primitive/IntExt.js';
+import * as hex from './Hex.js';
 
 interface EncodeOpts {
 	/**

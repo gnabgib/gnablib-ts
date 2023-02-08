@@ -1,8 +1,6 @@
-import * as littleEndian from '../endian/little';
-import { Uint64 } from '../primitive/Uint64';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as hex from '../encoding/Hex';
-import { SizeError } from '../primitive/ErrorExt';
+import * as littleEndian from '../endian/little.js';
+import { Uint64 } from '../primitive/Uint64.js';
+import { SizeError } from '../primitive/ErrorExt.js';
 import {
 	iv,
 	sigmas,
@@ -12,7 +10,7 @@ import {
 	nodeOffsetSequential,
 	nodeDepthSequential,
 	innerLenSequential
-} from './_blake2';
+} from './_blake2.js';
 
 //https://en.wikipedia.org/wiki/BLAKE_(hash_function)
 //https://www.blake2.net/

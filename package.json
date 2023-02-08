@@ -1,15 +1,24 @@
 {
   "name": "gnablib",
-  "version": "0.0.1",
-  "description": "A library for building web/Node/Deno applications",
-  "main": "dist/src/index.js",
+  "version": "0.1.2",
+  "description": "A library for building web/node/deno applications",
   "scripts": {
+    "preversion": "npm test",
+    "version":"npm run build && git add -A",
+    "_postversion": "npm publish",
     "format": "prettier --write \"src/**/*.{ts,js}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts}\"",
     "lint": "eslint \"src/**/*.{js,ts}\"",
     "test": "uvu -r tsm -i .log$ tst",
-    "build": "tsc"
+    "prebuild":"rm -rf dist",
+    "build": "tsc --sourceMap false"
   },
+  "exports":{
+    "./*":"./dist/*"
+  },
+  "files":[
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gnabgib/gnablib-ts.git"
@@ -33,6 +42,5 @@
     "typescript": "^4.9.4",
     "uvu": "^0.5.3"
   },
-  "types": "dist/src/index.d.ts",
   "type": "module"
 }

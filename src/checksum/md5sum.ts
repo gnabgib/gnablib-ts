@@ -1,4 +1,4 @@
-import { md5 } from '../hash/Md5';
+import { md5 } from '../hash/Md5.js';
 
 /**
  * Same as MD5

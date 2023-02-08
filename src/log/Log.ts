@@ -1,8 +1,8 @@
-import * as intExt from '../primitive/IntExt';
-import { LogLevel } from './LogLevel';
-import type { IStructuredLogger } from './IStructuredLogger';
-import { LogEntry } from './LogEntry';
-import { LogConsole } from './LogConsole';
+import * as intExt from '../primitive/IntExt.js';
+import { LogLevel } from './LogLevel.js';
+import type { IStructuredLogger } from './IStructuredLogger.js';
+import { LogEntry } from './LogEntry.js';
+import { LogConsole } from './LogConsole.js';
 
 class Log {
 	private _log: IStructuredLogger;

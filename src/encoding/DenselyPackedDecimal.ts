@@ -1,4 +1,4 @@
-import * as intExt from '../primitive/IntExt';
+import * as intExt from '../primitive/IntExt.js';
 
 //https://en.wikipedia.org/wiki/Densely_packed_decimal
 

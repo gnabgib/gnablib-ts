@@ -1,5 +1,5 @@
-import { ContentError } from '../primitive/ErrorExt';
-import * as bconv from './_bitConverter';
+import { ContentError } from '../primitive/ErrorExt.js';
+import * as bconv from './_bitConverter.js';
 
 const tbl_con = 'bdfghjklmnprstvz';
 const tbl_vow = 'aiou';
@@ -113,6 +113,11 @@ export function toBytes(proquint: string): Uint8Array {
 				break;
 		}
 	}
-	if (pos != 0) throw new ContentError('Size', 'Should be a multiple of 5, have leftovers', pos);
+	if (pos != 0)
+		throw new ContentError(
+			'Size',
+			'Should be a multiple of 5, have leftovers',
+			pos
+		);
 	return arr;
 }

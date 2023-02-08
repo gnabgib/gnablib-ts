@@ -1,16 +1,15 @@
-import { _sha2_512 } from '../hash/_Sha2-512';
-import { EnforceTypeError, OutOfRangeError } from './ErrorExt';
-import { FromBinResult } from './FromBinResult';
-import { padStart } from './StringExt';
+import { EnforceTypeError, OutOfRangeError } from './ErrorExt.js';
+import { FromBinResult } from './FromBinResult.js';
+import { padStart } from './StringExt.js';
 
 /**
  * Requires that `test` is an integer, and at a minimum `low` and a maximum `high` (both inclusive)
  * @throws EnforceTypeError If not an integer
  * @throws OutOfRangeError If invalid value
- * @param test 
- * @param low 
- * @param high 
- * @param noun 
+ * @param test
+ * @param low
+ * @param high
+ * @param noun
  */
 export function inRangeInclusive(
 	test: number,

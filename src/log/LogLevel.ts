@@ -1,4 +1,4 @@
-import * as intExt from '../primitive/IntExt';
+import * as intExt from '../primitive/IntExt.js';
 
 //Note these are upper bounds of their range, eg debug is 0-63
 const debugLevelUpper = 63;

@@ -1,4 +1,4 @@
-import { ContentError, VariedRangeError } from '../primitive/ErrorExt';
+import { ContentError, VariedRangeError } from '../primitive/ErrorExt.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38

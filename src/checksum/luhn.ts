@@ -1,5 +1,5 @@
-import * as intExt from '../primitive/IntExt';
-import * as utf8 from '../encoding/Utf8';
+import * as intExt from '../primitive/IntExt.js';
+import * as utf8 from '../encoding/Utf8.js';
 const ord_0 = 48; //char '0'
 
 export function sumStr(str: string): number {

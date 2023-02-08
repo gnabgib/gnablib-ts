@@ -1,4 +1,4 @@
-import * as hex from '../encoding/Hex';
+import * as hex from '../encoding/Hex.js';
 
 export class Uint64Array {
 	private readonly _buff: Uint32Array;

@@ -1,9 +1,14 @@
-import { EnforceTypeError, NullError, OutOfRangeError, SizeError } from '../../primitive/ErrorExt';
-import { ColType } from './ColType';
-import { ACudColType } from './CudColType';
-import type { Valid } from './Valid';
-import * as Utf8 from '../../encoding/Utf8';
-import { FromBinResult } from '../../primitive/FromBinResult';
+import {
+	EnforceTypeError,
+	NullError,
+	OutOfRangeError,
+	SizeError,
+} from '../../primitive/ErrorExt.js';
+import { ColType } from './ColType.js';
+import { ACudColType } from './CudColType.js';
+import type { Valid } from './Valid.js';
+import * as Utf8 from '../../encoding/Utf8.js';
+import { FromBinResult } from '../../primitive/FromBinResult.js';
 
 abstract class AUtf8 extends ACudColType implements Valid<string> {
 	protected abstract get _lenBytes(): number;
@@ -28,7 +33,12 @@ abstract class AUtf8 extends ACudColType implements Valid<string> {
 			return new EnforceTypeError('string', input);
 		}
 		if (input.length > this._maxStrLen)
-			return new OutOfRangeError('String length', input.length, 0, this._maxStrLen);
+			return new OutOfRangeError(
+				'String length',
+				input.length,
+				0,
+				this._maxStrLen
+			);
 	}
 
 	unknownBin(value: string | undefined): Uint8Array {
@@ -54,7 +64,11 @@ abstract class AUtf8 extends ACudColType implements Valid<string> {
 
 	binUnknown(bin: Uint8Array, pos: number): FromBinResult<string | undefined> {
 		if (pos + this._lenBytes > bin.length)
-			return new FromBinResult(0, undefined, 'Utf8.binUnknown unable to find length');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Utf8.binUnknown unable to find length'
+			);
 
 		let l = 0;
 		for (let i = 0; i < this._lenBytes; i++) {
@@ -68,10 +82,12 @@ abstract class AUtf8 extends ACudColType implements Valid<string> {
 			);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Utf8.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Utf8.binUnknown missing data');
 
 		//A shortcoming of this is something nullable looks the same as something empty
-		if (l === 0 && this.nullable) return new FromBinResult(this._lenBytes, undefined);
+		if (l === 0 && this.nullable)
+			return new FromBinResult(this._lenBytes, undefined);
 
 		const s = Utf8.fromBytes(bin.slice(pos, end));
 		return new FromBinResult(l + this._lenBytes, s);

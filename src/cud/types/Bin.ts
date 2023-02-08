@@ -1,8 +1,12 @@
-import { FromBinResult } from '../../primitive/FromBinResult';
-import { NullError, OutOfRangeError, SizeError } from '../../primitive/ErrorExt';
-import { ColType } from './ColType';
-import { ACudColType } from './CudColType';
-import type { Valid } from './Valid';
+import { FromBinResult } from '../../primitive/FromBinResult.js';
+import {
+	NullError,
+	OutOfRangeError,
+	SizeError,
+} from '../../primitive/ErrorExt.js';
+import { ColType } from './ColType.js';
+import { ACudColType } from './CudColType.js';
+import type { Valid } from './Valid.js';
 
 const len1Byte = 255;
 const len2Byte = 65536; //65k
@@ -18,11 +22,15 @@ abstract class ABin extends ACudColType implements Valid<Uint8Array> {
 		super(nullable);
 	}
 
-	protected _valid(input: Uint8Array | undefined, maxLen: number): Error | undefined {
+	protected _valid(
+		input: Uint8Array | undefined,
+		maxLen: number
+	): Error | undefined {
 		if (input === undefined || input === null) {
 			if (!this.nullable) return new NullError('Bin');
 		} else {
-			if (input.length > maxLen) return new OutOfRangeError('Data length', input.length, 0, maxLen);
+			if (input.length > maxLen)
+				return new OutOfRangeError('Data length', input.length, 0, maxLen);
 		}
 	}
 
@@ -47,16 +55,24 @@ export class Bin1 extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len1Byte) throw new SizeError('Bin size', value.length, 0, len1Byte);
+		if (value.length > len1Byte)
+			throw new SizeError('Bin size', value.length, 0, len1Byte);
 		const ret = new Uint8Array(1 + value.length);
 		ret[0] = value.length;
 		ret.set(value, 1);
 		return ret;
 	}
 
-	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Uint8Array | undefined> {
+	binUnknown(
+		bin: Uint8Array,
+		pos: number
+	): FromBinResult<Uint8Array | undefined> {
 		if (pos + 1 > bin.length)
-			return new FromBinResult(0, undefined, 'Bin1.binUnknown unable to find length byte');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Bin1.binUnknown unable to find length byte'
+			);
 
 		const l = bin[pos++];
 		// //Impossible:
@@ -64,7 +80,8 @@ export class Bin1 extends ABin {
 		// 	return new FromBinResult(0,undefined,`Bin1.binUnknown size invalid (0<${len1Byte} got ${l})`);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Bin1.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Bin1.binUnknown missing data');
 
 		//A shortcoming of this is something nullable looks the same as something empty
 		if (l === 0 && this.nullable) return new FromBinResult(1, undefined);
@@ -91,7 +108,8 @@ export class Bin2 extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len2Byte) throw new SizeError('Bin size', value.length, 0, len2Byte);
+		if (value.length > len2Byte)
+			throw new SizeError('Bin size', value.length, 0, len2Byte);
 		const ret = new Uint8Array(2 + value.length);
 		ret[0] = value.length >> 8;
 		ret[1] = value.length;
@@ -99,9 +117,16 @@ export class Bin2 extends ABin {
 		return ret;
 	}
 
-	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Uint8Array | undefined> {
+	binUnknown(
+		bin: Uint8Array,
+		pos: number
+	): FromBinResult<Uint8Array | undefined> {
 		if (pos + 2 > bin.length)
-			return new FromBinResult(0, undefined, 'Bin2.binUnknown unable to find length bytes');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Bin2.binUnknown unable to find length bytes'
+			);
 
 		const l = (bin[pos++] << 8) | bin[pos++];
 		// //Impossible:
@@ -109,7 +134,8 @@ export class Bin2 extends ABin {
 		// 	return new FromBinResult(0,undefined,`Bin2.binUnknown size invalid (0<${len2Byte} got ${l})`);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Bin2.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Bin2.binUnknown missing data');
 
 		//A shortcoming of this is something nullable looks the same as something empty
 		if (l === 0 && this.nullable) return new FromBinResult(2, undefined);
@@ -136,7 +162,8 @@ export class Bin3 extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len3Byte) throw new SizeError('Bin size', value.length, 0, len3Byte);
+		if (value.length > len3Byte)
+			throw new SizeError('Bin size', value.length, 0, len3Byte);
 		const ret = new Uint8Array(3 + value.length);
 		ret[0] = value.length >> 16;
 		ret[1] = value.length >> 8;
@@ -145,9 +172,16 @@ export class Bin3 extends ABin {
 		return ret;
 	}
 
-	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Uint8Array | undefined> {
+	binUnknown(
+		bin: Uint8Array,
+		pos: number
+	): FromBinResult<Uint8Array | undefined> {
 		if (pos + 3 > bin.length)
-			return new FromBinResult(0, undefined, 'Bin3.binUnknown unable to find length bytes');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Bin3.binUnknown unable to find length bytes'
+			);
 
 		const l = (bin[pos++] << 16) | (bin[pos++] << 8) | bin[pos++];
 		// //Impossible:
@@ -155,7 +189,8 @@ export class Bin3 extends ABin {
 		// 	return new FromBinResult(0,undefined,`Bin3.binUnknown size invalid (0<${len3Byte} got ${l})`);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Bin3.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Bin3.binUnknown missing data');
 
 		//A shortcoming of this is something nullable looks the same as something empty
 		if (l === 0 && this.nullable) return new FromBinResult(3, undefined);
@@ -184,7 +219,8 @@ export class Bin4ish extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len4Byte) throw new SizeError('Bin size', value.length, 0, len4Byte);
+		if (value.length > len4Byte)
+			throw new SizeError('Bin size', value.length, 0, len4Byte);
 		const ret = new Uint8Array(4 + value.length);
 		ret[0] = value.length >>> 24;
 		ret[1] = value.length >> 16;
@@ -194,11 +230,23 @@ export class Bin4ish extends ABin {
 		return ret;
 	}
 
-	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Uint8Array | undefined> {
+	binUnknown(
+		bin: Uint8Array,
+		pos: number
+	): FromBinResult<Uint8Array | undefined> {
 		if (pos + 4 > bin.length)
-			return new FromBinResult(0, undefined, 'Bin4ish.binUnknown unable to find length bytes');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Bin4ish.binUnknown unable to find length bytes'
+			);
 
-		const l = ((bin[pos++] << 24) | (bin[pos++] << 16) | (bin[pos++] << 8) | bin[pos++]) >>> 0;
+		const l =
+			((bin[pos++] << 24) |
+				(bin[pos++] << 16) |
+				(bin[pos++] << 8) |
+				bin[pos++]) >>>
+			0;
 		//Impossible:
 		if (l > len4Byte)
 			return new FromBinResult(
@@ -208,7 +256,8 @@ export class Bin4ish extends ABin {
 			);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Bin4ish.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Bin4ish.binUnknown missing data');
 
 		//A shortcoming of this is something nullable looks the same as something empty
 		if (l === 0 && this.nullable) return new FromBinResult(4, undefined);

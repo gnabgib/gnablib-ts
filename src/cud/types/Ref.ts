@@ -1,20 +1,24 @@
-import { EnforceTypeError, NullError, OutOfRangeError, SizeError } from '../../primitive/ErrorExt';
-import { ColType } from './ColType';
-import { ACudColType } from './CudColType';
-import type { Valid } from './Valid';
-import { Int64 } from '../../primitive/Int64';
-import { TableName } from '../TableName';
-import { ColName } from '../ColName';
-import { FromBinResult } from '../../primitive/FromBinResult';
+import {
+	EnforceTypeError,
+	NullError,
+	OutOfRangeError,
+	SizeError,
+} from '../../primitive/ErrorExt.js';
+import { ColType } from './ColType.js';
+import { ACudColType } from './CudColType.js';
+import type { Valid } from './Valid.js';
+import { Int64 } from '../../primitive/Int64.js';
+import { TableName } from '../TableName.js';
+import { ColName } from '../ColName.js';
+import { FromBinResult } from '../../primitive/FromBinResult.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = new Int64(0, 0);
 
-
 abstract class ARef extends ACudColType implements Valid<number | Int64> {
-	protected abstract get _maxByteLen():number;
-	protected abstract get _max64():Int64;
-	protected abstract get _cudPrefix():string;
+	protected abstract get _maxByteLen(): number;
+	protected abstract get _max64(): Int64;
+	protected abstract get _cudPrefix(): string;
 
 	readonly table: TableName;
 	readonly column: ColName;
@@ -26,15 +30,16 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 	}
 
 	get cudType(): string {
-		return this._cudPrefix+'(' + this.table.name + '.' + this.column.name + ')';
+		return (
+			this._cudPrefix + '(' + this.table.name + '.' + this.column.name + ')'
+		);
 	}
 
 	cudByteSize(_input: number): number {
 		return this._maxByteLen;
 	}
 
-
-	valid(input: number | Int64 | undefined):Error|undefined {
+	valid(input: number | Int64 | undefined): Error | undefined {
 		let i64: Int64;
 		if (input === undefined || input === null) {
 			if (!this.nullable) return new NullError('Ref');
@@ -53,17 +58,17 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 	}
 
 	toBin(): Uint8Array {
-		const s=super.toBin();
-		const t=this.table.toBin();
-		const c=this.column.toBin();
-		const ret=new Uint8Array(s.length+t.length+c.length);
+		const s = super.toBin();
+		const t = this.table.toBin();
+		const c = this.column.toBin();
+		const ret = new Uint8Array(s.length + t.length + c.length);
 		ret.set(s);
-		let ptr=s.length;
-		ret.set(t,ptr);
-		ptr+=t.length;
-		ret.set(c,ptr);
+		let ptr = s.length;
+		ret.set(t, ptr);
+		ptr += t.length;
+		ret.set(c, ptr);
 		return ret;
-    }
+	}
 
 	unknownBin(value: number | Int64): Uint8Array {
 		let i64: Int64;
@@ -80,7 +85,8 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		if (n.length > this._maxByteLen) throw new SizeError('Ref bytes', n.length, 0, this._maxByteLen);
+		if (n.length > this._maxByteLen)
+			throw new SizeError('Ref bytes', n.length, 0, this._maxByteLen);
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;
@@ -88,16 +94,18 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 		return ret;
 	}
 
-	binUnknown(
-		bin: Uint8Array,
-		pos: number
-	): FromBinResult<Int64 | undefined> {
+	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Int64 | undefined> {
 		if (pos + 1 > bin.length)
-			return new FromBinResult(0, undefined, 'Ref.binUnknown unable to find length');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Ref.binUnknown unable to find length'
+			);
 
 		const l = bin[pos++];
 		if (l === 0) {
-			if (!this.nullable) return new FromBinResult(0, undefined, 'Ref.binUnknown cannot be null');
+			if (!this.nullable)
+				return new FromBinResult(0, undefined, 'Ref.binUnknown cannot be null');
 			return new FromBinResult(1, undefined);
 		}
 		if (l > this._maxByteLen)
@@ -108,12 +116,19 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 			);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Ref.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Ref.binUnknown missing data');
 
 		return new FromBinResult(l + 1, Int64.fromMinBytes(bin, pos, l));
 	}
 
-	static fromBinSub(colByte:number,nullable:boolean,len:number, bin: Uint8Array, pos: number): FromBinResult<ARef> {
+	static fromBinSub(
+		colByte: number,
+		nullable: boolean,
+		len: number,
+		bin: Uint8Array,
+		pos: number
+	): FromBinResult<ARef> {
 		//Col type is already known/parsed from bin
 
 		switch (colByte) {
@@ -123,24 +138,47 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 				//Only parse for ref types
 				break;
 			default:
-				return new FromBinResult<ARef>(0,undefined,`ARef.fromBin invalid colType ${colByte}`);
+				return new FromBinResult<ARef>(
+					0,
+					undefined,
+					`ARef.fromBin invalid colType ${colByte}`
+				);
 		}
-		let ptr=pos;
-		const tFrom=TableName.fromBin(bin,ptr);
-		if (!tFrom.success) return new FromBinResult<ARef>(0,undefined,'ARef.fromBinSub missing table: '+tFrom.reason);
-		ptr+=tFrom.byteLen;
+		let ptr = pos;
+		const tFrom = TableName.fromBin(bin, ptr);
+		if (!tFrom.success)
+			return new FromBinResult<ARef>(
+				0,
+				undefined,
+				'ARef.fromBinSub missing table: ' + tFrom.reason
+			);
+		ptr += tFrom.byteLen;
 
-		const cFrom=ColName.fromBin(bin,ptr);
-		if (!cFrom.success) return new FromBinResult<ARef>(0,undefined,'ARef.fromBinSub missing column: '+cFrom.reason);
-		ptr+=cFrom.byteLen;
+		const cFrom = ColName.fromBin(bin, ptr);
+		if (!cFrom.success)
+			return new FromBinResult<ARef>(
+				0,
+				undefined,
+				'ARef.fromBinSub missing column: ' + cFrom.reason
+			);
+		ptr += cFrom.byteLen;
 
 		switch (colByte) {
 			case ColType.Ref2:
-				return new FromBinResult(len+ptr-pos,new Ref2(tFrom.value!,cFrom.value!,nullable));
+				return new FromBinResult(
+					len + ptr - pos,
+					new Ref2(tFrom.value!, cFrom.value!, nullable)
+				);
 			case ColType.Ref4:
-				return new FromBinResult(len+ptr-pos,new Ref4(tFrom.value!,cFrom.value!,nullable));
+				return new FromBinResult(
+					len + ptr - pos,
+					new Ref4(tFrom.value!, cFrom.value!, nullable)
+				);
 			case ColType.Ref8:
-				return new FromBinResult(len+ptr-pos,new Ref8(tFrom.value!,cFrom.value!,nullable));
+				return new FromBinResult(
+					len + ptr - pos,
+					new Ref8(tFrom.value!, cFrom.value!, nullable)
+				);
 		}
 	}
 }
@@ -159,7 +197,7 @@ export class Ref2 extends ARef {
 export class Ref4 extends ARef {
 	readonly _colType = ColType.Ref4;
 	readonly _maxByteLen = 4;
-	readonly _max64 = new Int64(0x7FFFFFFF, 0);
+	readonly _max64 = new Int64(0x7fffffff, 0);
 	readonly _cudPrefix = 'ref4';
 
 	readonly mysqlType = 'INT';

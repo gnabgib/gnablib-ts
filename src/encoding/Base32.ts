@@ -1,5 +1,5 @@
-import { ContentError } from '../primitive/ErrorExt';
-import * as bconv from './_bitConverter';
+import { ContentError } from '../primitive/ErrorExt.js';
+import * as bconv from './_bitConverter.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38

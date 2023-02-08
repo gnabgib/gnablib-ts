@@ -1,4 +1,4 @@
-import { ContentError, Grievous } from '../primitive/ErrorExt';
+import { ContentError, Grievous } from '../primitive/ErrorExt.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38

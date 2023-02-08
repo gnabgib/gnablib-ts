@@ -1,4 +1,4 @@
-import { ContentError } from '../primitive/ErrorExt';
+import { ContentError } from '../primitive/ErrorExt.js';
 const defLineLength = 128;
 const defShiftOffset = 42; //v0-1.2, default
 const defEscapeChar = '='; //V0-1.2, default

@@ -1,5 +1,5 @@
-import { lenInRangeInclusive } from '../../primitive/StringExt';
-import * as Utf8 from '../../encoding/Utf8';
+import { lenInRangeInclusive } from '../../primitive/StringExt.js';
+import * as Utf8 from '../../encoding/Utf8.js';
 
 export class Command {
 	readonly char: string;
@@ -41,11 +41,11 @@ export class CommandCtrl extends Command {
 		return new CommandCtrl('d', 'drop');
 	}
 
-    /**
-     * Decode a CommandCtrl from a byte
-     * @param byte 
-     * @returns CommandCtrl or undefined if bad byte-value
-     */
+	/**
+	 * Decode a CommandCtrl from a byte
+	 * @param byte
+	 * @returns CommandCtrl or undefined if bad byte-value
+	 */
 	static fromByte(byte: number): CommandCtrl | undefined {
 		switch (byte) {
 			case 99: //c
@@ -88,11 +88,11 @@ export class CommandData extends Command {
 	}
 
 	/**
-     * Decode a CommandData from a byte
-     * @param byte 
-     * @returns CommandData or undefined if bad byte-value
-     */
-	 static fromByte(byte: number): CommandData | undefined {
+	 * Decode a CommandData from a byte
+	 * @param byte
+	 * @returns CommandData or undefined if bad byte-value
+	 */
+	static fromByte(byte: number): CommandData | undefined {
 		switch (byte) {
 			case 105: //i
 				return this.Insert;

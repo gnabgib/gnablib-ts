@@ -1,7 +1,8 @@
 module.exports = {
   env: {
     browser: true,
-    es2021: true,
+    es2016: true,
+    //es2021: true,
     node: true,
   },
   extends: [
@@ -12,11 +13,18 @@ module.exports = {
   overrides: [
   ],
   parserOptions: {
-    ecmaVersion: 2020,
+    ecmaVersion: 2016,
+    //ecmaVersion: 2020,
     sourceType: 'module'
   },
   rules: {
-    '@typescript-eslint/ts-expect-error': 'allow-with-description' 
+    '@typescript-eslint/ban-ts-comment': [
+      'error',
+      {
+        'ts-expect-error': 'allow-with-description'
+      }
+    ]
+    //'@typescript-eslint/ts-expect-error': 'allow-with-description' 
   },
   // rules: {
   //   'no-prototype-builtins': 0,

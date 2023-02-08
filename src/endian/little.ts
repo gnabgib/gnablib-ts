@@ -1,9 +1,9 @@
-import { SizeError } from '../primitive/ErrorExt';
-import { Uint64 } from '../primitive/Uint64';
-import * as fp64 from '../encoding/ieee754-fp64';
-import * as fp32 from '../encoding/ieee754-fp32';
-import * as fp16 from '../encoding/ieee754-fp16';
-import { size64Bytes, size32Bytes, size16Bytes } from '../primitive/BitExt';
+import { SizeError } from '../primitive/ErrorExt.js';
+import { Uint64 } from '../primitive/Uint64.js';
+import * as fp64 from '../encoding/ieee754-fp64.js';
+import * as fp32 from '../encoding/ieee754-fp32.js';
+import * as fp16 from '../encoding/ieee754-fp16.js';
+import { size64Bytes, size32Bytes, size16Bytes } from '../primitive/BitExt.js';
 
 /**
  * Output a 64 bit unsigned number from @param sourceBytes at position @param sourcePos
@@ -15,7 +15,11 @@ import { size64Bytes, size32Bytes, size16Bytes } from '../primitive/BitExt';
  */
 export function u64FromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
 	if (sourcePos + size64Bytes > sourceBytes.length)
-		throw new SizeError('sourceBytes', sourceBytes.length, sourcePos + size64Bytes);
+		throw new SizeError(
+			'sourceBytes',
+			sourceBytes.length,
+			sourcePos + size64Bytes
+		);
 	//We can use unsafe because we've already tested length
 	return new Uint64(
 		u32FromBytesUnsafe(sourceBytes, sourcePos),
@@ -43,7 +47,8 @@ export function u64IntoArrFromBytes(
 ): void {
 	const byteCount = targetSize * size64Bytes;
 	const n = sourcePos + byteCount;
-	if (n > sourceBytes.length) throw new SizeError('sourceBytes', sourceBytes.length, n);
+	if (n > sourceBytes.length)
+		throw new SizeError('sourceBytes', sourceBytes.length, n);
 	if (targetPos + targetSize > target.length)
 		throw new SizeError('target', target.length, targetPos + targetSize);
 
@@ -71,7 +76,11 @@ export function u64ToBytes(u64: Uint64): Uint8Array {
  * @param targetBytes Destination of data starting at @param targetPos
  * @param targetPos Starting position in @param targetBytes
  */
-export function u64IntoBytesUnsafe(u64: Uint64, targetBytes: Uint8Array, targetPos = 0): void {
+export function u64IntoBytesUnsafe(
+	u64: Uint64,
+	targetBytes: Uint8Array,
+	targetPos = 0
+): void {
 	targetBytes.set(u64.toBytes().reverse(), targetPos);
 }
 
@@ -82,9 +91,17 @@ export function u64IntoBytesUnsafe(u64: Uint64, targetBytes: Uint8Array, targetP
  * @param targetPos Starting position in @param targetBytes
  * @throws {SizeError} if there's not enough space in @param targetBytes
  */
-export function u64IntoBytes(u64: Uint64, targetBytes: Uint8Array, targetPos = 0): void {
+export function u64IntoBytes(
+	u64: Uint64,
+	targetBytes: Uint8Array,
+	targetPos = 0
+): void {
 	if (targetPos + size64Bytes > targetBytes.length)
-		throw new SizeError('targetBytes', targetBytes.length, targetPos + size64Bytes);
+		throw new SizeError(
+			'targetBytes',
+			targetBytes.length,
+			targetPos + size64Bytes
+		);
 	targetBytes.set(u64.toBytes().reverse(), targetPos);
 }
 
@@ -121,7 +138,11 @@ export function u64ArrIntoBytes(
 ): void {
 	const byteCount = sourceU64s.length * size64Bytes;
 	if (targetPos + byteCount > targetBytes.length)
-		throw new SizeError('targetBytes', targetBytes.length, targetPos + byteCount);
+		throw new SizeError(
+			'targetBytes',
+			targetBytes.length,
+			targetPos + byteCount
+		);
 	for (let i = 0; i < sourceU64s.length; i++) {
 		const u64 = sourceU64s[i];
 		const rPos = targetPos + i * size64Bytes;
@@ -136,7 +157,10 @@ export function u64ArrIntoBytes(
  * @param sourcePos Starting position in @param sourceBytes
  * @returns
  */
-export function i32FromBytesUnsafe(sourceBytes: Uint8Array, sourcePos = 0): number {
+export function i32FromBytesUnsafe(
+	sourceBytes: Uint8Array,
+	sourcePos = 0
+): number {
 	return (
 		sourceBytes[sourcePos] |
 		(sourceBytes[sourcePos + 1] << 8) |
@@ -152,7 +176,10 @@ export function i32FromBytesUnsafe(sourceBytes: Uint8Array, sourcePos = 0): numb
  * @param sourcePos Starting position in @param sourceBytes
  * @returns
  */
-export function u32FromBytesUnsafe(sourceBytes: Uint8Array, sourcePos = 0): number {
+export function u32FromBytesUnsafe(
+	sourceBytes: Uint8Array,
+	sourcePos = 0
+): number {
 	return (
 		(sourceBytes[sourcePos] |
 			(sourceBytes[sourcePos + 1] << 8) |
@@ -172,7 +199,11 @@ export function u32FromBytesUnsafe(sourceBytes: Uint8Array, sourcePos = 0): numb
  */
 export function i32FromBytes(sourceBytes: Uint8Array, sourcePos = 0): number {
 	if (sourcePos + size32Bytes > sourceBytes.length)
-		throw new SizeError('sourceBytes', sourceBytes.length, sourcePos + size32Bytes);
+		throw new SizeError(
+			'sourceBytes',
+			sourceBytes.length,
+			sourcePos + size32Bytes
+		);
 	return (
 		sourceBytes[sourcePos] |
 		(sourceBytes[sourcePos + 1] << 8) |
@@ -191,7 +222,11 @@ export function i32FromBytes(sourceBytes: Uint8Array, sourcePos = 0): number {
  */
 export function u32FromBytes(sourceBytes: Uint8Array, sourcePos = 0): number {
 	if (sourcePos + size32Bytes > sourceBytes.length)
-		throw new SizeError('sourceBytes', sourceBytes.length, sourcePos + size32Bytes);
+		throw new SizeError(
+			'sourceBytes',
+			sourceBytes.length,
+			sourcePos + size32Bytes
+		);
 	return (
 		(sourceBytes[sourcePos] |
 			(sourceBytes[sourcePos + 1] << 8) |
@@ -216,7 +251,11 @@ export function u32ArrFromBytes(
 ): Uint32Array {
 	const byteCount = targetSize * size32Bytes;
 	if (sourcePos + byteCount > sourceBytes.length)
-		throw new SizeError('sourceBytes', sourceBytes.length, sourcePos + byteCount);
+		throw new SizeError(
+			'sourceBytes',
+			sourceBytes.length,
+			sourcePos + byteCount
+		);
 	const ret = new Uint32Array(targetSize);
 	for (let i = 0; i < targetSize; i++) {
 		const rPos = sourcePos + i * size32Bytes;
@@ -249,7 +288,8 @@ export function u32IntoArrFromBytes(
 ): void {
 	const byteCount = targetSize * size32Bytes;
 	const n = sourcePos + byteCount;
-	if (n > sourceBytes.length) throw new SizeError('sourceBytes', sourceBytes.length, n);
+	if (n > sourceBytes.length)
+		throw new SizeError('sourceBytes', sourceBytes.length, n);
 	if (targetPos + targetSize > target.length)
 		throw new SizeError('target', target.length, targetPos + targetSize);
 
@@ -297,7 +337,11 @@ export function uintToMinBytes(u32: number): Uint8Array {
  * @param targetBytes Destination of data starting at @param targetPos
  * @param targetPos Starting position in @param targetBytes
  */
-export function u32IntoBytesUnsafe(u32: number, targetBytes: Uint8Array, targetPos = 0): void {
+export function u32IntoBytesUnsafe(
+	u32: number,
+	targetBytes: Uint8Array,
+	targetPos = 0
+): void {
 	targetBytes[targetPos] = u32;
 	targetBytes[targetPos + 1] = u32 >> 8;
 	targetBytes[targetPos + 2] = u32 >> 16;
@@ -311,9 +355,17 @@ export function u32IntoBytesUnsafe(u32: number, targetBytes: Uint8Array, targetP
  * @param targetPos Starting position in @param targetBytes
  * @throws {SizeError} if there's not enough space in @param targetBytes
  */
-export function u32IntoBytes(u32: number, targetBytes: Uint8Array, targetPos = 0): void {
+export function u32IntoBytes(
+	u32: number,
+	targetBytes: Uint8Array,
+	targetPos = 0
+): void {
 	if (targetPos + size32Bytes > targetBytes.length)
-		throw new SizeError('targetBytes', targetBytes.length, targetPos + size32Bytes);
+		throw new SizeError(
+			'targetBytes',
+			targetBytes.length,
+			targetPos + size32Bytes
+		);
 	targetBytes[targetPos] = u32;
 	targetBytes[targetPos + 1] = u32 >> 8;
 	targetBytes[targetPos + 2] = u32 >> 16;
@@ -356,7 +408,11 @@ export function u32ArrIntoBytes(
 ): void {
 	const byteCount = sourceU32s.length * size32Bytes;
 	if (targetPos + byteCount > targetBytes.length)
-		throw new SizeError('targetBytes', targetBytes.length, targetPos + byteCount);
+		throw new SizeError(
+			'targetBytes',
+			targetBytes.length,
+			targetPos + byteCount
+		);
 	for (let i = 0; i < sourceU32s.length; i++) {
 		const rPos = targetPos + i * size32Bytes;
 		const u32 = sourceU32s[i];
@@ -374,7 +430,10 @@ export function u32ArrIntoBytes(
  * @param sourcePos
  * @returns
  */
-export function u16FromBytesUnsafe(sourceBytes: Uint8Array, sourcePos = 0): number {
+export function u16FromBytesUnsafe(
+	sourceBytes: Uint8Array,
+	sourcePos = 0
+): number {
 	return sourceBytes[sourcePos] | (sourceBytes[sourcePos + 1] << 8);
 }
 
@@ -387,7 +446,11 @@ export function u16FromBytesUnsafe(sourceBytes: Uint8Array, sourcePos = 0): numb
  */
 export function u16FromBytes(sourceBytes: Uint8Array, sourcePos = 0): number {
 	if (sourcePos + size16Bytes > sourceBytes.length)
-		throw new SizeError('sourceBytes', sourceBytes.length, sourcePos + size16Bytes);
+		throw new SizeError(
+			'sourceBytes',
+			sourceBytes.length,
+			sourcePos + size16Bytes
+		);
 	return sourceBytes[sourcePos] | (sourceBytes[sourcePos + 1] << 8);
 }
 
@@ -420,7 +483,8 @@ export function fp64ToBytes(float64: number): Uint8Array {
  * @returns
  */
 export function fp64FromBytes(bytes: Uint8Array, pos = 0): number {
-	if (pos + 8 > bytes.length) throw new SizeError('bytes', bytes.length, pos + 8);
+	if (pos + 8 > bytes.length)
+		throw new SizeError('bytes', bytes.length, pos + 8);
 	return fp64.fp64FromBytesUnsafe(bytes.slice(pos, 8).reverse(), 0);
 }
 
@@ -440,7 +504,8 @@ export function fp32ToBytes(float32: number): Uint8Array {
  * @returns
  */
 export function fp32FromBytes(bytes: Uint8Array, pos = 0): number {
-	if (pos + 4 > bytes.length) throw new SizeError('bytes', bytes.length, pos + 4);
+	if (pos + 4 > bytes.length)
+		throw new SizeError('bytes', bytes.length, pos + 4);
 	return fp32.fp32FromBytesUnsafe(bytes.slice(pos, 4).reverse(), 0);
 }
 
@@ -461,6 +526,7 @@ export function fp16ToBytes(float16: number): Uint8Array {
  * @returns
  */
 export function fp16FromBytes(bytes: Uint8Array, pos = 0): number {
-	if (pos + 2 > bytes.length) throw new SizeError('bytes', bytes.length, pos + 2);
+	if (pos + 2 > bytes.length)
+		throw new SizeError('bytes', bytes.length, pos + 2);
 	return fp16.fp16FromBytesUnsafe(bytes.slice(pos, 2).reverse(), 0);
 }

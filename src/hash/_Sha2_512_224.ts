@@ -1,7 +1,7 @@
-import * as intExt from '../primitive/IntExt';
-import * as utf8 from '../encoding/Utf8';
-import { iv512 } from './_Sha2';
-import { _sha2_512 } from './_Sha2-512';
+import * as intExt from '../primitive/IntExt.js';
+import * as utf8 from '../encoding/Utf8.js';
+import { iv512 } from './_Sha2.js';
+import { _sha2_512 } from './_Sha2-512.js';
 
 export const init512_224 = [
 	//These are pre-generated @see generateIV

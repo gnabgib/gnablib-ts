@@ -1,10 +1,10 @@
-import { fp32FromBytes, fp32ToBytes } from '../../encoding/ieee754-fp32';
-import { fp64FromBytes, fp64ToBytes } from '../../encoding/ieee754-fp64';
-import { FromBinResult } from '../../primitive/FromBinResult';
-import { NullError } from '../../primitive/ErrorExt';
-import { ColType } from './ColType';
-import { ACudColType } from './CudColType';
-import type { Valid } from './Valid';
+import { fp32FromBytes, fp32ToBytes } from '../../encoding/ieee754-fp32.js';
+import { fp64FromBytes, fp64ToBytes } from '../../encoding/ieee754-fp64.js';
+import { FromBinResult } from '../../primitive/FromBinResult.js';
+import { NullError } from '../../primitive/ErrorExt.js';
+import { ColType } from './ColType.js';
+import { ACudColType } from './CudColType.js';
+import type { Valid } from './Valid.js';
 
 abstract class AFloat extends ACudColType implements Valid<number> {
 	constructor(nullable = false) {
@@ -17,23 +17,40 @@ abstract class AFloat extends ACudColType implements Valid<number> {
 		}
 	}
 
-	protected _binUnknown(bin: Uint8Array, pos: number, byteSize:number): FromBinResult<Uint8Array | undefined> {
+	protected _binUnknown(
+		bin: Uint8Array,
+		pos: number,
+		byteSize: number
+	): FromBinResult<Uint8Array | undefined> {
 		if (pos + 1 > bin.length)
-			return new FromBinResult(0, undefined, 'Float.binUnknown unable to find length');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Float.binUnknown unable to find length'
+			);
 
 		const l = bin[pos++];
 		if (l === 0) {
 			if (!this.nullable)
-				return new FromBinResult(0, undefined, 'Float.binUnknown cannot be null');
+				return new FromBinResult(
+					0,
+					undefined,
+					'Float.binUnknown cannot be null'
+				);
 			return new FromBinResult(1, undefined);
 		}
 		if (l !== byteSize)
-			return new FromBinResult(0, undefined, `Float8.binUnknown invalid length (${byteSize} got ${l})`);
+			return new FromBinResult(
+				0,
+				undefined,
+				`Float8.binUnknown invalid length (${byteSize} got ${l})`
+			);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Float.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Float.binUnknown missing data');
 
-		return new FromBinResult(9, bin.slice(pos,end));
+		return new FromBinResult(9, bin.slice(pos, end));
 	}
 }
 
@@ -64,10 +81,10 @@ export class Float4 extends AFloat {
 	}
 
 	binUnknown(bin: Uint8Array, pos: number): FromBinResult<number | undefined> {
-		const bytes=this._binUnknown(bin,pos,4);
+		const bytes = this._binUnknown(bin, pos, 4);
 		//Propagate null or error (notice type change)
-		if (bytes.value===undefined) return bytes.switchT<number|undefined>();
-		return new FromBinResult(5,fp32FromBytes(bytes.value));
+		if (bytes.value === undefined) return bytes.switchT<number | undefined>();
+		return new FromBinResult(5, fp32FromBytes(bytes.value));
 	}
 }
 
@@ -98,9 +115,9 @@ export class Float8 extends AFloat {
 	}
 
 	binUnknown(bin: Uint8Array, pos: number): FromBinResult<number | undefined> {
-		const bytes=this._binUnknown(bin,pos,8);
+		const bytes = this._binUnknown(bin, pos, 8);
 		//Propagate null or error (notice type change)
-		if (bytes.value===undefined) return bytes.switchT<number|undefined>();
-		return new FromBinResult(9,fp64FromBytes(bytes.value));
+		if (bytes.value === undefined) return bytes.switchT<number | undefined>();
+		return new FromBinResult(9, fp64FromBytes(bytes.value));
 	}
 }

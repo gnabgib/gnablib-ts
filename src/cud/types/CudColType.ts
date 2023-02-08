@@ -1,13 +1,14 @@
-import type { PostgresType } from './PostgresType';
-import type { SqliteType } from './SqliteType';
-import type { MysqlType } from './MysqlType';
-import type { ColType } from './ColType';
-import type { FromBinResult } from '../../primitive/FromBinResult';
-
+import type { PostgresType } from './PostgresType.js';
+import type { SqliteType } from './SqliteType.js';
+import type { MysqlType } from './MysqlType.js';
+import type { ColType } from './ColType.js';
+import type { FromBinResult } from '../../primitive/FromBinResult.js';
 
 const nullMarker = 0x80;
 
-export abstract class ACudColType implements MysqlType, PostgresType, SqliteType {
+export abstract class ACudColType
+	implements MysqlType, PostgresType, SqliteType
+{
 	public readonly nullable: boolean;
 
 	protected constructor(nullable: boolean) {
@@ -17,7 +18,7 @@ export abstract class ACudColType implements MysqlType, PostgresType, SqliteType
 	toBin(): Uint8Array {
 		const ret = new Uint8Array(1);
 		ret[0] = this._colType;
-        if (this.nullable) ret[0]|=nullMarker;
+		if (this.nullable) ret[0] |= nullMarker;
 		return ret;
 	}
 
@@ -27,6 +28,6 @@ export abstract class ACudColType implements MysqlType, PostgresType, SqliteType
 	abstract get mysqlType(): string;
 	abstract get postgresType(): string;
 	abstract get sqliteType(): string;
-    abstract unknownBin(value:unknown):Uint8Array;
-    abstract binUnknown(bin:Uint8Array,pos:number):FromBinResult<unknown>;
+	abstract unknownBin(value: unknown): Uint8Array;
+	abstract binUnknown(bin: Uint8Array, pos: number): FromBinResult<unknown>;
 }

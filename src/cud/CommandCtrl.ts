@@ -1,15 +1,20 @@
-import { DateTime } from '../primitive/DateTime';
-import { FromBinResult } from '../primitive/FromBinResult';
-import { ACmd } from './ACmd';
-import { ColName } from './ColName';
-import { CreateColDef } from './CreateColDef';
-import { InsertColDef } from './InsertColDef';
-import type { TableName } from './TableName';
-import { CommandCtrl } from './types/Command';
-import { Plane } from './types/Plane';
+import { DateTime } from '../primitive/DateTime.js';
+import { FromBinResult } from '../primitive/FromBinResult.js';
+import { ACmd } from './ACmd.js';
+import { ColName } from './ColName.js';
+import { CreateColDef } from './CreateColDef.js';
+import { InsertColDef } from './InsertColDef.js';
+import type { TableName } from './TableName.js';
+import { CommandCtrl } from './types/Command.js';
+import { Plane } from './types/Plane.js';
 
 export abstract class ACmdCtrl extends ACmd {
-	constructor(userId: number, started: DateTime, table: TableName, cmd: CommandCtrl) {
+	constructor(
+		userId: number,
+		started: DateTime,
+		table: TableName,
+		cmd: CommandCtrl
+	) {
 		super(userId, started, table, Plane.Control, cmd);
 	}
 
@@ -24,7 +29,12 @@ export abstract class ACmdCtrl extends ACmd {
 		pos: number
 	): FromBinResult<ACmdCtrl> {
 		const c = CommandCtrl.fromByte(cByte);
-		if (!c) return new FromBinResult<ACmdCtrl>(0,undefined,'ACmdCtrl.fromBinSub missing command');
+		if (!c)
+			return new FromBinResult<ACmdCtrl>(
+				0,
+				undefined,
+				'ACmdCtrl.fromBinSub missing command'
+			);
 
 		if (c.isCreate) {
 			return CmdCtrlCreate.fromBinSub(s, cByte, u, t, e, bin, len, pos);
@@ -42,7 +52,12 @@ export abstract class ACmdCtrl extends ACmd {
 export class CmdCtrlCreate extends ACmdCtrl {
 	readonly cols: CreateColDef[];
 
-	public constructor(userId: number, started: DateTime, table: TableName, ...cols: CreateColDef[]) {
+	public constructor(
+		userId: number,
+		started: DateTime,
+		table: TableName,
+		...cols: CreateColDef[]
+	) {
 		super(userId, started, table, CommandCtrl.Create);
 		this.cols = cols;
 	}
@@ -72,7 +87,11 @@ export class CmdCtrlCreate extends ACmdCtrl {
 		return ret;
 	}
 
-	static Now(userId: number, table: TableName, ...cols: CreateColDef[]): CmdCtrlCreate {
+	static Now(
+		userId: number,
+		table: TableName,
+		...cols: CreateColDef[]
+	): CmdCtrlCreate {
 		return new CmdCtrlCreate(userId, DateTime.now(), table, ...cols);
 	}
 
@@ -86,17 +105,22 @@ export class CmdCtrlCreate extends ACmdCtrl {
 		len: number,
 		pos: number
 	): FromBinResult<CmdCtrlCreate> {
-        let ptr = pos;
-        const cols:CreateColDef[]=[];
-        let spaceRem=e;
-        while (spaceRem>0) {
-            const col=CreateColDef.fromBin(bin,ptr);
-            if (!col.success) return new FromBinResult<CmdCtrlCreate>(0,undefined,`CmdCtrlCreate.fromBinSub missing col ${cols.length}`);
-            ptr+=col.byteLen;
-            spaceRem-=col.byteLen;
-            cols.push(col.value!);
-        }
-		return new FromBinResult(len+e, new CmdCtrlCreate(u, s, t,...cols));
+		let ptr = pos;
+		const cols: CreateColDef[] = [];
+		let spaceRem = e;
+		while (spaceRem > 0) {
+			const col = CreateColDef.fromBin(bin, ptr);
+			if (!col.success)
+				return new FromBinResult<CmdCtrlCreate>(
+					0,
+					undefined,
+					`CmdCtrlCreate.fromBinSub missing col ${cols.length}`
+				);
+			ptr += col.byteLen;
+			spaceRem -= col.byteLen;
+			cols.push(col.value!);
+		}
+		return new FromBinResult(len + e, new CmdCtrlCreate(u, s, t, ...cols));
 	}
 }
 
@@ -178,28 +202,46 @@ export class CmdCtrlInsCols extends ACmdCtrl {
 		pos: number
 	): FromBinResult<CmdCtrlInsCols> {
 		let ptr = pos;
-        let spaceRem=e;
-        const cols:InsertColDef[]=[];
+		let spaceRem = e;
+		const cols: InsertColDef[] = [];
 		const aFrom = ColName.fromBin(bin, pos);
-		if (!aFrom.success) return new FromBinResult<CmdCtrlInsCols>(0,undefined,'CmdCtrlInsCols.fromBinSub missing after-column: '+aFrom.reason);
+		if (!aFrom.success)
+			return new FromBinResult<CmdCtrlInsCols>(
+				0,
+				undefined,
+				'CmdCtrlInsCols.fromBinSub missing after-column: ' + aFrom.reason
+			);
 		ptr += aFrom.byteLen;
-        spaceRem-=aFrom.byteLen;
+		spaceRem -= aFrom.byteLen;
 
-        while(spaceRem>0) {
-            const col=InsertColDef.fromBin(bin,ptr);
-			if (!col.success) return new FromBinResult<CmdCtrlInsCols>(0,undefined,`CmdCtrlInsCols.fromBinSub missing col ${cols.length}: ${col.reason}`);
-            ptr+=col.byteLen;
-            spaceRem-=col.byteLen;
-            cols.push(col.value!);
-        }
-		return new FromBinResult(len + e, new CmdCtrlInsCols(u, s, t, aFrom.value, ...cols));
+		while (spaceRem > 0) {
+			const col = InsertColDef.fromBin(bin, ptr);
+			if (!col.success)
+				return new FromBinResult<CmdCtrlInsCols>(
+					0,
+					undefined,
+					`CmdCtrlInsCols.fromBinSub missing col ${cols.length}: ${col.reason}`
+				);
+			ptr += col.byteLen;
+			spaceRem -= col.byteLen;
+			cols.push(col.value!);
+		}
+		return new FromBinResult(
+			len + e,
+			new CmdCtrlInsCols(u, s, t, aFrom.value, ...cols)
+		);
 	}
 }
 
 export class CmdCtrlRemCols extends ACmdCtrl {
 	readonly cols: ColName[];
 
-	public constructor(userId: number, started: DateTime, table: TableName, ...cols: ColName[]) {
+	public constructor(
+		userId: number,
+		started: DateTime,
+		table: TableName,
+		...cols: ColName[]
+	) {
 		super(userId, started, table, CommandCtrl.RemCols);
 		this.cols = cols;
 	}
@@ -229,11 +271,15 @@ export class CmdCtrlRemCols extends ACmdCtrl {
 		return ret;
 	}
 
-	static Now(userId: number, table: TableName, ...cols: ColName[]): CmdCtrlRemCols {
+	static Now(
+		userId: number,
+		table: TableName,
+		...cols: ColName[]
+	): CmdCtrlRemCols {
 		return new CmdCtrlRemCols(userId, DateTime.now(), table, ...cols);
 	}
 
-    static fromBinSub(
+	static fromBinSub(
 		s: DateTime,
 		cByte: number,
 		u: number,
@@ -244,15 +290,20 @@ export class CmdCtrlRemCols extends ACmdCtrl {
 		pos: number
 	): FromBinResult<CmdCtrlRemCols> {
 		let ptr = pos;
-        const cols:ColName[]=[];
-        let spaceRem=e;
-        while (spaceRem>0) {
-            const col=ColName.fromBin(bin,ptr);
-			if (!col.success) return new FromBinResult<CmdCtrlRemCols>(0,undefined,`CmdCtrlRemCols.fromBinSub missing col ${cols.length}: ${col.reason}`);
-            ptr+=col.byteLen;
-            spaceRem-=col.byteLen;
-            cols.push(col.value!);
-        }
+		const cols: ColName[] = [];
+		let spaceRem = e;
+		while (spaceRem > 0) {
+			const col = ColName.fromBin(bin, ptr);
+			if (!col.success)
+				return new FromBinResult<CmdCtrlRemCols>(
+					0,
+					undefined,
+					`CmdCtrlRemCols.fromBinSub missing col ${cols.length}: ${col.reason}`
+				);
+			ptr += col.byteLen;
+			spaceRem -= col.byteLen;
+			cols.push(col.value!);
+		}
 		return new FromBinResult(len + e, new CmdCtrlRemCols(u, s, t, ...cols));
 	}
 }
@@ -266,7 +317,7 @@ export class CmdCtrlDrop extends ACmdCtrl {
 		return new CmdCtrlDrop(userId, DateTime.now(), table);
 	}
 
-    static fromBinSub(
+	static fromBinSub(
 		s: DateTime,
 		cByte: number,
 		u: number,

@@ -1,4 +1,4 @@
-import * as intExt from './IntExt';
+import * as intExt from './IntExt.js';
 
 export const bitsPerByte = 8;
 export const size16Bytes = 2;

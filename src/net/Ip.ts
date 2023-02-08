@@ -1,6 +1,6 @@
-import { ContentError, SizeError } from '../primitive/ErrorExt';
-import * as intExt from '../primitive/IntExt';
-import * as objExt from '../primitive/ObjExt';
+import { ContentError, SizeError } from '../primitive/ErrorExt.js';
+import * as intExt from '../primitive/IntExt.js';
+import * as objExt from '../primitive/ObjExt.js';
 
 export class V4 {
 	readonly bytes: Uint8Array;
@@ -42,12 +42,12 @@ export class V4 {
 	/**
 	 * Create an IPv4 from 4 integers
 	 * @throws EnforceTypeError If `part0`,`part1`,`part2`,`part3` not integers
- 	 * @throws OutOfRangeError If `part0`,`part1`,`part2`,`part3` <0 or >255
-	 * @param part0 
-	 * @param part1 
-	 * @param part2 
-	 * @param part3 
-	 * @returns 
+	 * @throws OutOfRangeError If `part0`,`part1`,`part2`,`part3` <0 or >255
+	 * @param part0
+	 * @param part1
+	 * @param part2
+	 * @param part3
+	 * @returns
 	 */
 	static fromParts(
 		part0: number,
@@ -67,9 +67,9 @@ export class V4 {
 	 * @throws SizeError If there aren't 4 sections separated by dots
 	 * @throws ContentError If any of the parts aren't integer strings
 	 * @throws EnforceTypeError If `part0`,`part1`,`part2`,`part3` not integers
- 	 * @throws OutOfRangeError If `part0`,`part1`,`part2`,`part3` <0 or >255
-	 * @param value 
-	 * @returns 
+	 * @throws OutOfRangeError If `part0`,`part1`,`part2`,`part3` <0 or >255
+	 * @param value
+	 * @returns
 	 */
 	static fromString(value: string): V4 {
 		const parts = value.split('.');

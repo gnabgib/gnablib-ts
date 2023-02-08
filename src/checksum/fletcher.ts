@@ -1,5 +1,5 @@
-import * as littleEndian from '../endian/little';
-import * as bigEndian from '../endian/big';
+import * as littleEndian from '../endian/little.js';
+import * as bigEndian from '../endian/big.js';
 
 //http://www.zlib.net/maxino06_fletcher-adler.pdf -> Lower cpu and Adler and mostly more effective (in their tests)
 //https://datatracker.ietf.org/doc/html/rfc1146 (Appendix I)

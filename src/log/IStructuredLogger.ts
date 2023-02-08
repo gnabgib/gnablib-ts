@@ -1,4 +1,4 @@
-import type { LogEntry } from './LogEntry';
+import type { LogEntry } from './LogEntry.js';
 
 export interface IStructuredLogger {
 	/**

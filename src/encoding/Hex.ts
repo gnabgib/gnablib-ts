@@ -1,6 +1,6 @@
-import { ContentError, Grievous } from '../primitive/ErrorExt';
-import type { IReadArray } from '../primitive/IRWArray';
-import type { Uint64 } from '../primitive/Uint64';
+import { ContentError, Grievous } from '../primitive/ErrorExt.js';
+import type { IReadArray } from '../primitive/IRWArray.js';
+import type { Uint64 } from '../primitive/Uint64.js';
 /*
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38

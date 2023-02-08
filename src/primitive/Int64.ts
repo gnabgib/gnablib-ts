@@ -1,15 +1,15 @@
-import * as intExt from '../primitive/IntExt';
-import * as objExt from '../primitive/ObjExt';
-import * as hex from '../encoding/Hex';
-import { EnforceTypeError, NotSupported, SizeError } from './ErrorExt';
+import * as intExt from '../primitive/IntExt.js';
+import * as objExt from '../primitive/ObjExt.js';
+import * as hex from '../encoding/Hex.js';
+import { EnforceTypeError, NotSupported, SizeError } from './ErrorExt.js';
 
 const maxU32 = 0xffffffff;
-const maxI32 = 2147483647; // 0x7fffffff
+//const maxI32 = 2147483647; // 0x7fffffff
 const minI32 = -2147483648; //0x80000000
 const maxU32Plus1 = 0x100000000; //4294967296
 const negInd = 0x80000000;
 const mask5Bits = 0x1f;
-const mask16Bits = 0xffff;
+//const mask16Bits = 0xffff;
 
 export class Int64 {
 	readonly highU32: number;
@@ -127,13 +127,16 @@ export class Int64 {
 		const byPosEq2 = (byPos >> 1) & 1;
 
 		return [
-			(byPosEq2 * this.highU32) | (byPosEq1 * by32Not0 * (this.highU32 >> invBy32)),
+			(byPosEq2 * this.highU32) |
+				(byPosEq1 * by32Not0 * (this.highU32 >> invBy32)),
 			(byPosEq2 * this.lowU32) |
-				(byPosEq1 * ((this.highU32 << by32) | (by32Not0 * (this.lowU32 >> invBy32)))) |
+				(byPosEq1 *
+					((this.highU32 << by32) | (by32Not0 * (this.lowU32 >> invBy32)))) |
 				(byPosEq0 * by32Not0 * (this.highU32 >> invBy32)),
 			(byPosEq1 * (this.lowU32 << by32)) |
-				(byPosEq0 * ((this.highU32 << by32) | (by32Not0 * (this.lowU32 >> invBy32)))),
-			byPosEq0 * (this.lowU32 << by32)
+				(byPosEq0 *
+					((this.highU32 << by32) | (by32Not0 * (this.lowU32 >> invBy32)))),
+			byPosEq0 * (this.lowU32 << by32),
 		];
 	}
 
@@ -215,6 +218,7 @@ export class Int64 {
 		return this.addUnsafe(Int64.fromNumber(num));
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	mul(num: Int64): Int64 {
 		throw new Error('Not implemented;');
 		//todo: MUL https://en.wikipedia.org/wiki/Two%27s_complement#Multiplication
@@ -340,7 +344,7 @@ export class Int64 {
 	}
 
 	toBigInt(): bigint {
-		throw new NotSupported()
+		throw new NotSupported();
 	}
 
 	toString(): string {
@@ -371,7 +375,8 @@ export class Int64 {
 	 * @returns
 	 */
 	static fromNumber(number: number): Int64 {
-		if (!Number.isInteger(number)) throw new EnforceTypeError('Integer', number);
+		if (!Number.isInteger(number))
+			throw new EnforceTypeError('Integer', number);
 		const low = number & maxU32;
 		const high = Math.floor(number / maxU32Plus1);
 		// let high = 0;
@@ -387,13 +392,15 @@ export class Int64 {
 		return new Int64(low, high);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	static fromBigInt(num: bigint): Int64 {
-		throw new NotSupported()
+		throw new NotSupported();
 	}
 
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Int64 {
 		const end = sourcePos + 8;
-		if (end > sourceBytes.length) throw new SizeError('sourceBytes', sourceBytes.length, end);
+		if (end > sourceBytes.length)
+			throw new SizeError('sourceBytes', sourceBytes.length, end);
 		const high =
 			(sourceBytes[sourcePos++] << 24) |
 			(sourceBytes[sourcePos++] << 16) |
@@ -410,7 +417,8 @@ export class Int64 {
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Int64 {
 		intExt.inRangeInclusive(len, 0, 8);
 		const end = sourcePos + len;
-		if (end > sourceBytes.length) throw new SizeError('sourceBytes', sourceBytes.length, end);
+		if (end > sourceBytes.length)
+			throw new SizeError('sourceBytes', sourceBytes.length, end);
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

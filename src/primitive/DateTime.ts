@@ -1,6 +1,6 @@
-import { FromBinResult } from './FromBinResult';
-import { inRangeInclusive, zeroPad } from './IntExt';
-import { Uint64 } from './Uint64';
+import { FromBinResult } from './FromBinResult.js';
+import { inRangeInclusive, zeroPad } from './IntExt.js';
+import { Uint64 } from './Uint64.js';
 
 const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const microPerSec = 1000000;

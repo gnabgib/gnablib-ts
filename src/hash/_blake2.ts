@@ -1,7 +1,7 @@
-import { Uint64 } from '../primitive/Uint64';
+import { Uint64 } from '../primitive/Uint64.js';
 
-export { iv512 as iv } from './_Sha2';
-export { sigmas } from './_blake';
+export { iv512 as iv } from './_Sha2.js';
+export { sigmas } from './_blake.js';
 
 export const fanOutUnlimited = 0;
 export const fanOutSequential = 1;

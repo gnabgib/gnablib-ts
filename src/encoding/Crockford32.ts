@@ -1,4 +1,4 @@
-import * as bconv from './_bitConverter';
+import * as bconv from './_bitConverter.js';
 
 /**
  * Support: (Uint8Array)

@@ -1,5 +1,5 @@
-import { NotSupported } from './ErrorExt';
-import {  strictParseDecUint } from './IntExt';
+import { NotSupported } from './ErrorExt.js';
+import {  strictParseDecUint } from './IntExt.js';
 
 const defaultCap=4;
 const linearSwitch=0x100000;
@@ -91,7 +91,7 @@ export class ScalingByteArray {
 	private _resize(sizeBytes: number) {
         if (this._locked) throw new NotSupported("This array is locked");
 		const newB = new ArrayBuffer(sizeBytes);
-		var dst = new Uint8Array(newB);
+		const dst = new Uint8Array(newB);
 		dst.set(this._arr);
 		this._arr = dst;
 	}
@@ -300,7 +300,7 @@ export class ScalingByteArray {
      */
 	set(array: ArrayLike<number>, offset?: number | undefined): void {
         this._assertSpace((offset??0)+array.length);
-		this._arr.set(arguments, offset);
+		this._arr.set(array, offset);
 	}
 
     /**

@@ -1,12 +1,12 @@
-import { DateTime } from '../primitive/DateTime';
-import { FromBinResult } from '../primitive/FromBinResult';
-import { uintFromScaleBytes } from '../primitive/IntExt';
-import { TableName } from './TableName';
-import { Plane } from './types/Plane';
-import { ACmdData } from './CommandData';
-import type { ACmd } from './ACmd';
-import { ACmdCtrl } from './CommandCtrl';
-import { Uint64 } from '../primitive/Uint64';
+import { DateTime } from '../primitive/DateTime.js';
+import { FromBinResult } from '../primitive/FromBinResult.js';
+import { uintFromScaleBytes } from '../primitive/IntExt.js';
+import { TableName } from './TableName.js';
+import { Plane } from './types/Plane.js';
+import { ACmdData } from './CommandData.js';
+import type { ACmd } from './ACmd.js';
+import { ACmdCtrl } from './CommandCtrl.js';
+import { Uint64 } from '../primitive/Uint64.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)

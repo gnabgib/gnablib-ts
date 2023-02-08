@@ -1,7 +1,7 @@
-import * as littleEndian from '../endian/little';
-import * as bits from '../primitive/BitExt';
-import * as prv from './_RipeMd';
-import { pad } from './Md4';
+import * as littleEndian from '../endian/little.js';
+import * as bits from '../primitive/BitExt.js';
+import * as prv from './_RipeMd.js';
+import { pad } from './Md4.js';
 
 const digestSizeBytes = 16; //128 bits
 

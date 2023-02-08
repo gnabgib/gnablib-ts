@@ -1,6 +1,6 @@
-import * as littleEndian from '../endian/little';
-import { Uint64 } from '../primitive/Uint64';
-import * as intExt from '../primitive/IntExt';
+import * as littleEndian from '../endian/little.js';
+import { Uint64 } from '../primitive/Uint64.js';
+import * as intExt from '../primitive/IntExt.js';
 
 //https://en.wikipedia.org/wiki/SHA-3
 //https://emn178.github.io/online-tools/keccak_224.html (256,384,512, SHA3 224,256,384,512 Shake 128,256)

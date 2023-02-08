@@ -1,5 +1,5 @@
-import type { IStructuredLogger } from './IStructuredLogger';
-import type { LogEntry } from './LogEntry';
+import type { IStructuredLogger } from './IStructuredLogger.js';
+import type { LogEntry } from './LogEntry.js';
 
 export class LogConsole implements IStructuredLogger {
 	logEntry(entry: LogEntry): void {

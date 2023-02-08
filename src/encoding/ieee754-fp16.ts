@@ -1,12 +1,12 @@
-import { SizeError } from '../primitive/ErrorExt';
-import { signMul } from './_ieee754';
+import { SizeError } from '../primitive/ErrorExt.js';
+import { signMul } from './_ieee754.js';
 const last2Bits = 0x3;
 const last5Bits = 0x1f;
 
 //Big endian
 //[S][E][E][E][E][E][M][M] [M][M][M][M][M][M][M][M]
 const fp16ManSize = 10;
-const fp16ExpSize = 5;
+//const fp16ExpSize = 5;
 const fp16MaxMan = 0x7ff;
 const fp16MaxExp = 0x1f;
 const fp16Bias = 15; //fp16MaxExp>>1
@@ -100,6 +100,7 @@ export function fp16FromBytesUnsafe(bytes: Uint8Array, pos: number): number {
  * @returns
  */
 export function fp16FromBytes(bytes: Uint8Array, pos = 0): number {
-	if (pos + 2 > bytes.length) throw new SizeError('bytes', bytes.length, pos + 2);
+	if (pos + 2 > bytes.length)
+		throw new SizeError('bytes', bytes.length, pos + 2);
 	return fp16FromBytesUnsafe(bytes, pos);
 }

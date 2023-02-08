@@ -1,6 +1,6 @@
-import { lenInRangeInclusive } from '../../primitive/StringExt';
-import * as Utf8 from '../../encoding/Utf8';
-import { FromBinResult } from '../../primitive/FromBinResult';
+import { lenInRangeInclusive } from '../../primitive/StringExt.js';
+import * as Utf8 from '../../encoding/Utf8.js';
+import { FromBinResult } from '../../primitive/FromBinResult.js';
 
 export class Plane {
 	readonly char: string;
@@ -10,9 +10,9 @@ export class Plane {
 		this.char = char;
 		this.human = human;
 	}
-    get isCtrl():boolean {
-        return this.char==='c';
-    }
+	get isCtrl(): boolean {
+		return this.char === 'c';
+	}
 	toBin(): Uint8Array {
 		return Utf8.toBytes(this.char);
 	}
@@ -32,10 +32,14 @@ export class Plane {
 	static fromBin(bin: Uint8Array, pos = 0): FromBinResult<Plane> {
 		switch (bin[pos]) {
 			case 99: //c
-                return new FromBinResult(1,this.Control);
+				return new FromBinResult(1, this.Control);
 			case 100: //d
-                return new FromBinResult(1,this.Data);
+				return new FromBinResult(1, this.Data);
 		}
-        return new FromBinResult<Plane>(0,undefined,'Plane.fromBin unrecognized plane');
+		return new FromBinResult<Plane>(
+			0,
+			undefined,
+			'Plane.fromBin unrecognized plane'
+		);
 	}
 }

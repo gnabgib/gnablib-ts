@@ -30,17 +30,21 @@
     Types are numbered for BYTE length (not bit), because this is an encoding format and most
     things are at least byte if not 4*, 8* aligned
  */
-import { Int64 } from '../../primitive/Int64';
-import { Uint64 } from '../../primitive/Uint64';
-import { fp64FromBytes, fp64ToBytes } from '../ieee754-fp64';
-import * as Utf8 from '../Utf8';
-import { DateTime } from '../../primitive/DateTime';
-import { BinResult, FromBinResult } from '../../primitive/FromBinResult';
-import { fp32FromBytes } from '../ieee754-fp32';
-import { fp16FromBytes } from '../ieee754-fp16';
-import { inRangeInclusive } from '../../primitive/IntExt';
-import { NotEnoughDataError, NotEnoughSpaceError, SizeError } from '../../primitive/ErrorExt';
-import type { /*ReadonlyBigInt64Array,*/ ReadonlyInt16Array, ReadonlyInt32Array, ReadonlyInt8Array } from '../../primitive/ReadonlyTypedArray';
+import { Int64 } from '../../primitive/Int64.js';
+import { Uint64 } from '../../primitive/Uint64.js';
+import { fp64FromBytes, fp64ToBytes } from '../ieee754-fp64.js';
+import * as Utf8 from '../Utf8.js';
+import { DateTime } from '../../primitive/DateTime.js';
+import { BinResult, FromBinResult } from '../../primitive/FromBinResult.js';
+import { fp32FromBytes } from '../ieee754-fp32.js';
+import { fp16FromBytes } from '../ieee754-fp16.js';
+import { inRangeInclusive } from '../../primitive/IntExt.js';
+//import { NotEnoughDataError, NotEnoughSpaceError, SizeError } from '../../primitive/ErrorExt.js';
+import type {
+	/*ReadonlyBigInt64Array,*/ ReadonlyInt16Array,
+	ReadonlyInt32Array,
+	ReadonlyInt8Array,
+} from '../../primitive/ReadonlyTypedArray.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -51,14 +55,14 @@ export enum Type {
 	UInt_2, //2B 0 - 65535 (2^16 - 1) 65 kilo, 65 thousand
 	UInt_4, //4B 0 - 4294967295 (2^32 - 1) 4 mega, 4 billion
 	UInt_8, //8B 0 - 18446744073709551615 (2^64 - 1) 18 exa, 18 sextillion
-    UInt_16,//16B 0 - 340282366920938463463374607431768211455 (2^128 - 1) 340 tera-yotta, 340 undecillion, useful for (G|U)UID
+	UInt_16, //16B 0 - 340282366920938463463374607431768211455 (2^128 - 1) 340 tera-yotta, 340 undecillion, useful for (G|U)UID
 	// Integers (all can go 1 lower than range.. so -128 - 127 for 1byte)
 	Int_Var, //1-8B, ±36028797018963967 (2^55 - 1)
 	Int_1, //1B ±127 (2^7 - 1)
 	Int_2, //2B ±32767 (2^15 - 1)
 	Int_4, //4B ±2147483647 (2^31 - 1)
 	Int_8, //8B ±9223372036854775807 (2^63 - 1)
-    Int_16,//16B ±170141183460469231731687303715884105727 (2^127 - 1)
+	Int_16, //16B ±170141183460469231731687303715884105727 (2^127 - 1)
 	//Booleans take no more storage than type
 	True, //0B = Boolean(true) #LITERAL
 	False, //0B = Boolean(false) #LITERAL
@@ -71,7 +75,7 @@ export enum Type {
 	Utf8_3, //3B+NB, where first 3 bytes are UInt_3 (N is 0-16777215) 16 mega
 	Utf8_4, //4B+NB, where first 4 bytes are UInt_4 (N is 0-4294967295) 4 giga
 	//Floats
-    //Float_1, //There's no spec and it's hard to usably divide 7 bits into exponent and fraction
+	//Float_1, //There's no spec and it's hard to usably divide 7 bits into exponent and fraction
 	Float_2, //2B ieee754 16bit floating point, aka binary16, safe integers ±2048 (2^11) - used in ML, graphics
 	Float_4, //4B ieee754 32bit floating point, aka binary32, safe integers ±16777216 (2^24)
 	Float_8, //8B ieee754 64bit floating point, aka binary64, safe integers ±9007199254740992 (2^53)
@@ -85,12 +89,12 @@ export enum Type {
 	//Decimals
 	Decimal_4, //4B ieee754-2008 32bit decimal number ± 7dig x10 -95 +96
 	Decimal_8, //8B ieee754-2008 64bit decimal number ± 16dig x10 -383 +384
-	Decimal_16 //16B ieee754-2008 128bit decimal number ± 32dig x10 -6143 +6144
+	Decimal_16, //16B ieee754-2008 128bit decimal number ± 32dig x10 -6143 +6144
 	//max=32
 
-    //repeated
-    //map<Type,Type>
-    //struct
+	//repeated
+	//map<Type,Type>
+	//struct
 }
 
 function encodeUint(value: Uint64): Uint8Array {
@@ -231,13 +235,12 @@ function encodeBin(value: Uint8Array): Uint8Array {
 	return ret;
 }
 
-
-const minBuffLen=4;
+const minBuffLen = 4;
 //JS constrains array buffer to MAX_SAFE_INTEGER
-const maxBuffSize=Number.MAX_SAFE_INTEGER;
+const maxBuffSize = Number.MAX_SAFE_INTEGER;
 
 interface BufferInteractive {
-    hasSpace(pos:number,byteSize:number):boolean;
+	hasSpace(pos: number, byteSize: number): boolean;
 }
 
 // DataStream
@@ -264,7 +267,7 @@ interface BufferInteractive {
 //  write(Int|Uint)(32|16)(value,endian)
 //  write(Int|Uint)8(value)
 //  writeFloat(32|64)(value,endian)
-// IGNORE: 
+// IGNORE:
 //  !_trimAlloc
 //  !seek(pos)
 //  !isEof:boolean
@@ -277,179 +280,192 @@ interface BufferInteractive {
 
 // ISO/IEC 2382-1:1993 defines a byte as 2^8 bits, unsigned 0-255
 
-
-
-
-const size8=1;
-const size16=2;
-const size32=4;
-const size64=8;
+const size8 = 1;
+const size16 = 2;
+const size32 = 4;
+const size64 = 8;
 
 class ArrayBufferWindowReader {
-    private readonly _view:DataView;
-    private readonly _isLittleEndian:boolean;
-    private _pos=0;
+	private readonly _view: DataView;
+	private readonly _isLittleEndian: boolean;
+	private _pos = 0;
 
-    public constructor(view:DataView,isLittleEndian:boolean) {
-        this._view=view;
-        this._isLittleEndian=isLittleEndian;
-    }
+	public constructor(view: DataView, isLittleEndian: boolean) {
+		this._view = view;
+		this._isLittleEndian = isLittleEndian;
+	}
 
-    get position():number {
-        return this._pos;
-    }
-    private get space():number {
-        return this._view.byteLength-this._pos;
-    }
+	get position(): number {
+		return this._pos;
+	}
+	private get space(): number {
+		return this._view.byteLength - this._pos;
+	}
 
-    //Read-one
-    readInt1():number {
-        // DataView.get* will throw a RangeError if there's not enough space
-        const ret= this._view.getInt8(this._pos);
-        this._pos+=1;
-        return ret;
-    }
-    readInt2():number {
-        // DataView.get* will throw a RangeError if there's not enough space
-        const ret=this._view.getInt16(this._pos,this._isLittleEndian);
-        this._pos+=2;
-        return ret;
-    }
-    readInt4():number {
-        // DataView.get* will throw a RangeError if there's not enough space
-        const ret= this._view.getInt32(this._pos,this._isLittleEndian);
-        this._pos+=4;
-        return ret;
-    }
-    // readInt8():Int64 {
-    //     // DataView.get* will throw a RangeError if there's not enough space
-    //     const bi=this._view.getBigInt64(this._pos,this._isLittleEndian);
-    //     this._pos+=8;
-    //     return Int64.fromBigInt(bi);
-    // }
-    readUint1():number {
-        // DataView.get* will throw a RangeError if there's not enough space
-        const ret= this._view.getUint8(this._pos);
-        this._pos+=1;
-        return ret;
-    }
-    readUint2():number {
-        // DataView.get* will throw a RangeError if there's not enough space
-        const ret=this._view.getUint16(this._pos,this._isLittleEndian);
-        this._pos+=2;
-        return ret;
-    }
-    readUint4():number {
-        // DataView.get* will throw a RangeError if there's not enough space
-        const ret= this._view.getUint32(this._pos,this._isLittleEndian);
-        this._pos+=4;
-        return ret;
-    }
-    // readUint8():Uint64 {
-    //     // DataView.get* will throw a RangeError if there's not enough space
-    //     const bi=this._view.getBigUint64(this._pos,this._isLittleEndian);
-    //     this._pos+=8;
-    //     return Uint64.fromBigInt(bi);
-    // }
-    readFloat4():number {
-        const ret=this._view.getFloat32(this._pos,this._isLittleEndian);
-        this._pos+=4;
-        return ret;
-    }
-    readFloat8():number {
-        const ret=this._view.getFloat64(this._pos,this._isLittleEndian);
-        this._pos+=8;
-        return ret;
-    }
+	//Read-one
+	readInt1(): number {
+		// DataView.get* will throw a RangeError if there's not enough space
+		const ret = this._view.getInt8(this._pos);
+		this._pos += 1;
+		return ret;
+	}
+	readInt2(): number {
+		// DataView.get* will throw a RangeError if there's not enough space
+		const ret = this._view.getInt16(this._pos, this._isLittleEndian);
+		this._pos += 2;
+		return ret;
+	}
+	readInt4(): number {
+		// DataView.get* will throw a RangeError if there's not enough space
+		const ret = this._view.getInt32(this._pos, this._isLittleEndian);
+		this._pos += 4;
+		return ret;
+	}
+	// readInt8():Int64 {
+	//     // DataView.get* will throw a RangeError if there's not enough space
+	//     const bi=this._view.getBigInt64(this._pos,this._isLittleEndian);
+	//     this._pos+=8;
+	//     return Int64.fromBigInt(bi);
+	// }
+	readUint1(): number {
+		// DataView.get* will throw a RangeError if there's not enough space
+		const ret = this._view.getUint8(this._pos);
+		this._pos += 1;
+		return ret;
+	}
+	readUint2(): number {
+		// DataView.get* will throw a RangeError if there's not enough space
+		const ret = this._view.getUint16(this._pos, this._isLittleEndian);
+		this._pos += 2;
+		return ret;
+	}
+	readUint4(): number {
+		// DataView.get* will throw a RangeError if there's not enough space
+		const ret = this._view.getUint32(this._pos, this._isLittleEndian);
+		this._pos += 4;
+		return ret;
+	}
+	// readUint8():Uint64 {
+	//     // DataView.get* will throw a RangeError if there's not enough space
+	//     const bi=this._view.getBigUint64(this._pos,this._isLittleEndian);
+	//     this._pos+=8;
+	//     return Uint64.fromBigInt(bi);
+	// }
+	readFloat4(): number {
+		const ret = this._view.getFloat32(this._pos, this._isLittleEndian);
+		this._pos += 4;
+		return ret;
+	}
+	readFloat8(): number {
+		const ret = this._view.getFloat64(this._pos, this._isLittleEndian);
+		this._pos += 8;
+		return ret;
+	}
 
-    //Read-many
-    readInt1Array(count:number):ReadonlyInt8Array {
-        const sizeBytes=count*1;
-        if (this._pos+sizeBytes>this._view.byteLength) throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
-        const start=this._view.byteLength+this._pos;
-        //It's okay to share the buffer because we're using the Readonly<Typed> modifier
-        return new Int8Array(this._view.buffer,start,start+sizeBytes);
-    }
-    readInt2Array(count:number):ReadonlyInt16Array {
-        const sizeBytes=count*2;
-        if (this._pos+sizeBytes>this._view.byteLength) throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
-        const start=this._view.byteLength+this._pos;
-        //It's okay to share the buffer because we're using the Readonly<Typed> modifier
-        return new Int16Array(this._view.buffer,start,start+sizeBytes);
-    }
-    readInt4Array(count:number):ReadonlyInt32Array {
-        const sizeBytes=count*4;
-        if (this._pos+sizeBytes>this._view.byteLength) throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
-        const start=this._view.byteLength+this._pos;
-        //It's okay to share the buffer because we're using the Readonly<Typed> modifier
-        return new Int32Array(this._view.buffer,start,start+sizeBytes);
-    }
-    // readInt8Array(count:number):ReadonlyBigInt64Array {
-    //     const sizeBytes=count*4;
-    //     if (this._pos+sizeBytes>this._view.byteLength) throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
-    //     const start=this._view.byteLength+this._pos;
-    //     //It's okay to share the buffer because we're using the Readonly<Typed> modifier
-    //     return new BigInt64Array(this._view.buffer,start,start+sizeBytes);
-    // }
+	//Read-many
+	readInt1Array(count: number): ReadonlyInt8Array {
+		const sizeBytes = count * 1;
+		if (this._pos + sizeBytes > this._view.byteLength)
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
+		const start = this._view.byteLength + this._pos;
+		//It's okay to share the buffer because we're using the Readonly<Typed> modifier
+		return new Int8Array(this._view.buffer, start, start + sizeBytes);
+	}
+	readInt2Array(count: number): ReadonlyInt16Array {
+		const sizeBytes = count * 2;
+		if (this._pos + sizeBytes > this._view.byteLength)
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
+		const start = this._view.byteLength + this._pos;
+		//It's okay to share the buffer because we're using the Readonly<Typed> modifier
+		return new Int16Array(this._view.buffer, start, start + sizeBytes);
+	}
+	readInt4Array(count: number): ReadonlyInt32Array {
+		const sizeBytes = count * 4;
+		if (this._pos + sizeBytes > this._view.byteLength)
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
+		const start = this._view.byteLength + this._pos;
+		//It's okay to share the buffer because we're using the Readonly<Typed> modifier
+		return new Int32Array(this._view.buffer, start, start + sizeBytes);
+	}
+	// readInt8Array(count:number):ReadonlyBigInt64Array {
+	//     const sizeBytes=count*4;
+	//     if (this._pos+sizeBytes>this._view.byteLength) throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+	//     const start=this._view.byteLength+this._pos;
+	//     //It's okay to share the buffer because we're using the Readonly<Typed> modifier
+	//     return new BigInt64Array(this._view.buffer,start,start+sizeBytes);
+	// }
 }
 
 /**
  * A view into an existing array buffer (like TypedArray.subarray, Spans in C#, Slices in Golang)
  * This *uses the same memory*
  */
- class ArrayBufferWindow {
-    private readonly _buffer:ArrayBuffer;
-    private readonly _startInc:number;
-    //Note we use an exclusive range-end for fast length calcs, this means you should always < the end, not <=
-    private readonly _endExc:number;
-    private readonly _view:DataView;
+class ArrayBufferWindow {
+	private readonly _buffer: ArrayBuffer;
+	private readonly _startInc: number;
+	//Note we use an exclusive range-end for fast length calcs, this means you should always < the end, not <=
+	private readonly _endExc: number;
+	private readonly _view: DataView;
 
-    public constructor(buffer:ArrayBufferWindow|ArrayBuffer,start=0,end=-1) {
-        inRangeInclusive(start,0,buffer.byteLength-1,'start');
-        if (end===-1) {
-            end=buffer.byteLength;
-        } else {
-            //Note when end===start (allowed) the window has 0 length
-            inRangeInclusive(end,start,buffer.byteLength,'end');
-        }
-        if (buffer instanceof ArrayBufferWindow) {
-            this._buffer=buffer._buffer;
-            this._startInc=start+buffer._startInc;
-            this._endExc=end+buffer._endExc;
-        } else  {
-            //ArrayBuffer
-            this._buffer=buffer;
-            this._startInc=start;
-            this._endExc=end;
-        }
-        this._view=new DataView(this._buffer,this._startInc,this._endExc-this._startInc);
-    }
+	public constructor(
+		buffer: ArrayBufferWindow | ArrayBuffer,
+		start = 0,
+		end = -1
+	) {
+		inRangeInclusive(start, 0, buffer.byteLength - 1, 'start');
+		if (end === -1) {
+			end = buffer.byteLength;
+		} else {
+			//Note when end===start (allowed) the window has 0 length
+			inRangeInclusive(end, start, buffer.byteLength, 'end');
+		}
+		if (buffer instanceof ArrayBufferWindow) {
+			this._buffer = buffer._buffer;
+			this._startInc = start + buffer._startInc;
+			this._endExc = end + buffer._endExc;
+		} else {
+			//ArrayBuffer
+			this._buffer = buffer;
+			this._startInc = start;
+			this._endExc = end;
+		}
+		this._view = new DataView(
+			this._buffer,
+			this._startInc,
+			this._endExc - this._startInc
+		);
+	}
 
-    get byteLength():number {
-        return this._endExc-this._startInc;
-    }
+	get byteLength(): number {
+		return this._endExc - this._startInc;
+	}
 
-    getReader(isLittleEndian:boolean):ArrayBufferWindowReader {
-        return new ArrayBufferWindowReader(this._view,isLittleEndian);
-    }
+	getReader(isLittleEndian: boolean): ArrayBufferWindowReader {
+		return new ArrayBufferWindowReader(this._view, isLittleEndian);
+	}
 
-    // /**
-    //  * !DANGER this data view allows mutation of the internal buffer content
-    //  * @returns 
-    //  */
-    // newDataView():DataView {
-    //     return new DataView(this._buffer,this._startInc,this._endExc-this._startInc);
-    // }
+	// /**
+	//  * !DANGER this data view allows mutation of the internal buffer content
+	//  * @returns
+	//  */
+	// newDataView():DataView {
+	//     return new DataView(this._buffer,this._startInc,this._endExc-this._startInc);
+	// }
 
-    subWindow(start:number,end:number):ArrayBufferWindow {
-        return new ArrayBufferWindow(this,start,end);
-    }
+	subWindow(start: number, end: number): ArrayBufferWindow {
+		return new ArrayBufferWindow(this, start, end);
+	}
 
-    static ofCapacity(capacity:number):ArrayBufferWindow {
-        return new ArrayBufferWindow(new ArrayBuffer(capacity));
-    }
+	static ofCapacity(capacity: number): ArrayBufferWindow {
+		return new ArrayBufferWindow(new ArrayBuffer(capacity));
+	}
 }
-
 
 // class ScalingBuffer implements BufferInteractive {
 //     private _buffer:ArrayBufferWindow;
@@ -458,8 +474,8 @@ class ArrayBufferWindowReader {
 //     private _pos=0;
 
 //     /**
-//      * 
-//      * @param bufferOrCapacity 
+//      *
+//      * @param bufferOrCapacity
 //      * @param isLittleEndian Note endianness is fixed for the whole buffer
 //      */
 //     public constructor(bufferOrCapacity:ArrayBufferWindow,isLittleEndian=true) {
@@ -509,7 +525,7 @@ class ArrayBufferWindowReader {
 //      * NOTE: This will resize the buffer if it needs to accommodate the length
 //      * @param pos Starting position in the byte array
 //      * @param byteLen Number of bytes of space needed
-//      * @returns 
+//      * @returns
 //      */
 //     hasSpace(pos:number,byteLen:number):boolean {
 //         const len=pos+byteLen;
@@ -523,15 +539,15 @@ class ArrayBufferWindowReader {
 //      * Increase the size of the buffer to at least allow @see size space, this either
 //      * doubles existing size (if that's enough), or grows to @see size size if that's
 //      * larger (saves double/triple/* copies when @see size is large)
-//      * @param size 
+//      * @param size
 //      */
 //     private grow(size=0) {
 //         //Note newSize could be >maxBuffSize, let's rely on JS to throw one newBuff construct
 //         let newSize=this._buffer.byteLength===0?minBuffLen:2*this._buffer.byteLength;
 //         if (newSize<size) newSize=size;
 
-//         //Performance tests show uint8array.set is slower than a for loop with [] byte access.. which is really 
-//         // hard to believe (even with JS<->C++ interop, surely this could use memcpy). 
+//         //Performance tests show uint8array.set is slower than a for loop with [] byte access.. which is really
+//         // hard to believe (even with JS<->C++ interop, surely this could use memcpy).
 //         // DataView has been boosted to close to TypedArray performance, so let's avoid
 //         // extra Uint8Array objects on old/new and use the dataview (we need anyway) for the copy
 //         const newBuff=new ArrayBuffer(newSize);
@@ -543,7 +559,6 @@ class ArrayBufferWindowReader {
 //         this._buffer=newBuff;
 //         this._view=newView;
 //     }
-
 
 // }
 // class FixedBuffer implements BufferInteractive {
@@ -564,7 +579,7 @@ class ArrayBufferWindowReader {
 
 //     /**
 //      * Build from an existing buffer
-//      * @param buffer 
+//      * @param buffer
 //      */
 //      static From(buffer:ArrayBuffer):FixedBuffer {
 //         return new ScalingBuffer(buffer,0);
@@ -590,13 +605,10 @@ class ArrayBufferWindowReader {
 //     //private readonly _buffer:BufferInteractive;
 //     private _pos=0;
 
-    
-
 //     get pos():number {
 //         return this._pos;
 //     }
 // }
-
 
 export function encode(value: unknown): Uint8Array {
 	switch (typeof value) {
@@ -667,7 +679,8 @@ function eat3LenByte(bin: Uint8Array, pos: number): number | string {
 function eat4LenByte(bin: Uint8Array, pos: number): number | string {
 	if (pos + 4 > bin.length) return 'decode unable to find length';
 
-	const l = (bin[pos++] << 24) | (bin[pos++] << 16) | (bin[pos++] << 8) | bin[pos++];
+	const l =
+		(bin[pos++] << 24) | (bin[pos++] << 16) | (bin[pos++] << 8) | bin[pos++];
 	if (pos + l > bin.length) return 'decode missing data';
 
 	return l;
@@ -703,15 +716,16 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			// UInt_8, //8B 0 - 18446744073709551615 (2^64 - 1) 18 exa
 			return 'Not implemented';
 		case Type.Int_Var:
-            try {
-                Int64.fromMinBytes(bin,pos,)
-            } catch (e) {
+			try {
+				Int64.fromMinBytes(bin, pos);
+			} catch (e) {
+				//Todo: this isn't enough
+				console.log('Oh dear');
+			}
 
-            }
-            
 			if (pos + 1 > bin.length) return 'decode missing data';
 			return new BinResult(1 + 1, Int64.fromMinBytes(bin, pos, 1));
-        case Type.Int_1:
+		case Type.Int_1:
 			if (pos + 1 > bin.length) return 'decode missing data';
 			return new BinResult(1 + 1, Int64.fromMinBytes(bin, pos, 1));
 		case Type.Int_2:
@@ -720,7 +734,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 		case Type.Int_4:
 			if (pos + 4 > bin.length) return 'decode missing data';
 			return new BinResult(1 + 4, Int64.fromMinBytes(bin, pos, 4));
-        case Type.Int_8:
+		case Type.Int_8:
 			if (pos + 8 > bin.length) return 'decode missing data';
 			return new BinResult(1 + 8, Int64.fromMinBytes(bin, pos, 8));
 		case Type.True:
@@ -739,25 +753,37 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			if (typeof len === 'string') return len;
 			pos += 1;
 			if (pos + len > bin.length) return 'decode missing data';
-			return new BinResult(1 + 1 + len, Utf8.fromBytes(bin.slice(pos, pos + len)));
+			return new BinResult(
+				1 + 1 + len,
+				Utf8.fromBytes(bin.slice(pos, pos + len))
+			);
 		case Type.Utf8_2:
 			len = eat2LenByte(bin, pos);
 			if (typeof len === 'string') return len;
 			pos += 2;
 			if (pos + len > bin.length) return 'decode missing data';
-			return new BinResult(1 + 2 + len, Utf8.fromBytes(bin.slice(pos, pos + len)));
+			return new BinResult(
+				1 + 2 + len,
+				Utf8.fromBytes(bin.slice(pos, pos + len))
+			);
 		case Type.Utf8_3:
 			len = eat3LenByte(bin, pos);
 			if (typeof len === 'string') return len;
 			pos += 3;
 			if (pos + len > bin.length) return 'decode missing data';
-			return new BinResult(1 + 3 + len, Utf8.fromBytes(bin.slice(pos, pos + len)));
+			return new BinResult(
+				1 + 3 + len,
+				Utf8.fromBytes(bin.slice(pos, pos + len))
+			);
 		case Type.Utf8_4:
 			len = eat4LenByte(bin, pos);
 			if (typeof len === 'string') return len;
 			pos += 4;
 			if (pos + len > bin.length) return 'decode missing data';
-			return new BinResult(1 + 4 + len, Utf8.fromBytes(bin.slice(pos, pos + len)));
+			return new BinResult(
+				1 + 4 + len,
+				Utf8.fromBytes(bin.slice(pos, pos + len))
+			);
 		case Type.Float_2:
 			if (pos + 2 > bin.length) return 'decode missing data';
 			return new BinResult(1 + 2, fp16FromBytes(bin, pos));

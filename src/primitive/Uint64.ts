@@ -1,7 +1,12 @@
-import * as intExt from '../primitive/IntExt';
-import * as objExt from '../primitive/ObjExt';
-import * as hex from '../encoding/Hex';
-import { EnforceTypeError, NegativeError, NotSupported, SizeError } from './ErrorExt';
+import * as intExt from '../primitive/IntExt.js';
+import * as objExt from '../primitive/ObjExt.js';
+import * as hex from '../encoding/Hex.js';
+import {
+	EnforceTypeError,
+	NegativeError,
+	NotSupported,
+	SizeError,
+} from './ErrorExt.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = 0x100000000;
@@ -29,7 +34,10 @@ export class Uint64 {
 	 */
 	xor(num: Uint64): Uint64 {
 		objExt.notNull(num, 'xor(num)');
-		return new Uint64((this.lowU32 ^ num.lowU32) >>> 0, (this.highU32 ^ num.highU32) >>> 0);
+		return new Uint64(
+			(this.lowU32 ^ num.lowU32) >>> 0,
+			(this.highU32 ^ num.highU32) >>> 0
+		);
 	}
 
 	/**
@@ -39,7 +47,10 @@ export class Uint64 {
 	 */
 	or(num: Uint64): Uint64 {
 		objExt.notNull(num, 'or(num)');
-		return new Uint64((this.lowU32 | num.lowU32) >>> 0, (this.highU32 | num.highU32) >>> 0);
+		return new Uint64(
+			(this.lowU32 | num.lowU32) >>> 0,
+			(this.highU32 | num.highU32) >>> 0
+		);
 	}
 
 	/**
@@ -49,7 +60,10 @@ export class Uint64 {
 	 */
 	and(num: Uint64): Uint64 {
 		objExt.notNull(num, 'and(num)');
-		return new Uint64((this.lowU32 & num.lowU32) >>> 0, (this.highU32 & num.highU32) >>> 0);
+		return new Uint64(
+			(this.lowU32 & num.lowU32) >>> 0,
+			(this.highU32 & num.highU32) >>> 0
+		);
 	}
 
 	/**
@@ -107,13 +121,16 @@ export class Uint64 {
 		const byPosEq2 = (byPos >> 1) & 1;
 
 		return [
-			(byPosEq2 * this.highU32) | (byPosEq1 * by32Not0 * (this.highU32 >>> invBy32)),
+			(byPosEq2 * this.highU32) |
+				(byPosEq1 * by32Not0 * (this.highU32 >>> invBy32)),
 			(byPosEq2 * this.lowU32) |
-				(byPosEq1 * ((this.highU32 << by32) | (by32Not0 * (this.lowU32 >>> invBy32)))) |
+				(byPosEq1 *
+					((this.highU32 << by32) | (by32Not0 * (this.lowU32 >>> invBy32)))) |
 				(byPosEq0 * by32Not0 * (this.highU32 >>> invBy32)),
 			(byPosEq1 * (this.lowU32 << by32)) |
-				(byPosEq0 * ((this.highU32 << by32) | (by32Not0 * (this.lowU32 >>> invBy32)))),
-			byPosEq0 * (this.lowU32 << by32)
+				(byPosEq0 *
+					((this.highU32 << by32) | (by32Not0 * (this.lowU32 >>> invBy32)))),
+			byPosEq0 * (this.lowU32 << by32),
 		];
 	}
 
@@ -310,7 +327,7 @@ export class Uint64 {
 	// }
 
 	toBigInt(): bigint {
-		throw new NotSupported()
+		throw new NotSupported();
 	}
 
 	toString(): string {
@@ -329,7 +346,8 @@ export class Uint64 {
 	 */
 	static fromNumber(number: number): Uint64 {
 		if (number < 0) throw new NegativeError('number', number);
-		if (!Number.isInteger(number)) throw new EnforceTypeError('Integer', number);
+		if (!Number.isInteger(number))
+			throw new EnforceTypeError('Integer', number);
 		//Mask the low 32 bits (also stops it being floating point)
 		const low = number & maxU32;
 		const high = Math.floor(number / maxU32Plus1);
@@ -338,8 +356,9 @@ export class Uint64 {
 		return new Uint64(low, high);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	static fromBigInt(num: bigint): Uint64 {
-		throw new NotSupported()
+		throw new NotSupported();
 	}
 
 	/**
@@ -352,7 +371,8 @@ export class Uint64 {
 	 */
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
 		const end = sourcePos + 8;
-		if (end > sourceBytes.length) throw new SizeError('sourceBytes', sourceBytes.length, end);
+		if (end > sourceBytes.length)
+			throw new SizeError('sourceBytes', sourceBytes.length, end);
 		const high =
 			((sourceBytes[sourcePos++] << 24) |
 				(sourceBytes[sourcePos++] << 16) |
@@ -371,7 +391,8 @@ export class Uint64 {
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Uint64 {
 		intExt.inRangeInclusive(len, 0, 8);
 		const end = sourcePos + len;
-		if (end > sourceBytes.length) throw new SizeError('sourceBytes', sourceBytes.length, end);
+		if (end > sourceBytes.length)
+			throw new SizeError('sourceBytes', sourceBytes.length, end);
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

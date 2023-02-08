@@ -17,8 +17,8 @@
 
  */
 
-import { EnforceTypeError, OutOfRangeError } from './ErrorExt';
-import { padStart } from './StringExt';
+import { EnforceTypeError, OutOfRangeError } from './ErrorExt.js';
+import { padStart } from './StringExt.js';
 
 const microPerSec = 1000000;
 const secPerMin = 60;
@@ -43,7 +43,15 @@ export class Duration {
 	private readonly d: number;
 	private readonly hmsu: number;
 
-	constructor(year: number, month = 0, day = 0, hour = 0, minute = 0, second = 0, micro = 0) {
+	constructor(
+		year: number,
+		month = 0,
+		day = 0,
+		hour = 0,
+		minute = 0,
+		second = 0,
+		micro = 0
+	) {
 		if (year < 0) throw new OutOfRangeError('year', year, 0);
 		if (month < 0) throw new OutOfRangeError('month', month, 0);
 		if (day < 0) throw new OutOfRangeError('day', day, 0);
@@ -52,7 +60,8 @@ export class Duration {
 		if (second < 0) throw new OutOfRangeError('second', second, 0);
 		if (micro < 0) throw new OutOfRangeError('micro', micro, 0);
 
-		if (!Number.isInteger(micro)) throw new EnforceTypeError('Integer micro', micro);
+		if (!Number.isInteger(micro))
+			throw new EnforceTypeError('Integer micro', micro);
 		if (!Number.isInteger(second) && micro > 0)
 			throw new EnforceTypeError('Integer second with us defined', second);
 		if (!Number.isInteger(minute) && micro + second > 0)
@@ -62,9 +71,18 @@ export class Duration {
 		if (!Number.isInteger(day) && micro + second + minute + hour > 0)
 			throw new EnforceTypeError('Integer day with h/m/s/us defined', day);
 		if (!Number.isInteger(month) && micro + second + minute + hour + day > 0)
-			throw new EnforceTypeError('Integer month with d/h/m/s/us defined', month);
-		if (!Number.isInteger(year) && micro + second + minute + hour + day + month > 0)
-			throw new EnforceTypeError('Integer year with m/d/h/m/s/us defined', year);
+			throw new EnforceTypeError(
+				'Integer month with d/h/m/s/us defined',
+				month
+			);
+		if (
+			!Number.isInteger(year) &&
+			micro + second + minute + hour + day + month > 0
+		)
+			throw new EnforceTypeError(
+				'Integer year with m/d/h/m/s/us defined',
+				year
+			);
 
 		this.ym = year * monPerYear + month;
 		this.d = day;
@@ -161,8 +179,8 @@ export class Duration {
 		const padMin = h.length > 0 || ymd.length > 0;
 		const padSec = padMin || m.length > 0;
 
-		if (padMin) m = ':' + padStart(m,2,'0');// stringExt.padStart(m,2,'0');
-		if (padSec) s = ':' + padStart(s,2,'0');
+		if (padMin) m = ':' + padStart(m, 2, '0'); // stringExt.padStart(m,2,'0');
+		if (padSec) s = ':' + padStart(s, 2, '0');
 		let hms = h + m + s;
 
 		//Don't show null time if we
@@ -174,7 +192,9 @@ export class Duration {
 
 	toMSString(): string {
 		if (this.ym + this.d > 0)
-			throw new RangeError('Cannot convert years/months/days into minutes & seconds');
+			throw new RangeError(
+				'Cannot convert years/months/days into minutes & seconds'
+			);
 		let hmsu = this.hmsu;
 		const u = hmsu % microPerSec;
 		hmsu = (hmsu - u) / microPerSec; //In s
@@ -185,12 +205,14 @@ export class Duration {
 		//SU will always be at least 1 char, add a leading zero when s=0-9
 		if (s < 10) su = '0' + su;
 
-		return padStart(m.toString(),2,'0') + ':' + su;
+		return padStart(m.toString(), 2, '0') + ':' + su;
 	}
 
 	toMSShiftNumber(): number {
 		if (this.ym + this.d > 0)
-			throw new RangeError('Cannot convert years/months/days into minutes & seconds');
+			throw new RangeError(
+				'Cannot convert years/months/days into minutes & seconds'
+			);
 		const m = Math.floor(this.hmsu / microPerMin); //Includes hours
 		return m * 100 + this.secondMicro;
 	}
@@ -213,7 +235,7 @@ export class Duration {
 			hour: h, //int
 			minute: mi, //int
 			second: s, //int
-			micro: u //int
+			micro: u, //int
 		};
 	}
 
@@ -235,6 +257,14 @@ export class Duration {
 	 */
 	static fromDurationComponents(d: DurationComponents | Duration): Duration {
 		if (d instanceof Duration) d = d.toDto();
-		return new Duration(d.year, d.month, d.day, d.hour, d.minute, d.second, d.micro);
+		return new Duration(
+			d.year,
+			d.month,
+			d.day,
+			d.hour,
+			d.minute,
+			d.second,
+			d.micro
+		);
 	}
 }

@@ -1,5 +1,5 @@
-import { inRangeInclusive } from "../primitive/IntExt";
-import { ScalingUint8Array } from "../primitive/TypedArrayExt";
+import { inRangeInclusive } from '../primitive/IntExt.js';
+import { ScalingUint8Array } from '../primitive/TypedArrayExt.js';
 
 // const tbl = '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstu';
 const defLineLength = 79;
@@ -22,13 +22,13 @@ interface EncodeOpts {
  * @param bytes
  */
 export function fromBytes(bytes: Uint8Array, opts?: EncodeOpts): string {
-	let lineLength=defLineLength;
+	let lineLength = defLineLength;
 	if (opts?.lineLength) {
 		inRangeInclusive(opts.lineLength, 1, Number.MAX_SAFE_INTEGER, 'lineLength');
-		lineLength=opts.lineLength;
+		lineLength = opts.lineLength;
 	}
-	let pad=false;
-	if (opts?.pad) pad=true;
+	let pad = false;
+	if (opts?.pad) pad = true;
 
 	let ret = '';
 	let linePos = 0;
@@ -49,7 +49,13 @@ export function fromBytes(bytes: Uint8Array, opts?: EncodeOpts): string {
 		const u1 = num % 85;
 		num = (num / 85) | 0;
 		const u0 = num % 85;
-		return intToChar(u0) + intToChar(u1) + intToChar(u2) + intToChar(u3) + intToChar(u4);
+		return (
+			intToChar(u0) +
+			intToChar(u1) +
+			intToChar(u2) +
+			intToChar(u3) +
+			intToChar(u4)
+		);
 	}
 
 	function addToLine(chunk: string) {
@@ -103,7 +109,7 @@ export function toBytes(ascii85: string): Uint8Array {
 			} else {
 				return c;
 			}
-		} while (inPtr<ascii85.length);
+		} while (inPtr < ascii85.length);
 		return undefined;
 	}
 

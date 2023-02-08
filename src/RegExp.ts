@@ -5,5 +5,5 @@
  */
 export function escape(string:string):string {
     // Both - and / are safe but overly cautious is ok
-    return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return string.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }

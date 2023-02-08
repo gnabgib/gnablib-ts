@@ -1,6 +1,6 @@
-import { ContentError } from '../primitive/ErrorExt';
-import * as hex from './Hex';
-import * as utf8 from './Utf8';
+import { ContentError } from '../primitive/ErrorExt.js';
+import * as hex from './Hex.js';
+import * as utf8 from './Utf8.js';
 //https://datatracker.ietf.org/doc/html/rfc3986#page-11
 const ord_dash = 45; //ASCII -
 const ord_tilde = 126; //ASCII ~

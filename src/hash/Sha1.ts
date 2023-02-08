@@ -1,11 +1,11 @@
-import * as bigEndian from '../endian/big';
-import * as bitExt from '../primitive/BitExt';
+import * as bigEndian from '../endian/big.js';
+import * as bitExt from '../primitive/BitExt.js';
 
 //https://en.wikipedia.org/wiki/SHA-1
 //https://datatracker.ietf.org/doc/html/rfc3174
 const digestSizeBytes = 20; //160 bits
 const sha1BlockSizeBytes = 64; //512 bits
-const maxLen = Number.MAX_SAFE_INTEGER; //Limit is 2^64, but JS only allows 2^53.  TODO consider BigInt (timing attack+processing cost)
+//const maxLen = Number.MAX_SAFE_INTEGER; //Limit is 2^64, but JS only allows 2^53.  TODO consider BigInt (timing attack+processing cost)
 
 //Encode RFC 3174 in JS
 

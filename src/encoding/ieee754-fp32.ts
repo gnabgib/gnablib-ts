@@ -1,12 +1,12 @@
-import { SizeError } from '../primitive/ErrorExt';
-import { signMul } from './_ieee754';
+import { SizeError } from '../primitive/ErrorExt.js';
+import { signMul } from './_ieee754.js';
 const last7Bits = 0x7f;
 
 //Big endian
 //[S][E][E][E][E][E][E][E] [E][M][M][M][M][M][M][M] [M][M][M][M][M][M][M][M] [M][M][M][M][M][M][M][M]
 //https://en.wikipedia.org/wiki/IEEE_754
 const fp32ManSize = 23;
-const fp32ExpSize = 8;
+//const fp32ExpSize = 8;
 const fp32MaxMan = 0x7fffff;
 const fp32MaxExp = 0xff;
 const fp32Bias = 127; //fp32MaxExp>>1

@@ -1,9 +1,14 @@
-import { Int64 } from '../../primitive/Int64';
-import { EnforceTypeError, NullError, OutOfRangeError, SizeError } from '../../primitive/ErrorExt';
-import { ColType } from './ColType';
-import { ACudColType } from './CudColType';
-import type { Valid } from './Valid';
-import { FromBinResult } from '../../primitive/FromBinResult';
+import { Int64 } from '../../primitive/Int64.js';
+import {
+	EnforceTypeError,
+	NullError,
+	OutOfRangeError,
+	SizeError,
+} from '../../primitive/ErrorExt.js';
+import { ColType } from './ColType.js';
+import { ACudColType } from './CudColType.js';
+import type { Valid } from './Valid.js';
+import { FromBinResult } from '../../primitive/FromBinResult.js';
 
 //sql engines keep everything signed
 
@@ -64,11 +69,16 @@ abstract class AInt extends ACudColType implements Valid<number | Int64> {
 
 	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Int64 | undefined> {
 		if (pos + 1 > bin.length)
-			return new FromBinResult(0, undefined, 'Int.binUnknown unable to find length');
+			return new FromBinResult(
+				0,
+				undefined,
+				'Int.binUnknown unable to find length'
+			);
 
 		const l = bin[pos++];
 		if (l === 0) {
-			if (!this.nullable) return new FromBinResult(0, undefined, 'Int.binUnknown cannot be null');
+			if (!this.nullable)
+				return new FromBinResult(0, undefined, 'Int.binUnknown cannot be null');
 			return new FromBinResult(1, undefined);
 		}
 		if (l > this._maxByteLen)
@@ -79,7 +89,8 @@ abstract class AInt extends ACudColType implements Valid<number | Int64> {
 			);
 
 		const end = pos + l;
-		if (end > bin.length) return new FromBinResult(0, undefined, 'Int.binUnknown missing data');
+		if (end > bin.length)
+			return new FromBinResult(0, undefined, 'Int.binUnknown missing data');
 
 		return new FromBinResult(l + 1, Int64.fromMinBytes(bin, pos, l));
 	}

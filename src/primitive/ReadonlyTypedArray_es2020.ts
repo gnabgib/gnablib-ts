@@ -9,7 +9,7 @@ type TypedArrayMutableProperties =
 	//We need to hide 'subarray' otherwise you can build a new TypedArray from the subarray (or it's buffer) and mutate
 	| 'subarray';
 
-export * from './ReadonlyTypedArray';
+export * from './ReadonlyTypedArray.js';
 
 // @ts-expect-error: es2016 doesn't support BigInt64Array
 interface BigInt64Array extends BigInt64Array {}

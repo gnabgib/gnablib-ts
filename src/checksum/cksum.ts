@@ -1,4 +1,4 @@
-import * as bigEndian from '../endian/big';
+import * as bigEndian from '../endian/big.js';
 
 // - https://en.wikipedia.org/wiki/Cksum
 // - https://pubs.opengroup.org/onlinepubs/009695399/utilities/cksum.html

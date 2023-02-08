@@ -1,8 +1,8 @@
-import * as intExt from '../primitive/IntExt';
-import * as bitExt from '../primitive/BitExt';
-import * as objExt from '../primitive/ObjExt';
-import * as ip from './Ip';
-import { ContentError, SizeError } from '../primitive/ErrorExt';
+import * as intExt from '../primitive/IntExt.js';
+import * as bitExt from '../primitive/BitExt.js';
+import * as objExt from '../primitive/ObjExt.js';
+import * as ip from './Ip.js';
+import { ContentError, SizeError } from '../primitive/ErrorExt.js';
 
 export class Cidr {
 	/**

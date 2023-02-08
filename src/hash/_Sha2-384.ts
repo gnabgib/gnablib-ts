@@ -1,7 +1,7 @@
-import * as bigEndian from '../endian/big';
-import * as bitExt from '../primitive/BitExt';
-import { iv384, k, pad } from './_Sha2';
-import { Uint64 } from '../primitive/Uint64';
+import * as bigEndian from '../endian/big.js';
+import * as bitExt from '../primitive/BitExt.js';
+import { iv384, k, pad } from './_Sha2.js';
+import { Uint64 } from '../primitive/Uint64.js';
 
 const digestSizeBytes = bitExt.size64Bytes * 6; //384bits
 const blockSizeBytes = 128; //1024 bits

@@ -1,16 +1,22 @@
-import { DateTime } from '../primitive/DateTime';
-import { FromBinResult } from '../primitive/FromBinResult';
-import { uintFromScaleBytes, uintToScaleBytes } from '../primitive/IntExt';
-import { ACmd } from './ACmd';
-import { ColValue } from './ColValue';
-import type { TableName } from './TableName';
-import { CommandData } from './types/Command';
-import { Plane } from './types/Plane';
+import { DateTime } from '../primitive/DateTime.js';
+import { FromBinResult } from '../primitive/FromBinResult.js';
+import { uintFromScaleBytes, uintToScaleBytes } from '../primitive/IntExt.js';
+import { ACmd } from './ACmd.js';
+import { ColValue } from './ColValue.js';
+import type { TableName } from './TableName.js';
+import { CommandData } from './types/Command.js';
+import { Plane } from './types/Plane.js';
 
 export abstract class ACmdData extends ACmd {
 	readonly recId: number;
 
-	constructor(userId: number, started: DateTime, table: TableName, recId: number, cmd: CommandData) {
+	constructor(
+		userId: number,
+		started: DateTime,
+		table: TableName,
+		recId: number,
+		cmd: CommandData
+	) {
 		super(userId, started, table, Plane.Data, cmd);
 		this.recId = recId;
 	}
@@ -31,7 +37,7 @@ export abstract class ACmdData extends ACmd {
 		return ret;
 	}
 
-    static fromBinSub(
+	static fromBinSub(
 		s: DateTime,
 		cByte: number,
 		u: number,
@@ -41,19 +47,24 @@ export abstract class ACmdData extends ACmd {
 		len: number,
 		pos: number
 	): FromBinResult<ACmdData> {
-		const c= CommandData.fromByte(cByte);
-		if (!c) return new FromBinResult<ACmdData>(0,undefined,'ACmdData.fromBinSub missing command');
+		const c = CommandData.fromByte(cByte);
+		if (!c)
+			return new FromBinResult<ACmdData>(
+				0,
+				undefined,
+				'ACmdData.fromBinSub missing command'
+			);
 
 		if (c.isInsert) {
-			return CmdDataInsert.fromBinSub(s,cByte,u,t,e,bin,len,pos);
+			return CmdDataInsert.fromBinSub(s, cByte, u, t, e, bin, len, pos);
 		}
 		if (c.isPut) {
-			return CmdDataPut.fromBinSub(s,cByte,u,t,e,bin,len,pos);
+			return CmdDataPut.fromBinSub(s, cByte, u, t, e, bin, len, pos);
 		}
 		if (c.isPatch) {
-			return CmdDataPatch.fromBinSub(s,cByte,u,t,e,bin,len,pos);
+			return CmdDataPatch.fromBinSub(s, cByte, u, t, e, bin, len, pos);
 		}
-		return CmdDataDelete.fromBinSub(s,cByte,u,t,e,bin,len,pos);
+		return CmdDataDelete.fromBinSub(s, cByte, u, t, e, bin, len, pos);
 	}
 }
 abstract class ADataCols extends ACmdData {
@@ -108,11 +119,16 @@ export class CmdDataInsert extends ADataCols {
 		super(userId, started, table, recId, CommandData.Insert, ...cols);
 	}
 
-	static Now(userId: number, table: TableName, recId: number, ...cols: ColValue[]): CmdDataInsert {
+	static Now(
+		userId: number,
+		table: TableName,
+		recId: number,
+		...cols: ColValue[]
+	): CmdDataInsert {
 		return new CmdDataInsert(userId, DateTime.now(), table, recId, ...cols);
 	}
 
-    static fromBinSub(
+	static fromBinSub(
 		s: DateTime,
 		cByte: number,
 		u: number,
@@ -122,24 +138,36 @@ export class CmdDataInsert extends ADataCols {
 		len: number,
 		pos: number
 	): FromBinResult<CmdDataInsert> {
-        let ptr = pos;
-        let spaceRem=e;
-		const iFrom=uintFromScaleBytes(bin,ptr);
-		if (!iFrom.success) return new FromBinResult<CmdDataInsert>(0,undefined,`CmdDataInsert.fromBinSub missing recId: ${iFrom.reason}`);
-		ptr+=iFrom.byteLen;
-		spaceRem-=iFrom.byteLen;
+		let ptr = pos;
+		let spaceRem = e;
+		const iFrom = uintFromScaleBytes(bin, ptr);
+		if (!iFrom.success)
+			return new FromBinResult<CmdDataInsert>(
+				0,
+				undefined,
+				`CmdDataInsert.fromBinSub missing recId: ${iFrom.reason}`
+			);
+		ptr += iFrom.byteLen;
+		spaceRem -= iFrom.byteLen;
 
-		const cols:ColValue[]=[];
-        while (spaceRem>0) {
-			const col=ColValue.fromBin(bin,ptr);
+		const cols: ColValue[] = [];
+		while (spaceRem > 0) {
+			const col = ColValue.fromBin(bin, ptr);
 			if (!col.success) {
-				return new FromBinResult<CmdDataInsert>(0,undefined,`CmdDataInsert.fromBinSub missing col ${cols.length}: ${col.reason}`);
+				return new FromBinResult<CmdDataInsert>(
+					0,
+					undefined,
+					`CmdDataInsert.fromBinSub missing col ${cols.length}: ${col.reason}`
+				);
 			}
-            ptr+=col.byteLen;
-            spaceRem-=col.byteLen;
-            cols.push(col.value!);
-        }
-		return new FromBinResult(len+e, new CmdDataInsert(u, s, t, iFrom.value!,...cols));
+			ptr += col.byteLen;
+			spaceRem -= col.byteLen;
+			cols.push(col.value!);
+		}
+		return new FromBinResult(
+			len + e,
+			new CmdDataInsert(u, s, t, iFrom.value!, ...cols)
+		);
 	}
 }
 
@@ -154,7 +182,12 @@ export class CmdDataPut extends ADataCols {
 		super(userId, started, table, recId, CommandData.Put, ...cols);
 	}
 
-	static Now(userId: number, table: TableName, recId: number, ...cols: ColValue[]): CmdDataPut {
+	static Now(
+		userId: number,
+		table: TableName,
+		recId: number,
+		...cols: ColValue[]
+	): CmdDataPut {
 		return new CmdDataPut(userId, DateTime.now(), table, recId, ...cols);
 	}
 
@@ -168,22 +201,35 @@ export class CmdDataPut extends ADataCols {
 		len: number,
 		pos: number
 	): FromBinResult<CmdDataPut> {
-        let ptr = pos;
-        let spaceRem=e;
-		const iFrom=uintFromScaleBytes(bin,ptr);
-		if (!iFrom.success) return new FromBinResult<CmdDataPut>(0,undefined,`CmdDataPut.fromBinSub missing recId: ${iFrom.reason}`);
-		ptr+=iFrom.byteLen;
-		spaceRem-=iFrom.byteLen;
+		let ptr = pos;
+		let spaceRem = e;
+		const iFrom = uintFromScaleBytes(bin, ptr);
+		if (!iFrom.success)
+			return new FromBinResult<CmdDataPut>(
+				0,
+				undefined,
+				`CmdDataPut.fromBinSub missing recId: ${iFrom.reason}`
+			);
+		ptr += iFrom.byteLen;
+		spaceRem -= iFrom.byteLen;
 
-		const cols:ColValue[]=[];
-        while (spaceRem>0) {
-			const col=ColValue.fromBin(bin,ptr);
-			if (!col.success) return new FromBinResult<CmdDataPut>(0,undefined,`CmdDataPut.fromBinSub missing col ${cols.length}: ${col.reason}`);
-            ptr+=col.byteLen;
-            spaceRem-=col.byteLen;
-            cols.push(col.value!);
-        }
-		return new FromBinResult(len+e, new CmdDataPut(u, s, t, iFrom.value!,...cols));
+		const cols: ColValue[] = [];
+		while (spaceRem > 0) {
+			const col = ColValue.fromBin(bin, ptr);
+			if (!col.success)
+				return new FromBinResult<CmdDataPut>(
+					0,
+					undefined,
+					`CmdDataPut.fromBinSub missing col ${cols.length}: ${col.reason}`
+				);
+			ptr += col.byteLen;
+			spaceRem -= col.byteLen;
+			cols.push(col.value!);
+		}
+		return new FromBinResult(
+			len + e,
+			new CmdDataPut(u, s, t, iFrom.value!, ...cols)
+		);
 	}
 }
 
@@ -198,7 +244,12 @@ export class CmdDataPatch extends ADataCols {
 		super(userId, started, table, recId, CommandData.Patch, ...cols);
 	}
 
-	static Now(userId: number, table: TableName, recId: number, ...cols: ColValue[]): CmdDataPatch {
+	static Now(
+		userId: number,
+		table: TableName,
+		recId: number,
+		...cols: ColValue[]
+	): CmdDataPatch {
 		return new CmdDataPatch(userId, DateTime.now(), table, recId, ...cols);
 	}
 
@@ -212,27 +263,45 @@ export class CmdDataPatch extends ADataCols {
 		len: number,
 		pos: number
 	): FromBinResult<CmdDataPatch> {
-        let ptr = pos;
-        let spaceRem=e;
-		const iFrom=uintFromScaleBytes(bin,ptr);
-		if (!iFrom.success) return new FromBinResult<CmdDataPatch>(0,undefined,`CmdDataPatch.fromBinSub missing recId: ${iFrom.reason}`);
-		ptr+=iFrom.byteLen;
-		spaceRem-=iFrom.byteLen;
+		let ptr = pos;
+		let spaceRem = e;
+		const iFrom = uintFromScaleBytes(bin, ptr);
+		if (!iFrom.success)
+			return new FromBinResult<CmdDataPatch>(
+				0,
+				undefined,
+				`CmdDataPatch.fromBinSub missing recId: ${iFrom.reason}`
+			);
+		ptr += iFrom.byteLen;
+		spaceRem -= iFrom.byteLen;
 
-		const cols:ColValue[]=[];
-        while (spaceRem>0) {
-			const col=ColValue.fromBin(bin,ptr);
-			if (!col.success) return new FromBinResult<CmdDataPatch>(0,undefined,`CmdDataPatch.fromBinSub missing col ${cols.length}`);
-            ptr+=col.byteLen;
-            spaceRem-=col.byteLen;
-            cols.push(col.value!);
-        }
-		return new FromBinResult(len+e, new CmdDataPatch(u, s, t, iFrom.value!,...cols));
+		const cols: ColValue[] = [];
+		while (spaceRem > 0) {
+			const col = ColValue.fromBin(bin, ptr);
+			if (!col.success)
+				return new FromBinResult<CmdDataPatch>(
+					0,
+					undefined,
+					`CmdDataPatch.fromBinSub missing col ${cols.length}`
+				);
+			ptr += col.byteLen;
+			spaceRem -= col.byteLen;
+			cols.push(col.value!);
+		}
+		return new FromBinResult(
+			len + e,
+			new CmdDataPatch(u, s, t, iFrom.value!, ...cols)
+		);
 	}
 }
 
 export class CmdDataDelete extends ACmdData {
-	public constructor(userId: number, started: DateTime, table: TableName, recId: number) {
+	public constructor(
+		userId: number,
+		started: DateTime,
+		table: TableName,
+		recId: number
+	) {
 		super(userId, started, table, recId, CommandData.Delete);
 	}
 
@@ -250,11 +319,16 @@ export class CmdDataDelete extends ACmdData {
 		len: number,
 		pos: number
 	): FromBinResult<CmdDataDelete> {
-        let ptr = pos;
-		const iFrom=uintFromScaleBytes(bin,ptr);
-		if (!iFrom.success) return new FromBinResult<CmdDataDelete>(0,undefined,`CmdDataDelete.fromBinSub missing recId: ${iFrom.reason}`);
-		ptr+=iFrom.byteLen;
+		let ptr = pos;
+		const iFrom = uintFromScaleBytes(bin, ptr);
+		if (!iFrom.success)
+			return new FromBinResult<CmdDataDelete>(
+				0,
+				undefined,
+				`CmdDataDelete.fromBinSub missing recId: ${iFrom.reason}`
+			);
+		ptr += iFrom.byteLen;
 		//Check ptr==e?
-		return new FromBinResult(len+e,new CmdDataDelete(u,s,t,iFrom.value!));
+		return new FromBinResult(len + e, new CmdDataDelete(u, s, t, iFrom.value!));
 	}
 }

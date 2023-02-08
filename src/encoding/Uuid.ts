@@ -1,5 +1,5 @@
-import { VariedRangeError } from '../primitive/ErrorExt';
-import * as hex from './Hex';
+import { VariedRangeError } from '../primitive/ErrorExt.js';
+import * as hex from './Hex.js';
 
 /**
  * Support: (Uint8Array)

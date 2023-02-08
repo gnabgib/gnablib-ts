@@ -1,5 +1,5 @@
-import * as littleEndian from '../endian/little';
-import * as bitExt from '../primitive/BitExt';
+import * as littleEndian from '../endian/little.js';
+import * as bitExt from '../primitive/BitExt.js';
 
 //https://datatracker.ietf.org/doc/html/rfc1321
 const digestSizeBytes = 16; //128 bits

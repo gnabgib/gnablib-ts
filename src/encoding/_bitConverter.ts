@@ -1,5 +1,5 @@
-import { Carrier } from '../primitive/BitExt';
-import { ContentError } from '../primitive/ErrorExt';
+import { Carrier } from '../primitive/BitExt.js';
+import { ContentError } from '../primitive/ErrorExt.js';
 
 export function fromBytes(
 	bytes: Uint8Array,

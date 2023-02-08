@@ -1,5 +1,5 @@
-import { Cidr } from './Cidr';
-import * as ip from './Ip';
+import { Cidr } from './Cidr.js';
+import * as ip from './Ip.js';
 
 interface ITreeNode<T> {
 	readonly value: T | undefined;
@@ -49,7 +49,7 @@ class NoneNode<T> implements ITreeNode<T> {
 	contains(): boolean {
 		return false;
 	}
-	output():void {
+	output(): void {
 		//nop
 	}
 }
@@ -69,7 +69,9 @@ class TreeNode<T> implements ITreeNode<T> {
 
 	contains(val: number, bit: number): boolean {
 		const odd = (val >> bit) & 1;
-		return odd ? this._right.contains(val, bit - 1) : this._left.contains(val, bit - 1);
+		return odd
+			? this._right.contains(val, bit - 1)
+			: this._left.contains(val, bit - 1);
 	}
 
 	output(
@@ -106,12 +108,20 @@ class TreeNode<T> implements ITreeNode<T> {
 		//if (bit <= end) return all;
 
 		//If this is a none node (ie not a TreeNode), switch (all has already been filtered)
-		const ret: TreeNode<T> = parent instanceof TreeNode ? parent : new TreeNode();
+		const ret: TreeNode<T> =
+			parent instanceof TreeNode ? parent : new TreeNode();
 
 		//Now descend
 		const odd = (position >> bit) & 1;
 		if (odd) {
-			ret._right = TreeNode.add(ret._right, position, bit - 1, end, value, merge);
+			ret._right = TreeNode.add(
+				ret._right,
+				position,
+				bit - 1,
+				end,
+				value,
+				merge
+			);
 		} else {
 			ret._left = TreeNode.add(ret._left, position, bit - 1, end, value, merge);
 		}
@@ -133,7 +143,7 @@ function pickFirst<T>(value1: T, value2: T): T {
 export type CidrValue<T> = { cidr: Cidr; value: T };
 
 export class IpTree<T> {
-	private _root:ITreeNode<T> = new NoneNode<T>();
+	private _root: ITreeNode<T> = new NoneNode<T>();
 	private _merge: valueMerge<T>;
 
 	constructor(merge?: valueMerge<T>) {
@@ -141,7 +151,14 @@ export class IpTree<T> {
 	}
 
 	addIp(ipv4: ip.V4, value: T): void {
-		this._root = TreeNode.add(this._root, ipv4.toInt(), 31, -1, value, this._merge);
+		this._root = TreeNode.add(
+			this._root,
+			ipv4.toInt(),
+			31,
+			-1,
+			value,
+			this._merge
+		);
 	}
 
 	addRange(start: ip.V4, end: ip.V4, value: T): void {
@@ -158,7 +175,14 @@ export class IpTree<T> {
 				bit++;
 				temp >>= 1;
 			}
-			this._root = TreeNode.add(this._root, startInt, 31, bit, value, this._merge);
+			this._root = TreeNode.add(
+				this._root,
+				startInt,
+				31,
+				bit,
+				value,
+				this._merge
+			);
 			startInt += m + 1;
 		}
 	}

@@ -1,4 +1,4 @@
-import { _sha2_512 } from './_Sha2-512';
+import { _sha2_512 } from './_Sha2-512.js';
 
 export const init512_256 = [
 	//These are pre-generated @see generateIV (in _Sha2_512_224)

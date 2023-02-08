@@ -1,4 +1,4 @@
-import { NullError } from './ErrorExt';
+import { NullError } from './ErrorExt.js';
 
 /**
  * If @param obj is null or undefined a @see NullError is thrown

@@ -35,4 +35,4 @@ export const k = [
 	0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a, 0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817
 ];
 
-export { pad } from './Sha1';
+export { pad } from './Sha1.js';

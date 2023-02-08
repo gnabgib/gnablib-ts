@@ -1,6 +1,6 @@
-import type { Int64 } from '../primitive/Int64';
-import type { Uint64 } from '../primitive/Uint64';
-import { inRangeInclusive } from '../primitive/IntExt';
+import type { Int64 } from '../primitive/Int64.js';
+import type { Uint64 } from '../primitive/Uint64.js';
+import { inRangeInclusive } from '../primitive/IntExt.js';
 import type {
 	// ReadonlyBigInt64Array,
 	// ReadonlyBigUint64Array,
@@ -11,9 +11,8 @@ import type {
 	ReadonlyInt8Array,
 	ReadonlyUint16Array,
 	ReadonlyUint32Array,
-	ReadonlyUint8Array
-} from '../primitive/ReadonlyTypedArray';
-
+	ReadonlyUint8Array,
+} from '../primitive/ReadonlyTypedArray.js';
 
 export const platformIsLE = (() => {
 	//Since TypedArrays use system-endianness, putting 1 in a U16 will be:
@@ -113,18 +112,24 @@ class ArrayBufferWindowReader {
 	readInt1Array(count: number): ReadonlyInt8Array {
 		const sizeBytes = count * 1;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 		//We can share the buffer and build with offset,length here (no alignment requirement).. but all
 		// the other forms copy the data so let's be consistent
 		const start = this._pos + this._view.byteOffset;
-		const ret = new Int8Array(this._view.buffer.slice(start, start + sizeBytes));
+		const ret = new Int8Array(
+			this._view.buffer.slice(start, start + sizeBytes)
+		);
 		this._pos += sizeBytes;
 		return ret;
 	}
 	readInt2Array(count: number): ReadonlyInt16Array {
 		const sizeBytes = count * 2;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
@@ -145,7 +150,9 @@ class ArrayBufferWindowReader {
 	readInt4Array(count: number): ReadonlyInt32Array {
 		const sizeBytes = count * 4;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
@@ -187,18 +194,24 @@ class ArrayBufferWindowReader {
 	readUint1Array(count: number): ReadonlyUint8Array {
 		const sizeBytes = count * 1;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 		//We can share the buffer and build with offset,length here (no alignment requirement).. but all
 		// the other forms copy the data so let's be consistent
 		const start = this._pos + this._view.byteOffset;
-		const ret = new Uint8Array(this._view.buffer.slice(start, start + sizeBytes));
+		const ret = new Uint8Array(
+			this._view.buffer.slice(start, start + sizeBytes)
+		);
 		this._pos += sizeBytes;
 		return ret;
 	}
 	readUint2Array(count: number): ReadonlyUint16Array {
 		const sizeBytes = count * 2;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
@@ -219,7 +232,9 @@ class ArrayBufferWindowReader {
 	readUint4Array(count: number): ReadonlyUint32Array {
 		const sizeBytes = count * 4;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
@@ -261,7 +276,9 @@ class ArrayBufferWindowReader {
 	readFloat4Array(count: number): ReadonlyFloat32Array {
 		const sizeBytes = count * 4;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
@@ -282,7 +299,9 @@ class ArrayBufferWindowReader {
 	readFloat8Array(count: number): ReadonlyFloat64Array {
 		const sizeBytes = count * 8;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to read, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to read, have ${this._view.byteLength}`
+			);
 
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
@@ -347,8 +366,8 @@ class ArrayBufferWindowWriter {
 	}
 	writeInt8(value: Int64) {
 		// DataView.set* will throw a RangeError if there's not enough space
-		this._view.setUint32(this._pos,value.highU32,this._isLittleEndian);
-		this._view.setUint32(this._pos+4,value.lowU32,this._isLittleEndian);
+		this._view.setUint32(this._pos, value.highU32, this._isLittleEndian);
+		this._view.setUint32(this._pos + 4, value.lowU32, this._isLittleEndian);
 		//this._view.setBigInt64(this._pos, value.toBigInt(), this._isLittleEndian);
 		this._pos += 8;
 	}
@@ -369,8 +388,8 @@ class ArrayBufferWindowWriter {
 	}
 	writeUint8(value: Uint64) {
 		// DataView.set* will throw a RangeError if there's not enough space
-		this._view.setUint32(this._pos,value.highU32,this._isLittleEndian);
-		this._view.setUint32(this._pos+4,value.lowU32,this._isLittleEndian);
+		this._view.setUint32(this._pos, value.highU32, this._isLittleEndian);
+		this._view.setUint32(this._pos + 4, value.lowU32, this._isLittleEndian);
 		//this._view.setBigUint64(this._pos, value.toBigInt(), this._isLittleEndian);
 		this._pos += 8;
 	}
@@ -390,7 +409,9 @@ class ArrayBufferWindowWriter {
 		const sizeBytes = value.byteLength;
 		//Does this maybe need byteOffset?
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setInt8(pos, value[i]);
@@ -401,7 +422,9 @@ class ArrayBufferWindowWriter {
 	writeInt2Array(value: ReadonlyInt16Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setInt16(pos, value[i], this._isLittleEndian);
@@ -412,7 +435,9 @@ class ArrayBufferWindowWriter {
 	writeInt4Array(value: ReadonlyInt32Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setInt32(pos, value[i], this._isLittleEndian);
@@ -434,7 +459,9 @@ class ArrayBufferWindowWriter {
 	writeUint1Array(value: ReadonlyUint8Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setUint8(pos, value[i]);
@@ -445,7 +472,9 @@ class ArrayBufferWindowWriter {
 	writeUint2Array(value: ReadonlyUint16Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setUint16(pos, value[i], this._isLittleEndian);
@@ -456,7 +485,9 @@ class ArrayBufferWindowWriter {
 	writeUint4Array(value: ReadonlyUint32Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setUint32(pos, value[i], this._isLittleEndian);
@@ -478,7 +509,9 @@ class ArrayBufferWindowWriter {
 	writeFloat4Array(value: ReadonlyFloat32Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setFloat32(pos, value[i], this._isLittleEndian);
@@ -489,7 +522,9 @@ class ArrayBufferWindowWriter {
 	writeFloat8Array(value: ReadonlyFloat64Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			this._view.setFloat64(pos, value[i], this._isLittleEndian);
@@ -510,7 +545,11 @@ export class ArrayBufferWindow {
 	private readonly _endExc: number;
 	protected readonly _view: DataView;
 
-	public constructor(buffer: ArrayBufferWindow | ArrayBuffer, start = 0, end = -1) {
+	public constructor(
+		buffer: ArrayBufferWindow | ArrayBuffer,
+		start = 0,
+		end = -1
+	) {
 		inRangeInclusive(start, 0, buffer.byteLength - 1, 'start');
 		if (end === -1) {
 			end = buffer.byteLength;
@@ -529,7 +568,11 @@ export class ArrayBufferWindow {
 			this._endExc = end;
 		}
 		//console.log(`dataView(buff,${this._startInc},${this._endExc} - ${this._startInc})`);
-		this._view = new DataView(this._buffer, this._startInc, this._endExc - this._startInc);
+		this._view = new DataView(
+			this._buffer,
+			this._startInc,
+			this._endExc - this._startInc
+		);
 	}
 
 	get byteLength(): number {
@@ -566,15 +609,16 @@ export class ArrayBufferWindow {
 // include the 2021 features in this file (which is a little messy, but exposing the classes
 // is worse)
 
-class ArrayBufferWindowReader_es2021 extends ArrayBufferWindowReader {
-}
+class ArrayBufferWindowReader_es2021 extends ArrayBufferWindowReader {}
 
 class ArrayBufferWindowWriter_es2021 extends ArrayBufferWindowWriter {
 	// @ts-expect-error: es2016 doesn't support BigUint64Array
 	writeUint8Array(value: ReadonlyBigUint64Array) {
 		const sizeBytes = value.byteLength;
 		if (this._pos + sizeBytes > this._view.byteLength)
-			throw new RangeError(`Need ${sizeBytes} to write, have ${this._view.byteLength}`);
+			throw new RangeError(
+				`Need ${sizeBytes} to write, have ${this._view.byteLength}`
+			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
 			// @ts-expect-error: es2016 DataView doesn't support setBigUint64

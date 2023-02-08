@@ -1,4 +1,4 @@
-import { OutOfRangeError } from '../primitive/ErrorExt';
+import { OutOfRangeError } from '../primitive/ErrorExt.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38

@@ -1,5 +1,5 @@
-import { NotEnoughSpaceError, OutOfRangeError, SizeError } from './ErrorExt';
-import * as intExt from './IntExt';
+import { NotEnoughSpaceError, OutOfRangeError, SizeError } from './ErrorExt.js';
+import * as intExt from './IntExt.js';
 
 export function pushInt(
 	value: number,
@@ -18,7 +18,7 @@ export function pushInt(
 	const bytePos = currentBitPos >> 3;
 
 	const bitSizeOffset = bitSize & 7;
-	const lastBytePos = (currentBitPos + bitSize - 1) >> 3;
+	//const lastBytePos = (currentBitPos + bitSize - 1) >> 3;
 
 	//0 [________][________] s<<1      [sssssss_][________]
 	//1 [x_______][________] s<<0      [xsssssss][________]

@@ -1,5 +1,5 @@
-import { escape } from '../RegExp';
-import { OutOfRangeError, VariedRangeError } from './ErrorExt';
+import { escape } from '../RegExp.js';
+import { OutOfRangeError, VariedRangeError } from './ErrorExt.js';
 
 export function lenInRangeInclusive(test: string, high: number, low = 0): void {
 	if (test.length < low || test.length > high)
@@ -68,7 +68,7 @@ export function reverse(source: string): string {
 export function padStart(
 	source: string,
 	len: number,
-	fill: string = ' '
+	fill = ' '
 ): string {
 	const dist = len - source.length;
 	//If source is already long enough, or fill isn't going to help.. bail

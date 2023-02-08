@@ -1,6 +1,10 @@
-import * as hex from '../encoding/Hex';
-import * as intExt from '../primitive/IntExt';
-import { ContentError, OutOfRangeError, ZeroError } from '../primitive/ErrorExt';
+import * as hex from '../encoding/Hex.js';
+import * as intExt from '../primitive/IntExt.js';
+import {
+	ContentError,
+	OutOfRangeError,
+	ZeroError,
+} from '../primitive/ErrorExt.js';
 
 //https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 //Some source from: https://github.com/zxing/zxing
@@ -199,11 +203,15 @@ class Gf8 implements Gf<Uint8Array> {
 
 	mul(a: number, b: number): number {
 		if (a === 0 || b === 0) return 0;
-		return this._expTable[(this._logTable[a] + this._logTable[b]) % this._lastSpot];
+		return this._expTable[
+			(this._logTable[a] + this._logTable[b]) % this._lastSpot
+		];
 	}
 
 	toString(): string {
-		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${this._lastSpot + 1}, ${this.base})`;
+		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${
+			this._lastSpot + 1
+		}, ${this.base})`;
 	}
 }
 
@@ -215,7 +223,8 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	readonly coefficients: Uint8Array;
 
 	constructor(field: Gf<Uint8Array>, coefficients: Uint8Array) {
-		if (coefficients.length === 0) throw new ZeroError('Coefficients.length', '>');
+		if (coefficients.length === 0)
+			throw new ZeroError('Coefficients.length', '>');
 		this._field = field;
 		if (coefficients.length > 1 && coefficients[0] === 0) {
 			// Leading term must be non-zero for anything except the constant polynomial "0"
@@ -269,7 +278,8 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	addOrSubtract(other: GfPoly8): GfPoly<Uint8Array> {
-		if (this._field !== other._field) throw new ContentError('other', "fields don't match");
+		if (this._field !== other._field)
+			throw new ContentError('other', "fields don't match");
 		if (this.isZero) return other;
 		if (other.isZero) return this;
 
@@ -290,7 +300,8 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	mulPoly(other: GfPoly8): GfPoly<Uint8Array> {
-		if (this._field !== other._field) throw new ContentError('other', "fields don't match");
+		if (this._field !== other._field)
+			throw new ContentError('other', "fields don't match");
 		if (this.isZero || other.isZero) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -329,7 +340,8 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	div(other: GfPoly8): DivideResponse<GfPoly<Uint8Array>> {
-		if (this._field !== other._field) throw new ContentError('other', "fields don't match");
+		if (this._field !== other._field)
+			throw new ContentError('other', "fields don't match");
 		if (other.isZero) throw new ZeroError('other');
 
 		let quotient = this._field.zero;
@@ -338,12 +350,20 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 		let remainder: GfPoly<Uint8Array> = this;
 
 		const denominatorLeadingTerm = other.degreeCoefficient;
-		const inverseDenominatorLeadingTerm = this._field.inverse(denominatorLeadingTerm);
+		const inverseDenominatorLeadingTerm = this._field.inverse(
+			denominatorLeadingTerm
+		);
 		let degreeDifference = this.degree - other.degree;
 		while (degreeDifference >= 0 && !remainder.isZero) {
-			const scale = this._field.mul(remainder.degreeCoefficient, inverseDenominatorLeadingTerm);
+			const scale = this._field.mul(
+				remainder.degreeCoefficient,
+				inverseDenominatorLeadingTerm
+			);
 			const term = other.mulMonomial(degreeDifference, scale);
-			const iterationQuotient = this._field.buildMonomial(degreeDifference, scale);
+			const iterationQuotient = this._field.buildMonomial(
+				degreeDifference,
+				scale
+			);
 			quotient = quotient.addOrSubtract(iterationQuotient);
 			remainder = remainder.addOrSubtract(term);
 			degreeDifference = remainder.degree - other.degree;
@@ -456,11 +476,15 @@ class Gf16 implements Gf<Uint16Array> {
 	 */
 	mul(a: number, b: number): number {
 		if (a === 0 || b === 0) return 0;
-		return this._expTable[(this._logTable[a] + this._logTable[b]) % this._lastSpot];
+		return this._expTable[
+			(this._logTable[a] + this._logTable[b]) % this._lastSpot
+		];
 	}
 
 	toString(): string {
-		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${this._lastSpot + 1}, ${this.base})`;
+		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${
+			this._lastSpot + 1
+		}, ${this.base})`;
 	}
 }
 
@@ -472,7 +496,8 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	readonly coefficients: Uint16Array;
 
 	constructor(field: Gf16, coefficients: Uint16Array) {
-		if (coefficients.length === 0) throw new ZeroError('Coefficients.length', '>');
+		if (coefficients.length === 0)
+			throw new ZeroError('Coefficients.length', '>');
 		this._field = field;
 		if (coefficients.length > 1 && coefficients[0] === 0) {
 			// Leading term must be non-zero for anything except the constant polynomial "0"
@@ -526,7 +551,8 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	addOrSubtract(other: GfPoly16): GfPoly<Uint16Array> {
-		if (this._field !== other._field) throw new ContentError('other', "fields don't match");
+		if (this._field !== other._field)
+			throw new ContentError('other', "fields don't match");
 		if (this.isZero) return other;
 		if (other.isZero) return this;
 
@@ -547,7 +573,8 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	mulPoly(other: GfPoly16): GfPoly<Uint16Array> {
-		if (this._field !== other._field) throw new ContentError('other', "fields don't match");
+		if (this._field !== other._field)
+			throw new ContentError('other', "fields don't match");
 		if (this.isZero || other.isZero) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -586,7 +613,8 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	div(other: GfPoly16): DivideResponse<GfPoly<Uint16Array>> {
-		if (this._field !== other._field) throw new ContentError('other', "fields don't match");
+		if (this._field !== other._field)
+			throw new ContentError('other', "fields don't match");
 		if (other.isZero) throw new ZeroError('other');
 
 		let quotient = this._field.zero;
@@ -595,12 +623,20 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 		let remainder: GfPoly<Uint16Array> = this;
 
 		const denominatorLeadingTerm = other.degreeCoefficient;
-		const inverseDenominatorLeadingTerm = this._field.inverse(denominatorLeadingTerm);
+		const inverseDenominatorLeadingTerm = this._field.inverse(
+			denominatorLeadingTerm
+		);
 		let degreeDifference = this.degree - other.degree;
 		while (degreeDifference >= 0 && !remainder.isZero) {
-			const scale = this._field.mul(remainder.degreeCoefficient, inverseDenominatorLeadingTerm);
+			const scale = this._field.mul(
+				remainder.degreeCoefficient,
+				inverseDenominatorLeadingTerm
+			);
 			const term = other.mulMonomial(degreeDifference, scale);
-			const iterationQuotient = this._field.buildMonomial(degreeDifference, scale);
+			const iterationQuotient = this._field.buildMonomial(
+				degreeDifference,
+				scale
+			);
 			quotient = quotient.addOrSubtract(iterationQuotient);
 			remainder = remainder.addOrSubtract(term);
 			degreeDifference = remainder.degree - other.degree;
@@ -736,7 +772,10 @@ export class ReedSolomon<T extends UIntArray> {
 	}
 
 	//-- -- -- Decode -- -- --
-	private _findErrorMagnitudes(errorEvaluator: GfPoly<T>, errorLocations: T): T {
+	private _findErrorMagnitudes(
+		errorEvaluator: GfPoly<T>,
+		errorLocations: T
+	): T {
 		// Forney's Formula
 		const n = errorLocations.length;
 		const ret = this._field.newArr(n);
@@ -751,7 +790,10 @@ export class ReedSolomon<T extends UIntArray> {
 					);
 				}
 			}
-			ret[i] = this._field.mul(errorEvaluator.evalAt(xiInverse), this._field.inverse(denominator));
+			ret[i] = this._field.mul(
+				errorEvaluator.evalAt(xiInverse),
+				this._field.inverse(denominator)
+			);
 			if (this._field.base !== 0) {
 				ret[i] = this._field.mul(ret[i], xiInverse);
 			}
@@ -782,7 +824,9 @@ export class ReedSolomon<T extends UIntArray> {
 				if (rootCount >= eDegree) return ret;
 			}
 		}
-		throw new ReedSolomonError('Error locator degree does not match number of roots');
+		throw new ReedSolomonError(
+			'Error locator degree does not match number of roots'
+		);
 	}
 
 	/**

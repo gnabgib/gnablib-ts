@@ -1,4 +1,4 @@
-export { iv512 as iv } from './_Sha2';
+export { iv512 as iv } from './_Sha2.js';
 
 export const n = [
 	//256

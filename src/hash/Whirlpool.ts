@@ -1,6 +1,5 @@
-import * as bigEndian from '../endian/big';
-import { Uint64 } from '../primitive/Uint64';
-import * as hex from '../encoding/Hex';
+import * as bigEndian from '../endian/big.js';
+import { Uint64 } from '../primitive/Uint64.js';
 
 //https://en.wikipedia.org/wiki/Whirlpool_(hash_function)
 //https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html

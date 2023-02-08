@@ -1,5 +1,5 @@
-import { SizeError } from '../primitive/ErrorExt';
-import { signMul } from './_ieee754';
+import { SizeError } from '../primitive/ErrorExt.js';
+import { signMul } from './_ieee754.js';
 const last4Bits = 0xf;
 const last7Bits = 0x7f;
 
@@ -8,7 +8,7 @@ const last7Bits = 0x7f;
 //[M][M][M][M][M][M][M][M] [M][M][M][M][M][M][M][M] [M][M][M][M][M][M][M][M] [M][M][M][M][M][M][M][M]
 //https://en.wikipedia.org/wiki/IEEE_754
 const fp64ManSize = 52;
-const fp64ExpSize = 11;
+//const fp64ExpSize = 11;
 const fp64MaxMan = 0xfffffffffffff;
 const fp64MaxExp = 0x7ff;
 const fp64Bias = 1023; //fp64MaxExp>>1
@@ -83,7 +83,8 @@ export function fp64FromBytesUnsafe(bytes: Uint8Array, pos: number): number {
 		(bytes[pos + 2] << 16) |
 		(bytes[pos + 3] << 8) |
 		bytes[pos + 4];
-	const mantissaLow = (bytes[pos + 5] << 16) | (bytes[pos + 6] << 8) | bytes[pos + 7];
+	const mantissaLow =
+		(bytes[pos + 5] << 16) | (bytes[pos + 6] << 8) | bytes[pos + 7];
 
 	switch (exponent) {
 		case fp64MaxExp:
@@ -109,6 +110,7 @@ export function fp64FromBytesUnsafe(bytes: Uint8Array, pos: number): number {
  * @returns
  */
 export function fp64FromBytes(bytes: Uint8Array, pos = 0): number {
-	if (pos + 8 > bytes.length) throw new SizeError('bytes', bytes.length, pos + 8);
+	if (pos + 8 > bytes.length)
+		throw new SizeError('bytes', bytes.length, pos + 8);
 	return fp64FromBytesUnsafe(bytes, pos);
 }

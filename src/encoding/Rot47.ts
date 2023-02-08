@@ -1,4 +1,4 @@
-import * as intExt from '../primitive/IntExt';
+import * as intExt from '../primitive/IntExt.js';
 
 const ord_low = 33; //!
 const ord_high = 126; //~

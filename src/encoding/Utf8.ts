@@ -1,4 +1,4 @@
-import { ContentError } from '../primitive/ErrorExt';
+import { ContentError } from '../primitive/ErrorExt.js';
 /**
  * Support: (TextEncoded.encode, TextDecoder.decode)
  * Chrome, Android webview, ChromeM >=38
