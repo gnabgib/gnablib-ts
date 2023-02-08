@@ -8,7 +8,6 @@ This module is available through [NPM](https://www.npmjs.com/).
 To install this library:
 ```bash
 npm install gnablib
-npm install github:gnabgib/gnablib-ts
 ```
 
 ## Dev: Testing
