@@ -6,8 +6,6 @@ A library for building web/node/deno applications.
 
 This module is available through [NPM](https://www.npmjs.com/).
 
-To install this library:
-
 ```bash
 npm install gnablib
 ```
@@ -100,7 +98,8 @@ npm install gnablib
 
 - RegExp escape string
 
-<!-- ## Development
+<!-- 
+## Development
 
 Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runner /w [uvu/assert](https://github.com/lukeed/uvu/blob/master/docs/api.assert.md)
 
@@ -112,7 +111,8 @@ Content will be output into `/dist/**`
 
 ```bash
 npm run build
-``` -->
+``` 
+-->
 
 ## License
 
