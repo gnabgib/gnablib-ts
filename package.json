@@ -1,46 +1,113 @@
 {
-  "name": "gnablib",
-  "version": "0.1.3",
-  "description": "A library for building web/node/deno applications",
-  "scripts": {
-    "preversion": "npm test",
-    "version":"npm run build && git add -A",
-    "postversion": "git push && git push --tags && npm publish",
-    "format": "prettier --write \"src/**/*.{ts,js}\"",
-    "format:check": "prettier --check \"src/**/*.{js,ts}\"",
-    "lint": "eslint \"src/**/*.{js,ts}\"",
-    "test": "uvu -r tsm -i .log$ tst",
-    "prebuild":"rm -rf dist",
-    "build": "tsc --sourceMap false"
-  },
-  "exports":{
-    "./*":"./dist/*"
-  },
-  "files":[
-    "dist"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gnabgib/gnablib-ts.git"
-  },
-  "keywords": [],
-  "author": "gnabgib",
-  "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/gnabgib/gnablib-ts/issues"
-  },
-  "homepage": "https://github.com/gnabgib/gnablib-ts#readme",
-  "dependencies": {},
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.48.1",
-    "@typescript-eslint/parser": "^5.48.1",
-    "eslint": "^8.31.0",
-    "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-import": "^2.26.0",
-    "prettier": "^2.8.2",
-    "tsm": "^2.2.1",
-    "typescript": "^4.9.4",
-    "uvu": "^0.5.3"
-  },
-  "type": "module"
+	"name": "gnablib",
+	"version": "0.1.3",
+	"description": "A library for building web/node/deno applications",
+	"scripts": {
+		"preversion": "npm test",
+		"version": "npm run build && git add -A",
+		"postversion": "git push && git push --tags && npm publish",
+		"format": "prettier --write \"src/**/*.{ts,js}\"",
+		"format:check": "prettier --check \"src/**/*.{js,ts}\"",
+		"lint": "eslint \"src/**/*.{js,ts}\"",
+		"test": "uvu -r tsm -i .log$ tst",
+		"prebuild": "rm -rf dist",
+		"build": "tsc --sourceMap false"
+	},
+	"exports": {
+		"./*": "./dist/*"
+	},
+	"files": [
+		"dist"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gnabgib/gnablib-ts.git"
+	},
+	"keywords": [
+		"adler",
+		"BCC",
+		"cksum",
+		"CRC32",
+		"fletcher",
+		"LRC",
+		"luhn",
+		"MD5sum",
+		"SHA1sum",
+		"ReedSolomon",
+		"ASCII85",
+		"Base32",
+		"Base64",
+		"Crockford32",
+		"DenselyPackedDecimal",
+		"Hex",
+		"IEEE754",
+		"Proquint",
+		"QuotedPrintable",
+		"Rot13",
+		"Rot13.5",
+		"Rot47",
+		"URI",
+		"UTF8",
+		"UUCode",
+		"UUID",
+		"YEnc",
+		"littleEndian",
+		"bigEndian",
+		"Blake-256",
+		"Blake-512",
+		"Blake2b",
+		"Blake2s",
+		"Keccak",
+		"MD4",
+		"MD5",
+		"RipeMD128",
+		"RipeMD160",
+		"RipeMD256",
+		"RipeMD320",
+		"SHA1",
+		"SHA2-224",
+		"SHA2-256",
+		"SHA2-384",
+		"SHA2-512",
+		"SHA2-512/224",
+		"SHA2-512/256",
+		"SHA3-224",
+		"SHA3-256",
+		"SHA3-384",
+		"SHA3-512",
+		"Shake-128",
+		"Shake-256",
+		"Whirlpool",
+		"Structured logging",
+		"CIDR",
+		"IPTree",
+		"IPv4",
+		"DateTime",
+		"Duration",
+		"Int64",
+		"Lazy",
+		"ReadonlyTypedArray",
+		"TypedArray",
+		"Uint64",
+		"RegEx-Escape"
+	],
+	"author": "gnabgib",
+	"license": "MPL-2.0",
+	"bugs": {
+		"url": "https://github.com/gnabgib/gnablib-ts/issues"
+	},
+	"homepage": "https://github.com/gnabgib/gnablib-ts#readme",
+	"dependencies": {},
+	"devDependencies": {
+		"@typescript-eslint/eslint-plugin": "^5.48.1",
+		"@typescript-eslint/parser": "^5.48.1",
+		"eslint": "^8.31.0",
+		"eslint-config-prettier": "^8.6.0",
+		"eslint-plugin-import": "^2.26.0",
+		"prettier": "^2.8.2",
+		"tsm": "^2.2.1",
+		"typescript": "^4.9.4",
+		"uvu": "^0.5.3"
+	},
+	"type": "module"
 }

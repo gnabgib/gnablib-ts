@@ -21,22 +21,22 @@ export interface IReadArray<A> {
 
 	every(
 		predicate: (value: number, index: number) => unknown,
-		thisArg?: any
+		thisArg?: unknown
 	): boolean;
 
-	filter(predicate: (value: number, index: number) => any, thisArg?: any): A;
+	filter(predicate: (value: number, index: number) => unknown, thisArg?: unknown): A;
 
 	find(
 		predicate: (value: number, index: number) => boolean,
-		thisArg?: any
+		thisArg?: unknown
 	): number | undefined;
 
 	findIndex(
 		predicate: (value: number, index: number) => boolean,
-		thisArg?: any
+		thisArg?: unknown
 	): number;
 
-	forEach(action: (value: number, index: number) => void, thisArg?: any): void;
+	forEach(action: (value: number, index: number) => void, thisArg?: unknown): void;
 
 	includes(searchElement: number, fromIndex?: number | undefined): boolean;
 
@@ -48,7 +48,7 @@ export interface IReadArray<A> {
 
 	lastIndexOf(searchElement: number, fromIndex?: number | undefined): number;
 
-	map(callbackfn: (value: number, index: number) => number, thisArg?: any): A;
+	map(callbackfn: (value: number, index: number) => number, thisArg?: unknown): A;
 
 	readonlySpan(
 		start?: number | undefined,
@@ -57,7 +57,7 @@ export interface IReadArray<A> {
 
 	some(
 		predicate: (value: number, index: number) => unknown,
-		thisArg?: any
+		thisArg?: unknown
 	): boolean;
 
 	values(): IterableIterator<number>;
