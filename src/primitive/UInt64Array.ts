@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as hex from '../encoding/Hex.js';
 
 export class Uint64Array {

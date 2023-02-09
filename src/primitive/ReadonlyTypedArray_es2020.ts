@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 type TypedArrayMutableProperties =
 	| 'copyWithin' //Mutates internal
 	| 'fill' //Mutates internal

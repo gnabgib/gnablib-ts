@@ -1,3 +1,4 @@
+/*! No copyright, knock yourself out */
 //https://homes.esat.kuleuven.be/~bosselae/ripemd160.html
 
 export { blockSizeBytes } from './_RipeMd.js';

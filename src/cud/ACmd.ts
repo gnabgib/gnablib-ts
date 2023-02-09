@@ -1,6 +1,8 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import type { DateTime } from '../primitive/DateTime.js';
-import { FromBinResult } from '../primitive/FromBinResult.js';
-import { uintFromScaleBytes, uintToScaleBytes } from '../primitive/IntExt.js';
+//import { FromBinResult } from '../primitive/FromBinResult.js';
+import { uintToScaleBytes } from '../primitive/IntExt.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
 import type { Plane } from './types/Plane.js';

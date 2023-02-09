@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from '../primitive/IntExt.js';
 import * as utf8 from '../encoding/Utf8.js';
 import { iv512 } from './_Sha2.js';

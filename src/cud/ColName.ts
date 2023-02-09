@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as Utf8 from '../encoding/Utf8.js';
 import { OutOfRangeError } from '../primitive/ErrorExt.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';

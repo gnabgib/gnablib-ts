@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from '../primitive/IntExt.js';
 
 //https://en.wikipedia.org/wiki/Densely_packed_decimal
@@ -34,7 +36,9 @@ export function fromDense2(value: number): bcd {
 	const d0 = (value & maskD0) | (largeD0 << 7);
 	//d1 is composed of masked value OR (bits 6&7 if d0 is large, and this isn't) OR implied 1 at b3 (if large)
 	const d1 =
-		(value & maskD1) | (((value >> 4) & bit2and3) * (largeD0 & (1 - largeD1))) | (largeD1 << 3);
+		(value & maskD1) |
+		(((value >> 4) & bit2and3) * (largeD0 & (1 - largeD1))) |
+		(largeD1 << 3);
 
 	//console.log('fd2',d0,d1,'e',expand,'l',largeD0,largeD1,'m',maskD0,maskD1);
 	return d0 | d1;
@@ -130,11 +134,14 @@ export function fromDense3Unsafe(value: number): bcd {
 
 	//l0=1000|1100|1101|1111 -> 1x00|11x1
 	const largeD0 =
-		expand & (((ctrl >> 3) & (1 - ((ctrl >> 1) | ctrl))) | ((ctrl >> 3) & (ctrl >> 2) & ctrl));
+		expand &
+		(((ctrl >> 3) & (1 - ((ctrl >> 1) | ctrl))) |
+			((ctrl >> 3) & (ctrl >> 2) & ctrl));
 	//l1=0100|1100|1110|1111 -> x100|111x
 	const largeD1 =
 		expand &
-		(((ctrl >> 2) & (1 - ((ctrl >> 1) | ctrl))) | ((ctrl >> 3) & (ctrl >> 2) & (ctrl >> 1)));
+		(((ctrl >> 2) & (1 - ((ctrl >> 1) | ctrl))) |
+			((ctrl >> 3) & (ctrl >> 2) & (ctrl >> 1)));
 	//l2=0000|1101|1110|1111 -> 0000|11xx where xx!=00, x|x!=0
 	const largeD2 =
 		expand &
@@ -146,11 +153,13 @@ export function fromDense3Unsafe(value: number): bcd {
 	//D2 is shifted most of the time when not large
 	// by 7 (mod=1000,1100) or by 4 (mod=0100) or by 0 (!expand)
 	//NOTE: No not-large check here because it's used during the shit (@see maskD2)
-	const shiftD2by = expand * ((((ctrl >> 3) & 1) * 7) | (((ctrl >> 2) & 1) * 4));
+	const shiftD2by =
+		expand * ((((ctrl >> 3) & 1) * 7) | (((ctrl >> 2) & 1) * 4));
 
 	const maskD0 = (last3bits >> (largeD0 * 2)) << 7;
 	//Mask 654 for non-shift,not-large, 4 for large or shift and 98 for shift
-	const maskD1 = ((last3bits >> ((largeD1 | shiftD1) * 2)) << 4) | (shiftD1 * 0x300);
+	const maskD1 =
+		((last3bits >> ((largeD1 | shiftD1) * 2)) << 4) | (shiftD1 * 0x300);
 	//Mask if !large, and shift by shiftD2By*2
 	const maskD2 = 1 | ((1 - largeD2) * (bit2and3 << shiftD2by));
 
@@ -345,7 +354,11 @@ export function toDense3(d0: number, d1: number, d2: number): number {
  * @param bytes
  * @param bitPos
  */
-export function push2DigitsToBytes(value: number, bytes: Uint8Array, bitPos: number): number {
+export function push2DigitsToBytes(
+	value: number,
+	bytes: Uint8Array,
+	bitPos: number
+): number {
 	intExt.inRangeInclusive(value, 0, 99);
 	const packBits = 7;
 	const startBitPos = bitPos & 0x7;
@@ -372,10 +385,14 @@ export function push2DigitsToBytesN(
 	bitPos: number
 ): number {
 	//TODO
-	return 0
+	return 0;
 }
 
-export function push3DigitsToBytes(value: number, bytes: Uint8Array, bitPos: number): number {
+export function push3DigitsToBytes(
+	value: number,
+	bytes: Uint8Array,
+	bitPos: number
+): number {
 	intExt.inRangeInclusive(value, 0, 999);
 	const packBits = 10;
 	const startBitPos = bitPos & 0x7;

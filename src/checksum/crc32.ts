@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 const reversedPoly = 0xedb88320;
 
 function makeTable(poly: number): Uint32Array {

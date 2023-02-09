@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 /**
  * Build something upon first access to .value property (cache the result)
  * @param factory Builder to call on first access 

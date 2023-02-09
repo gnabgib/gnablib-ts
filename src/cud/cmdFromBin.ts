@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { DateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { uintFromScaleBytes } from '../primitive/IntExt.js';
@@ -65,12 +67,17 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 		);
 	ptr += eFrom.byteLen;
 
+	//We know values (because success)
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	if (pFrom.value!.isCtrl) {
 		return ACmdCtrl.fromBinSub(
 			s,
 			cByte,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			uFrom.value!,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			tFrom.value!,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			eFrom.value!,
 			bin,
 			ptr - pos,
@@ -80,8 +87,11 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 		return ACmdData.fromBinSub(
 			s,
 			cByte,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			uFrom.value!,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			tFrom.value!,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			eFrom.value!,
 			bin,
 			ptr - pos,

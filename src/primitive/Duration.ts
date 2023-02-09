@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 /* ISO8601 duration:
     - Marked by starting P
     - P[n]Y[n]M[n]DT[n]H[n]M[n]S (P[n]W not supported.. just use P[n*7]D)
@@ -24,9 +26,9 @@ const microPerSec = 1000000;
 const secPerMin = 60;
 const microPerMin = secPerMin * microPerSec;
 const minPerHour = 60;
-const hourPerDay = 24;
+// const hourPerDay = 24;
 const monPerYear = 12;
-const approxDayPerMon = 30.5; //30.42, 30.5 leap
+// const approxDayPerMon = 30.5; //30.42, 30.5 leap
 
 export interface DurationComponents {
 	year: number; //float

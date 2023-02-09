@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import type { ACudColType } from './types/CudColType.js';
 import { ColName } from './ColName.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
@@ -61,6 +63,8 @@ export class CreateColDef {
 
 		return new FromBinResult(
 			ptr - pos,
+            //We;ve a
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CreateColDef(nFrom.value!, tFrom.value!)
 		);
 	}

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import type { Int64 } from '../primitive/Int64.js';
 import type { Uint64 } from '../primitive/Uint64.js';
 import { inRangeInclusive } from '../primitive/IntExt.js';

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as littleEndian from '../endian/little.js';
 import * as bits from '../primitive/BitExt.js';
 import * as prv from './_RipeMd.js';
@@ -32,12 +34,20 @@ export function ripeMd160(bytes: Uint8Array): Uint8Array {
 
 		for (let j = 0; j < 80; j++) {
 			const round = Math.floor(j / 16);
-			t = e + bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t =
+				e +
+				bits.rotLeft32(
+					a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+					prv.s[j]
+				);
 			//Using the rare , to show this is a big swap
 			(a = e), (e = d), (d = bits.rotLeft32(c, 10)), (c = b), (b = t);
 			t =
 				ee +
-				bits.rotLeft32(aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round], prv.ss[j]);
+				bits.rotLeft32(
+					aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round],
+					prv.ss[j]
+				);
 			//Using the rare , to show this is a big swap
 			(aa = ee), (ee = dd), (dd = bits.rotLeft32(cc, 10)), (cc = bb), (bb = t);
 		}

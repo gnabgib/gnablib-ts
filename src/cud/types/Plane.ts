@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { lenInRangeInclusive } from '../../primitive/StringExt.js';
 import * as Utf8 from '../../encoding/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';

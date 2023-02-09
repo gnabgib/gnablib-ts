@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from '../primitive/IntExt.js';
 
 const ord_low = 33; //!

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from '../primitive/IntExt.js';
 
 //Note these are upper bounds of their range, eg debug is 0-63

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import type { ACudColType } from './types/CudColType.js';
 import { ColName } from './ColName.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
@@ -59,6 +61,8 @@ export class ColValue {
 			);
 		ptr += tFrom.byteLen;
 
+		//We know values (because success)
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const vFrom = tFrom.value!.binUnknown(bin, ptr);
 		if (!vFrom.success)
 			return new FromBinResult<ColValue>(
@@ -70,6 +74,7 @@ export class ColValue {
 
 		return new FromBinResult(
 			ptr - pos,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new ColValue(nFrom.value!, tFrom.value!, vFrom.value!)
 		);
 	}

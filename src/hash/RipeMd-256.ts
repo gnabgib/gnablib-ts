@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as littleEndian from '../endian/little.js';
 import * as bits from '../primitive/BitExt.js';
 import * as prv from './_RipeMd.js';
@@ -33,7 +35,10 @@ export function ripeMd256(bytes: Uint8Array): Uint8Array {
 		let j = 0;
 		let round = 0;
 		for (; j < 16; j++) {
-			t = bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t = bits.rotLeft32(
+				a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+				prv.s[j]
+			);
 			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
 			t = bits.rotLeft32(
@@ -47,7 +52,10 @@ export function ripeMd256(bytes: Uint8Array): Uint8Array {
 
 		round = 1;
 		for (; j < 32; j++) {
-			t = bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t = bits.rotLeft32(
+				a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+				prv.s[j]
+			);
 			(a = d), (d = c), (c = b), (b = t);
 			t = bits.rotLeft32(
 				aa + prv.f[3 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk128[round],
@@ -59,7 +67,10 @@ export function ripeMd256(bytes: Uint8Array): Uint8Array {
 
 		round = 2;
 		for (; j < 48; j++) {
-			t = bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t = bits.rotLeft32(
+				a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+				prv.s[j]
+			);
 			(a = d), (d = c), (c = b), (b = t);
 			t = bits.rotLeft32(
 				aa + prv.f[3 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk128[round],
@@ -71,7 +82,10 @@ export function ripeMd256(bytes: Uint8Array): Uint8Array {
 
 		round = 3;
 		for (; j < 64; j++) {
-			t = bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t = bits.rotLeft32(
+				a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+				prv.s[j]
+			);
 			(a = d), (d = c), (c = b), (b = t);
 			t = bits.rotLeft32(
 				aa + prv.f[3 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk128[round],

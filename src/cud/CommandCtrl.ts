@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { DateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { ACmd } from './ACmd.js';
@@ -118,6 +120,8 @@ export class CmdCtrlCreate extends ACmdCtrl {
 				);
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(len + e, new CmdCtrlCreate(u, s, t, ...cols));
@@ -224,6 +228,8 @@ export class CmdCtrlInsCols extends ACmdCtrl {
 				);
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(
@@ -302,6 +308,8 @@ export class CmdCtrlRemCols extends ACmdCtrl {
 				);
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(len + e, new CmdCtrlRemCols(u, s, t, ...cols));

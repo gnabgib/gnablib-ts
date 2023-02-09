@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { inRangeInclusive } from '../primitive/IntExt.js';
 import { ScalingUint8Array } from '../primitive/TypedArrayExt.js';
 

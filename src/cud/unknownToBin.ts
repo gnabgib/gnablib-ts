@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { DateTime } from '../primitive/DateTime.js';
 import { uintToScaleBytes } from '../primitive/IntExt.js';
 import * as Utf8 from '../encoding/Utf8.js';

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { FromBinResult } from './FromBinResult.js';
 import { inRangeInclusive, zeroPad } from './IntExt.js';
 import { Uint64 } from './Uint64.js';

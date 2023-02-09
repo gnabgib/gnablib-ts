@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 //https://en.wikipedia.org/wiki/RIPEMD
 //https://homes.esat.kuleuven.be/~bosselae/ripemd160.html (1996)
 export const f = [

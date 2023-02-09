@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from '../primitive/IntExt.js';
 import * as utf8 from '../encoding/Utf8.js';
 const ord_0 = 48; //char '0'

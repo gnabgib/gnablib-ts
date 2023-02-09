@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { SizeError } from '../primitive/ErrorExt.js';
 import { signMul } from './_ieee754.js';
 const last7Bits = 0x7f;

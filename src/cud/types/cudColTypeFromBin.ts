@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { Bin1, Bin2, Bin3, Bin4ish } from './Bin.js';
 import { Bool } from './Bool.js';

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { Carrier } from '../primitive/BitExt.js';
 import { ContentError } from '../primitive/ErrorExt.js';
 

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { ContentError, Grievous } from '../primitive/ErrorExt.js';
 import type { IReadArray } from '../primitive/IRWArray.js';
 import type { Uint64 } from '../primitive/Uint64.js';

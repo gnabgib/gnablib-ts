@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 /**
  * $noun should be $lowInc<=x<=$highInc, got: $value
  * $noun should be $lowInc, got: $value

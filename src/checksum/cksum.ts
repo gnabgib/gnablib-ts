@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as bigEndian from '../endian/big.js';
 
 // - https://en.wikipedia.org/wiki/Cksum

@@ -1,3 +1,5 @@
+/*! No copyright, knock yourself out */
+
 // FIPS 180-4
 //https://en.wikipedia.org/wiki/SHA-2
 export { sha2_224 } from './_Sha2-224.js';

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { NullError } from '../../primitive/ErrorExt.js';
 import { DateTime } from '../../primitive/DateTime.js';
 import { ColType } from './ColType.js';

@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { ContentError } from '../primitive/ErrorExt.js';
 import * as bconv from './_bitConverter.js';
 

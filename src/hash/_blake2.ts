@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { Uint64 } from '../primitive/Uint64.js';
 
 export { iv512 as iv } from './_Sha2.js';

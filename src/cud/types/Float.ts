@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { fp32FromBytes, fp32ToBytes } from '../../encoding/ieee754-fp32.js';
 import { fp64FromBytes, fp64ToBytes } from '../../encoding/ieee754-fp64.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';

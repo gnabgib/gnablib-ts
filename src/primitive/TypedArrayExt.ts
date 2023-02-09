@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { NotEnoughSpaceError, NotSupported } from './ErrorExt.js';
 import { strictParseDecUint } from './IntExt.js';
 import type { IReadArray, IReadWriteArray } from './IRWArray.js';

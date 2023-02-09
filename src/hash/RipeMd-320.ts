@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as littleEndian from '../endian/little.js';
 import * as bits from '../primitive/BitExt.js';
 import * as prv from './_RipeMd.js';
@@ -35,12 +37,20 @@ export function ripeMd320(bytes: Uint8Array): Uint8Array {
 		let j = 0;
 		let round = 0;
 		for (; j < 16; j++) {
-			t = e + bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t =
+				e +
+				bits.rotLeft32(
+					a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+					prv.s[j]
+				);
 			//Using the rare , to show this is a big swap
 			(a = e), (e = d), (d = bits.rotLeft32(c, 10)), (c = b), (b = t);
 			t =
 				ee +
-				bits.rotLeft32(aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round], prv.ss[j]);
+				bits.rotLeft32(
+					aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round],
+					prv.ss[j]
+				);
 			//Using the rare , to show this is a big swap
 			(aa = ee), (ee = dd), (dd = bits.rotLeft32(cc, 10)), (cc = bb), (bb = t);
 		}
@@ -48,44 +58,76 @@ export function ripeMd320(bytes: Uint8Array): Uint8Array {
 
 		round = 1;
 		for (; j < 32; j++) {
-			t = e + bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t =
+				e +
+				bits.rotLeft32(
+					a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+					prv.s[j]
+				);
 			(a = e), (e = d), (d = bits.rotLeft32(c, 10)), (c = b), (b = t);
 			t =
 				ee +
-				bits.rotLeft32(aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round], prv.ss[j]);
+				bits.rotLeft32(
+					aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round],
+					prv.ss[j]
+				);
 			(aa = ee), (ee = dd), (dd = bits.rotLeft32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = d), (d = dd), (dd = t);
 
 		round = 2;
 		for (; j < 48; j++) {
-			t = e + bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t =
+				e +
+				bits.rotLeft32(
+					a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+					prv.s[j]
+				);
 			(a = e), (e = d), (d = bits.rotLeft32(c, 10)), (c = b), (b = t);
 			t =
 				ee +
-				bits.rotLeft32(aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round], prv.ss[j]);
+				bits.rotLeft32(
+					aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round],
+					prv.ss[j]
+				);
 			(aa = ee), (ee = dd), (dd = bits.rotLeft32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = a), (a = aa), (aa = t);
 
 		round = 3;
 		for (; j < 64; j++) {
-			t = e + bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t =
+				e +
+				bits.rotLeft32(
+					a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+					prv.s[j]
+				);
 			(a = e), (e = d), (d = bits.rotLeft32(c, 10)), (c = b), (b = t);
 			t =
 				ee +
-				bits.rotLeft32(aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round], prv.ss[j]);
+				bits.rotLeft32(
+					aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round],
+					prv.ss[j]
+				);
 			(aa = ee), (ee = dd), (dd = bits.rotLeft32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = c), (c = cc), (cc = t);
 
 		round = 4;
 		for (; j < 80; j++) {
-			t = e + bits.rotLeft32(a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round], prv.s[j]);
+			t =
+				e +
+				bits.rotLeft32(
+					a + prv.f[round](b, c, d) + x[prv.r[j]] + prv.k[round],
+					prv.s[j]
+				);
 			(a = e), (e = d), (d = bits.rotLeft32(c, 10)), (c = b), (b = t);
 			t =
 				ee +
-				bits.rotLeft32(aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round], prv.ss[j]);
+				bits.rotLeft32(
+					aa + prv.f[4 - round](bb, cc, dd) + x[prv.rr[j]] + prv.kk[round],
+					prv.ss[j]
+				);
 			(aa = ee), (ee = dd), (dd = bits.rotLeft32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = e), (e = ee), (ee = t);

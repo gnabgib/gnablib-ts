@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import type { PostgresType } from './PostgresType.js';
 import type { SqliteType } from './SqliteType.js';
 import type { MysqlType } from './MysqlType.js';

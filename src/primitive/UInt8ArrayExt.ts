@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { NotEnoughSpaceError, OutOfRangeError, SizeError } from './ErrorExt.js';
 import * as intExt from './IntExt.js';
 

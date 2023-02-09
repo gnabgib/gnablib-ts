@@ -1,3 +1,4 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
 //https://datatracker.ietf.org/doc/html/rfc1950
 
 /**

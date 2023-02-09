@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import {
 	EnforceTypeError,
 	NullError,
@@ -163,20 +165,24 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 			);
 		ptr += cFrom.byteLen;
 
+		//We know values (because success)
 		switch (colByte) {
 			case ColType.Ref2:
 				return new FromBinResult(
 					len + ptr - pos,
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					new Ref2(tFrom.value!, cFrom.value!, nullable)
 				);
 			case ColType.Ref4:
 				return new FromBinResult(
 					len + ptr - pos,
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					new Ref4(tFrom.value!, cFrom.value!, nullable)
 				);
 			case ColType.Ref8:
 				return new FromBinResult(
 					len + ptr - pos,
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					new Ref8(tFrom.value!, cFrom.value!, nullable)
 				);
 		}

@@ -1,4 +1,6 @@
-//Prettier brakes base16 case, despite violation of RFC4648
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
+//Prettier brakes base16 case, despite RFC4648 suggesting upper only
 export const iv512 = [
 	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2..19):
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers

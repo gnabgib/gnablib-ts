@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { LogField } from './LogField.js';
 import type { LogLevel } from './LogLevel.js';
 import * as objExt from '../primitive/ObjExt.js';

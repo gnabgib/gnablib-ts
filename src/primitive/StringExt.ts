@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { escape } from '../RegExp.js';
 import { OutOfRangeError, VariedRangeError } from './ErrorExt.js';
 

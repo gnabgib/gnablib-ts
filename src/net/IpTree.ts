@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { Cidr } from './Cidr.js';
 import * as ip from './Ip.js';
 

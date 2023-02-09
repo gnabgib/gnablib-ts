@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { DateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { uintFromScaleBytes, uintToScaleBytes } from '../primitive/IntExt.js';
@@ -162,10 +164,14 @@ export class CmdDataInsert extends ADataCols {
 			}
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(
 			len + e,
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CmdDataInsert(u, s, t, iFrom.value!, ...cols)
 		);
 	}
@@ -224,10 +230,14 @@ export class CmdDataPut extends ADataCols {
 				);
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(
 			len + e,
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CmdDataPut(u, s, t, iFrom.value!, ...cols)
 		);
 	}
@@ -286,10 +296,14 @@ export class CmdDataPatch extends ADataCols {
 				);
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(
 			len + e,
+			//We know value (because success)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CmdDataPatch(u, s, t, iFrom.value!, ...cols)
 		);
 	}
@@ -329,6 +343,8 @@ export class CmdDataDelete extends ACmdData {
 			);
 		ptr += iFrom.byteLen;
 		//Check ptr==e?
+		//We know value (because success)
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return new FromBinResult(len + e, new CmdDataDelete(u, s, t, iFrom.value!));
 	}
 }

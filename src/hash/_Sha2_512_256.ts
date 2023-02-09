@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import { _sha2_512 } from './_Sha2-512.js';
 
 export const init512_256 = [

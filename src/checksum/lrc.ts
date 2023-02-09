@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 //[Longitudinal redundancy check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)
 export function lrc(bytes: Uint8Array): number {
 	let sum = 0;

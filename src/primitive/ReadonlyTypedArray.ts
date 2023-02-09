@@ -1,5 +1,6 @@
-//Take all of this with a grain of salt, (T|J)S sort of ignore (you'll get a TS error, but you can still mutate)
+/*! Copyright 2023 gnabgib MPL-2.0 */
 
+//Take all of this with a grain of salt, (T|J)S sort of ignore (you'll get a TS error, but you can still mutate)
 type TypedArrayMutableProperties =
 	| 'copyWithin' //Mutates internal
 	| 'fill' //Mutates internal

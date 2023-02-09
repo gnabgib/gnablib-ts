@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 /*
     Common: Null, Int, Utf8, Bool, DateTime, Float, 
     Ext: Bin, ?Decimal(Money)

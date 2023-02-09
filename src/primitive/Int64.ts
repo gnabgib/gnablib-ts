@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from '../primitive/IntExt.js';
 import * as objExt from '../primitive/ObjExt.js';
 import * as hex from '../encoding/Hex.js';
