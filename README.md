@@ -12,6 +12,10 @@ npm install gnablib
 
 ## Details
 
+### Algorithms
+
+- Weighted Random Sampling
+
 ### Checksum
 
 - [adler32](https://datatracker.ietf.org/doc/html/rfc1950)
