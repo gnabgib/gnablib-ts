@@ -4,17 +4,29 @@ A library for building web/node/deno applications.
 
 ## Installation
 
-This module is available through [NPM](https://www.npmjs.com/).
+This module is available through [NPM](https://www.npmjs.com/).  There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)
 
+**PNPM**
+```
+pnpm install gnablib --ignore-scripts
+```
+
+**NPM**
 ```bash
-npm install gnablib
+npm install gnablib --ignore-scripts
 ```
 
 ## Details
 
+### Augmented Backus-Naur Form /[rfc5234](https://datatracker.ietf.org/doc/html/rfc5234)
+
+- [Operators](https://datatracker.ietf.org/doc/html/rfc5234#section-3)
+- Definition of [core rules](https://datatracker.ietf.org/doc/html/rfc5234#appendix-B.1)
+
 ### Algorithms
 
 - Weighted Random Sampling
+- Next power of 2
 
 ### Checksum
 
@@ -34,7 +46,7 @@ npm install gnablib
 
 ### Encoding
 
-- ASCII85
+- [ASCII85](https://en.wikipedia.org/wiki/Ascii85)
 - [Base32](https://www.gnabgib.com/tools/base32/)
 - [Base64](https://www.gnabgib.com/tools/base64/)
 - [Crockford32](https://www.crockford.com/base32.html)
@@ -116,6 +128,11 @@ Content will be output into `/dist/**`
 ```bash
 npm run build
 ``` 
+
+Update version
+```bash
+npm version patch -m "Upgrade to %s, <reason>"
+```
 -->
 
 ## License
