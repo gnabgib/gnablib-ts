@@ -19,10 +19,12 @@ export class OutOfRangeError<T> extends RangeError {
 	 * @param highInc
 	 */
 	constructor(noun: string, value: T, lowInc: T, highInc?: T) {
-		if (highInc !== undefined) {
-			super(`${noun} should be ${lowInc}<=x<=${highInc}, got: ${value}`);
-		} else {
+		if (highInc === undefined || highInc === null) {
 			super(`${noun} should be >=${lowInc}, got: ${value}`);
+		} else if (highInc===lowInc) {
+			super(`${noun} should be ${lowInc}, got: ${value}`);
+		} else {
+			super(`${noun} should be ${lowInc}<=x<=${highInc}, got: ${value}`);
 		}
 
 		this.noun = noun;

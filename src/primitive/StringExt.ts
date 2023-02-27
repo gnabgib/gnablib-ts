@@ -1,11 +1,20 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { escape } from '../RegExp.js';
-import { OutOfRangeError, VariedRangeError } from './ErrorExt.js';
+import { NullError, OutOfRangeError, VariedRangeError } from './ErrorExt.js';
 
 export function lenInRangeInclusive(test: string, high: number, low = 0): void {
+	if (test===undefined || test===null)
+		throw new NullError('String');
 	if (test.length < low || test.length > high)
 		throw new OutOfRangeError('String length', test.length, low, high);
+}
+
+export function lenAtLeast(test: string, low:number):void {
+	if (test===undefined || test===null)
+		throw new NullError('String');
+	if (test.length<low)
+		throw new OutOfRangeError('String length', test.length, low);
 }
 
 export function wrap(source: string, width: number, join?: string): string {

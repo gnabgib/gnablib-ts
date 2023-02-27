@@ -1,5 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
+import { nextPow2 } from '../algo/nextPow2.js';
 import { NotEnoughSpaceError, NotSupported } from './ErrorExt.js';
 import { strictParseDecUint } from './IntExt.js';
 import type { IReadArray, IReadWriteArray } from './IRWArray.js';
@@ -93,22 +94,6 @@ interface IWriteTyped<T> extends IReadTyped<T> {
 	sort(compareFn?: ((a: number, b: number) => number) | undefined): T;
 }
 
-/**
- * Find the next power of 2 that's at least `v` in magnitude
- * @param v
- * @returns
- */
-function nextPow2(v: number): number {
-	//http://graphics.stanford.edu/%7Eseander/bithacks.html#RoundUpPowerOf2
-	if (v === 0) return defaultCap;
-	v--;
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	v |= v >> 8;
-	v |= v >> 16;
-	return v + 1;
-}
 
 /**
  * When <1MB use powers of 2 to allocate memory, after that use nearest 1MB alignment (that's larger)
@@ -119,7 +104,7 @@ function goodSize(v: number): number {
 	//After 1M (1<<21) let's linear increase size (vs exponent)
 	if (v <= defaultCap) return defaultCap;
 	if (v < linearSwitch) {
-		return nextPow2(v);
+		return v===0?defaultCap:nextPow2(v);
 	} else {
 		//Round up to next multiple of linearSwitch to accommodate v
 		return (v + linearSwitch) / linearSwitch;
