@@ -25,6 +25,7 @@
 		"url": "git+https://github.com/gnabgib/gnablib-ts.git"
 	},
 	"keywords": [
+		"ABNF",
 		"adler",
 		"BCC",
 		"cksum",
@@ -61,6 +62,8 @@
 		"Keccak",
 		"MD4",
 		"MD5",
+		"NFA",
+		"Nondeterministic Finite Automata",
 		"RipeMD128",
 		"RipeMD160",
 		"RipeMD256",
@@ -78,6 +81,8 @@
 		"SHA3-512",
 		"Shake-128",
 		"Shake-256",
+		"StringBuilder",
+		"Thompson-NFA",
 		"Whirlpool",
 		"Structured logging",
 		"CIDR",
@@ -91,7 +96,8 @@
 		"TypedArray",
 		"Uint64",
 		"RegEx-Escape",
-		"Weighted Random"
+		"Weighted Random",
+		"WindowStr"
 	],
 	"author": "gnabgib",
 	"license": "MPL-2.0",

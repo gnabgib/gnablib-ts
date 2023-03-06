@@ -7,7 +7,7 @@ A library for building web/node/deno applications.
 This module is available through [NPM](https://www.npmjs.com/).  There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)
 
 **PNPM**
-```
+```bash
 pnpm install gnablib --ignore-scripts
 ```
 
@@ -27,6 +27,7 @@ npm install gnablib --ignore-scripts
 
 - Weighted Random Sampling
 - Next power of 2
+- [Thomson NFA (1968)](https://dl.acm.org/doi/10.1145/363347.363387) solver
 
 ### Checksum
 
@@ -95,20 +96,24 @@ npm install gnablib --ignore-scripts
 
 ### Primitive
 
-- Bit extensions
 - DateTime
 - Duration
-- Error extensions
-- Int64
-- Integer extensions
-- Lazy
-- Object extensions
-- ReadonlyTypedArray
-- String extensions
-- Readonly TypedArray
 - Fixed TypedArray
+- Int64
+- Lazy
+- Readonly TypedArray
 - Scaling TypedArray
+- StringBuilder
 - Uint64
+- WindowStr
+
+#### Extensions:
+
+- Bit
+- Error
+- Integer
+- Object
+- String
 
 ### Misc
 

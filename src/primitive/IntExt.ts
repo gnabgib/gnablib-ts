@@ -25,6 +25,30 @@ export function inRangeInclusive(
 		throw new OutOfRangeError('Value ' + noun, test, low, high);
 }
 
+/**
+ * Requires that `test` is an integer and >= `low`
+ * @param test 
+ * @param low 
+ * @param noun 
+ */
+export function isGreaterThanEqual(test:number,low:number,noun?:string):void {
+	if (!Number.isInteger(test))
+		throw new EnforceTypeError('Integer ' + noun, test);
+	if (test<low)
+		throw new OutOfRangeError('Value '+noun,test,low);
+}
+
+/**
+ * Requires that `test` is an integer, and >=0
+ * @throws EnforceTypeError If not an integer
+ * @throws OutOfRangeError If <0
+ * @param test 
+ * @param noun 
+ */
+export function isPositive(test:number,noun?:string):void {
+	isGreaterThanEqual(test,0,noun);
+}
+
 export function satisfiesRules(
 	test: number,
 	rules: (test: number) => boolean,

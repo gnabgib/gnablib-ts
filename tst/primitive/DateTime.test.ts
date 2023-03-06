@@ -85,7 +85,7 @@ tsts('now', () => {
 	const now = DateTime.now();
 	//Bit hard to write a test for this
 	assert.equal(now.toString().length > 0, true);
-	console.log(now.toString());
+	//console.log(now.toString());
 });
 
 tsts('Create from epochMillis /w Fraction', () => {

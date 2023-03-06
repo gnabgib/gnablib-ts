@@ -3,11 +3,14 @@
 import { nextPow2 } from '../algo/nextPow2.js';
 import { OutOfRangeError } from '../primitive/ErrorExt.js';
 import { inRangeInclusive } from '../primitive/IntExt.js';
+import { MatchDetail, MatchFail, MatchResult, MatchSuccess } from '../primitive/MatchResult.js';
 import {
 	lenInRangeInclusive,
 	lenAtLeast,
 	padStart,
 } from '../primitive/StringExt.js';
+import { asciiCased, printable } from '../primitive/Utf.js';
+import type { WindowStr } from '../primitive/WindowStr.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 //Augmented Backus-Naur Form
@@ -17,9 +20,29 @@ const CONCAT_SEP = ' ';
 const CONCAT_SEP_HEX = '.';
 const ALT_SEP = ' / ';
 
-export interface IBnfRepeatable {
-	get nonPrintable(): boolean;
-	descr(asHex: boolean): string;
+export interface IBnf {
+    /**
+     * Name of the component (default undefined)
+     */
+    get name():string|undefined;
+    /**
+     * Whether non-printable characters are found within
+     */
+    get nonPrintable(): boolean;
+    /**
+     * Catching length, min/max
+     */
+    get length():[number,number];
+    /**
+     * BNF syntax description of the rule
+     * @param asHex 
+     */
+    descr(asHex: boolean): string;
+    /**
+     * Test whether `s` contains this at the beginning
+     * @param s 
+     */
+    atStartOf(s:WindowStr):MatchResult;
 	/**
 	 * Casting to primitive type, debug
 	 */
@@ -30,9 +53,8 @@ export interface IBnfRepeatable {
 	[consoleDebugSymbol](/*depth, options, inspect*/): unknown;
 }
 
-export interface IBnfRepeat {
-	get rule(): IBnfRepeatable;
-	descr(asHex: boolean): string;
+export interface IBnfRepeat extends IBnf {
+	get rule(): IBnf;
 }
 
 function bnfCharArrToStr(asHex: boolean, set: BnfChar[]): string {
@@ -43,7 +65,8 @@ function bnfCharArrToStr(asHex: boolean, set: BnfChar[]): string {
 
 // -- -- -- -- -- -- -- BNF Types -- -- -- -- -- -- --
 
-class BnfChar implements IBnfRepeatable {
+class BnfChar implements IBnf {
+    name:string|undefined=undefined;
 	readonly ord: number;
 	readonly caseInsensitive: boolean | undefined;
 
@@ -54,13 +77,11 @@ class BnfChar implements IBnfRepeatable {
 	 */
 	constructor(
 		value: string | number | BnfChar,
-		caseInsensitive: boolean | undefined = undefined
+		caseInsensitive?: boolean,
+        name?:string
 	) {
-		// !! BUG: `boolean|undefined=false` will set specific undefined values to false
-		// which in some ways is what you imagine it means, but in another specifically
-		// providing a value is different from not providing it (the only time you might
-		// expect the default to be used).  Consequentially the false coercing happens
-		// inside @see smartSensitive
+        // Warning: boolean|undefined=false will set specific undefined values to false
+        //  which you might expect, but doesn't seem the same as not specifying
 		if (typeof value === 'number') {
 			this.ord = value;
 		} else if (value instanceof BnfChar) {
@@ -74,6 +95,7 @@ class BnfChar implements IBnfRepeatable {
 			this.ord = value.charCodeAt(0);
 		}
 		this.caseInsensitive = BnfChar.smartSensitive(this.ord, caseInsensitive);
+        this.name=name;
 	}
 
 	/**
@@ -83,26 +105,25 @@ class BnfChar implements IBnfRepeatable {
 	 * @param caseInsensitive
 	 * @returns
 	 */
-	static smartSensitive(
+	private static smartSensitive(
 		ord: number,
 		caseInsensitive: boolean | undefined
 	): boolean | undefined {
-		//if (caseInsensitive===undefined) return caseInsensitive;
-		if (ord < 64) return undefined;
-		if (ord < 128) {
-			//fold to upper case
-			ord = ord & 95;
-			if (ord < 65 || ord > 90) return undefined;
-		}
-		//Default sensitive
-		if (caseInsensitive === undefined) caseInsensitive = false;
-		return caseInsensitive;
+        if (asciiCased(ord)) {
+            //default sensitive
+            if (caseInsensitive===undefined) return false;
+            return caseInsensitive;
+        }
+        return undefined;
 	}
 
 	get nonPrintable(): boolean {
-		//@@todo: the no printable space is bigger than this
-		return this.ord < 32;
+        return !printable(this.ord);
 	}
+
+    get length():[number,number] {
+        return [1,1];
+    }
 
 	//Note, case insensitivity is not reflected in the following
 	// parameters and method.
@@ -126,6 +147,22 @@ class BnfChar implements IBnfRepeatable {
 		return this.nonPrintable ? '%x' + this.chrHex : `"${this.chr}"`;
 	}
 
+    atStartOf(s:WindowStr):MatchResult {
+        if (s.length===0) return new MatchFail(0);
+        let match=false;
+        if (this.caseInsensitive) {
+            //Fold to lower case (upper case will break other codepoints)
+            const c=s.charCodeAt(0)|0x20;
+            match=(c===(this.ord|0x20));
+        } else {
+            match=s.charCodeAt(0)===this.ord;
+        }
+        if (!match) {
+            return new MatchFail(0);
+        }
+        return new MatchSuccess(s.sub(1),{name:this.name,value:s.left(1)});
+    }
+
 	[Symbol.toPrimitive](): string {
 		return this.descr() + (this.caseInsensitive ? '/i' : '');
 	}
@@ -139,14 +176,16 @@ class BnfChar implements IBnfRepeatable {
 	}
 }
 
-class BnfRange implements IBnfRepeatable, Iterable<BnfChar> {
+class BnfRange implements IBnf, Iterable<BnfChar> {
+    name:string|undefined=undefined;
 	readonly start: BnfChar;
 	readonly end: BnfChar;
 	readonly nonPrintable: boolean;
 
 	constructor(
 		startInc: string | number | BnfChar,
-		endInc: string | number | BnfChar
+		endInc: string | number | BnfChar,
+        name?:string
 	) {
 		this.start = new BnfChar(startInc);
 		this.end = new BnfChar(endInc);
@@ -155,9 +194,17 @@ class BnfRange implements IBnfRepeatable, Iterable<BnfChar> {
 		this.nonPrintable = this.start.nonPrintable || this.end.nonPrintable;
 		if (this.end.ord <= this.start.ord)
 			throw new OutOfRangeError('End (in ASCII)', this.end.chr, this.start.chr);
+        this.name=name;
 	}
 
-	get length(): number {
+    get length():[number,number] {
+        return [1,1];
+    }
+
+    /**
+     * Number of potential characters
+     */
+	get rangeLength(): number {
 		return this.end.ord - this.start.ord + 1;
 	}
 
@@ -187,6 +234,16 @@ class BnfRange implements IBnfRepeatable, Iterable<BnfChar> {
 			: `${this.start.descr()}-${this.end.descr()}`;
 	}
 
+    atStartOf(s:WindowStr):MatchResult {
+        if (s.length===0) return new MatchFail(0);
+        const c=s.charCodeAt(0);
+        if (c<this.start.ord || c>this.end.ord) {
+            return new MatchFail(0);
+        }
+        return new MatchSuccess(s.sub(1),{name:this.name,value:s.left(1)});
+    }
+
+
 	[Symbol.toPrimitive](): string {
 		return `${this.start[Symbol.toPrimitive]()}-${this.end[
 			Symbol.toPrimitive
@@ -202,107 +259,10 @@ class BnfRange implements IBnfRepeatable, Iterable<BnfChar> {
 	}
 }
 
-class BnfConcat implements IBnfRepeatable, Iterable<IBnfRepeatable> {
-	readonly items: IBnfRepeatable[];
-	readonly nonPrintable: boolean;
-
-	constructor(...items: IBnfRepeatable[]) {
-		this.items = items;
-		//non printable if any of the items are non printable
-		this.nonPrintable = items.some((v) => v.nonPrintable);
-	}
-
-	[Symbol.iterator](): Iterator<IBnfRepeatable> {
-		return this.items[Symbol.iterator]();
-	}
-
-	descr(asHex = false): string {
-		const ret: string[] = new Array<string>(this.items.length);
-
-		const charSet: BnfChar[] = [];
-		let charSetNonPrintable = false;
-		let idx = 0;
-		for (const item of this.items) {
-			//Compress a char sequence into a string
-			if (item instanceof BnfChar && item.caseInsensitive) {
-				charSet.push(item);
-				charSetNonPrintable ||= item.nonPrintable;
-			} else {
-				if (charSet.length > 0) {
-					ret[idx++] = bnfCharArrToStr(asHex || charSetNonPrintable, charSet);
-					charSet.length = 0;
-				}
-				ret[idx++] = item.descr(asHex);
-			}
-		}
-		if (charSet.length > 0) {
-			ret[idx++] =
-				asHex || charSetNonPrintable
-					? `%x${charSet.map((c) => c.chrHex).join('.')}`
-					: `"${charSet.map((c) => c.chr).join('')}"`;
-			charSet.length = 0;
-		}
-		//Only bracket if there's >1 element (by description.. there may have been more than one element input)
-		return idx <= 1
-			? ret.slice(0, idx).join(CONCAT_SEP)
-			: `(${ret.slice(0, idx).join(CONCAT_SEP)})`;
-	}
-
-	[Symbol.toPrimitive](): string {
-		return `(${this.items
-			.map((i) => i[Symbol.toPrimitive]())
-			.join(CONCAT_SEP)})`;
-	}
-
-	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return this[Symbol.toPrimitive]();
-	}
-
-	public toString(): string {
-		return this[Symbol.toPrimitive]();
-	}
-}
-
-class BnfAlt implements IBnfRepeatable, Iterable<IBnfRepeatable> {
-	readonly items: IBnfRepeatable[];
-	//While there maybe some nonPrintable elements within, Alt is a boundary
-	// (parents shouldn't be concerned)
-	readonly nonPrintable = false;
-
-	constructor(...items: IBnfRepeatable[]) {
-		this.items = items;
-	}
-
-	[Symbol.iterator](): Iterator<IBnfRepeatable> {
-		return this.items[Symbol.iterator]();
-	}
-
-	descr(asHex = false): string {
-		const ret: string[] = new Array<string>(this.items.length);
-		let idx = 0;
-		for (const item of this.items) {
-			ret[idx++] = item.descr(asHex);
-		}
-		//Only bracket if there's >1 element
-		return idx <= 1 ? ret.join(ALT_SEP) : `(${ret.join(ALT_SEP)})`;
-	}
-
-	[Symbol.toPrimitive](): string {
-		return `(${this.items.map((i) => i[Symbol.toPrimitive]()).join(ALT_SEP)})`;
-	}
-
-	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return this[Symbol.toPrimitive]();
-	}
-
-	public toString(): string {
-		return this[Symbol.toPrimitive]();
-	}
-}
-
 class BnfString
-	implements IBnfRepeatable, Iterable<BnfChar>, Iterable<IBnfRepeatable>
+	implements IBnf, Iterable<BnfChar>, Iterable<IBnf>
 {
+    name:string|undefined=undefined;
 	private readonly _chars: BnfChar[];
 	readonly nonPrintable: boolean;
 	/**
@@ -319,7 +279,7 @@ class BnfString
 	 * @param value
 	 * @param caseInsensitive
 	 */
-	constructor(value: string | BnfChar[], caseInsensitive = true) {
+	constructor(value: string | BnfChar[], caseInsensitive = true,name?:string) {
 		let ci: boolean | undefined | 'mix' = caseInsensitive;
 		if (value instanceof Array<BnfChar>) {
 			this._chars = value;
@@ -356,7 +316,12 @@ class BnfString
 			ci = ci_all_undef ? undefined : caseInsensitive;
 		}
 		this.caseInsensitive = ci;
+        this.name=name;
 	}
+
+    get length():[number,number] {
+        return [this._chars.length,this._chars.length];
+    }
 
 	[Symbol.iterator](): Iterator<BnfChar> {
 		return this._chars[Symbol.iterator]();
@@ -375,6 +340,24 @@ class BnfString
 			return bnfCharArrToStr(this.nonPrintable, this._chars);
 		}
 	}
+
+    atStartOf(s:WindowStr):MatchResult {
+        //Make a copy of the original
+        let ptr=s.sub(0);
+        let i=0;
+        for(;i<this._chars.length;i++) {
+            const match=this._chars[i].atStartOf(ptr);
+            if (match.fail) {
+                return new MatchFail(s.length-ptr.length);
+            }
+            //We could capture the component parts, but a string is a basic primitive
+            // so that could be confusing.
+            ptr=match.remain;
+        }
+        //Catch the full match
+        const full=s.left(s.length-ptr.length);
+        return new MatchSuccess(ptr,{name:this.name,value:full})
+    }
 
 	[Symbol.toPrimitive](): string {
 		switch (this.caseInsensitive) {
@@ -403,26 +386,231 @@ class BnfString
 	}
 }
 
+class BnfConcat implements IBnf, Iterable<IBnf> {
+    name:string|undefined=undefined;
+    suppressComponents=false;
+	readonly items: IBnf[];
+	readonly nonPrintable: boolean;
+
+	constructor(...items: IBnf[]) {
+		this.items = items;
+		//non printable if any of the items are non printable
+		this.nonPrintable = items.some((v) => v.nonPrintable);
+	}
+
+    get length():[number,number] {
+        let min=0;
+        let max=0;
+        for(const item of this.items) {
+            const [iMin,iMax]=item.length;
+            min+=iMin;
+            max+=iMax;
+        }
+        return [min,max];
+    }
+
+	[Symbol.iterator](): Iterator<IBnf> {
+		return this.items[Symbol.iterator]();
+	}
+
+	descr(asHex = false): string {
+		const ret: string[] = new Array<string>(this.items.length);
+
+		const charSet: BnfChar[] = [];
+		let charSetNonPrintable = false;
+		let idx = 0;
+		for (const item of this.items) {
+			//Compress a char sequence into a string
+			if (item instanceof BnfChar && item.caseInsensitive) {
+				charSet.push(item);
+				charSetNonPrintable ||= item.nonPrintable;
+			} else {
+				if (charSet.length > 0) {
+					ret[idx++] = bnfCharArrToStr(asHex || charSetNonPrintable, charSet);
+					charSet.length = 0;
+				}
+				ret[idx++] = item.descr(asHex);
+			}
+		}
+		if (charSet.length > 0) {
+			ret[idx++] =
+				asHex || charSetNonPrintable
+					? `%x${charSet.map((c) => c.chrHex).join('.')}`
+					: `"${charSet.map((c) => c.chr).join('')}"`;
+			charSet.length = 0;
+		}
+		//Only bracket if there's >1 element (by description.. there may have been more than one element input)
+		return idx <= 1
+			? ret.slice(0, idx).join(CONCAT_SEP)
+			: `(${ret.slice(0, idx).join(CONCAT_SEP)})`;
+	}
+
+    atStartOf(s:WindowStr):MatchResult {
+        const components:MatchDetail[]=[];
+        let ptr=s.sub(0);
+        for(const item of this.items) {
+            const match=item.atStartOf(ptr);
+            if (match.fail) {
+                return new MatchFail(s.length-ptr.length);
+            }
+            ptr=match.remain;
+            components.push(match.result);
+            // if (match.components.length>0) {
+            //     if (match.result.name!==undefined) components.push(match.result);
+            //     components.push(...match.components);
+            // } else {
+            //     components.push(match.result);
+            // }
+        }
+        //Catch the full match
+        const full=s.left(s.length-ptr.length);
+        if (this.suppressComponents) {
+            return new MatchSuccess(ptr,{name:this.name,value:full});    
+        }
+        return new MatchSuccess(ptr,{name:this.name,value:full,components:components});
+    }
+
+	[Symbol.toPrimitive](): string {
+		return `(${this.items
+			.map((i) => i[Symbol.toPrimitive]())
+			.join(CONCAT_SEP)})`;
+	}
+
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return this[Symbol.toPrimitive]();
+	}
+
+	public toString(): string {
+		return this[Symbol.toPrimitive]();
+	}
+}
+
+class BnfAlt implements IBnf, Iterable<IBnf> {
+    name:string|undefined=undefined;
+    suppressComponents=false;
+	readonly items: IBnf[]=[];
+	//While there maybe some nonPrintable elements within, Alt is a boundary
+	// (parents shouldn't be concerned)
+	readonly nonPrintable = false;
+
+	constructor(...items: IBnf[]) {
+        //Unwrap sub-alts
+        for(const item of items) {
+            if (item instanceof BnfAlt) {
+                this.items.push(...item.items);
+            } else {
+                this.items.push(item);
+            }
+        }
+		//this.items = items;
+	}
+
+    get length():[number,number] {
+        let min=Number.MAX_SAFE_INTEGER;
+        let max=0;
+        for(const item of this.items) {
+            const [iMin,iMax]=item.length;
+            if (iMin<min) min=iMin;
+            if (iMax>max) max=iMax;
+        }
+        return [min,max];
+    }
+
+	[Symbol.iterator](): Iterator<IBnf> {
+		return this.items[Symbol.iterator]();
+	}
+
+	descr(asHex = false): string {
+		const ret: string[] = new Array<string>(this.items.length);
+		let idx = 0;
+		for (const item of this.items) {
+			ret[idx++] = item.descr(asHex);
+		}
+		//Only bracket if there's >1 element
+		return idx <= 1 ? ret.join(ALT_SEP) : `(${ret.join(ALT_SEP)})`;
+	}
+
+    atStartOf(s:WindowStr):MatchResult {
+        for(const item of this.items) {
+            const match=item.atStartOf(s);
+            if (!match.fail) {
+                //We have to recreate the result to capture our name
+                return new MatchSuccess(match.remain,{
+                    name:this.name,
+                    value:match.result.value,
+                    components:this.suppressComponents?[]:[match.result]});
+                // if (match.result.name!==undefined) {
+                //     //Keep an old name if it's found
+                //     return new MatchSuccess(match.remain,{name:this.name,value:match.result.value,components:[match.result]});    
+                // } else {
+                //     return new MatchSuccess(match.remain,{name:this.name,value:match.result.value},match.components);
+                // }
+            }
+        }
+        return new MatchFail(0);
+    }
+
+	[Symbol.toPrimitive](): string {
+		return `(${this.items.map((i) => i[Symbol.toPrimitive]()).join(ALT_SEP)})`;
+	}
+
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return this[Symbol.toPrimitive]();
+	}
+
+	public toString(): string {
+		return this[Symbol.toPrimitive]();
+	}
+
+    /**
+     * Compose an alternate from a series of characters
+     * @param chars 
+     * @param caseInsensitive 
+     * @returns 
+     */
+    static Split(chars:string,caseInsensitive:boolean|undefined=undefined,name?:string):BnfAlt {
+        const ret=new BnfAlt(...chars.split('').map(c=>new BnfChar(c,caseInsensitive)));
+        ret.name=name;
+        return ret;
+    }
+}
+
+
+
 class BnfRepeat implements IBnfRepeat {
+    name:string|undefined=undefined;
+    suppressComponents=false;
 	readonly min: number;
 	readonly max: number;
-	readonly rule: IBnfRepeatable;
+	readonly rule: IBnf;
 
 	/**
 	 * Between @see min and @see max repeats of @see rule
 	 * `{min,max}` suffix in RegEx
 	 * @param rule
-	 * @param min Integer, must be >=0
-	 * @param max Integer, must be >=@see min
+	 * @param min Integer, must be >=0 (default 0)
+	 * @param max Integer, must be >=@see min (default MAX_INT)
 	 */
-	constructor(rule: IBnfRepeatable, min = 0, max = Number.MAX_SAFE_INTEGER) {
+	private constructor(rule: IBnf, min:number, max:number,name?:string) {
 		//max = infinity, but we cannot measure that..this is a decent equiv for now
 		inRangeInclusive(min, 0, Number.MAX_SAFE_INTEGER);
 		inRangeInclusive(max, min, Number.MAX_SAFE_INTEGER);
 		this.rule = rule;
 		this.min = min;
 		this.max = max;
+        this.name=name;
 	}
+
+    get nonPrintable():boolean {
+        return this.rule.nonPrintable;
+    }
+
+    get length():[number,number] {
+        const [rMin,rMax]=this.rule.length;
+        const min=rMin*this.min;
+        const max=this.max===Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : rMax*this.max;
+        return [min,max];
+    }
 
 	descr(asHex = false): string {
 		let prefix = (this.min == 0 ? '' : this.min) + '*';
@@ -431,62 +619,36 @@ class BnfRepeat implements IBnfRepeat {
 		return prefix + this.rule.descr(asHex);
 	}
 
-	/**
-	 * Zero or more @param rule repeated
-	 * `*` suffix in RegEx
-	 */
-	static ZeroPlus(rule: IBnfRepeatable): BnfRepeat {
-		return new BnfRepeat(rule);
-	}
+    atStartOf(s:WindowStr):MatchResult {
+        const components:MatchDetail[]=[];
+        let ptr=s.sub(0);
+        //Must have at least min matches
+        for(let i=0;i<this.min;i++) {
+            const match=this.rule.atStartOf(ptr);
+            if (match.fail) {
+                return new MatchFail(s.length-ptr.length);
+            }
+            ptr=match.remain;
+            components.push(match.result);
+        }
+        //May have up to max matches
+        for (let i=this.min;i<this.max;i++) {
+            const match=this.rule.atStartOf(ptr);
+            if (match.fail) break;
+            ptr=match.remain;
+            components.push(match.result);
+            // if (match.components.length>0) {
+            //     components.push(...match.components);
+            // } else {
+            //     components.push(match.result);
+            // }
+        }
+        //Catch the full match
+        const full=s.left(s.length-ptr.length);
+        return new MatchSuccess(ptr,{name:this.name,value:full,components:this.suppressComponents?[]:components});
+    }
 
-	/**
-	 * At least one @param rule repeated
-	 * `+` suffix in RegEx
-	 * @param rule
-	 * @returns
-	 */
-	static OnePlus(rule: IBnfRepeatable): BnfRepeat {
-		return new BnfRepeat(rule, 1);
-	}
-
-	/**
-	 * Zero or one @param rule (aka optional)
-	 * `?` suffix in RegEx
-	 * @param rule
-	 * @returns
-	 */
-	static Optional(rule: IBnfRepeatable): BnfRepeat {
-		return new BnfRepeat(rule, 0, 1);
-	}
-
-	/**
-	 * @see constructor
-	 * `{min,max}` suffix in RegEx
-	 */
-	static Between(rule: IBnfRepeatable, min: number, max: number): BnfRepeat {
-		return new BnfRepeat(rule, min, max);
-	}
-
-	/**
-	 * @param rule repeated @param value times
-	 * `{value}` suffix in RegEx
-	 * @param rule
-	 * @param value Integer, must be >=0 (probably >0)
-	 * @returns
-	 */
-	static Exactly(rule: IBnfRepeatable, value: number): BnfRepeat {
-		return new BnfRepeat(rule, value, value);
-	}
-
-	/**
-	 * https://datatracker.ietf.org/doc/html/rfc5234#section-3.7
-	 * @see Exactly
-	 */
-	static Specific(rule: IBnfRepeatable, value: number): BnfRepeat {
-		return new BnfRepeat(rule, value, value);
-	}
-
-	[Symbol.toPrimitive](): string {
+    [Symbol.toPrimitive](): string {
 		const max = this.max === Number.MAX_SAFE_INTEGER ? '∞' : this.max;
 		return this.min + '*' + max + this.rule[Symbol.toPrimitive]();
 	}
@@ -497,6 +659,58 @@ class BnfRepeat implements IBnfRepeat {
 
 	public toString(): string {
 		return this[Symbol.toPrimitive]();
+	}
+
+	/**
+	 * Zero or more @param rule repeated
+	 * `*` suffix in RegEx
+	 */
+	static ZeroPlus(rule: IBnf,name?:string): BnfRepeat {
+		return new BnfRepeat(rule,0,Number.MAX_SAFE_INTEGER,name);
+	}
+
+	/**
+	 * At least one @param rule repeated
+	 * `+` suffix in RegEx
+	 * @param rule
+	 * @returns
+	 */
+	static OnePlus(rule: IBnf,name?:string): BnfRepeat {
+		return new BnfRepeat(rule, 1,Number.MAX_SAFE_INTEGER,name);
+	}
+
+	/**
+	 * Zero or one @param rule (aka optional)
+	 * `?` suffix in RegEx
+	 * @param rule
+	 * @returns
+	 */
+	static Optional(rule: IBnf,name?:string): BnfRepeat {
+		return new BnfRepeat(rule, 0, 1,name);
+	}
+
+    /**
+	 * Between @see min and @see max repeats of @see rule
+	 * `{min,max}` suffix in RegEx
+	 * @param min Integer, must be >=0
+	 * @param max Integer, must be >=@see min
+     * @param rule 
+     * @param name 
+     * @returns 
+     */
+	static Between(min:number,max:number,rule: IBnf,name?:string): BnfRepeat {
+		return new BnfRepeat(rule, min, max,name);
+	}
+
+    /**
+	 * @param rule repeated @param value times
+	 * `{value}` suffix in RegEx
+     * @param count Integer, must be >=0 (probably >0)
+     * @param rule 
+     * @returns 
+     */
+	static Exactly(count:number,rule: IBnf): BnfRepeat {
+		return new BnfRepeat(rule, count, count);
 	}
 }
 
