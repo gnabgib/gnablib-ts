@@ -1,14 +1,24 @@
 import { suite } from 'uvu';
-import * as assert from 'uvu/assert';
+import assert from '../../src/test/assert';
+import * as uAssert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
-import { md5 } from '../../src/hash/Md5';
+import { Md5 } from '../../src/hash/Md5';
 
 const tsts = suite('MD5/RFC 1321');
 
 const asciiHexPairs = [
-	//Source, MD5-as-hex
+	//Source: RFC 1321
 	['', 'D41D8CD98F00B204E9800998ECF8427E'],
+	['a', '0CC175B9C0F1B6A831C399E269772661'],
+	['abc', '900150983CD24FB0D6963F7D28E17F72'],
+	['message digest', 'F96B697D7CB7938D525A2F31AAF161D0'],
+	['abcdefghijklmnopqrstuvwxyz', 'C3FCD3D76192E4007DFB496CCA67E13B'],
+	['ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789','D174AB98D277D9F5A5611C2C9F419D9F'],
+	['12345678901234567890123456789012345678901234567890123456789012345678901234567890','57EDF4A22BE3C955AC49DA2E2107B67A'],
+
+
+	//Source, MD5-as-hex
 	['\0', '93B885ADFE0DA089CDF634904FD59F71'],
 	['\0\0', 'C4103F122D27677C9DB144CAE1394A66'],
 	['f', '8FA14CDD754F91CC6554C9E71929CCE7'],
@@ -20,10 +30,7 @@ const asciiHexPairs = [
 		'The quick brown fox jumps over the lazy dog.',
 		'E4D909C290D0FB1CA068FFADDF22CBD0',
 	],
-	['abc', '900150983CD24FB0D6963F7D28E17F72'],
 	//https://md5calc.com/hash/md5
-	['message digest', 'F96B697D7CB7938D525A2F31AAF161D0'],
-	['abcdefghijklmnopqrstuvwxyz', 'C3FCD3D76192E4007DFB496CCA67E13B'],
 	['ABCDEFGHIJKLMNOPQRSTUVWXYZ', '437BBA8E0BF58337674F4539E75186AC'],
 	['ABCDEFGHIJKLMNOPQRSTUVWXYZa', 'FF5430F5934BE6AFD893DD7DC7DF4694'],
 	['ABCDEFGHIJKLMNOPQRSTUVWXYZab', '38B26FADF19F786CD53F8A552A7836A8'],
@@ -132,14 +139,6 @@ const asciiHexPairs = [
 		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678',
 		'BAC284BC4691EF939CDD215C16D0A47A',
 	],
-	[
-		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-		'D174AB98D277D9F5A5611C2C9F419D9F',
-	],
-	[
-		'12345678901234567890123456789012345678901234567890123456789012345678901234567890',
-		'57EDF4A22BE3C955AC49DA2E2107B67A',
-	],
 	['f', '8FA14CDD754F91CC6554C9E71929CCE7'],
 	['fo', 'EED807024939B808083F0031A56E9872'],
 	['foo', 'ACBD18DB4CC2F85CEDEF654FCCC4A4D8'],
@@ -148,58 +147,62 @@ const asciiHexPairs = [
 	['foobar', '3858F62230AC3C915F300C664312C63F'],
 	['foo bar baz٪☃🍣', 'D7C4BA57383416CE758A11277E0E3D8E'],
 	['gnabgib', '0DF80DBA66CE7E7B359FB87F21F88132'],
-
-	[
-		'\t\tconst x0 = littleEndian.u32FromBytes(bytes, i);\n' +
-			'\t\tconst x1 = littleEndian.u32FromBytes(bytes, i + 4);\n' +
-			'\t\tconst x2 = littleEndian.u32FromBytes(bytes, i + 8);\n' +
-			'\t\tconst x3 = littleEndian.u32FromBytes(bytes, i + 12);\n' +
-			'\t\tconst x4 = littleEndian.u32FromBytes(bytes, i + 16);\n' +
-			'\t\tconst x5 = littleEndian.u32FromBytes(bytes, i + 20);\n' +
-			'\t\tconst x6 = littleEndian.u32FromBytes(bytes, i + 24);\n' +
-			'\t\tconst x7 = littleEndian.u32FromBytes(bytes, i + 28);\n' +
-			'\t\tconst x8 = littleEndian.u32FromBytes(bytes, i + 32);\n' +
-			'\t\tconst x9 = littleEndian.u32FromBytes(bytes, i + 36);\n' +
-			'\t\tconst xa = littleEndian.u32FromBytes(bytes, i + 40);\n' +
-			'\t\tconst xb = littleEndian.u32FromBytes(bytes, i + 44);\n' +
-			'\t\tconst xc = littleEndian.u32FromBytes(bytes, i + 48);\n' +
-			'\t\tconst xd = littleEndian.u32FromBytes(bytes, i + 52);\n' +
-			'\t\tconst xe = littleEndian.u32FromBytes(bytes, i + 56);\n' +
-			'\t\tconst xf = littleEndian.u32FromBytes(bytes, i + 60);\n',
-		'D7B2C5ABCF19B48D2DA49C4B9247E50E',
-	],
 ];
 
-for (const pair of asciiHexPairs) {
-	tsts('Hash:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = md5(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of asciiHexPairs) {
+	tsts('MD5:' + source, () => {
+		const b = utf8.toBytes(source);
+		const hash=new Md5();
+		hash.write(b);
+		const md=hash.sum();
+		assert.bytesMatchHex(md, expect);
 	});
 }
 
-const hexHexPairs = [
-	['', 0, 'D41D8CD98F00B204E9800998ECF8427E'],
-	['\0', 1, 'D41D8CD98F00B204E9800998ECF8427E'],
-];
+tsts('Sequential Hash: a/ab/b',()=> {
+	const hash=new Md5();
+	//md(a)
+	hash.write(utf8.toBytes('a'));
+	assert.bytesMatchHex(hash.sum(), '0CC175B9C0F1B6A831C399E269772661');
+	//md(ab)
+	hash.write(utf8.toBytes('b'));
+	assert.bytesMatchHex(hash.sum(), '187EF4436122D1CC2F40DC2B92F0EBA0');
+	//md(b)
+	hash.reset();
+	hash.write(utf8.toBytes('b'));
+	assert.bytesMatchHex(hash.sum(), '92EB5FFEE6AE2FEC3AD71C777531578F');
+});
 
-// for(let i=0;i<130;i+=2) {
-//     const len=i+64-((i+8)%64);// +(56-(i-8)%64)%64;
-//     console.log(i,len);
-// }
+tsts('MD5 Collision example:',()=>{
+	const k1='d131dd02c5e6eec4'+'693d9a0698aff95c'+'2fcab58712467eab'+'4004583eb8fb7f89'+
+	//        ----------------   ----------------   ------^---------   ----------------
+			 '55ad340609f4b302'+'83e488832571415a'+'085125e8f7cdc99f'+'d91dbdf280373c5b'+
+	//        ----------------   ----------^-----   ----------------   ------^---------
+			 'd8823e3156348f5b'+'ae6dacd436c919c6'+'dd53e2b487da03fd'+'02396306d248cda0'+
+	//        ----------------   ----------------   ------^---------   ----------------
+			 'e99f33420f577ee8'+'ce54b67080a80d1e'+'c69821bcb6a88393'+'96f9652b6ff72a70';
+	//        ----------------   ----------^-----   ----------------   ------^---------
+
+	const k2='d131dd02c5e6eec4'+'693d9a0698aff95c'+'2fcab50712467eab'+'4004583eb8fb7f89'+
+	//        ----------------   ----------------   ------^---------   ----------------
+			 '55ad340609f4b302'+'83e4888325f1415a'+'085125e8f7cdc99f'+'d91dbd7280373c5b'+
+	//        ----------------   ----------^-----   ----------------   ------^---------
+			 'd8823e3156348f5b'+'ae6dacd436c919c6'+'dd53e23487da03fd'+'02396306d248cda0'+
+	//        ----------------   ----------------   ------^---------   ----------------
+			 'e99f33420f577ee8'+'ce54b67080280d1e'+'c69821bcb6a88393'+'96f965ab6ff72a70';
+	//        ----------------   ----------^-----   ----------------   ------^---------
+
+	uAssert.not.equal(k1,k2);
+
+	const hash=new Md5();
+	hash.write(hex.toBytes(k1));
+	const digest1=hash.sum();
+	hash.reset();
+
+	hash.write(hex.toBytes(k2));
+	const digest2=hash.sum();
+
+	uAssert.is(hex.fromBytes(digest1),hex.fromBytes(digest2));
+});
+
 tsts.run();
-
-//F(X,Y,Z) = XY v not(X) Z
-/* Round 1. */
-/* Let [abcd k s i] denote the operation
-          a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s). */
-/* Do the following 16 operations. */
-//[ABCD  0  7  1]  [DABC  1 12  2]  [CDAB  2 17  3]  [BCDA  3 22  4]
-//a = b+ ((a + BC v ~B d + x0 + t1 <<< 7))
-// a+b&c|~b&d
-
-//  a = FF(a, b, c, d, m[i+ 0],  7, -680876936);
-//  md5._ff  = function (a, b, c, d, x, s, t) {
-//     var n = a + (b & c | ~b & d) + (x >>> 0) + t;
-//     return ((n << s) | (n >>> (32 - s))) + b;
-//   };

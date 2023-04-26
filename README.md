@@ -4,14 +4,16 @@ A library for building web/node/deno applications.
 
 ## Installation
 
-This module is available through [NPM](https://www.npmjs.com/).  There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)
+This module is available through [NPM](https://www.npmjs.com/). There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)
 
 **PNPM**
+
 ```bash
 pnpm install gnablib --ignore-scripts
 ```
 
 **NPM**
+
 ```bash
 npm install gnablib --ignore-scripts
 ```
@@ -119,7 +121,7 @@ npm install gnablib --ignore-scripts
 
 - RegExp escape string
 
-<!-- 
+<!--
 ## Development
 
 Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runner /w [uvu/assert](https://github.com/lukeed/uvu/blob/master/docs/api.assert.md)
@@ -132,12 +134,19 @@ Content will be output into `/dist/**`
 
 ```bash
 npm run build
-``` 
+```
 
 Update version
 ```bash
 npm version patch -m "Upgrade to %s, <reason>"
 ```
+
+Resume after checkout
+```bash
+pnpm install
+```
+
+Format in VSCode: CTRL+SHIFT+P: Format
 -->
 
 ## License

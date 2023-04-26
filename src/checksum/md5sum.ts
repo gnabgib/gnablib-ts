@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { md5 } from '../hash/Md5.js';
+import { Md5 } from '../hash/Md5.js';
 
 /**
  * Same as MD5
@@ -9,5 +9,7 @@ import { md5 } from '../hash/Md5.js';
  * @returns
  */
 export function md5sum(bytes: Uint8Array): Uint8Array {
-	return md5(bytes);
+	const hash=new Md5();
+	hash.write(bytes);
+	return hash.sum();
 }

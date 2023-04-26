@@ -1,3 +1,5 @@
+import * as hex from '../encoding/Hex.js';
+
 type errorSetting = {
 	percent?:number,
 	amount?:number
@@ -65,5 +67,10 @@ export default {
 			return;
 		}
 		throw new Error(`${name} '${found}' not in range (${low} (${lowType}) <= ${expect} <= ${high} (${highType})) ${away}/${awayPc}% off`);
+	},
+	bytesMatchHex(b:Uint8Array,expectHex:string):void {
+		const found=hex.fromBytes(b);
+		if (found===expectHex) return;
+		throw new Error(`Expect: ${expectHex}\n    Found : ${found}`);
 	}
 };

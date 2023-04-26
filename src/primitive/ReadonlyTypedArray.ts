@@ -9,7 +9,7 @@ type TypedArrayMutableProperties =
 	| 'sort' //Mutates internal
 	//We need to hide 'buffer' otherwise you can build a new TypedArray from the buffer and mutate
 	| 'buffer'
-	//We need to hide 'subarray' otherwise you can build a new TypedArray from the subarray (or it's buffer) and mutate
+	//We need to hide 'subarray' otherwise you can build a new TypedArray from the subarray (or its buffer) and mutate
 	| 'subarray';
 
 export interface ReadonlyUint8ClampedArray
