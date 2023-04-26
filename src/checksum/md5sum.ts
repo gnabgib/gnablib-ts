@@ -1,4 +1,4 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2022-2023 gnabgib MPL-2.0 */
 
 import { Md5 } from '../hash/Md5.js';
 
