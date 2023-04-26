@@ -1,11 +1,12 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2022-2023 gnabgib MPL-2.0 */
 
 import * as littleEndian from '../endian/little.js';
 import * as bitExt from '../primitive/BitExt.js';
 import type { IHash } from './IHash.js';
 
 //[The MD5 Message-Digest Algorithm](https://datatracker.ietf.org/doc/html/rfc1321)
-
+//[Wikipedia: MD5](https://en.wikipedia.org/wiki/MD5)
+// You can generate test values with: `echo -n '<test>' | md5sum `
 const digestSize = 16; //128 bits
 const digestSizeU32 = 4;
 const blockSize = 64; //512 bits
@@ -39,6 +40,9 @@ export class Md5 implements IHash {
 	 */
 	private bPos = 0;
 
+	/**
+	 * Build a new MD5 hash generator
+	 */
 	constructor() {
 		this.reset();
 	}
@@ -714,7 +718,7 @@ export class Md5 implements IHash {
 	}
 
 	/**
-	 * Clone the running context, close out the hash, and return the sum (does not change running hash)
+	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
 		const alt = this.clone();
@@ -731,6 +735,9 @@ export class Md5 implements IHash {
 		}
 		//Zero the rest of the block
 		alt.block.fill(0, alt.bPos);
+
+		//Write out the data size in little-endian
+
 		//We tracked bytes, <<3 (*8) to count bits
 		littleEndian.u32IntoBytes(alt.ingestBytes << 3, alt.block, sizeSpace);
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
@@ -742,7 +749,7 @@ export class Md5 implements IHash {
 	}
 
 	/**
-	 * Set hash to initial state. Any past writes will be forgotten
+	 * Set hash state. Any past writes will be forgotten
 	 */
 	reset(): void {
 		//Setup state

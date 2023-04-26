@@ -1,16 +1,16 @@
 import { suite } from 'uvu';
-import * as assert from 'uvu/assert';
+import assert from '../../src/test/assert';
+import * as uAssert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
-import { md4 } from '../../src/hash/Md4';
+import { Md4 } from '../../src/hash/Md4';
 
 const tsts = suite('MD4/RFC 1320');
 //Note RFC 6150 retires
 
 const asciiHexPairs = [
-	//Source: https://en.wikipedia.org/wiki/MD4
+	//Source: https://datatracker.ietf.org/doc/html/rfc1186
 	['', '31D6CFE0D16AE931B73C59D7E0C089C0'],
-	['\0', '47C61A0FA8738BA77308A8A600F88E4B'],
 	['a', 'BDE52CB31DE33E46245E05FBDBD6FB24'],
 	['abc', 'A448017AAF21D8525FC10AE87AA6729D'],
 	['message digest', 'D9130A8164549FE818874806E1C7014B'],
@@ -19,6 +19,10 @@ const asciiHexPairs = [
 		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
 		'043F8582F241DB351CE627E153E7F0E4',
 	],
+	['hi', 'CFAEE2512BD25EB033236F0CD054E308'],
+
+	//Source: https://en.wikipedia.org/wiki/MD4
+	['\0', '47C61A0FA8738BA77308A8A600F88E4B'],
 	[
 		'12345678901234567890123456789012345678901234567890123456789012345678901234567890',
 		'E33B4DDC9C38F2199C3E7B164FCC0536',
@@ -142,32 +146,52 @@ const asciiHexPairs = [
 	['gnabgib', '2AA4B585F046299C9A5F348DC6D3846A'],
 ];
 
-for (const pair of asciiHexPairs) {
-	tsts('md4:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = md4(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of asciiHexPairs) {
+	tsts('md4:' + source, () => {
+		const b = utf8.toBytes(source);
+		const hash=new Md4();
+		hash.write(b);
+		const md=hash.sum();
+		assert.bytesMatchHex(md, expect);
 	});
 }
 
-const hexHexPairs = [
-	//MD4 collision example
-	[
-		'839c7a4d7a92cb5678a5d5b9eea5a7573c8a74deb366c3dc20a083b69f5d2a3bb3719dc69891e9f95e809fd7e8b23ba6318edd45e51fe39708bf9427e9c3e8b9',
-		'4D7E6A1DEFA93D2DDE05B45D864C429B',
-	],
-	[
-		'839c7a4d7a92cbd678a5d529eea5a7573c8a74deb366c3dc20a083b69f5d2a3bb3719dc69891e9f95e809fd7e8b23ba6318edc45e51fe39708bf9427e9c3e8b9',
-		'4D7E6A1DEFA93D2DDE05B45D864C429B',
-	],
-];
+tsts('Sequential Hash: a/ab/b',()=> {
+	const hash=new Md4();
+	//md(a)
+	hash.write(utf8.toBytes('a'));
+	assert.bytesMatchHex(hash.sum(), 'BDE52CB31DE33E46245E05FBDBD6FB24');
+	//md(ab)
+	hash.write(utf8.toBytes('b'));
+	assert.bytesMatchHex(hash.sum(), 'EC388DD78999DFC7CF4632465693B6BF');
+	//md(b)
+	hash.reset();
+	hash.write(utf8.toBytes('b'));
+	assert.bytesMatchHex(hash.sum(), '7AEAFCB2818E533B384433DEA80992F5');
+});
 
-for (const pair of hexHexPairs) {
-	tsts('md4:' + pair[0], () => {
-		const b = hex.toBytes(pair[0]);
-		const m = md4(b);
-		assert.is(hex.fromBytes(m), pair[1]);
-	});
-}
+tsts('MD4 Collision example:',()=>{
+	const k1='839c7a4d7a92cb56'+'78a5d5b9eea5a757'+'3c8a74deb366c3dc'+'20a083b69f5d2a3b'+
+	//        --------------^-   ------^---------   ----------------   ----------------
+			 'b3719dc69891e9f9'+'5e809fd7e8b23ba6'+'318edd45e51fe397'+'08bf9427e9c3e8b9';
+	//        ----------------   ----------------   -----^----------   ----------------
+	const k2='839c7a4d7a92cbd6'+'78a5d529eea5a757'+'3c8a74deb366c3dc'+'20a083b69f5d2a3b'+
+	//        --------------^-   ------^---------   ----------------   ----------------
+			 'b3719dc69891e9f9'+'5e809fd7e8b23ba6'+'318edc45e51fe397'+'08bf9427e9c3e8b9';
+	//        ----------------   ----------------   -----^----------   ----------------
+
+	uAssert.not.equal(k1,k2);
+
+	const hash=new Md4();
+	hash.write(hex.toBytes(k1));
+	const digest1=hash.sum();
+	hash.reset();
+
+	hash.write(hex.toBytes(k2));
+	const digest2=hash.sum();
+
+	uAssert.is(hex.fromBytes(digest1),hex.fromBytes(digest2));
+});
+
 
 tsts.run();

@@ -6,10 +6,10 @@ export interface IHash {
      * @param data 
      */
     write(data:Uint8Array):void;
-    /**
-     * Clone the running context, close out the hash, and return the sum (does not change running hash)
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
      * - You can call write(a)-sum-write(b)-sum to get hash(a) and hash(ab)
-     */
+	 */
     sum():Uint8Array;
     /**
      * Set hash to initial state. Any past writes will be forgotten
@@ -24,3 +24,4 @@ export interface IHash {
      */
     get blockSize():number;
 }
+
