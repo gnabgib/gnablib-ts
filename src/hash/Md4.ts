@@ -28,19 +28,19 @@ export class Md4 implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	private readonly state = new Uint32Array(digestSizeU32);
+	readonly #state = new Uint32Array(digestSizeU32);
 	/**
 	 * Temp processing block
 	 */
-	private readonly block = new Uint8Array(blockSize);
+	readonly #block = new Uint8Array(blockSize);
 	/**
 	 * Number of bytes added to the hash
 	 */
-	private ingestBytes = 0;
+	#ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	private bPos = 0;
+	#bPos = 0;
 
 	/**
 	 * Build a new MD4 hash generator
@@ -50,13 +50,13 @@ export class Md4 implements IHash {
 	}
 
 	private hash() {
-		const aa = this.state[0];
-		const bb = this.state[1];
-		const cc = this.state[2];
-		const dd = this.state[3];
+		const aa = this.#state[0];
+		const bb = this.#state[1];
+		const cc = this.#state[2];
+		const dd = this.#state[3];
 
 		const x = new Uint32Array(16);
-		littleEndian.u32IntoArrFromBytes(x, 0, 16, this.block);
+		littleEndian.u32IntoArrFromBytes(x, 0, 16, this.#block);
 
 		/* Round 1. */
 		//a = (a + F(b,c,d) + X[k]) <<< s
@@ -65,99 +65,99 @@ export class Md4 implements IHash {
 		const round0col1 = 7;
 		const round0col2 = 11;
 		const round0col3 = 19;
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[3] ^ (this.state[1] & (this.state[2] ^ this.state[3]))) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[3] ^ (this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				x[0],
 			round0col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[2] ^ (this.state[0] & (this.state[1] ^ this.state[2]))) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[2] ^ (this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				x[1],
 			round0col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[1] ^ (this.state[3] & (this.state[0] ^ this.state[1]))) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[1] ^ (this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				x[2],
 			round0col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[0] ^ (this.state[2] & (this.state[3] ^ this.state[0]))) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[0] ^ (this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
 				x[3],
 			round0col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[3] ^ (this.state[1] & (this.state[2] ^ this.state[3]))) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[3] ^ (this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				x[4],
 			round0col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[2] ^ (this.state[0] & (this.state[1] ^ this.state[2]))) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[2] ^ (this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				x[5],
 			round0col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[1] ^ (this.state[3] & (this.state[0] ^ this.state[1]))) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[1] ^ (this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				x[6],
 			round0col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[0] ^ (this.state[2] & (this.state[3] ^ this.state[0]))) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[0] ^ (this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
 				x[7],
 			round0col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[3] ^ (this.state[1] & (this.state[2] ^ this.state[3]))) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[3] ^ (this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				x[8],
 			round0col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[2] ^ (this.state[0] & (this.state[1] ^ this.state[2]))) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[2] ^ (this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				x[9],
 			round0col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[1] ^ (this.state[3] & (this.state[0] ^ this.state[1]))) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[1] ^ (this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				x[10],
 			round0col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[0] ^ (this.state[2] & (this.state[3] ^ this.state[0]))) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[0] ^ (this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
 				x[11],
 			round0col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[3] ^ (this.state[1] & (this.state[2] ^ this.state[3]))) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[3] ^ (this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				x[12],
 			round0col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[2] ^ (this.state[0] & (this.state[1] ^ this.state[2]))) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[2] ^ (this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				x[13],
 			round0col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[1] ^ (this.state[3] & (this.state[0] ^ this.state[1]))) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[1] ^ (this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				x[14],
 			round0col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[0] ^ (this.state[2] & (this.state[3] ^ this.state[0]))) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[0] ^ (this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
 				x[15],
 			round0col3
 		);
@@ -170,130 +170,130 @@ export class Md4 implements IHash {
 		const round1col2 = 9;
 		const round1col3 = 13;
 		const round2Add = 0x5a827999; //sqrt(2)
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(((this.state[1] | this.state[2]) & this.state[3]) |
-					(this.state[1] & this.state[2])) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
+					(this.#state[1] & this.#state[2])) +
 				x[0] +
 				round2Add,
 			round1col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(((this.state[0] | this.state[1]) & this.state[2]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
+					(this.#state[0] & this.#state[1])) +
 				x[4] +
 				round2Add,
 			round1col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(((this.state[0] | this.state[1]) & this.state[3]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
+					(this.#state[0] & this.#state[1])) +
 				x[8] +
 				round2Add,
 			round1col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(((this.state[0] | this.state[2]) & this.state[3]) |
-					(this.state[0] & this.state[2])) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
+					(this.#state[0] & this.#state[2])) +
 				x[12] +
 				round2Add,
 			round1col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(((this.state[1] | this.state[2]) & this.state[3]) |
-					(this.state[1] & this.state[2])) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
+					(this.#state[1] & this.#state[2])) +
 				x[1] +
 				round2Add,
 			round1col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(((this.state[0] | this.state[1]) & this.state[2]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
+					(this.#state[0] & this.#state[1])) +
 				x[5] +
 				round2Add,
 			round1col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(((this.state[0] | this.state[1]) & this.state[3]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
+					(this.#state[0] & this.#state[1])) +
 				x[9] +
 				round2Add,
 			round1col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(((this.state[0] | this.state[2]) & this.state[3]) |
-					(this.state[0] & this.state[2])) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
+					(this.#state[0] & this.#state[2])) +
 				x[13] +
 				round2Add,
 			round1col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(((this.state[1] | this.state[2]) & this.state[3]) |
-					(this.state[1] & this.state[2])) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
+					(this.#state[1] & this.#state[2])) +
 				x[2] +
 				round2Add,
 			round1col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(((this.state[0] | this.state[1]) & this.state[2]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
+					(this.#state[0] & this.#state[1])) +
 				x[6] +
 				round2Add,
 			round1col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(((this.state[0] | this.state[1]) & this.state[3]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
+					(this.#state[0] & this.#state[1])) +
 				x[10] +
 				round2Add,
 			round1col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(((this.state[0] | this.state[2]) & this.state[3]) |
-					(this.state[0] & this.state[2])) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
+					(this.#state[0] & this.#state[2])) +
 				x[14] +
 				round2Add,
 			round1col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(((this.state[1] | this.state[2]) & this.state[3]) |
-					(this.state[1] & this.state[2])) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
+					(this.#state[1] & this.#state[2])) +
 				x[3] +
 				round2Add,
 			round1col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(((this.state[0] | this.state[1]) & this.state[2]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
+					(this.#state[0] & this.#state[1])) +
 				x[7] +
 				round2Add,
 			round1col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(((this.state[0] | this.state[1]) & this.state[3]) |
-					(this.state[0] & this.state[1])) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
+					(this.#state[0] & this.#state[1])) +
 				x[11] +
 				round2Add,
 			round1col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(((this.state[0] | this.state[2]) & this.state[3]) |
-					(this.state[0] & this.state[2])) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
+					(this.#state[0] & this.#state[2])) +
 				x[15] +
 				round2Add,
 			round1col3
@@ -307,126 +307,126 @@ export class Md4 implements IHash {
 		const round2col2 = 11;
 		const round2col3 = 15;
 		const round3Add = 0x6ed9eba1; //sqrt(3)
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[1] ^ this.state[2] ^ this.state[3]) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				x[0] +
 				round3Add,
 			round2col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[0] ^ this.state[1] ^ this.state[2]) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				x[8] +
 				round3Add,
 			round2col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[3] ^ this.state[0] ^ this.state[1]) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				x[4] +
 				round3Add,
 			round2col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[2] ^ this.state[3] ^ this.state[0]) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				x[12] +
 				round3Add,
 			round2col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[1] ^ this.state[2] ^ this.state[3]) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				x[2] +
 				round3Add,
 			round2col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[0] ^ this.state[1] ^ this.state[2]) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				x[10] +
 				round3Add,
 			round2col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[3] ^ this.state[0] ^ this.state[1]) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				x[6] +
 				round3Add,
 			round2col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[2] ^ this.state[3] ^ this.state[0]) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				x[14] +
 				round3Add,
 			round2col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[1] ^ this.state[2] ^ this.state[3]) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				x[1] +
 				round3Add,
 			round2col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[0] ^ this.state[1] ^ this.state[2]) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				x[9] +
 				round3Add,
 			round2col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[3] ^ this.state[0] ^ this.state[1]) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				x[5] +
 				round3Add,
 			round2col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[2] ^ this.state[3] ^ this.state[0]) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				x[13] +
 				round3Add,
 			round2col3
 		);
-		this.state[0] = bitExt.rotLeft32(
-			this.state[0] +
-				(this.state[1] ^ this.state[2] ^ this.state[3]) +
+		this.#state[0] = bitExt.rotLeft32(
+			this.#state[0] +
+				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				x[3] +
 				round3Add,
 			round2col0
 		);
-		this.state[3] = bitExt.rotLeft32(
-			this.state[3] +
-				(this.state[0] ^ this.state[1] ^ this.state[2]) +
+		this.#state[3] = bitExt.rotLeft32(
+			this.#state[3] +
+				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				x[11] +
 				round3Add,
 			round2col1
 		);
-		this.state[2] = bitExt.rotLeft32(
-			this.state[2] +
-				(this.state[3] ^ this.state[0] ^ this.state[1]) +
+		this.#state[2] = bitExt.rotLeft32(
+			this.#state[2] +
+				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				x[7] +
 				round3Add,
 			round2col2
 		);
-		this.state[1] = bitExt.rotLeft32(
-			this.state[1] +
-				(this.state[2] ^ this.state[3] ^ this.state[0]) +
+		this.#state[1] = bitExt.rotLeft32(
+			this.#state[1] +
+				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				x[15] +
 				round3Add,
 			round2col3
 		);
 
-		this.state[0] += aa;
-		this.state[1] += bb;
-		this.state[2] += cc;
-		this.state[3] += dd;
+		this.#state[0] += aa;
+		this.#state[1] += bb;
+		this.#state[2] += cc;
+		this.#state[3] += dd;
 
 		//Reset block pointer
-		this.bPos = 0;
+		this.#bPos = 0;
 	}
 
 	/**
@@ -436,23 +436,23 @@ export class Md4 implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.ingestBytes += data.length;
+		this.#ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize - this.bPos;
+		let space = blockSize - this.#bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.block.set(data.subarray(dPos), this.bPos);
+				this.#block.set(data.subarray(dPos), this.#bPos);
 				//Update pos
-				this.bPos += nToWrite;
+				this.#bPos += nToWrite;
 				return;
 			}
-			this.block.set(data.subarray(dPos, dPos + blockSize), this.bPos);
-			this.bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + blockSize), this.#bPos);
+			this.#bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -465,33 +465,33 @@ export class Md4 implements IHash {
 	 */
 	sum(): Uint8Array {
 		const alt = this.clone();
-		alt.block[alt.bPos] = 0x80;
-		alt.bPos++;
+		alt.#block[alt.#bPos] = 0x80;
+		alt.#bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (alt.bPos > sizeSpace) {
+		if (alt.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.block.fill(0, alt.bPos);
+			alt.#block.fill(0, alt.#bPos);
 			alt.hash();
 		}
 		//Zero the rest of the block
-		alt.block.fill(0, alt.bPos);
+		alt.#block.fill(0, alt.#bPos);
 
 		//Write out the data size in little-endian
 
 		//We tracked bytes, <<3 (*8) to count bits
-		littleEndian.u32IntoBytes(alt.ingestBytes << 3, alt.block, sizeSpace);
+		littleEndian.u32IntoBytes(alt.#ingestBytes << 3, alt.#block, sizeSpace);
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
 		littleEndian.u32IntoBytes(
-			alt.ingestBytes / 0x20000000,
-			alt.block,
+			alt.#ingestBytes / 0x20000000,
+			alt.#block,
 			sizeSpace + 4
 		);
 		alt.hash();
 		const ret = new Uint8Array(digestSize);
-		littleEndian.u32ArrIntoBytesUnsafe(alt.state, ret);
+		littleEndian.u32ArrIntoBytesUnsafe(alt.#state, ret);
 		return ret;
 	}
 
@@ -500,14 +500,14 @@ export class Md4 implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.state[0] = iv[0];
-		this.state[1] = iv[1];
-		this.state[2] = iv[2];
-		this.state[3] = iv[3];
+		this.#state[0] = iv[0];
+		this.#state[1] = iv[1];
+		this.#state[2] = iv[2];
+		this.#state[3] = iv[3];
 		//Reset ingest count
-		this.ingestBytes = 0;
+		this.#ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.bPos = 0;
+		this.#bPos = 0;
 	}
 
 	/**
@@ -516,10 +516,10 @@ export class Md4 implements IHash {
 	 */
 	private clone(): Md4 {
 		const ret = new Md4();
-		ret.state.set(this.state);
-		ret.block.set(this.block);
-		ret.ingestBytes = this.ingestBytes;
-		ret.bPos = this.bPos;
+		ret.#state.set(this.#state);
+		ret.#block.set(this.#block);
+		ret.#ingestBytes = this.#ingestBytes;
+		ret.#bPos = this.#bPos;
 		return ret;
 	}
 }

@@ -29,19 +29,19 @@ export class Sha1 implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	private readonly state = new Uint32Array(digestSizeU32);
+	readonly #state = new Uint32Array(digestSizeU32);
 	/**
 	 * Temp processing block
 	 */
-	private readonly block = new Uint8Array(blockSize);
+	readonly #block = new Uint8Array(blockSize);
 	/**
 	 * Number of bytes added to the hash
 	 */
-	private ingestBytes = 0;
+	#ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	private bPos = 0;
+	#bPos = 0;
 
 	/**
 	 * Build a new Sha-1 hash generator
@@ -51,16 +51,16 @@ export class Sha1 implements IHash {
 	}
 	private hash() {
 		const w = new Uint32Array(80);
-		let a = this.state[0],
-			b = this.state[1],
-			c = this.state[2],
-			d = this.state[3],
-			e = this.state[4];
+		let a = this.#state[0],
+			b = this.#state[1],
+			c = this.#state[2],
+			d = this.#state[3],
+			e = this.#state[4];
 
 		let j = 0;
 		let t: number;
 		for (; j < 16; j++) {
-			w[j] = bigEndian.u32FromBytes(this.block,j*4);
+			w[j] = bigEndian.u32FromBytes(this.#block,j*4);
 			// (b&c)|((~b)&d) - Same as MD4-r1
 			t = bitExt.rotLeft32(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
 			//Rare use of comma!  Make it clear there's a 5 stage swap going on
@@ -91,10 +91,10 @@ export class Sha1 implements IHash {
 			(e = d), (d = c), (c = bitExt.rotLeft32(b, 30)), (b = a), (a = t);
 		}
 
-		(this.state[0] += a), (this.state[1] += b), (this.state[2] += c), (this.state[3] += d), (this.state[4] += e);
+		(this.#state[0] += a), (this.#state[1] += b), (this.#state[2] += c), (this.#state[3] += d), (this.#state[4] += e);
 
 		//Reset block pointer
-		this.bPos = 0;
+		this.#bPos = 0;
 	}
 
 	/**
@@ -104,23 +104,23 @@ export class Sha1 implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.ingestBytes += data.length;
+		this.#ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize - this.bPos;
+		let space = blockSize - this.#bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.block.set(data.subarray(dPos), this.bPos);
+				this.#block.set(data.subarray(dPos), this.#bPos);
 				//Update pos
-				this.bPos += nToWrite;
+				this.#bPos += nToWrite;
 				return;
 			}
-			this.block.set(data.subarray(dPos, dPos + blockSize), this.bPos);
-			this.bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + blockSize), this.#bPos);
+			this.#bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -133,29 +133,29 @@ export class Sha1 implements IHash {
 	 */
 	sum(): Uint8Array {
 		const alt = this.clone();
-		alt.block[alt.bPos] = 0x80;
-		alt.bPos++;
+		alt.#block[alt.#bPos] = 0x80;
+		alt.#bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (alt.bPos > sizeSpace) {
+		if (alt.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.block.fill(0, alt.bPos);
+			alt.#block.fill(0, alt.#bPos);
 			alt.hash();
 		}
 		//Zero the rest of the block
-		alt.block.fill(0, alt.bPos);
+		alt.#block.fill(0, alt.#bPos);
 
 		//Write out the data size in big-endian
 
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		bigEndian.u32IntoBytes(alt.ingestBytes / 0x20000000, alt.block, sizeSpace);
-		bigEndian.u32IntoBytes(alt.ingestBytes<<3,alt.block,sizeSpace+4);
+		bigEndian.u32IntoBytes(alt.#ingestBytes / 0x20000000, alt.#block, sizeSpace);
+		bigEndian.u32IntoBytes(alt.#ingestBytes<<3,alt.#block,sizeSpace+4);
 		alt.hash();
 		const ret = new Uint8Array(digestSize);
-		bigEndian.u32ArrIntoBytesUnsafe(alt.state, ret);
+		bigEndian.u32ArrIntoBytesUnsafe(alt.#state, ret);
 		return ret;
 	}
 
@@ -164,15 +164,22 @@ export class Sha1 implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.state[0] = iv[0];
-		this.state[1] = iv[1];
-		this.state[2] = iv[2];
-		this.state[3] = iv[3];
-		this.state[4] = iv[4];
+		this.#state[0] = iv[0];
+		this.#state[1] = iv[1];
+		this.#state[2] = iv[2];
+		this.#state[3] = iv[3];
+		this.#state[4] = iv[4];
 		//Reset ingest count
-		this.ingestBytes = 0;
+		this.#ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.bPos = 0;
+		this.#bPos = 0;
+	}
+
+	/**
+     * Create an empty IHash using the same algorithm
+     */
+	newEmpty(): IHash {
+		return new Sha1();
 	}
 
 	/**
@@ -181,10 +188,10 @@ export class Sha1 implements IHash {
 	 */
 	private clone(): Sha1 {
 		const ret = new Sha1();
-		ret.state.set(this.state);
-		ret.block.set(this.block);
-		ret.ingestBytes = this.ingestBytes;
-		ret.bPos = this.bPos;
+		ret.#state.set(this.#state);
+		ret.#block.set(this.#block);
+		ret.#ingestBytes = this.#ingestBytes;
+		ret.#bPos = this.#bPos;
 		return ret;
 	}
 }

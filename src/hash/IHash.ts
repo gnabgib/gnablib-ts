@@ -16,6 +16,10 @@ export interface IHash {
      */
     reset():void;
     /**
+     * Create an empty IHash using the same algorithm
+     */
+    newEmpty():IHash;
+    /**
      * Digest size in bytes
      */
     get size():number;
