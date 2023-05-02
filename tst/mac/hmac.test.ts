@@ -5,6 +5,7 @@ import * as utf8 from '../../src/encoding/Utf8';
 import { Hmac } from '../../src/mac/Hmac';
 import { Md5 } from '../../src/hash/Md5';
 import { Sha1 } from '../../src/hash/Sha1';
+import { Sha256, Sha512 } from '../../src/hash/Sha2';
 
 const tsts = suite('HMAC/RFC 2104');
 
@@ -76,6 +77,19 @@ const sha256Hex:hashHex[]=[
         data:'The quick brown fox jumps over the lazy dog',
         expect:'F7BC83F430538424B13298E6AA6FB143EF4D59A14946175997479DBC2D1A3CD8'},
 ];
+for (const test of sha256Hex) {
+    //Note we reuse the hash object
+    const hash=new Sha256();
+    tsts('hmac-sha256: '+test.data,()=>{
+        const bKey=test.key instanceof Uint8Array ? test.key : utf8.toBytes(test.key);
+        const bMsg=test.data instanceof Uint8Array ? test.data : utf8.toBytes(test.data);
+        const mac=new Hmac(hash,bKey);
+        mac.write(bMsg);
+        const found=mac.sum();
+        assert.is(hex.fromBytes(found),test.expect);
+    });
+}
+
 const sha512Hex:hashHex[]=[
     //Wikipedia
     {
@@ -83,5 +97,17 @@ const sha512Hex:hashHex[]=[
         data:'The quick brown fox jumps over the lazy dog',
         expect:'B42AF09057BAC1E2D41708E48A902E09B5FF7F12AB428A4FE86653C73DD248FB82F948A549F7B791A5B41915EE4D1EC3935357E4E2317250D0372AFA2EBEEB3A'},
 ];
+for (const test of sha512Hex) {
+    //Note we reuse the hash object
+    const hash=new Sha512();
+    tsts('hmac-sha512: '+test.data,()=>{
+        const bKey=test.key instanceof Uint8Array ? test.key : utf8.toBytes(test.key);
+        const bMsg=test.data instanceof Uint8Array ? test.data : utf8.toBytes(test.data);
+        const mac=new Hmac(hash,bKey);
+        mac.write(bMsg);
+        const found=mac.sum();
+        assert.is(hex.fromBytes(found),test.expect);
+    });
+}
 
 tsts.run();

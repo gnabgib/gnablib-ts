@@ -511,6 +511,13 @@ export class Md4 implements IHash {
 	}
 
 	/**
+     * Create an empty IHash using the same algorithm
+     */
+	newEmpty(): IHash {
+		return new Md4();
+	}
+
+	/**
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */

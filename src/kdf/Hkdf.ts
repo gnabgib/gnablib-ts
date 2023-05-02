@@ -1,37 +1,57 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import type { IHash } from "../hash/IHash.js";
-import * as hex from "../encoding/Hex.js";
 import { Hmac } from "../mac/Hmac.js";
+import { inRangeInclusive } from "../primitive/IntExt.js";
 
-//(HMAC-based Extract-and-Expand Key Derivation Function)[https://datatracker.ietf.org/doc/html/rfc5869]
+//(HMAC-based Extract-and-Expand Key Derivation Function)[https://datatracker.ietf.org/doc/html/rfc5869] (2010)
+
+const maxUint8=255;
+
+/**
+ * Extract pseudorandom from IKM
+ * @param hash Hash to use for extraction 
+ * @param ikm Input keying material
+ * @param salt Optional salt value (not expected to be secret), defaults hash.size bytes of 0
+ * @returns pseudorandom key of at hash.size bytes
+ */
 export function extract(hash:IHash,ikm:Uint8Array,salt?:Uint8Array):Uint8Array {
     const mac=new Hmac(hash,salt??new Uint8Array(hash.blockSize));
     mac.write(ikm);
     return mac.sum();
 }
 
+/**
+ * Expand pseudorandom key to lenBytes
+ * @param hash Hash to use for expansion
+ * @param prk pseudorandom key of at least hash.size bytes
+ * @param lenBytes Length of output (in bytes)
+ * @param info Optional info data (not expected to be secret), defaults to zero-bytes (zero length string)
+ * @returns 
+ */
 export function expand(hash:IHash,prk:Uint8Array,lenBytes:number,info?:Uint8Array):Uint8Array {
+    //Per RFC, and because only one byte is used per round to indicate which round it is
+    inRangeInclusive(lenBytes,0,maxUint8*hash.size);
+    //If no info is provided, zero length
     info=info??new Uint8Array(0);
-    const n=Math.floor(lenBytes/hash.size);
+    //Chose the lower bound since the last write may need to be sized to remaining space 
+    // (if lenBytes isn't multiple of hash.size)
+    const safeN=Math.floor(lenBytes/hash.size);
     const ret=new Uint8Array(lenBytes);
     const msg=new Uint8Array(hash.size+1+info.length);
-    //console.log(`n=${n} len=${lenBytes} hl=${hash.size} i.length=${info.length} msg.length=${msg.length}`)
     let t=new Uint8Array(0);
     let i=1;
     let pos=0;
     let mPos=0;
     const mac=new Hmac(hash,prk);
-    for(;i<=n;) {
+    for(;i<=safeN;) {
         //Note i is 1 based (hence <=)
-        mPos=0;
-        msg.set(t,mPos);
-        mPos+=t.length;
-        msg.set(info,mPos);
-        mPos+=info.length;
+        msg.set(t,0);
+        msg.set(info,t.length);
+        mPos=t.length+info.length;
         msg[mPos]=i;
         mPos+=1;
-        mac.write(msg.slice(0,mPos));
+        mac.write(msg.subarray(0,mPos));
         t=mac.sum();
         mac.reset();
         ret.set(t,pos);
@@ -40,20 +60,27 @@ export function expand(hash:IHash,prk:Uint8Array,lenBytes:number,info?:Uint8Arra
     }
     const rem=lenBytes-pos;
     if (rem>0) {
-        mPos=0;
-        msg.set(t,mPos);
-        mPos+=t.length;
-        msg.set(info,mPos);
-        mPos+=info.length;
+        msg.set(t,0);
+        msg.set(info,t.length);
+        mPos=t.length+info.length;
         msg[mPos]=i;
         mPos+=1;
-        mac.write(msg.slice(0,mPos));
+        mac.write(msg.subarray(0,mPos));
         t=mac.sum();
-        ret.set(t.slice(0,rem),pos);
+        ret.set(t.subarray(0,rem),pos);
     }
     return ret;
 }
 
+/**
+ * Hash-based key derivation function (HKDF)
+ * @param hash Hash to use for KDF
+ * @param ikm Input keying material
+ * @param lenBytes Length of output (in bytes)
+ * @param salt Optional salt value (not expected to be secret), defaults hash.size bytes of 0
+ * @param info Optional info data (not expected to be secret), defaults to zero-bytes (zero length string)
+ * @returns Output keying material
+ */
 export function hkdf(hash:IHash,ikm:Uint8Array,lenBytes:number,salt?:Uint8Array,info?:Uint8Array):Uint8Array {
     const prk=extract(hash,ikm,salt);
     return expand(hash,prk,lenBytes,info);

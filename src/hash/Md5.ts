@@ -4,7 +4,7 @@ import * as littleEndian from '../endian/little.js';
 import * as bitExt from '../primitive/BitExt.js';
 import type { IHash } from './IHash.js';
 
-//[The MD5 Message-Digest Algorithm](https://datatracker.ietf.org/doc/html/rfc1321)
+//[The MD5 Message-Digest Algorithm](https://datatracker.ietf.org/doc/html/rfc1321) (1992)
 //[Wikipedia: MD5](https://en.wikipedia.org/wiki/MD5)
 // You can generate test values with: `echo -n '<test>' | md5sum `
 const digestSize = 16; //128 bits

@@ -3,19 +3,35 @@ import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
 import {
-	sha2_224,
-	sha2_256,
-	sha2_384,
-	sha2_512,
-	sha2_512_224,
-	sha2_512_256,
+	Sha224,
+	Sha256,
+	Sha384,
+	Sha512,
+	Sha512_224,
+	Sha512_256,
 } from '../../src/hash/Sha2';
 
 const tsts = suite('SHA2/RFC 6234 | FIPS 180-4');
 
 const ascii244Pairs = [
+	//Source: RFC6234
+	//test 1
+	[
+		'abc', 
+		'23097D223405D8228642A477BDA255B32AADBCE4BDA0B3F7E36C9DA7'],
+	//test 2
+	[
+		'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq', 
+		'75388B16512776CC5DBA5DA1FD890150B0C6455CB4F58B1952522525'],
+	//test 4
+	[
+		'0123456701234567012345670123456701234567012345670123456701234567'.repeat(10), 
+		'567F69F168CD7844E65259CE658FE7AADFA25216E68ECA0EB7AB8262'],
+
 	//Source: https://en.wikipedia.org/wiki/SHA-2
-	['', 'D14A028C2A3A2BC9476102BB288234C415A2B01F828EA62AC5B3E42F'],
+	[
+		'', 
+		'D14A028C2A3A2BC9476102BB288234C415A2B01F828EA62AC5B3E42F'],
 	[
 		'The quick brown fox jumps over the lazy dog',
 		'730E109BD7A8A32B1CB9D9A09AA2325D2430587DDBC0C38BAD911525',
@@ -76,16 +92,59 @@ const ascii244Pairs = [
 	],
 	['gnabgib', 'BAC996C38B530F7031B6B838AD4803970BDE1DFC567E5CF6D4CC7722'],
 ];
+for (const [source,expect] of ascii244Pairs) {
+	//continue;
+	tsts('Sha224:' + source, () => {
+		const b = utf8.toBytes(source);
+		const hash=new Sha224();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
+	});
+}
 
-for (const pair of ascii244Pairs) {
-	tsts('sha224:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = sha2_224(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+const hex224Pairs=[
+	//Test 6
+	[
+		'07', 
+		'00ECD5F138422B8AD74C9799FD826C531BAD2FCABC7450BEE2AA8C2A'],
+	//Test 8
+	[
+		'18804005dd4fbd1556299d6f9d93df62',
+		'DF90D78AA78821C99B40BA4C966921ACCD8FFB1E98AC388E56191DB1'
+	],
+	//test 10
+	[
+		'55b210079c61b53add520622d1ac97d5cdbe8cb33aa0ae344517bee4d7ba09abc8533c5250887a43bebbac906c2e1837f26b36a59ae3be7814d506896b718b2a383ecdac16b96125553f416ff32c6674c74599a9005386d9ce1112245f48ee470d396c1ed63b92670ca56ec84deea814b6135eca54392bdedb9489bc9b875a8baf0dc1ae785736914ab7daa264bc079d269f2c0d7eddd810a426145a0776f67c878273',
+		'0B31894EC8937AD9B91BDFBCBA294D9ADEFAA18E09305E9F20D5C3A4'],
+];
+for (const [source,expect] of hex224Pairs) {
+	tsts('Sha224: 0x' + source, () => {
+		const h = hex.toBytes(source);
+		const hash=new Sha224();
+		hash.write(h);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
 const ascii256Pairs = [
+	//Source: RFC6234
+	//test 1
+	[
+		'abc', 
+		'BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD'],
+	//test 2
+	[
+		'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq', 
+		'248D6A61D20638B8E5C026930C3E6039A33CE45964FF2167F6ECEDD419DB06C1'],
+	//test 4
+	[
+		'0123456701234567012345670123456701234567012345670123456701234567'.repeat(10), 
+		'594847328451BDFA85056225462CC1D867D877FB388DF0CE35F25AB5562BFBB5'],
+	//test 7 - todo implement extra bits code?
+	//test 9 - todo implement extra bits code?
+	
 	//Source: https://en.wikipedia.org/wiki/SHA-2
 	['', 'E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855'],
 	//Source: https://md5calc.com/hash/sha256/
@@ -155,17 +214,56 @@ const ascii256Pairs = [
 		'25C883DEF68E954E0E6EB057B8CE3636720A32D5544BCCBF98F780227286D6F7',
 	],
 ];
-
-for (const pair of ascii256Pairs) {
-	tsts('sha256:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = sha2_256(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii256Pairs) {
+	tsts('Sha256:' + source, () => {
+		const b = utf8.toBytes(source);
+		const hash=new Sha256();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
-//JS doesn't support 64bit ints, so we can't easily do these two:
+const hex256Pairs=[
+	//test 6
+	[
+		'19', 
+		'68AA2E2EE5DFF96E3355E6C7EE373E3D6A4E17F75F9518D843709C0C9BC3E3D4'],
+	//Test 8
+	[
+		'e3d72570dcdd787ce3887ab2cd684652',
+		'175EE69B02BA9B58E2B0A5FD13819CEA573F3940A94F825128CF4209BEABB4E8'
+	],
+	//test 10
+	[
+		'8326754e2277372f4fc12b20527afef04d8a056971b11ad57123a7c137760000d7bef6f3c1f7a9083aa39d810db310777dab8b1e7f02b84a26c773325f8b2374de7a4b5a58cb5c5cf35bcee6fb946e5bd694fa593a8beb3f9d6592ecedaa66ca82a29d0c51bcf9336230e5d784e4c0a43f8d79a30a165cbabe452b774b9c7109a97d138f129228966f6c0adc106aad5a9fdd30825769b2c671af6759df28eb393d54d6', 
+		'97DBCA7DF46D62C8A422C941DD7E835B8AD3361763F7E9B2D95F4F0DA6E1CCBC'],
+	
+];
+for (const [source,expect] of hex256Pairs) {
+	tsts('Sha256: 0x' + source, () => {
+		const h = hex.toBytes(source);
+		const hash=new Sha256();
+		hash.write(h);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
+	});
+}
+
 const ascii384Pairs = [
+	//Source: RFC6234
+	//test 1
+	[
+		'abc', 
+		'CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED1631A8B605A43FF5BED8086072BA1E7CC2358BAECA134C825A7'],
+	//test 2
+	[
+		'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu', 
+		'09330C33F71147E83D192FC782CD1B4753111B173B3B05D22FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039'],
+	//test 4
+	[
+		'0123456701234567012345670123456701234567012345670123456701234567'.repeat(10), 
+		'2FC64A4F500DDB6828F6A3430B8DD72A368EB7F3A8322A70BC84275B9C0B3AB00D27A5CC3C2D224AA6B61A0D79FB4596'],	
 	//Source: https://en.wikipedia.org/wiki/SHA-2
 	[
 		'',
@@ -238,42 +336,103 @@ const ascii384Pairs = [
 	],
 ];
 
-for (const pair of ascii384Pairs) {
-	tsts('sha384:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = sha2_384(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii384Pairs) {
+	const b = utf8.toBytes(source);
+	tsts('Sha384: ' + source, () => {
+		const hash=new Sha384();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
+	});
+}
+
+const hex384Pairs=[
+	//test 6
+	[
+		'b9', 
+		'BC8089A19007C0B14195F4ECC74094FEC64F01F90929282C2FB392881578208AD466828B1C6C283D2722CF0AD1AB6938'],
+	//Test 8
+	[
+		'a41c497779c0375ff10a7f4e08591739',
+		'C9A68443A005812256B8EC76B00516F0DBB74FAB26D665913F194B6FFB0E91EA9967566B58109CBC675CC208E4C823F7'
+	],
+	//test 10
+	[
+		'399669e28f6b9c6dbcbb6912ec10ffcf74790349b7dc8fbe4a8e7b3b5621db0f3e7dc87f823264bbe40d1811c9ea2061e1c84ad10a23fac1727e7202fc3f5042e6bf58cba8a2746e1f64f9b9ea352c711507053cf4e5339d52865f25cc22b5e87784a12fc961d66cb6e89573199a2ce6565cbdf13dca403832cfcb0e8b7211e83af32a11ac17929ff1c073a51cc027aaedeff85aad7c2b7c5a803e2404d96d2a77357bda1a6daeed17151cb9bc5125a422e941de0ca0fc5011c23ecffefdd09676711cf3db0a3440720e1615c1f22fbc3c721de521e1b99ba1bd5577408642147ed096', 
+		'4F440DB1E6EDD2899FA335F09515AA025EE177A79F4B4AAF38E42B5C4DE660F5DE8FB2A5B2FBD2A3CBFFD20CFF1288C0'],
+	
+];
+for (const [source,expect] of hex384Pairs) {
+	tsts('Sha384: 0x' + source, () => {
+		const h = hex.toBytes(source);
+		const hash=new Sha384();
+		hash.write(h);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
 const ascii512_224Pairs = [
-	//['','CF83E1357EEFB8BDF1542850D66D8007D620E4050B5715DC83F4A921D36CE9CE47D0D13C5D85F2B0FF8318D2877EEC2F63B931BD47417A81A538327AF927DA3E'],
-	['gnabgib', '63C7E6AE3EB9365315BF7D8E41F3B1737597962C66B3A29143394299'],
+	//Source: https://en.wikipedia.org/wiki/SHA-2
+	[
+		'',
+		'6ED0DD02806FA89E25DE060C19D3AC86CABB87D6A0DDD05C333B84F4'],
+	//Others https://md5calc.com/hash/sha512/		
+	[
+		'gnabgib', 
+		'63C7E6AE3EB9365315BF7D8E41F3B1737597962C66B3A29143394299'],
 ];
-
-for (const pair of ascii512_224Pairs) {
-	tsts('sha512/224:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = sha2_512_224(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii512_224Pairs) {
+	const b = utf8.toBytes(source);
+	tsts('Sha512/224: ' + source, () => {
+		const hash=new Sha512_224();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
 const ascii512_256 = [
+	//Source: https://en.wikipedia.org/wiki/SHA-2
+	[
+		'',
+		'C672B8D1EF56ED28AB87C3622C5114069BDD3AD7B8F9737498D0C01ECEF0967A'],
+	//Others https://md5calc.com/hash/sha512/
 	[
 		'gnabgib',
 		'FDED532E1BA8CF9F02F2F2A47B1E61275ED2818A2FAD8818AFD3114A01849D5B',
 	],
 ];
-for (const pair of ascii512_256) {
-	tsts('sha512/256:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = sha2_512_256(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii512_256) {
+	const b = utf8.toBytes(source);
+	tsts('Sha512/256: ' + source, () => {
+		const hash=new Sha512_256();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
 const ascii512Pairs = [
+	//Source: RFC6234
+	//test 1
+	[
+		'abc', 
+		'DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F'],
+	//test 2
+	[
+		'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu', 
+		'8E959B75DAE313DA8CF4F72814FC143F8F7779C6EB9F7FA17299AEADB6889018501D289E4900F7E4331B99DEC4B5433AC7D329EEB6DD26545E96E55B874BE909'],
+	[
+		'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrst',
+		'0988DB6EE79AA0B4B28B0B3D2D9D50A0C2782144BA51A0405BDF82F04E895FB6A4848953A0028D33DD6FCE20C3994D078F8382DFC48903521C7AA744DDEBF6C6'],
+	[
+		'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstuv', 
+		'3BAC30B4B4933AB8A535CB7B240788A34177AC2F7B76D8D0C8FC154EF9F48D5D5BF880F32C9CE525599D496C6DAA77C3E32F5072A9E41B684E8DDDFB3D816D8D'],
+	//test 4
+	[
+		'0123456701234567012345670123456701234567012345670123456701234567'.repeat(10), //512 bits
+		'89D05BA632C699C31231DED4FFC127D5A894DAD412C0E024DB872D1ABD2BA8141A0F85072A9BE1E2AA04CF33C765CB510813A39CD5A84C4ACAA64D3F3FB7BAE9'],
 	//Source: https://en.wikipedia.org/wiki/SHA-2
 	[
 		'',
@@ -345,12 +504,39 @@ const ascii512Pairs = [
 		'5B58B7C85B03D1F9AA15D0972EEE02C632214CCF5622B8DB7D940EC30E17DCA053EA11468DB229A82907F216BE33D3C041CA616622FB5AABCBB05D4008CC889C',
 	],
 ];
+for (const [source,expect] of ascii512Pairs) {
+	const b = utf8.toBytes(source);
+	tsts('Sha512:' + source, () => {
+		const hash=new Sha512();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
+	});
+}
 
-for (const pair of ascii512Pairs) {
-	tsts('sha512:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = sha2_512(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+const hex512Pairs=[
+	//test 6
+	[
+		'D0', 
+		'9992202938E882E73E20F6B69E68A0A7149090423D93C81BAB3F21678D4ACEEEE50E4E8CAFADA4C85A54EA8306826C4AD6E74CECE9631BFA8A549B4AB3FBBA15'],
+	//Test 8
+	[
+		'8d4e3c0e3889191491816e9d98bff0a0',
+		'CB0B67A4B8712CD73C9AABC0B199E9269B20844AFB75ACBDD1C153C9828924C3DDEDAAFE669C5FDD0BC66F630F6773988213EB1B16F517AD0DE4B2F0C95C90F8'
+	],
+	//test 10
+	[
+		'a55f20c411aad132807a502d65824e31a2305432aa3d06d3e282a8d84e0de1de6974bf495469fc7f338f8054d58c26c49360c3e87af56523acf6d89d03e56ff2f868002bc3e431edc44df2f0223d4bb3b243586e1a7d924936694fcbbaf88d9519e4eb50a644f8e4f95eb0ea95bc4465c8821aacd2fe15ab4981164bbb6dc32f969087a145b0d9cc9c67c22b763299419cc4128be9a077b3ace634064e6d99283513dc06e7515d0d73132e9a0dc6d3b1f8b246f1a98a3fc72941b1e3bb2098e8bf16f268d64f0b0f4707fe1ea1a1791ba2f3c0c758e5f551863a96c949ad47d7fb40d2', 
+		'C665BEFB36DA189D78822D10528CBF3B12B3EEF726039909C1A16A270D48719377966B957A878E720584779A62825C18DA26415E49A7176A894E7510FD1451F5'],
+	
+];
+for (const [source,expect] of hex512Pairs) {
+	tsts('Sha512: 0x' + source, () => {
+		const h = hex.toBytes(source);
+		const hash=new Sha512();
+		hash.write(h);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 

@@ -195,31 +195,3 @@ export class Sha1 implements IHash {
 		return ret;
 	}
 }
-
-/**
- * Pad out the starting amount to be a multiple of @see blockSizeBytes including the bit count
- * @param bytes
- * @param blockSizeBytes
- * @returns
- */
-export function pad(bytes: Uint8Array, blockSizeBytes: number): Uint8Array {
-	const reqSpace = bitExt.size64Bytes;
-	const len =
-		bytes.length +
-		reqSpace +
-		blockSizeBytes -
-		((bytes.length + reqSpace) % blockSizeBytes);
-	const padBytes = new Uint8Array(len);
-	padBytes.set(bytes, 0);
-	padBytes[bytes.length] = 0x80;
-	//Basically the same as MD4(+5+RipeMD) except bigEndian
-	bigEndian.u32IntoBytes(
-		bytes.length / 0x20000000,
-		padBytes,
-		len - bitExt.size64Bytes
-	);
-	//bigEndian.u32IntoBytes(bytes.length / 0x1fffffff, paddedBytes, len - bitExt.i64SizeBytes);
-	//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-	bigEndian.u32IntoBytes(bytes.length << 3, padBytes, len - bitExt.size32Bytes);
-	return padBytes;
-}

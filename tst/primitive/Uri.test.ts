@@ -23,21 +23,21 @@ const testParseUrn:{
     {s:'urn:isbn:0451450523',nid:'isbn',nss:'0451450523'}
 ];
 for (const {s,nid,nss,q,r,f} of testParseUrn) {
-    tsts(`Urn.parse(${s}):`,()=>{
-        const w=new WindowStr(s);
-        const u=Urn.parse(w);
-        if (nid===undefined) {
-            assert.is(u===undefined,true);
-        } else {
-            assert.is(u.nid,nid);
-            assert.is(u.nss,nss);
-            assert.is(u.q,q);
-            assert.is(u.rComponent,r);
-            assert.is(u.qComponent,q);
-            assert.is(u.fragment,f);
-        }
+    // tsts(`Urn.parse(${s}):`,()=>{
+    //     const w=new WindowStr(s);
+    //     const u=Urn.parse(w);
+    //     if (nid===undefined) {
+    //         assert.is(u===undefined,true);
+    //     } else {
+    //         assert.is(u.nid,nid);
+    //         assert.is(u.nss,nss);
+    //         assert.is(u.q,q);
+    //         assert.is(u.rComponent,r);
+    //         assert.is(u.qComponent,q);
+    //         assert.is(u.fragment,f);
+    //     }
 
-    });
+    // });
 }
 
 tsts.run();

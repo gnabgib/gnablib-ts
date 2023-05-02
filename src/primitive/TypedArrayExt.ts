@@ -29,7 +29,7 @@ interface IBuildable<T> {
 
 /**
  * Used to harvest the buffer from TypedArray implementations
- * You can fool htis by adhering to this interface (providing a .buffer getter)
+ * You can fool this by adhering to this interface (providing a .buffer getter)
  * NAME: Uses go paradigm of feature +er
  */
 interface IBufferer {
