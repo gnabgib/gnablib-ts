@@ -153,6 +153,33 @@ export function u64ArrIntoBytes(
 }
 
 /**
+ * Copy the content of an Array<Uint64> into @param targetBytes
+ * - Only as much space as is available in Target will be copied
+ * - Only as much source material as is available will be copied
+ * @param sourceU64s Array to copy from
+ * @param targetBytes Destination of data starting at @param targetPos
+ * @param targetPos Starting position in @param targetBytes to start writing
+ */
+export function u64ArrIntoBytesSafe(
+	sourceU64s: Uint64[],
+	targetBytes: Uint8Array,
+	targetPos = 0
+): void {
+	let targetByteCount=targetBytes.length-targetPos;
+	let i=0;
+	while (targetByteCount>8) {
+		if (sourceU64s.length<=i) return;
+		targetBytes.set(sourceU64s[i].toBytes().reverse(),targetPos);
+		i++;
+		targetPos+=size64Bytes;
+		targetByteCount-=size64Bytes;
+	}
+	if (targetByteCount>0) {
+		targetBytes.set(sourceU64s[i].toBytes().reverse().slice(0,targetByteCount),targetPos);
+	}
+}
+
+/**
  * Output a 32bit signed number from @param sourceBytes at position @param sourcePos
  * WARN: If there isn't enough source data zeros will be used (you probably want @see i32FromBytes)
  * @param sourceBytes Source data
