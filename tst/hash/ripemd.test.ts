@@ -3,50 +3,14 @@ import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
 import {
-	ripeMd128,
-	ripeMd160,
-	ripeMd256,
-	ripeMd320,
+	RipeMd128,
+	RipeMd160,
+	RipeMd256,
+	RipeMd320,
 } from '../../src/hash/RipeMd';
 
 const tsts = suite('RipeMd');
 
-const slow = false; //~2s
-if (slow) {
-	//https://homes.esat.kuleuven.be/~bosselae/ripemd160.html
-
-	//One million bytes means the size overflows into the second 32bit length character
-
-	const asciiSlow = {
-		src: 'a'.repeat(1000000),
-		ripeMd128: '4A7F5723F954EBA1216C9D8F6320431F',
-		ripeMd160: '52783243C1697BDBE16D37F97F68F08325DC1528',
-		ripeMd256:
-			'AC953744E10E31514C150D4D8D7B677342E33399788296E43AE4850CE4F97978',
-		ripeMd320:
-			'BDEE37F4371E20646B8B0D862DDA16292AE36F40965E8C8509E63D1DBDDECC503E2B63EB9245BB66',
-	};
-
-	const b = utf8.toBytes(asciiSlow.src);
-	tsts('slow-ripeMd128:', () => {
-		const m = ripeMd128(b);
-		assert.is(hex.fromBytes(m), asciiSlow.ripeMd128);
-	});
-	tsts('slow-ripeMd160:', () => {
-		const m = ripeMd160(b);
-		assert.is(hex.fromBytes(m), asciiSlow.ripeMd160);
-	});
-	tsts('slow-ripeMd256:', () => {
-		const m = ripeMd256(b);
-		assert.is(hex.fromBytes(m), asciiSlow.ripeMd256);
-	});
-	tsts('slow-ripeMd320:', () => {
-		const m = ripeMd320(b);
-		assert.is(hex.fromBytes(m), asciiSlow.ripeMd320);
-	});
-}
-
-//https://md5calc.com/hash/ripemd128
 const ascii128HexPairs = [
 	//Source: https://homes.esat.kuleuven.be/~bosselae/ripemd160.html
 	['', 'CDF26213A150DC3ECB610F18F6B38B46'],
@@ -80,11 +44,13 @@ const ascii128HexPairs = [
 	['gnabgib', '1B6B23F7CFBA4BBF4209757466C1561B'],
 ];
 
-for (const pair of ascii128HexPairs) {
-	tsts('ripeMd128:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = ripeMd128(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii128HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('RipeMd128:' + source, () => {
+		const hash=new RipeMd128();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
@@ -113,7 +79,6 @@ const ascii160HexPairs = [
 		'B0E20B6E3116640286ED3A87A5713079B21F5189',
 	],
 	['1234567890'.repeat(8), '9B752E45573D4B39F4DBD3323CAB82BF63326BFB'],
-	//['a'.repeat(1000000),'52783243C1697BDBE16D37F97F68F08325DC1528'],
 	//Other
 	[
 		'The quick brown fox jumps over the lazy dog.',
@@ -122,11 +87,13 @@ const ascii160HexPairs = [
 	['gnabgib', '324ABA4F089151BD019C8C747EF8F4BEC0447112'],
 ];
 
-for (const pair of ascii160HexPairs) {
-	tsts('ripeMd160:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = ripeMd160(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii160HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('RipeMd160:' + source, () => {
+		const hash=new RipeMd160();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
@@ -174,11 +141,13 @@ const ascii256HexPairs = [
 	],
 ];
 
-for (const pair of ascii256HexPairs) {
-	tsts('ripeMd256:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = ripeMd256(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii256HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('RipeMd256:' + source, () => {
+		const hash=new RipeMd256();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
@@ -234,12 +203,13 @@ const ascii320HexPairs = [
 		'EFB9A476DAC2762191AA9890089ECCE637DAA14C22A2F8B6D024DF1AAB2DDDFAE159071D96196EFF',
 	],
 ];
-
-for (const pair of ascii320HexPairs) {
-	tsts('ripeMd320:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = ripeMd320(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii320HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('RipeMd320:' + source, () => {
+		const hash=new RipeMd320();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
