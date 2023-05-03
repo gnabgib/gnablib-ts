@@ -2,17 +2,31 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
-import { blake256, blake512 } from '../../src/hash/Blake';
+import { Blake256, Blake32, Blake512, Blake64 } from '../../src/hash/Blake';
 
 const tsts = suite('Blake1');
-
-//log.ignoreUnder=0;
 
 /* Blake32/64 wre submitted with 10/14 rounds, but then tweaked in the SHA3 competition to 14/16 rounds
  *  which makes testing problematic.. The original test vectors can't be used for testing.
  * Helpfully the finally SHA3 submissions were renamed Blake256/512, but then Blake2(s|b) was released on
  *  top and Blake1 is hard to find (looks like the original website was taken down)
  */
+
+const ascii32HexPairs= [
+	//Blake.pdf test vectors (10 round, 32bit)
+	['\0','D1E39B457D2250B4F5B152E74157FBA4C1B423B87549106B07FD3A3E7F4AEB28'],
+	['\0'.repeat(72),'8A638488C318C5A8222A1813174C36B4BB66E45B09AFDDFD7F2B2FE3161B7A6D'],
+	//['\0'.repeat(512),'8A638488C318C5A8222A1813174C36B4BB66E45B09AFDDFD7F2B2FE3161B7A6D'],
+];
+for (const [source,expect] of ascii32HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('Blake32:' + source, () => {
+		const hash=new Blake32();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
+	});
+}
 
 const ascii256HexPairs = [
 	//Source: https://en.wikipedia.org/wiki/BLAKE_(hash_function)
@@ -73,17 +87,34 @@ const ascii256HexPairs = [
 		'\0'.repeat(72),
 		'D419BAD32D504FB7D44D460C42C5593FE544FA4C135DEC31E21BD9ABDCC22D41',
 	],
-
-	//Blake.pdf test vectors (10 rounds)
-	//['\0','D1E39B457D2250B4F5B152E74157FBA4C1B423B87549106B07FD3A3E7F4AEB28'],
-	//['\0'.repeat(72),'8A638488C318C5A8222A1813174C36B4BB66E45B09AFDDFD7F2B2FE3161B7A6D'],
 ];
 
-for (const pair of ascii256HexPairs) {
-	tsts('blake256:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const hash = blake256(b);
-		assert.is(hex.fromBytes(hash), pair[1]);
+for (const [source,expect] of ascii256HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('Blake256:' + source, () => {
+		const hash=new Blake256();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
+	});
+}
+
+const ascii64HexPairs= [
+	//Blake.pdf test vectors (14 rounds)
+	[
+		'\0',
+		'765F7084548226C3E6F4779B954661DF49A272E2BA16635F17A3093756AA93642A92E5BDDB21A3218F72B7FD44E9FA19F86A86334EBEDA0F4D4204BF3B6BED68'],
+	[
+		'\0'.repeat(144),
+		'EAB730280428210571F3F8DEE678A9B1BBEF58DF55471265B71E262B8EFFBA2533C15317C3E9F897B269ED4146AED0F3A29827060055CA14652753EFE20A913E'],
+];
+for (const [source,expect] of ascii64HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('Blake64:' + source, () => {
+		const hash=new Blake64();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
@@ -142,17 +173,15 @@ const ascii512HexPairs = [
 		'\0'.repeat(112),
 		'AA42836448C9DB34E0E45A49F916B54C25C9EEFE3F9F65DB0C13654BCBD9A938C24251F3BEDB7105FA4EA54292CE9EBF5ADEA15CE530FB71CDF409387A78C6FF',
 	],
-
-	//Blake.pdf test vectors (14 rounds)
-	//['\0','765F7084548226C3E6F4779B954661DF49A272E2BA16635F17A3093756AA93642A92E5BDDB21A3218F72B7FD44E9FA19F86A86334EBEDA0F4D4204BF3B6BED68'],
-	//['\0'.repeat(144),'EAB730280428210571F3F8DEE678A9B1BBEF58DF55471265B71E262B8EFFBA2533C15317C3E9F897B269ED4146AED0F3A29827060055CA14652753EFE20A913E'],
 ];
 
-for (const pair of ascii512HexPairs) {
-	tsts('blake512:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const hash = blake512(b);
-		assert.is(hex.fromBytes(hash), pair[1]);
+for (const [source,expect] of ascii512HexPairs) {
+	const b = utf8.toBytes(source);
+	tsts('Blake512:' + source, () => {
+		const hash=new Blake512();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 

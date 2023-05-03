@@ -37,12 +37,12 @@ export class Hmac implements IHash {
 	 * @param key Secret key (as bytes, see utf8.toBytes, hex.toBytes etc)
 	 */
 	constructor(hash:IHash,key:Uint8Array) {
-		const fKey = fixKey(hash, key);
+		const fk = fixKey(hash, key);
 		this.#oPadKey = new Uint8Array(hash.blockSize);
 		this.#iPadKey = new Uint8Array(hash.blockSize);
 		for (let i = 0; i < hash.blockSize; i++) {
-			this.#oPadKey[i] = fKey[i] ^ oPad;
-			this.#iPadKey[i] = fKey[i] ^ iPad;
+			this.#oPadKey[i] = fk[i] ^ oPad;
+			this.#iPadKey[i] = fk[i] ^ iPad;
 		}
 	
 		this.#oHash=hash.newEmpty();
