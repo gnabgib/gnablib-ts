@@ -3,9 +3,11 @@
 import * as bigEndian from '../endian/big.js';
 import * as bitExt from '../primitive/BitExt.js';
 import { SizeError } from '../primitive/ErrorExt.js';
-import * as hex from '../encoding/Hex.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import type { IHash } from './IHash.js';
+
+//[Wikipedia: Blake1](https://en.wikipedia.org/wiki/BLAKE_(hash_function))
+//[SHA-3 proposal BLAKE](https://ehash.iaik.tugraz.at/uploads/0/06/Blake.pdf) (2008)
 
 const digestSizeEls = 8;
 const blockSizeEls=16;//4x4
