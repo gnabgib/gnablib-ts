@@ -74,7 +74,7 @@ class Blake2_32bit implements IHash {
 	/**
 	 * Number of bytes added to the hash (this is just the low count)
 	 */
-	#ingestBytes = new Uint64(0); //12
+	#ingestBytes = Uint64.zero;
 	/**
 	 * Position of data written to block
 	 */
@@ -272,7 +272,7 @@ class Blake2_32bit implements IHash {
         this.#state[7] = iv[14] ^ littleEndian.u32FromBytes(this.#params, 28);
 
 		//Reset ingest count
-		this.#ingestBytes = new Uint64(0);
+		this.#ingestBytes = Uint64.zero;
 		//Reset block (which is just pointing to the start)
 		this.#bPos = 0;
 
@@ -328,7 +328,7 @@ class Blake2_64bit implements IHash {
 	/**
 	 * Number of bytes added to the hash (this is just the low count)
 	 */
-	#ingestBytes = new Uint64(0); //12
+	#ingestBytes = Uint64.zero;
 	//#ingestBytesHigh=new Uint64(0);//13
 	/**
 	 * Position of data written to block
@@ -558,7 +558,7 @@ class Blake2_64bit implements IHash {
 		);
 
 		//Reset ingest count
-		this.#ingestBytes = new Uint64(0);
+		this.#ingestBytes = Uint64.zero;
 		//Reset block (which is just pointing to the start)
 		this.#bPos = 0;
 

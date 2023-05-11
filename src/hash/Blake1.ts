@@ -329,7 +329,7 @@ class Blake1_64bit implements IHash {
 	 */
 	constructor(salt?:Uint64[],roundCount=14) {
         if (!salt) {
-            this.#salt = new Array<Uint64>(new Uint64(0), new Uint64(0), new Uint64(0), new Uint64(0));
+            this.#salt = new Array<Uint64>(Uint64.zero,Uint64.zero,Uint64.zero,Uint64.zero);
         } else if (salt.length!=4) {
             throw new SizeError('salt', salt.length, 4);
         } else {

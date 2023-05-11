@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
-import { whirlpool } from '../../src/hash/Whirlpool';
+import { Whirlpool } from '../../src/hash/Whirlpool';
 
 const tsts = suite('Whirlpool/ISO 10118-3:2004');
 const asciiPairs = [
@@ -80,22 +80,15 @@ const asciiPairs = [
 	],
 ];
 
-for (const pair of asciiPairs) {
-	tsts('whirlpool:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = whirlpool(b);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of asciiPairs) {
+	const b = utf8.toBytes(source);
+	tsts('Whirlpool:' + source, () => {
+		const b = utf8.toBytes(source);
+		const hash=new Whirlpool();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
-
-// //This is from the ISO test vectors, but slow
-// const t0 = performance.now();
-// const b=utf8.toBytes('a'.repeat(1000000));
-// const m=whirlpool(b);
-// tsts('whirlpool: a.repeat(10^6)',()=> {
-//     assert.is(hex.fromBytes(m),'0C99005BEB57EFF50A7CF005560DDF5D29057FD86B20BFD62DECA0F1CCEA4AF51FC15490EDDC47AF32BB2B66C34FF9AD8C6008AD677F77126953B226E4ED8B01');
-// });
-// const t1 = performance.now();
-// console.log(`a(10^6) took ${t1 - t0} milliseconds.`);
 
 tsts.run();

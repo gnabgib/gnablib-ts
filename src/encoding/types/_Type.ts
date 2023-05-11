@@ -100,7 +100,7 @@ export enum Type {
 }
 
 function encodeUint(value: Uint64): Uint8Array {
-	if (value.equals(new Uint64(0, 0))) return new Uint8Array([Type.Zero]);
+	if (value.equals(Uint64.zero)) return new Uint8Array([Type.Zero]);
 	const min = value.toMinBytes();
 	const ret = new Uint8Array(9);
 	switch (min.length) {

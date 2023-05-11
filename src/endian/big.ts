@@ -7,6 +7,28 @@ import { Int64 } from '../primitive/Int64.js';
 import { inRangeInclusive } from '../primitive/IntExt.js';
 
 /**
+ * Output a 64 bit unsigned number from @param sourceBytes at position @param sourcePos
+ * Requires 8 bytes
+ * @param sourceBytes Source data
+ * @param sourcePos Starting position in @param sourceBytes
+ * @throws {SizeError} if there's not enough data in @param sourceBytes
+ * @returns
+ */
+export function u64FromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
+	if (sourcePos + size64Bytes > sourceBytes.length)
+		throw new SizeError(
+			'sourceBytes',
+			sourceBytes.length,
+			sourcePos + size64Bytes
+		);
+	//We can use unsafe because we've already tested length
+	return new Uint64(
+		u32FromBytesUnsafe(sourceBytes, sourcePos + size32Bytes),
+		u32FromBytesUnsafe(sourceBytes, sourcePos)
+	);
+}
+
+/**
  * Copy the contents of @param sourceBytes at position @param sourcePos into @param target
  * starting at @param targetPos for @param targetSize elements
  * @param target Copy the content into
@@ -303,7 +325,7 @@ export function uintToMinBytes(uint: number | Uint64): Uint8Array {
 		u64 = uint as Uint64;
 	}
 	const ret = new Uint8Array(8);
-	const zero = new Uint64(0);
+	const zero = Uint64.zero;
 	let ptr = 0;
 	do {
 		ret[ptr++] = u64.lowU32;

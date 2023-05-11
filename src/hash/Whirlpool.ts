@@ -2,17 +2,19 @@
 
 import * as bigEndian from '../endian/big.js';
 import { Uint64 } from '../primitive/Uint64.js';
+import type { IHash } from './IHash.js';
 
-//https://en.wikipedia.org/wiki/Whirlpool_(hash_function)
-//https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html
-//https://github.com/angeal185/whirlpool-js/blob/master/dist/whirlpool-js.js
-//https://github.com/jzelinskie/whirlpool/blob/master/whirlpool.go
-//https://www2.seas.gwu.edu/~poorvi/Classes/CS381_2007/Whirlpool.pdf
+//[Wikipedia: Whirlpool (hash function)](https://en.wikipedia.org/wiki/Whirlpool_(hash_function))
+//[The Whirlpool Hash Function](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)
+//[The Whirlpool Secure Hash Function](https://www2.seas.gwu.edu/~poorvi/Classes/CS381_2007/Whirlpool.pdf) (2006)
 
-//Favour compact size (means building roundConstants and circulant table on first run)
-const blockSizeBytes = 64; //512bits
-const blockSizeU64 = blockSizeBytes >> 3;
+const blockSizeEls=8;
+const digestSizeEls=8;
+const spaceForLen=32;//256bit length
 const rounds = 10;
+const circulantTable = new Array<Uint64>(8 * 256);
+const roundConstants = new Array<Uint64>(rounds);
+
 const substitutionBox = new Uint8Array([
 	//block 0
 	0x18, 0x23, 0xc6, 0xe8, 0x87, 0xb8, 0x01, 0x4f, 0x36, 0xa6, 0xd2, 0xf5, 0x79,
@@ -39,10 +41,6 @@ const substitutionBox = new Uint8Array([
 	0x6c, 0x31, 0x74, 0xf6, 0x46, 0xac, 0x89, 0x14, 0xe1, 0x16, 0x3a, 0x69, 0x09,
 	0x70, 0xb6, 0xd0, 0xed, 0xcc, 0x42, 0x98, 0xa4, 0x28, 0x5c, 0xf8, 0x86,
 ]);
-
-const circulantTable = new Array<Uint64>(8 * 256);
-const roundConstants = new Array<Uint64>(rounds);
-
 function init() {
 	for (let x = 0; x < 256; x++) {
 		const v1 = substitutionBox[x];
@@ -78,30 +76,56 @@ function init() {
 }
 init();
 
-class Ctx {
-	private _countBytes = new Uint64(0);
-	private _ptr = 0;
-	private readonly _buff = new Uint8Array(blockSizeBytes);
-	private readonly _hash = new Array<Uint64>(blockSizeU64);
+export class Whirlpool implements IHash {
+	/**
+	 * Digest size in bytes
+	 */
+	readonly size=digestSizeEls<<3;//64bit els
+	/**
+	 * Block size in bytes
+	 */
+	readonly blockSize = blockSizeEls<<3;//64bit els
+	/**
+	 * Runtime state of the hash
+	 */
+	readonly #state = new Array<Uint64>(digestSizeEls);
+	/**
+	 * Temp processing block
+	 */
+	readonly #block = new Uint8Array(blockSizeEls<<3);
+	/**
+	 * Number of bytes added to the hash
+	 */
+	#ingestBytes = Uint64.zero;
+	/**
+	 * Position of data written to block
+	 */
+	#bPos = 0;	
 
-	constructor() {
-		for (let i = 0; i < blockSizeU64; i++) {
-			this._hash[i] = new Uint64(0);
-		}
-	}
+    /**
+	 * Build a new Whirlpool hash generator
+	 */
+    constructor() {
+        this.reset();
+    }
 
-	private transform() {
-		const state = new Array<Uint64>(blockSizeU64);
-		const w = new Array<Uint64>(blockSizeU64);
-		const K = new Array<Uint64>(blockSizeU64);
-		const L = new Array<Uint64>(blockSizeU64);
-		bigEndian.u64IntoArrFromBytes(w, 0, 8, this._buff);
+    /**
+     * aka Transform
+     */
+    private hash() {
+        const state = new Array<Uint64>(blockSizeEls);
+		const K = new Array<Uint64>(blockSizeEls);
+		const L = new Array<Uint64>(blockSizeEls);
 
 		//Initialize K and state
-		for (let i = 0; i < 8; i++) {
-			K[i] = this._hash[i];
-			state[i] = w[i].xor(K[i]);
-		}
+		K[0] = this.#state[0];state[0] = Uint64.fromBytes(this.#block,0).xor(K[0]);
+		K[1] = this.#state[1];state[1] = Uint64.fromBytes(this.#block,8).xor(K[1]);
+		K[2] = this.#state[2];state[2] = Uint64.fromBytes(this.#block,16).xor(K[2]);
+		K[3] = this.#state[3];state[3] = Uint64.fromBytes(this.#block,24).xor(K[3]);
+		K[4] = this.#state[4];state[4] = Uint64.fromBytes(this.#block,32).xor(K[4]);
+		K[5] = this.#state[5];state[5] = Uint64.fromBytes(this.#block,40).xor(K[5]);
+		K[6] = this.#state[6];state[6] = Uint64.fromBytes(this.#block,48).xor(K[6]);
+		K[7] = this.#state[7];state[7] = Uint64.fromBytes(this.#block,56).xor(K[7]);
 		for (let r = 0; r < rounds; r++) {
 			for (let i = 0; i < 8; i++) {
 				// //Loop unroll:
@@ -134,83 +158,136 @@ class Ctx {
 				// }
 				L[i] = L[i]
 					.xor(circulantTable[state[i].rShift(56).lowU32 & 0xff])
-					.xor(
-						circulantTable[256 | (state[(i - 1) & 7].rShift(48).lowU32 & 0xff)]
-					)
-					.xor(
-						circulantTable[512 | (state[(i - 2) & 7].rShift(40).lowU32 & 0xff)]
-					)
-					.xor(
-						circulantTable[768 | (state[(i - 3) & 7].rShift(32).lowU32 & 0xff)]
-					)
-					.xor(
-						circulantTable[1024 | (state[(i - 4) & 7].rShift(24).lowU32 & 0xff)]
-					)
-					.xor(
-						circulantTable[1280 | (state[(i - 5) & 7].rShift(16).lowU32 & 0xff)]
-					)
-					.xor(
-						circulantTable[1536 | (state[(i - 6) & 7].rShift(8).lowU32 & 0xff)]
-					)
+					.xor(circulantTable[256 | (state[(i - 1) & 7].rShift(48).lowU32 & 0xff)])
+					.xor(circulantTable[512 | (state[(i - 2) & 7].rShift(40).lowU32 & 0xff)])
+					.xor(circulantTable[768 | (state[(i - 3) & 7].rShift(32).lowU32 & 0xff)])
+					.xor(circulantTable[1024 | (state[(i - 4) & 7].rShift(24).lowU32 & 0xff)])
+					.xor(circulantTable[1280 | (state[(i - 5) & 7].rShift(16).lowU32 & 0xff)])
+					.xor(circulantTable[1536 | (state[(i - 6) & 7].rShift(8).lowU32 & 0xff)])
 					.xor(circulantTable[1792 | (state[(i - 7) & 7].lowU32 & 0xff)]);
 			}
-			//Because L used state, we need to do this separately
-			for (let i = 0; i < 8; i++) {
-				state[i] = L[i];
-			}
+			//Because state is used in L gen (above), we need to do this separately
+			state[0] = L[0];
+			state[1] = L[1];
+			state[2] = L[2];
+			state[3] = L[3];
+			state[4] = L[4];
+			state[5] = L[5];
+			state[6] = L[6];
+			state[7] = L[7];
 		}
 		//Apply the Miyaguchi-Preneel compression function:
-		for (let i = 0; i < 8; i++) {
-			this._hash[i] = this._hash[i].xor(state[i].xor(w[i]));
+        this.#state[0] = this.#state[0].xor(state[0].xor(Uint64.fromBytes(this.#block,0)));
+        this.#state[1] = this.#state[1].xor(state[1].xor(Uint64.fromBytes(this.#block,8)));
+        this.#state[2] = this.#state[2].xor(state[2].xor(Uint64.fromBytes(this.#block,16)));
+        this.#state[3] = this.#state[3].xor(state[3].xor(Uint64.fromBytes(this.#block,24)));
+        this.#state[4] = this.#state[4].xor(state[4].xor(Uint64.fromBytes(this.#block,32)));
+        this.#state[5] = this.#state[5].xor(state[5].xor(Uint64.fromBytes(this.#block,40)));
+        this.#state[6] = this.#state[6].xor(state[6].xor(Uint64.fromBytes(this.#block,48)));
+        this.#state[7] = this.#state[7].xor(state[7].xor(Uint64.fromBytes(this.#block,56)));
+
+		//Reset block pointer
+		this.#bPos = 0;
+    }
+
+	/**
+	 * Write data to the hash (can be called multiple times)
+	 * @param data
+	 */
+	write(data: Uint8Array): void {
+		//It would be more accurately to update these on each cycle (below) but since we cannot
+		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
+		this.#ingestBytes = this.#ingestBytes.add(Uint64.fromNumber(data.length));
+
+		let nToWrite = data.length;
+		let dPos = 0;
+		let space = this.blockSize - this.#bPos;
+		while (nToWrite > 0) {
+			//Note this is >, so if there's exactly space this won't trigger
+			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
+			if (space > nToWrite) {
+				//More space than data, copy in verbatim
+				this.#block.set(data.subarray(dPos), this.#bPos);
+				//Update pos
+				this.#bPos += nToWrite;
+				return;
+			}
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
+			this.#bPos += space;
+			this.hash();
+			dPos += space;
+			nToWrite -= space;
+			space = this.blockSize;
 		}
 	}
 
-	update(input: Uint8Array): void {
-		let i = 0;
-		if (this._ptr === 0) {
-			const safeLen = ((input.length / blockSizeBytes) | 0) * blockSizeBytes;
-			for (; i < safeLen; i += blockSizeBytes) {
-				this._buff.set(input.slice(i, blockSizeBytes));
-				this._countBytes = this._countBytes.addNumber(blockSizeBytes);
-				this.transform();
-			}
-		}
+    /**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */
+	sum(): Uint8Array {
+        const alt = this.clone();
+        alt.#block[alt.#bPos] = 0x80;
+		alt.#bPos++;
 
-		for (; i < input.length; i++) {
-			this._buff[this._ptr++] = input[i];
-			this._countBytes = this._countBytes.addNumber(1);
-
-			if (this._ptr === blockSizeBytes) {
-				this.transform();
-				this._ptr = 0;
-			}
+        const sizeSpace = this.blockSize - spaceForLen;
+        		//If there's not enough space, end this block
+		if (alt.#bPos > sizeSpace) {
+			//Zero the remainder of the block
+			alt.#block.fill(0, alt.#bPos);
+			alt.hash();
 		}
+        //Zero the rest of the block
+		alt.#block.fill(0, alt.#bPos);
+
+        //Technically we write 256bit length ([ms_u64,u64,u64,ls_u64]), but we only count 67 bits (for now)
+        // so only need to write the last two spots
+        //bigEndian.u64IntoBytes(this.#ingestBytesHigh.rShift(61), alt.#block, sizeSpace);
+        //bigEndian.u64IntoBytes(this.#ingestBytesHigh.lShift(3), alt.#block, sizeSpace+8);
+        bigEndian.u64IntoBytes(alt.#ingestBytes.rShift(61), alt.#block, sizeSpace+16);
+        bigEndian.u64IntoBytes(alt.#ingestBytes.lShift(3), alt.#block, sizeSpace+24);
+		alt.hash();
+		const ret = new Uint8Array(alt.size);
+		bigEndian.u64ArrIntoBytesSafe(alt.#state, ret);
+		return ret;   
 	}
 
-	finalize(): Uint8Array {
-		this._buff[this._ptr++] = 0x80;
-		if (this._ptr > 32) {
-			this._buff.set(new Uint8Array(64 - this._ptr), this._ptr);
-			this.transform();
-			this._ptr = 0;
-		}
-		//Set rest of this block to zero
-		this._buff.set(new Uint8Array(64 - this._ptr), this._ptr);
-		//Multiply the count (in bytes) by 8  to get bit-count
-		//Uint64.fromBytes
-		bigEndian.u64IntoBytes(this._countBytes.rShift(61), this._buff, 64 - 16);
-		bigEndian.u64IntoBytes(this._countBytes.lShift(3), this._buff, 64 - 8);
-		this.transform();
-		this._ptr = 0;
+	/**
+	 * Set hash state. Any past writes will be forgotten
+	 */
+	reset(): void {
+		//Setup state
+		this.#state[0] = Uint64.zero;
+        this.#state[1] = Uint64.zero;
+        this.#state[2] = Uint64.zero;
+        this.#state[3] = Uint64.zero;
+        this.#state[4] = Uint64.zero;
+        this.#state[5] = Uint64.zero;
+        this.#state[6] = Uint64.zero;
+        this.#state[7] = Uint64.zero;
 
-		const ret = new Uint8Array(blockSizeBytes);
-		bigEndian.u64ArrIntoBytesUnsafe(this._hash, ret);
+		//Reset ingest count
+		this.#ingestBytes = Uint64.zero;
+		//Reset block (which is just pointing to the start)
+		this.#bPos = 0;
+	}
+
+	/**
+	 * Create an empty IHash using the same algorithm
+	 */
+	newEmpty(): IHash {
+		return new Whirlpool();
+	}
+	
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
+	 */
+	private clone(): Whirlpool {
+		const ret = new Whirlpool();
+		for(let i=0;i<digestSizeEls;i++) ret.#state[i]=this.#state[i];
+		ret.#block.set(this.#block);
+		ret.#ingestBytes = this.#ingestBytes;
+		ret.#bPos = this.#bPos;
 		return ret;
 	}
-}
-
-export function whirlpool(bytes: Uint8Array): Uint8Array {
-	const ctx = new Ctx();
-	ctx.update(bytes);
-	return ctx.finalize();
 }

@@ -15,6 +15,7 @@ const maxU32Plus1 = 0x100000000;
 const mask5Bits = 0x1f;
 const mask16Bits = 0xffff;
 
+export type Uint64ish = Uint64|number;
 /**
  * A 64 bit int/uint
  */
@@ -407,7 +408,11 @@ export class Uint64 {
 	}
 
 	static get min(): Uint64 {
-		return new Uint64(0, 0);
+		return zero;
+	}
+
+	static get zero(): Uint64 {
+		return zero;
 	}
 
 	/**
@@ -425,7 +430,7 @@ export class Uint64 {
 	 * @param value 
 	 * @returns 
 	 */
-	static coerce(value:Uint64|number):Uint64 {
+	static coerce(value:Uint64ish):Uint64 {
 		if (value instanceof Uint64) {
 			return value;
 		} else {
@@ -435,5 +440,7 @@ export class Uint64 {
 
 	//minSafe cannot be represented in unsigned int
 }
+const zero=new Uint64(0,0);
+
 
 //Uint64.MAX=new Uint64(maxU32,maxU32);
