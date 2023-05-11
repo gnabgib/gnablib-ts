@@ -453,6 +453,33 @@ export function u32ArrIntoBytes(
 }
 
 /**
+ * Copy the content of an Uint32Array into @param targetBytes
+ * - Only as much space as is available in Target will be copied
+ * - Only as much source material as is available will be copied
+ * @param sourceU64s Array to copy from
+ * @param targetBytes Destination of data starting at @param targetPos
+ * @param targetPos Starting position in @param targetBytes to start writing
+ */
+export function u32ArrIntoBytesSafe(
+	sourceU32s: Uint32Array,
+	targetBytes: Uint8Array,
+	targetPos = 0
+): void {
+	let targetByteCount=targetBytes.length-targetPos;
+	let i=0;
+	while (targetByteCount>size32Bytes) {
+		if (sourceU32s.length<=i) return;
+		targetBytes.set(u32ToBytes(sourceU32s[i]),targetPos);
+		i++;
+		targetPos+=size32Bytes;
+		targetByteCount-=size32Bytes;
+	}
+	if (targetByteCount>0) {
+		targetBytes.set(u32ToBytes(sourceU32s[i]).slice(0,targetByteCount),targetPos);
+	}
+}
+
+/**
  * Get the next two bytes as a word.
  * WARN: Unsafe doesn't confirm you're within bounds of array (@see u16FromBytes recommended)
  * @param sourceBytes
