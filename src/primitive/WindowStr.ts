@@ -267,7 +267,7 @@ export class WindowStr {
      * @param value 
      * @returns 
      */
-    static Coerce(value:WindowStrish):WindowStr {
+    static coerce(value:WindowStrish):WindowStr {
         if (value instanceof WindowStr) {
             return value;
         } if (value instanceof String) {

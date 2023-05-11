@@ -420,6 +420,19 @@ export class Uint64 {
 		return new Uint64(maxU32, 0x1fffff);
 	}
 
+	/**
+	 * Coerce a Uint64 or number into a Uint64 if it isn't already
+	 * @param value 
+	 * @returns 
+	 */
+	static coerce(value:Uint64|number):Uint64 {
+		if (value instanceof Uint64) {
+			return value;
+		} else {
+			return this.fromNumber(value);
+		}
+	}
+
 	//minSafe cannot be represented in unsigned int
 }
 

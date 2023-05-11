@@ -178,7 +178,7 @@ export class Urn {
     }
 
     static parse(s:WindowStrish):Urn|undefined {
-        s=WindowStr.Coerce(s);
+        s=WindowStr.coerce(s);
         const match=namestring.atStartOf(s);
         console.log(match);
     }
