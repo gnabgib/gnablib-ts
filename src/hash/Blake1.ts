@@ -457,6 +457,9 @@ class Blake1_64bit implements IHash {
 		}
     }
 
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */	
     sum(): Uint8Array {
         const alt = this.clone();
         //End with a 0b1 in MSB

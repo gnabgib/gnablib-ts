@@ -12,6 +12,7 @@ import * as utf8 from '../encoding/Utf8.js';
 //[US Secure Hash Algorithms (SHA and HMAC-SHA)](https://datatracker.ietf.org/doc/html/rfc4634) (2006) - obsolete by above
 //[Wikipedia: SHA-2](https://en.wikipedia.org/wiki/SHA-2)
 // FIPS 180-4 (added 512/224, 512/256)
+// You can generate test values with: `echo -n '<test>' | shasum -a (224|256|384|512|512224|512256) -`
 
 const spaceForLen32 = 8; //Number of bytes needed to append length
 const spaceForLen64 = 16; //Number of bytes needed to append length
