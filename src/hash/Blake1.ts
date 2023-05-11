@@ -3,6 +3,7 @@
 import * as bigEndian from '../endian/big.js';
 import * as bitExt from '../primitive/BitExt.js';
 import { SizeError } from '../primitive/ErrorExt.js';
+
 import { Uint64 } from '../primitive/Uint64.js';
 import type { IHash } from './IHash.js';
 
@@ -20,7 +21,7 @@ const spaceForLen32 = 8; //Number of bytes needed to append length
 const spaceForLen64 = 16; //Number of bytes needed to append length
 //Same as Sha2-512
 const iv = [
-	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2..19):
+	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2,3,5,7,11,13,17,19):
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
 	0x6a09e667, 0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1,
 	0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179
@@ -288,26 +289,6 @@ class Blake1_32bit implements IHash {
 	}
 }
 
-export class Blake32 extends Blake1_32bit {
-    /**
-     * Build a new Blake32 hash generator (retired in favour of @see Blake256)
-     * @param salt 4*Uint32 (exactly) of salt, or empty
-     */
-    constructor(salt?:Uint32Array) {
-        super(salt,b32rounds);
-	}    
-}
-
-export class Blake256 extends Blake1_32bit {
-    /**
-     * Build a new Blake1-256 hash generator
-     * @param salt 4*Uint32 (exactly) of salt, or empty
-     */
-    constructor(salt?:Uint32Array) {
-        super(salt,b256rounds);
-	}    
-}
-
 // chain=#state, m=#block
 class Blake1_64bit implements IHash {
 	/**
@@ -555,6 +536,26 @@ class Blake1_64bit implements IHash {
 		ret.#bPos = this.#bPos;
 		return ret;
 	}
+}
+
+export class Blake32 extends Blake1_32bit {
+    /**
+     * Build a new Blake32 hash generator (retired in favour of @see Blake256)
+     * @param salt 4*Uint32 (exactly) of salt, or empty
+     */
+    constructor(salt?:Uint32Array) {
+        super(salt,b32rounds);
+	}    
+}
+
+export class Blake256 extends Blake1_32bit {
+    /**
+     * Build a new Blake1-256 hash generator
+     * @param salt 4*Uint32 (exactly) of salt, or empty
+     */
+    constructor(salt?:Uint32Array) {
+        super(salt,b256rounds);
+	}    
 }
 
 export class Blake64 extends Blake1_64bit {
