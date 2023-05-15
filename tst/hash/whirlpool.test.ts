@@ -81,7 +81,6 @@ const asciiPairs = [
 ];
 
 for (const [source,expect] of asciiPairs) {
-	const b = utf8.toBytes(source);
 	tsts('Whirlpool:' + source, () => {
 		const b = utf8.toBytes(source);
 		const hash=new Whirlpool();

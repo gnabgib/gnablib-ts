@@ -1,5 +1,2 @@
-/*! No copyright, knock yourself out */
-
-// FIPS 202
-//https://en.wikipedia.org/wiki/SHA-3
-export { sha3_224, sha3_256, sha3_384, sha3_512 } from './Keccak.js';
+/*! Copyright 2023 gnabgib MPL-2.0 */
+export {Sha3_224,Sha3_256,Sha3_384,Sha3_512} from './Keccak.js';

@@ -1,17 +1,17 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
+//import * as hex from '../encoding/Hex.js';
+import type { IHash } from "./IHash.js";
 import * as littleEndian from '../endian/little.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import * as intExt from '../primitive/IntExt.js';
 
-//https://en.wikipedia.org/wiki/SHA-3
-//https://emn178.github.io/online-tools/keccak_224.html (256,384,512, SHA3 224,256,384,512 Shake 128,256)
-//https://keccak.team/keccak.html
-//https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf
-//https://keccak.team/files/Keccak-submission-3.pdf
+//[Wikipedia: SHA-3](https://en.wikipedia.org/wiki/SHA-3)
+//[Keccak](https://keccak.team/keccak.html)
+//[FIPS PUB 202: SHA3-Standard](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf) (2015)
 
-//These are in pairs to make Uint64s (MSB first to match docs)
-//https://keccak.team/files/Keccak-reference-3.0.pdf
+//https://emn178.github.io/online-tools/keccak_224.html (256,384,512, SHA3 224,256,384,512 Shake 128,256)
+
 const roundConst = [
 	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a, 0x80000000, 0x80008000,
 	0x00000000, 0x0000808b, 0x00000000, 0x80000001, 0x80000000, 0x80008081, 0x80000000, 0x00008009,
@@ -58,48 +58,63 @@ const piShift = [
 
 const rounds = 24;
 const maxBlockSizeU64 = 5 * 5;
-const maxBlockSizeBytes = maxBlockSizeU64 << 3; //1600 bits,8*5*5=200
+const maxBlockSizeBytes = 200; //1600 bits,8*5*5=200
 const keccak_suffix = 1;
 const sha3_suffix = 6;
 const shake_suffix = 0x1f;
 
-class Ctx {
-	private _ptr = 0;
-	private readonly _bytes: Uint8Array;
-	private readonly _blockSizeBytes: number;
-	private readonly _capacityBytes: number;
-	private readonly _digestSizeBytes: number;
-	private readonly _suffix: number;
+class KeccakCore implements IHash {
+	/**
+	 * Digest size in bytes
+	 */
+	readonly size:number;
+	/**
+	 * Block size in bytes
+	 */
+	readonly blockSize:number;
+	/**
+	 * Runtime state of the hash
+	 */
+	readonly #state = new Uint8Array(maxBlockSizeBytes);
+	/**
+	 * Temp processing block
+	 */
+	readonly #block:Uint8Array;
+    readonly #suffix:number;
+	/**
+	 * Number of bytes added to the hash
+	 */
+	#ingestBytes = Uint64.zero;
+	/**
+	 * Position of data written to block
+	 */
+	#bPos = 0;	
 
 	/**
-	 * @param digestSizeBytes Output digest size (bytes)
 	 * @param suffix 1 for Keccak, 6 for SHA3, 0x1f/31 for Shake
+	 * @param digestSizeBytes Output digest size (bytes)
 	 * @param capacityBytes (default digestSize)
 	 */
-	constructor(digestSizeBytes: number, suffix: number, capacityBytes = 0) {
+	constructor(suffix: number, digestSizeBytes: number, capacityBytes = 0) {
 		intExt.inRangeInclusive(capacityBytes, 0, maxBlockSizeBytes / 2);
-		this._bytes = new Uint8Array(maxBlockSizeBytes);
-		this._capacityBytes = 2 * (capacityBytes === 0 ? digestSizeBytes : capacityBytes);
+        if (capacityBytes<=0) capacityBytes=digestSizeBytes;
+        capacityBytes*=2;
 
-		this._digestSizeBytes = digestSizeBytes;
-		this._suffix = suffix;
-		this._blockSizeBytes = maxBlockSizeBytes - this._capacityBytes;
+		this.#suffix = suffix;
+        this.size=digestSizeBytes;
+        this.blockSize= maxBlockSizeBytes - capacityBytes;
+		this.#block=new Uint8Array(maxBlockSizeBytes);
+
+        this.reset();
 	}
 
-	update(input: Uint8Array): void {
-		for (let i = 0; i < input.length; i++) {
-			this._bytes[this._ptr++] ^= input[i];
-			if (this._ptr === this._blockSizeBytes) {
-				this.absorb();
-				this._ptr = 0;
-			}
-		}
-	}
-
-	private absorb(): void {
-		//Copy state-bytes into u64
+    /**
+     * aka absorb
+     */
+    private hash():void {
+        //Copy state-bytes into u64
 		const st = new Array<Uint64>(maxBlockSizeU64);
-		littleEndian.u64IntoArrFromBytes(st, 0, maxBlockSizeU64, this._bytes);
+		littleEndian.u64IntoArrFromBytes(st, 0, maxBlockSizeU64, this.#block);
 
 		const bc = new Array<Uint64>(5);
 		let t: Uint64;
@@ -149,52 +164,162 @@ class Ctx {
 			st[0] = st[0].xor(new Uint64(roundConst[2 * r + 1], roundConst[2 * r]));
 		}
 		//Copy the data back to state
-		littleEndian.u64ArrIntoBytes(st, this._bytes);
+		littleEndian.u64ArrIntoBytes(st, this.#block);
+		//Reset block pointer
+		this.#bPos = 0;
+    }
+
+    write(data: Uint8Array): void {
+        for (let i = 0; i < data.length; i++) {
+			this.#block[this.#bPos++] ^= data[i];
+			if (this.#bPos === this.blockSize) {
+				this.hash();
+				this.#bPos = 0;
+			}
+		}
+    }
+
+    /**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */    
+    sum(): Uint8Array {
+        const alt = this.clone();
+        //End with a 0b1 in MSB
+		alt.#block[alt.#bPos] ^= alt.#suffix;
+        alt.#block[alt.blockSize - 1] ^= 0x80;
+		alt.hash();
+        //Squeeze
+		return alt.#block.slice(0, alt.size);
+    }
+
+	/**
+	 * Set hash state. Any past writes will be forgotten
+	 */
+    reset(): void {
+        this.#state.fill(0,0);
+        this.#block.fill(0,0);
+		//Reset ingest count
+		this.#ingestBytes = Uint64.zero;
+		//Reset block (which is just pointing to the start)
+		this.#bPos = 0;
+    }
+
+	/**
+	 * Create an empty IHash using the same algorithm
+	 */
+    newEmpty(): IHash {
+        return new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2);
+    }
+
+    /**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
+	 */
+	private clone(): KeccakCore {
+		const ret = new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2);
+		ret.#state.set(this.#state);
+		ret.#block.set(this.#block);
+		ret.#ingestBytes = this.#ingestBytes;
+		ret.#bPos = this.#bPos;
+		return ret;
 	}
-
-	finalize(): Uint8Array {
-		//Add the padding
-		this._bytes[this._ptr] ^= this._suffix;
-		this._bytes[this._blockSizeBytes - 1] ^= 0x80;
-		this.absorb();
-		//Squeeze
-		return this._bytes.slice(0, this._digestSizeBytes);
-	}
 }
 
-export function keccak(bytes: Uint8Array, digestSizeBytes: number): Uint8Array {
-	const ret = new Ctx(digestSizeBytes, keccak_suffix);
-	ret.update(bytes);
-	return ret.finalize();
+export class Keccak extends KeccakCore {
+    /**
+     * Build a new Keccak hash generator
+     * @param digestSize Output digest size (bytes)
+     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's @param digestSize
+     */
+    constructor(digestSize:number,capacityBytes = 0) {
+        super(keccak_suffix,digestSize,capacityBytes);
+    }
+}
+export class Keccak224 extends KeccakCore {
+    /**
+     * Build a new Keccak 224bit hash generator
+     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 224
+     */
+    constructor(capacityBytes = 0) {
+        super(keccak_suffix,28/*224/8*/,capacityBytes);
+    }
+}
+export class Keccak256 extends KeccakCore {
+    /**
+     * Build a new Keccak 256bit hash generator
+     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 256
+     */
+    constructor(capacityBytes = 0) {
+        super(keccak_suffix,32/*256/8*/,capacityBytes);
+    }
+}
+export class Keccak384 extends KeccakCore {
+    /**
+     * Build a new Keccak 384bit hash generator
+     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 384
+     */
+    constructor(capacityBytes = 0) {
+        super(keccak_suffix,48/*384/8*/,capacityBytes);
+    }
+}
+export class Keccak512 extends KeccakCore {
+    /**
+     * Build a new Keccak 512bit hash generator
+     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 512
+     */
+    constructor(capacityBytes = 0) {
+        super(keccak_suffix,64/*512/8*/,capacityBytes);
+    }
 }
 
-export function sha3_224(bytes: Uint8Array): Uint8Array {
-	const ret = new Ctx(224 / 8, sha3_suffix);
-	ret.update(bytes);
-	return ret.finalize();
+export class Sha3_224 extends KeccakCore {
+    /**
+     * Build a new Sha3 224bit hash generator
+     */
+    constructor() {
+        super(sha3_suffix,28/*224/8*/);
+    }
 }
-export function sha3_256(bytes: Uint8Array): Uint8Array {
-	const ret = new Ctx(256 / 8, sha3_suffix);
-	ret.update(bytes);
-	return ret.finalize();
+export class Sha3_256 extends KeccakCore {
+    /**
+     * Build a new Sha3 256bit hash generator
+     */
+    constructor() {
+        super(sha3_suffix,32/*256/8*/);
+    }
 }
-export function sha3_384(bytes: Uint8Array): Uint8Array {
-	const ret = new Ctx(384 / 8, sha3_suffix);
-	ret.update(bytes);
-	return ret.finalize();
+export class Sha3_384 extends KeccakCore {
+    /**
+     * Build a new Sha3 384bit hash generator
+     */
+    constructor() {
+        super(sha3_suffix,48/*384/8*/);
+    }
 }
-export function sha3_512(bytes: Uint8Array): Uint8Array {
-	const ret = new Ctx(512 / 8, sha3_suffix);
-	ret.update(bytes);
-	return ret.finalize();
+export class Sha3_512 extends KeccakCore {
+    /**
+     * Build a new Sha3 512bit hash generator
+     */
+    constructor() {
+        super(sha3_suffix,64/*512/8*/);
+    }
 }
-export function shake128(bytes: Uint8Array, digestSizeBytes: number): Uint8Array {
-	const ret = new Ctx(digestSizeBytes, shake_suffix, 128 / 8);
-	ret.update(bytes);
-	return ret.finalize();
+
+export class Shake128 extends KeccakCore {
+    /**
+     * Build a new Shake 128bit XOF generator
+     * @param digestSize Output digest size (bytes)
+     */
+    constructor(digestSize: number) {
+        super(shake_suffix,digestSize,16/*128/8*/);
+    }
 }
-export function shake256(bytes: Uint8Array, digestSizeBytes: number): Uint8Array {
-	const ret = new Ctx(digestSizeBytes, shake_suffix, 256 / 8);
-	ret.update(bytes);
-	return ret.finalize();
+export class Shake256 extends KeccakCore {
+    /**
+     * Build a new Shake 256bit XOF generator
+     * @param digestSize Output digest size (bytes)
+     */
+    constructor(digestSize: number) {
+        super(shake_suffix,digestSize,32/*256/8*/);
+    }
 }

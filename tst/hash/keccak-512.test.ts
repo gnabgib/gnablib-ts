@@ -2,82 +2,10 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
-import { keccak } from '../../src/hash/Keccak';
+import { Keccak512 } from '../../src/hash/Keccak';
 
-const tsts = suite('Keccak');
-const ascii224Pairs = [
-	['', 'F71837502BA8E10837BDD8D365ADB85591895602FC552B48B7390ABD'],
-	//https://emn178.github.io/online-tools/keccak_224.html
-	[
-		'The quick brown fox jumps over the lazy dog',
-		'310AEE6B30C47350576AC2873FA89FD190CDC488442F3EF654CF23FE',
-	],
-	[
-		'The quick brown fox jumps over the lazy dog.',
-		'C59D4EAEAC728671C635FF645014E2AFA935BEBFFDB5FBD207FFDEAB',
-	],
-	[
-		'The quick brown fox jumps over the lazy cog',
-		'0B27FF3B732133287F6831E2AF47CF342B7EF1F3FCDEE248811090CD',
-	],
-	[
-		'12345678901234567890123456789012345678901234567890123456789012345678901234567890',
-		'744C1765A53043E186BC30BAB07FA379B421CF0BCA8224CB83E5D45B',
-	],
-	['gnabgib', '08F80715EA0CA01A7AFE6B069ABF72721431B0A1D1A595702F74537D'],
-];
-const ascii256Pairs = [
-	['', 'C5D2460186F7233C927E7DB2DCC703C0E500B653CA82273B7BFAD8045D85A470'],
-	//https://emn178.github.io/online-tools/keccak_256.html
-	[
-		'The quick brown fox jumps over the lazy dog',
-		'4D741B6F1EB29CB2A9B9911C82F56FA8D73B04959D3D9D222895DF6C0B28AA15',
-	],
-	[
-		'The quick brown fox jumps over the lazy dog.',
-		'578951E24EFD62A3D63A86F7CD19AAA53C898FE287D2552133220370240B572D',
-	],
-	[
-		'The quick brown fox jumps over the lazy cog',
-		'ED6C07F044D7573CC53BF1276F8CBA3DAC497919597A45B4599C8F73E22AA334',
-	],
-	[
-		'12345678901234567890123456789012345678901234567890123456789012345678901234567890',
-		'1523A0CD0E7E1FAABA17E1C12210FABC49FA99A7ABC061E3D6C978EEF4F748C4',
-	],
-	[
-		'gnabgib',
-		'62955A89E3AC49B4C86BC1A8A8B86A8C1AAB38F542528C50D8F1237F60944858',
-	],
-];
-const ascii384Pairs = [
-	//Source: https://en.wikipedia.org/wiki/SHA-2
-	[
-		'',
-		'2C23146A63A29ACF99E73B88F8C24EAA7DC60AA771780CCC006AFBFA8FE2479B2DD2B21362337441AC12B515911957FF',
-	],
-	//!https://emn178.github.io/online-tools/keccak_384.html
-	[
-		'The quick brown fox jumps over the lazy dog',
-		'283990FA9D5FB731D786C5BBEE94EA4DB4910F18C62C03D173FC0A5E494422E8A0B3DA7574DAE7FA0BAF005E504063B3',
-	],
-	[
-		'The quick brown fox jumps over the lazy dog.',
-		'9AD8E17325408EDDB6EDEE6147F13856AD819BB7532668B605A24A2D958F88BD5C169E56DC4B2F89FFD325F6006D820B',
-	],
-	[
-		'The quick brown fox jumps over the lazy cog',
-		'1CC515E1812491058D8B8B226FD85045E746B4937A58B0111B6B7A39DD431B6295BD6B6D05E01E225586B4DAB3CBB87A',
-	],
-	[
-		'12345678901234567890123456789012345678901234567890123456789012345678901234567890',
-		'FD6E89CBE3271545F94C3E6786803260F929C1589E3091AFD58CF32EF53A4F29B69C1166CB2982E2CB65CF5EB903E669',
-	],
-	[
-		'gnabgib',
-		'3552FA115C790DE606E9532C61522E73AAC6FD298F931D8445421EF8DC4173FA8F1F888E26BBED65F5AB5E01B633201F',
-	],
-];
+const tsts = suite('Keccak (512)');
+
 const ascii512Pairs = [
 	[
 		'',
@@ -216,35 +144,14 @@ const ascii512Pairs = [
 	],
 ];
 
-for (const pair of ascii224Pairs) {
-	tsts('keccak224:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = keccak(b, 224 / 8);
-		assert.is(hex.fromBytes(m), pair[1]);
-	});
-}
-
-for (const pair of ascii256Pairs) {
-	tsts('keccak256:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = keccak(b, 256 / 8);
-		assert.is(hex.fromBytes(m), pair[1]);
-	});
-}
-
-for (const pair of ascii384Pairs) {
-	tsts('keccak384:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = keccak(b, 384 / 8);
-		assert.is(hex.fromBytes(m), pair[1]);
-	});
-}
-
-for (const pair of ascii512Pairs) {
-	tsts('keccak512:' + pair[0], () => {
-		const b = utf8.toBytes(pair[0]);
-		const m = keccak(b, 512 / 8);
-		assert.is(hex.fromBytes(m), pair[1]);
+for (const [source,expect] of ascii512Pairs) {
+	const b = utf8.toBytes(source);
+	tsts('Keccak512:' + source, () => {
+		const hash=new Keccak512();
+		hash.write(b);
+		const md=hash.sum();
+		assert.is(hex.fromBytes(md), expect);
+        assert.is(hash.size,64);
 	});
 }
 

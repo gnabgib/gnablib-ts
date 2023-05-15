@@ -1,5 +1,2 @@
-/*! No copyright, knock yourself out */
-
-// FIPS 202
-//https://en.wikipedia.org/wiki/SHA-3
-export { shake128, shake256 } from './Keccak.js';
+/*! Copyright 2023 gnabgib MPL-2.0 */
+export { Shake128, Shake256 } from './Keccak.js';
