@@ -1,5 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
+import * as hex from '../encoding/Hex.js';
 import type { IHash } from '../hash/IHash.js';
 
 //[Wikipedia: HMAC](https://en.wikipedia.org/wiki/HMAC)
@@ -44,6 +45,8 @@ export class Hmac implements IHash {
 			this.#oPadKey[i] = fk[i] ^ oPad;
 			this.#iPadKey[i] = fk[i] ^ iPad;
 		}
+		//console.log(`ipad= ${hex.fromBytes(this.#iPadKey)}`);
+		//console.log(`opad= ${hex.fromBytes(this.#oPadKey)}`);
 	
 		this.#oHash=hash.newEmpty();
 		this.#oHash.write(this.#oPadKey);
@@ -62,12 +65,15 @@ export class Hmac implements IHash {
 
 	/**
 	 * Sum the hash (does not mutate )
-	 * @returns Hash-digest
+	 * @param size Tag length (truncates output to this many bites if >0), defaults to hash size
+	 * @returns HMAC-digest
 	 */
-	sum(): Uint8Array {
+	sum(size:number|undefined=0): Uint8Array {
 		const iHash=this.#iHash.sum();
+		//console.log(`i= ${hex.fromBytes(iHash)}`);
 		this.#oHash.write(iHash);
-		return this.#oHash.sum();
+		const ret=this.#oHash.sum();
+		return size>0?ret.slice(0,size):ret;
 	}
 
 	/**
