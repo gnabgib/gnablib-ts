@@ -36,12 +36,12 @@ npm install gnablib --ignore-scripts
 - [adler32](https://datatracker.ietf.org/doc/html/rfc1950)
 - [Block check character](https://en.wikipedia.org/wiki/Block_check_character)
 - [cksum](https://en.wikipedia.org/wiki/Cksum)
-- CRC32
+- [CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)
 - [fletcher](http://www.zlib.net/maxino06_fletcher-adler.pdf) 16, 32, 64
 - [Longitudinal redundancy check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)
-- luhn
-- MD5Sum
-- SHA1Sum
+- [Luhn](https://en.wikipedia.org/wiki/Luhn_algorithm)
+- [MD5Sum](https://en.wikipedia.org/wiki/Md5sum)
+- [SHA1Sum](https://en.wikipedia.org/wiki/Sha1sum)
 
 ### Error Correction Codes
 
@@ -65,7 +65,7 @@ npm install gnablib --ignore-scripts
 - [UTF8](https://datatracker.ietf.org/doc/html/rfc3629)
 - [uuencode](https://en.wikipedia.org/wiki/Uuencoding), uudecode
 - UUID
-- YEnc
+- [YEnc](https://en.wikipedia.org/wiki/YEnc)
 
 ### Endian
 
@@ -74,21 +74,29 @@ npm install gnablib --ignore-scripts
 
 ### Hash
 
-- [Blake](<https://en.wikipedia.org/wiki/BLAKE_(hash_function)>) (256, 512)
+- [Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function)) (256, 512)
 - [Blake2](https://www.blake2.net/) (2b, 2s)
-- [Keccak](https://keccak.team/keccak.html)
+- [Keccak](https://keccak.team/keccak.html) (224, 256, 384, 512)
 - [MD4](https://datatracker.ietf.org/doc/html/rfc1320)
 - [MD5](https://datatracker.ietf.org/doc/html/rfc1321)
 - [RipeMD](https://en.wikipedia.org/wiki/RIPEMD) ([128](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd128.txt), [160](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd160.txt), [256](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd256.txt), [320](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd320.txt))
 - [SHA-1](https://datatracker.ietf.org/doc/html/rfc3174)
 - [SHA-2](https://en.wikipedia.org/wiki/SHA-2) (224, 256, 384, 512, 512/224, 512/256)
 - [SHA-3](https://en.wikipedia.org/wiki/SHA-3) (224, 256, 384, 512)
-- Shake (128, 256)
+- [Shake](https://en.wikipedia.org/wiki/SHAKE128) (128, 256)
 - [Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)
 
 ### Log
 
 - Structured logging
+
+## KDF
+
+- [HKDF](https://en.wikipedia.org/wiki/HKDF)
+
+## MAC
+
+- [HMAC](https://en.wikipedia.org/wiki/HMAC)
 
 ### Net
 
