@@ -76,6 +76,7 @@ npm install gnablib --ignore-scripts
 
 - [Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function)) (256, 512)
 - [Blake2](https://www.blake2.net/) (2b, 2s)
+- [cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128,256)
 - [Keccak](https://keccak.team/keccak.html) (224, 256, 384, 512)
 - [MD4](https://datatracker.ietf.org/doc/html/rfc1320)
 - [MD5](https://datatracker.ietf.org/doc/html/rfc1321)

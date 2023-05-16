@@ -25,6 +25,20 @@ export function lsbs(bitCount: number): number {
 }
 
 /**
+ * Invert the significance of the bits in a byte eg 0x01->0x80, 0x02->0x40
+ * @param byte 
+ * @returns 
+ */
+export function reverse(byte:number):number {
+	byte&=0xff;
+	// 01234567 -> 76543210
+	byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
+   	byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
+   	byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
+	return byte;
+}
+
+/**
  * Counter the number of binary 1s in a number (1==a multiple of 2)
  * count1Bits(2)=1
  * count1Bits(3)=2

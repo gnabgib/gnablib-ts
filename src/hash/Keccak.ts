@@ -1,16 +1,18 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-//import * as hex from '../encoding/Hex.js';
+import * as hex from '../encoding/Hex.js';
 import type { IHash } from "./IHash.js";
 import * as littleEndian from '../endian/little.js';
 import { Uint64 } from '../primitive/Uint64.js';
+import * as bitExt from '../primitive/BitExt.js';
 import * as intExt from '../primitive/IntExt.js';
+import * as utf8 from '../encoding/Utf8.js';
 
 //[Wikipedia: SHA-3](https://en.wikipedia.org/wiki/SHA-3)
 //[Keccak](https://keccak.team/keccak.html)
 //[FIPS PUB 202: SHA3-Standard](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf) (2015)
-
-//https://emn178.github.io/online-tools/keccak_224.html (256,384,512, SHA3 224,256,384,512 Shake 128,256)
+//[SHA-3 Derived Functinos](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (2016)
+//[SP 800-185](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)
 
 const roundConst = [
 	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a, 0x80000000, 0x80008000,
@@ -62,6 +64,7 @@ const maxBlockSizeBytes = 200; //1600 bits,8*5*5=200
 const keccak_suffix = 1;
 const sha3_suffix = 6;
 const shake_suffix = 0x1f;
+const cShake_suffix = 4;
 
 class KeccakCore implements IHash {
 	/**
@@ -115,7 +118,9 @@ class KeccakCore implements IHash {
         //Copy state-bytes into u64
 		const st = new Array<Uint64>(maxBlockSizeU64);
 		littleEndian.u64IntoArrFromBytes(st, 0, maxBlockSizeU64, this.#block);
-
+		//console.log(`hash : ${hex.fromBytes(this.#block)}`);
+		//console.log(`hash : ${hex.fromU64s(st,' ')}`);
+		
 		const bc = new Array<Uint64>(5);
 		let t: Uint64;
 		for (let r = 0; r < rounds; r++) {
@@ -167,9 +172,11 @@ class KeccakCore implements IHash {
 		littleEndian.u64ArrIntoBytes(st, this.#block);
 		//Reset block pointer
 		this.#bPos = 0;
+		//console.log(`post hash : ${hex.fromBytes(this.#block)}`);
     }
 
     write(data: Uint8Array): void {
+		//console.log(`write: ${hex.fromBytes(data)} (:${this.#bPos}+${data.length} /${this.blockSize})`);
         for (let i = 0; i < data.length; i++) {
 			this.#block[this.#bPos++] ^= data[i];
 			if (this.#bPos === this.blockSize) {
@@ -177,7 +184,8 @@ class KeccakCore implements IHash {
 				this.#bPos = 0;
 			}
 		}
-    }
+		//console.log(`post-write: ${hex.fromBytes(this.#block)}`);
+	}
 
     /**
 	 * Sum the hash with the all content written so far (does not mutate state)
@@ -322,4 +330,87 @@ export class Shake256 extends KeccakCore {
     constructor(digestSize: number) {
         super(shake_suffix,digestSize,32/*256/8*/);
     }
+}
+
+function leftEncode(w:number):Uint8Array {
+	//This is very complicatedly written in the spec
+	//The max number we can hold is 2^51 because of JS
+	//So we only require 7 bytes to represent that (size+6)
+	const ret=new Uint8Array(7);
+	let ptr=1;
+	do {
+		ret[ptr++]=w;//bitExt.reverse(w);/*implied: &0xff*/
+		//Can't use bit shift because it's limited to 32 bit ints
+		//w>>>=8;
+		w=Math.floor(w/256);
+	} while (w>0);
+	ret[0]=ptr-1;//bitExt.reverse(ptr-1);
+	return ret.subarray(0,ptr);
+}
+function encodeString(x:string):Uint8Array {
+	const l=leftEncode(x.length<<3);
+	const s=utf8.toBytes(x);
+	const ret=new Uint8Array(l.length+s.length);
+	ret.set(l);
+	ret.set(s,l.length);
+	return ret;
+}
+function bytePad(w:number,... x:Uint8Array[]):Uint8Array {
+	intExt.isGreaterThanEqual(w,1,'w');
+	//w;
+	const l=leftEncode(w);
+	//Sum all the inputs (x)
+	let reqSpace=0;
+	for(let i=0;i<x.length;i++) reqSpace+=x[i].length;
+	//Figure out allocation size
+	let alloc=w;
+	while(alloc<reqSpace) alloc+=w;
+	const ret=new Uint8Array(w);
+	ret.set(l);
+	let ptr=l.length;
+	for(let i=0;i<x.length;i++) {
+		ret.set(x[i],ptr);
+		ptr+=x[i].length;
+	}
+	return ret;
+}
+
+export class CShake128 extends KeccakCore {
+	/**
+	 * Build a new cShake 128bit generator
+	 * @param digestSize Output digest size (bytes) (aka L)
+	 * @param functionName Function-name string (aka N)
+	 * @param customization Customization string (aka S)
+	 */
+    constructor(digestSize: number,functionName='',customization='') {
+		if (functionName.length==0 && customization.length==0) {
+			super(shake_suffix,digestSize,16/*128/8*/);
+		} else {
+			super(cShake_suffix,digestSize,16);
+			const N=encodeString(functionName);
+			const S=encodeString(customization);
+			const b=bytePad(168,N,S);
+			this.write(b);
+		}
+    }	
+}
+
+export class CShake256 extends KeccakCore {
+	/**
+	 * Build a new cShake 256bit generator
+	 * @param digestSize Output digest size (bytes) (aka L)
+	 * @param functionName Function-name string (aka N)
+	 * @param customization Customization string (aka S)
+	 */
+    constructor(digestSize: number,functionName='',customization='') {
+		if (functionName.length==0 && customization.length==0) {
+			super(shake_suffix,digestSize,32/*256/8*/);
+		} else {
+			super(cShake_suffix,digestSize,32);
+			const N=encodeString(functionName);
+			const S=encodeString(customization);
+			const b=bytePad(136,N,S);
+			this.write(b);
+		}
+    }	
 }
