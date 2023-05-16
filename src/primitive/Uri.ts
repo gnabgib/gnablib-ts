@@ -112,15 +112,15 @@ const heirPart=new bnf.Alt(
 heirPart.name='heir-part';
 const absoluteUri=new bnf.Concat(scheme,colon,heirPart,bnf.Repeat.Optional(new bnf.Concat(questionMark,query)));
 absoluteUri.name='absolute-URI';
-export const uri=new bnf.Concat(
-    scheme,colon,
-    heirPart,
-    bnf.Repeat.Optional(new bnf.Concat(questionMark,query)),
-    bnf.Repeat.Optional(new bnf.Concat(hash,fragment))
-);
-uri.name='URI';
-const uriReference=new bnf.Alt(uri,relativeRef);
-uriReference.name='URI-reference';
+// export const uri=new bnf.Concat(
+//     scheme,colon,
+//     heirPart,
+//     bnf.Repeat.Optional(new bnf.Concat(questionMark,query)),
+//     bnf.Repeat.Optional(new bnf.Concat(hash,fragment))
+// );
+// uri.name='URI';
+// const uriReference=new bnf.Alt(uri,relativeRef);
+// uriReference.name='URI-reference';
 
 // URN
 const qComponent=new bnf.Concat(pchar,bnf.Repeat.ZeroPlus(new bnf.Alt(pchar,slash,questionMark)));
@@ -181,6 +181,7 @@ export class Urn {
         s=WindowStr.coerce(s);
         const match=namestring.atStartOf(s);
         console.log(match);
+        return undefined;
     }
 
     private static validNid(input:string):boolean {
