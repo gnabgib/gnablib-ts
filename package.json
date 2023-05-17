@@ -116,7 +116,10 @@
 		"KMAC256",
 		"TupleHash",
 		"TupleHash128",
-		"TupleHash256"
+		"TupleHash256",
+		"ParallelHash",
+		"ParallelHash128",
+		"ParallelHash256"
 	],
 	"author": "gnabgib",
 	"license": "MPL-2.0",

@@ -59,7 +59,6 @@ const tests:hashHex[]=[
 ];
 
 for (const test of tests) {
-    //Note we reuse the hash object
     tsts('kmac: '+test.data,()=>{
         const bMsg=test.data instanceof Uint8Array ? test.data : utf8.toBytes(test.data);
         const mac=new Kmac256(test.size,test.key,test.customize);

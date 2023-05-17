@@ -75,11 +75,12 @@ npm install gnablib --ignore-scripts
 ### Hash
 
 - [Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function)) (256, 512)
-- [Blake2](https://www.blake2.net/) (2b, 2s)
+- [Blake2](https://www.blake2.net/) (2s-224, 2s-256, 2b-256, 2b-384, 2b-512)
 - [cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128,256)
 - [Keccak](https://keccak.team/keccak.html) (224, 256, 384, 512)
 - [MD4](https://datatracker.ietf.org/doc/html/rfc1320)
 - [MD5](https://datatracker.ietf.org/doc/html/rfc1321)
+- [ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)
 - [RipeMD](https://en.wikipedia.org/wiki/RIPEMD) ([128](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd128.txt), [160](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd160.txt), [256](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd256.txt), [320](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd320.txt))
 - [SHA-1](https://datatracker.ietf.org/doc/html/rfc3174)
 - [SHA-2](https://en.wikipedia.org/wiki/SHA-2) (224, 256, 384, 512, 512/224, 512/256)
