@@ -26,13 +26,13 @@
 	},
 	"keywords": [
 		"ABNF",
-		"adler",
+		"Adler",
 		"BCC",
 		"cksum",
 		"CRC32",
-		"fletcher",
+		"Fletcher",
 		"LRC",
-		"luhn",
+		"Luhn",
 		"MD5sum",
 		"SHA1sum",
 		"ReedSolomon",
@@ -113,7 +113,10 @@
 		"cShake256",
 		"KMAC",
 		"KMAC128",
-		"KMAC256"
+		"KMAC256",
+		"TupleHash",
+		"TupleHash128",
+		"TupleHash256"
 	],
 	"author": "gnabgib",
 	"license": "MPL-2.0",

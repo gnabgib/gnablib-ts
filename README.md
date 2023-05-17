@@ -85,6 +85,7 @@ npm install gnablib --ignore-scripts
 - [SHA-2](https://en.wikipedia.org/wiki/SHA-2) (224, 256, 384, 512, 512/224, 512/256)
 - [SHA-3](https://en.wikipedia.org/wiki/SHA-3) (224, 256, 384, 512)
 - [Shake](https://en.wikipedia.org/wiki/SHAKE128) (128, 256)
+- [TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)
 - [Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)
 
 ### Log
@@ -97,7 +98,7 @@ npm install gnablib --ignore-scripts
 
 ### MAC
 
-- [HMAC](https://en.wikipedia.org/wiki/HMAC)
+- [HMAC](https://en.wikipedia.org/wiki/HMAC) (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
 - [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128,256)
 
 ### Net

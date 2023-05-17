@@ -71,6 +71,8 @@ const cap256=32;/*256/8*/
 const pad128=168;
 const pad256=136;
 const kMacFn='KMAC';
+const tupleHashFn='TupleHash';
+const parallelHashFn='ParallelHash';
 
 class KeccakCore implements IHash {
 	/**
@@ -114,7 +116,10 @@ class KeccakCore implements IHash {
         this.blockSize= maxBlockSizeBytes - capacityBytes;
 		this.#block=new Uint8Array(maxBlockSizeBytes);
 
-        this.reset();
+		//We don't need to reset keccak because there's no IV to load, and while it
+		// would be consistent with other hashes, it causes problems with cShake which
+		// needs to override reset.
+        //this.reset();
 	}
 
     /**
@@ -181,6 +186,10 @@ class KeccakCore implements IHash {
 		//console.log(`post hash : ${hex.fromBytes(this.#block)}`);
     }
 
+	/**
+     * Write data to the hash (can be called multiple times)
+     * @param data 
+     */
     write(data: Uint8Array): void {
 		//console.log(`write: ${hex.fromBytes(data)} (:${this.#bPos}+${data.length} /${this.blockSize})`);
         for (let i = 0; i < data.length; i++) {
@@ -210,8 +219,8 @@ class KeccakCore implements IHash {
 	 * Set hash state. Any past writes will be forgotten
 	 */
     reset(): void {
-        this.#state.fill(0,0);
-        this.#block.fill(0,0);
+        this.#state.fill(0);
+        this.#block.fill(0);
 		//Reset ingest count
 		this.#ingestBytes = Uint64.zero;
 		//Reset block (which is just pointing to the start)
@@ -338,6 +347,8 @@ export class Shake256 extends KeccakCore {
     }
 }
 
+// SP800-185 SHA3 Derived functions
+
 function leftEncode(w:number):Uint8Array {
 	//This is very complicatedly written in the spec
 	//The max number we can hold is 2^51 because of JS
@@ -395,27 +406,42 @@ function bytePad(w:number,... x:Uint8Array[]):Uint8Array {
 	return ret;
 }
 
-export class CShake128 extends KeccakCore {
-	//cSHAKE128(X, L, N, S)
-	// X=inputString, L=outputLengthBits, N=functionName, S=customization
+class CShake extends KeccakCore {
+	//cSHAKE128(X, L, N, S)  X=inputString, L=outputLengthBits, N=functionName, S=customization
+	readonly #prefix:Uint8Array;
+
+	constructor(cap:number,pad:number,digestSize: number,functionName='',customization?:Uint8Array|string) {
+		const isShake=functionName.length==0 && (!customization || customization.length==0);
+		const suffix=isShake?shake_suffix:cShake_suffix;
+		super(suffix,digestSize,cap);
+		if (isShake) {
+			this.#prefix=new Uint8Array(0)
+		} else {
+			this.#prefix=bytePad(pad,encodeString(functionName),encodeString(customization));
+			super.write(this.#prefix);
+		}
+    }
+
+	/**
+	 * Set hash state. Any past writes will be forgotten
+	 */
+    reset(): void {
+		super.reset();
+		super.write(this.#prefix);
+    }
+}
+export class CShake128 extends CShake {
 	/**
 	 * Build a new cShake 128bit generator
 	 * @param digestSize Output digest size (bytes) (aka L)
 	 * @param functionName Function-name string (aka N)
 	 * @param customization Customization string (aka S)
 	 */
-    constructor(digestSize: number,functionName='',customization='') {
-		if (functionName.length==0 && customization.length==0) {
-			super(shake_suffix,digestSize,cap128);
-		} else {
-			super(cShake_suffix,digestSize,cap128);
-			const b=bytePad(pad128,encodeString(functionName),encodeString(customization));
-			this.write(b);
-			//todo: store b for reset?
-		}
-    }	
+    constructor(digestSize: number,functionName='',customization?:Uint8Array|string) {
+		super(cap128,pad128,digestSize,functionName,customization);
+    }
 }
-export class CShake256 extends KeccakCore {
+export class CShake256 extends CShake {
 	/**
 	 * Build a new cShake 256bit generator
 	 * @param digestSize Output digest size (bytes) (aka L)
@@ -423,33 +449,17 @@ export class CShake256 extends KeccakCore {
 	 * @param customization Customization string (aka S)
 	 */
     constructor(digestSize: number,functionName='',customization='') {
-		if (functionName.length==0 && customization.length==0) {
-			super(shake_suffix,digestSize,cap256);
-		} else {
-			super(cShake_suffix,digestSize,cap256);
-			const b=bytePad(pad256,encodeString(functionName),encodeString(customization));
-			this.write(b);
-		}
-    }	
+		super(cap256,pad256,digestSize,functionName,customization);
+	}
 }
 
-export class Kmac128 extends KeccakCore {
-	// K=key, X=inputString,L=digestSize (bits),S=customization
-	/**
-	 * Build a new KMAC128 generator
-	 * - Key SHOULD NOT be less than digestSize (32 by default) per SP800-185
-	 * @param digestSize Digest size in bytes, 32 by default
-	 * @param key Optional key a string (will be utf8 encoded) or in bytes
-	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
-	 */
-	constructor(digestSize=32,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cShake_suffix,digestSize,cap128);
-		const b=bytePad(pad128,encodeString(kMacFn),encodeString(customization));
-		this.write(b);
-		this.write(bytePad(pad128,encodeString(key)));
+class KMac extends CShake {
+	// KMAC(K,X,L,S) K=key, X=inputString,L=digestSize (bits),S=customization
+	constructor(cap:number,pad:number,digestSize: number,key?:Uint8Array|string,customization?:Uint8Array|string) {
+		super(cap,pad,digestSize,kMacFn,customization);
+		this.write(bytePad(pad,encodeString(key)));
 	}
-
-    /**
+	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */    
 	sum():Uint8Array {
@@ -457,26 +467,161 @@ export class Kmac128 extends KeccakCore {
 		return super.sum();
 	}
 }
-export class Kmac256 extends KeccakCore {
+export class Kmac128 extends KMac {
 	/**
-	 * Build a new KMAC256 generator
+	 * Build a new KMAC 128bit generator
+	 * - Key SHOULD NOT be less than digestSize (32 by default) per SP800-185
+	 * @param digestSize Digest size in bytes, 32 by default (128bit)
+	 * @param key Optional key a string (will be utf8 encoded) or in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize=32,key?:Uint8Array|string,customization?:Uint8Array|string) {
+		super(cap128,pad128,digestSize,key,customization);
+	}
+}
+export class Kmac256 extends KMac {
+	/**
+	 * Build a new KMAC 256bit generator
 	 * - Key SHOULD NOT be less than digestSize (32 by default) per SP800-185
 	 * @param digestSize Digest size in bytes, 64 by default
 	 * @param key Optional key a string (will be utf8 encoded) or in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
 	constructor(digestSize=64,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cShake_suffix,digestSize,cap256);
-		const b=bytePad(pad256,encodeString(kMacFn),encodeString(customization));
-		this.write(b);
-		this.write(bytePad(pad256,encodeString(key)));
+		super(cap256,pad256,digestSize,key,customization);
 	}
+}
 
-    /**
+class TupleHash extends CShake {
+	// TupleHash(K,L,S) X=input sets, L=digestSize(bits), S=customization
+	constructor(cap:number,pad:number,digestSize: number,customization?:Uint8Array|string) {
+		super(cap,pad,digestSize,tupleHashFn,customization);
+	}
+	/**
+     * Write data to the hash (can be called multiple times)
+	 * ! Careful write(a), write(b) is not the same as write(ab)
+     * @param data 
+     */
+	write(data: Uint8Array): void {
+		super.write(encodeString(data));
+	}
+	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */    
 	sum():Uint8Array {
-		this.write(rightEncode(this.size<<3));
+		super.write(rightEncode(this.size<<3));
 		return super.sum();
+	}
+}
+export class TupleHash128 extends TupleHash {
+	/**
+	 * Build a new TupleHash 128bit generator
+	 * @param digestSize Digest size in bytes, 32 by default (128bit)
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize=32,customization?:Uint8Array|string) {
+		super(cap128,pad128,digestSize,customization);
+	}
+}
+export class TupleHash256 extends TupleHash {
+	/**
+	 * Build a new TupleHash 256bit generator
+	 * @param digestSize Digest size in bytes, 64 by default (256bit)
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize=64,customization?:Uint8Array|string) {
+		super(cap256,pad256,digestSize,customization);
+	}
+}
+
+class ParallelHash extends CShake {
+	//ParallelHash(X, B, L, S) X=input, B=blockSize(Bytes), L=digestSize(bits), S=customization
+	readonly #outBlock:Uint8Array;
+	readonly #subHash:CShake;
+	#obPos=0;
+	#obCount=0;
+
+	constructor(cap:number,pad:number,blockSize:number,digestSize: number,customization?:Uint8Array|string) {
+		super(cap,pad,digestSize,parallelHashFn,customization);
+		this.#outBlock=new Uint8Array(blockSize);
+		this.#subHash=new CShake(cap,pad,digestSize,"","");
+		super.write(leftEncode(blockSize));
+	}
+
+	/**
+     * Write data to the hash (can be called multiple times)
+     * @param data 
+     */
+    write(data: Uint8Array): void {
+		let nToWrite = data.length;
+		let dPos = 0;
+		let space = this.#outBlock.length - this.#obPos;
+		while (nToWrite > 0) {
+			//Note this is >, so if there's exactly space this won't trigger
+			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
+			if (space > nToWrite) {
+				//More space than data, copy in verbatim
+				this.#outBlock.set(data.subarray(dPos), this.#obPos);
+				//Update pos
+				this.#obPos += nToWrite;
+				return;
+			}
+			this.#outBlock.set(data.subarray(dPos, dPos + this.#outBlock.length), this.#obPos);
+			this.#obPos += space;
+		
+			//Instead of hash, we subhash, write that result, and rely on the original write (cShake)
+			// to merge things together
+			this.#subHash.reset();
+			this.#subHash.write(this.#outBlock);
+			super.write(this.#subHash.sum());
+			this.#obPos=0;
+			this.#obCount++;
+
+			dPos += space;
+			nToWrite -= space;
+			space = this.#outBlock.length;
+		}
+	}
+
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */    
+	sum():Uint8Array {
+		super.write(rightEncode(this.#obCount));
+		super.write(rightEncode(this.size<<3));
+		return super.sum();
+	}
+
+	/**
+	 * Set hash state. Any past writes will be forgotten
+	 */
+    reset(): void {
+		super.reset();
+		super.write(leftEncode(this.#outBlock.length));
+		this.#outBlock.fill(0);
+		this.#obPos=0;
+		this.#obCount=0;
+    }
+}
+export class ParallelHash128 extends ParallelHash {	
+	/**
+	 * Build a new ParallelHash 128bit generator
+	 * @param blockSize Block size in bytes
+	 * @param digestSize Digest size in bytes, 32 by default (128bit)
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(blockSize:number,digestSize=32,customization?:Uint8Array|string) {
+		super(cap128,pad128,blockSize,digestSize,customization);
+	}
+}
+export class ParallelHash256 extends ParallelHash {	
+	/**
+	 * Build a new ParallelHash 256bit generator
+	 * @param blockSize Block size in bytes
+	 * @param digestSize Digest size in bytes, 64 by default (256bit)
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(blockSize:number,digestSize=64,customization?:Uint8Array|string) {
+		super(cap256,pad256,blockSize,digestSize,customization);
 	}
 }
