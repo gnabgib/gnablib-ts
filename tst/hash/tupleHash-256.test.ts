@@ -31,9 +31,9 @@ const tests:hashHex[]=[
     },
 ];
 
+let count=0;
 for (const test of tests) {
-    //Note we reuse the hash object
-    tsts('TupleHash: '+test.data,()=>{
+    tsts(`TupleHash[${count++}]`,()=>{
         const hash=new TupleHash256(test.size??64,test.customize);
         for(let i=0;i<test.data.length;i++) hash.write(test.data[i]);
         const md=hash.sum();

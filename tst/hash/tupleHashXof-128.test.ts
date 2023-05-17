@@ -1,39 +1,42 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as hex from '../../src/encoding/Hex';
-import { TupleHash128 } from '../../src/hash/TupleHash';
+import { TupleHashXof128 } from '../../src/hash/TupleHash';
 
-const tsts = suite('TupleHash128');
+const tsts = suite('TupleHashXof128');
 
 type hashHex={
     data:Uint8Array[],
-    size?:number,
+    size:number,
     customize?:string,
     expect:string
 };
 
 const tests:hashHex[]=[
-    //https://csrc.nist.gov/csrc/media/projects/cryptographic-standards-and-guidelines/documents/examples/tuplehash_samples.pdf
+    //https://csrc.nist.gov/csrc/media/projects/cryptographic-standards-and-guidelines/documents/examples/tuplehashxof_samples.pdf
     {
         data:[hex.toBytes('000102'),hex.toBytes('101112131415')],
-        expect:'C5D8786C1AFB9B82111AB34B65B2C0048FA64E6D48E263264CE1707D3FFC8ED1'
+        size:256/8,
+        expect:'2F103CD7C32320353495C68DE1A8129245C6325F6F2A3D608D92179C96E68488'
     },
     {
         data:[hex.toBytes('000102'),hex.toBytes('101112131415')],
+        size:256/8,
         customize:'My Tuple App',
-        expect:'75CDB20FF4DB1154E841D758E24160C54BAE86EB8C13E7F5F40EB35588E96DFB'
+        expect:'3FC8AD69453128292859A18B6C67D7AD85F01B32815E22CE839C49EC374E9B9A'
     },
     {
         data:[hex.toBytes('000102'),hex.toBytes('101112131415'),hex.toBytes('202122232425262728')],
+        size:256/8,
         customize:'My Tuple App',
-        expect:'E60F202C89A2631EDA8D4C588CA5FD07F39E5151998DECCF973ADB3804BB6E84'
+        expect:'900FE16CAD098D28E74D632ED852F99DAAB7F7DF4D99E775657885B4BF76D6F8'
     },
 ];
 
 let count=0;
 for (const test of tests) {
-    tsts(`TupleHash[${count++}]`,()=>{
-        const hash=new TupleHash128(test.size??32,test.customize);
+    tsts(`TupleHashXof[${count++}]`,()=>{
+        const hash=new TupleHashXof128(test.size,test.customize);
         for(let i=0;i<test.data.length;i++) hash.write(test.data[i]);
         const md=hash.sum();
         assert.is(hex.fromBytes(md),test.expect);
