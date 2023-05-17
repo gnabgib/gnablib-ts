@@ -65,6 +65,12 @@ const keccak_suffix = 1;
 const sha3_suffix = 6;
 const shake_suffix = 0x1f;
 const cShake_suffix = 4;
+//cShake, kMac
+const cap128=16;/*128/8*/
+const cap256=32;/*256/8*/
+const pad128=168;
+const pad256=136;
+const kMacFn='KMAC';
 
 class KeccakCore implements IHash {
 	/**
@@ -337,19 +343,33 @@ function leftEncode(w:number):Uint8Array {
 	//The max number we can hold is 2^51 because of JS
 	//So we only require 7 bytes to represent that (size+6)
 	const ret=new Uint8Array(7);
-	let ptr=1;
+	let ptr=6;
 	do {
-		ret[ptr++]=w;//bitExt.reverse(w);/*implied: &0xff*/
+		ret[ptr--]=w;//bitExt.reverse(w);/*implied: &0xff*/
 		//Can't use bit shift because it's limited to 32 bit ints
 		//w>>>=8;
 		w=Math.floor(w/256);
 	} while (w>0);
-	ret[0]=ptr-1;//bitExt.reverse(ptr-1);
-	return ret.subarray(0,ptr);
+	ret[ptr]=6-ptr;//bitExt.reverse(ptr-1);
+	return ret.subarray(ptr);
 }
-function encodeString(x:string):Uint8Array {
-	const l=leftEncode(x.length<<3);
-	const s=utf8.toBytes(x);
+function rightEncode(w:number):Uint8Array {
+	//The max number we can hold is 2^51 because of JS
+	//So we only require 7 bytes to represent that (size+6)
+	const ret=new Uint8Array(7);
+	let ptr=5;
+	do {
+		ret[ptr--]=w;//bitExt.reverse(w);/*implied: &0xff*/
+		//Can't use bit shift because it's limited to 32 bit ints
+		//w>>>=8;
+		w=Math.floor(w/256);
+	} while (w>0);
+	ret[6]=5-ptr;//bitExt.reverse(ptr-1);
+	return ret.subarray(ptr+1);
+}
+function encodeString(x:string|Uint8Array|undefined):Uint8Array {
+	const s=x===undefined ? new Uint8Array(0) : x instanceof Uint8Array ? x : utf8.toBytes(x);
+	const l=leftEncode(s.length<<3);
 	const ret=new Uint8Array(l.length+s.length);
 	ret.set(l);
 	ret.set(s,l.length);
@@ -376,6 +396,8 @@ function bytePad(w:number,... x:Uint8Array[]):Uint8Array {
 }
 
 export class CShake128 extends KeccakCore {
+	//cSHAKE128(X, L, N, S)
+	// X=inputString, L=outputLengthBits, N=functionName, S=customization
 	/**
 	 * Build a new cShake 128bit generator
 	 * @param digestSize Output digest size (bytes) (aka L)
@@ -384,17 +406,15 @@ export class CShake128 extends KeccakCore {
 	 */
     constructor(digestSize: number,functionName='',customization='') {
 		if (functionName.length==0 && customization.length==0) {
-			super(shake_suffix,digestSize,16/*128/8*/);
+			super(shake_suffix,digestSize,cap128);
 		} else {
-			super(cShake_suffix,digestSize,16);
-			const N=encodeString(functionName);
-			const S=encodeString(customization);
-			const b=bytePad(168,N,S);
+			super(cShake_suffix,digestSize,cap128);
+			const b=bytePad(pad128,encodeString(functionName),encodeString(customization));
 			this.write(b);
+			//todo: store b for reset?
 		}
     }	
 }
-
 export class CShake256 extends KeccakCore {
 	/**
 	 * Build a new cShake 256bit generator
@@ -404,13 +424,59 @@ export class CShake256 extends KeccakCore {
 	 */
     constructor(digestSize: number,functionName='',customization='') {
 		if (functionName.length==0 && customization.length==0) {
-			super(shake_suffix,digestSize,32/*256/8*/);
+			super(shake_suffix,digestSize,cap256);
 		} else {
-			super(cShake_suffix,digestSize,32);
-			const N=encodeString(functionName);
-			const S=encodeString(customization);
-			const b=bytePad(136,N,S);
+			super(cShake_suffix,digestSize,cap256);
+			const b=bytePad(pad256,encodeString(functionName),encodeString(customization));
 			this.write(b);
 		}
     }	
+}
+
+export class Kmac128 extends KeccakCore {
+	// K=key, X=inputString,L=digestSize (bits),S=customization
+	/**
+	 * Build a new KMAC128 generator
+	 * - Key SHOULD NOT be less than digestSize (32 by default) per SP800-185
+	 * @param digestSize Digest size in bytes, 32 by default
+	 * @param key Optional key a string (will be utf8 encoded) or in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize=32,key?:Uint8Array|string,customization?:Uint8Array|string) {
+		super(cShake_suffix,digestSize,cap128);
+		const b=bytePad(pad128,encodeString(kMacFn),encodeString(customization));
+		this.write(b);
+		this.write(bytePad(pad128,encodeString(key)));
+	}
+
+    /**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */    
+	sum():Uint8Array {
+		this.write(rightEncode(this.size<<3));
+		return super.sum();
+	}
+}
+export class Kmac256 extends KeccakCore {
+	/**
+	 * Build a new KMAC256 generator
+	 * - Key SHOULD NOT be less than digestSize (32 by default) per SP800-185
+	 * @param digestSize Digest size in bytes, 64 by default
+	 * @param key Optional key a string (will be utf8 encoded) or in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize=64,key?:Uint8Array|string,customization?:Uint8Array|string) {
+		super(cShake_suffix,digestSize,cap256);
+		const b=bytePad(pad256,encodeString(kMacFn),encodeString(customization));
+		this.write(b);
+		this.write(bytePad(pad256,encodeString(key)));
+	}
+
+    /**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */    
+	sum():Uint8Array {
+		this.write(rightEncode(this.size<<3));
+		return super.sum();
+	}
 }

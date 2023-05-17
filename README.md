@@ -91,13 +91,14 @@ npm install gnablib --ignore-scripts
 
 - Structured logging
 
-## KDF
+### KDF
 
 - [HKDF](https://en.wikipedia.org/wiki/HKDF)
 
-## MAC
+### MAC
 
 - [HMAC](https://en.wikipedia.org/wiki/HMAC)
+- [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128,256)
 
 ### Net
 

@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "A library for building web/node/deno applications",
 	"scripts": {
 		"preversion": "npm run deeptest",
@@ -70,7 +70,6 @@
 		"RipeMD320",
 		"SHA1",
 		"SHA2",
-		"SHA3",
 		"SHA-224",
 		"SHA-256",
 		"SHA-384",
@@ -81,6 +80,7 @@
 		"SHA2-512",
 		"SHA2-512/224",
 		"SHA2-512/256",
+		"SHA3",
 		"SHA3-224",
 		"SHA3-256",
 		"SHA3-384",
@@ -110,7 +110,10 @@
 		"FIPS-202",
 		"cShake",
 		"cShake128",
-		"cShake256"
+		"cShake256",
+		"KMAC",
+		"KMAC128",
+		"KMAC256"
 	],
 	"author": "gnabgib",
 	"license": "MPL-2.0",

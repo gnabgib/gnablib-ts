@@ -1,6 +1,5 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as utf8 from '../../src/encoding/Utf8';
 import * as hex from '../../src/encoding/Hex';
 import { CShake256 } from '../../src/hash/CShake';
 
