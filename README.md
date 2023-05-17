@@ -72,22 +72,30 @@ npm install gnablib --ignore-scripts
 - [Big](https://en.wikipedia.org/wiki/Endianness)
 - Little
 
-### Hash
+### Hash & XOF
 
-- [Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function)) (256, 512)
-- [Blake2](https://www.blake2.net/) (2s-224, 2s-256, 2b-256, 2b-384, 2b-512)
-- [cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128,256)
-- [Keccak](https://keccak.team/keccak.html) (224, 256, 384, 512)
-- [MD4](https://datatracker.ietf.org/doc/html/rfc1320)
-- [MD5](https://datatracker.ietf.org/doc/html/rfc1321)
-- [ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)
-- [RipeMD](https://en.wikipedia.org/wiki/RIPEMD) ([128](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd128.txt), [160](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd160.txt), [256](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd256.txt), [320](https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd320.txt))
-- [SHA-1](https://datatracker.ietf.org/doc/html/rfc3174)
-- [SHA-2](https://en.wikipedia.org/wiki/SHA-2) (224, 256, 384, 512, 512/224, 512/256)
-- [SHA-3](https://en.wikipedia.org/wiki/SHA-3) (224, 256, 384, 512)
-- [Shake](https://en.wikipedia.org/wiki/SHAKE128) (128, 256)
-- [TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)
-- [Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)
+Hash|Digest sizes|Optional parameters
+-------|----------------------|-------------------
+[Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function))|256, 512|salt
+[Blake2b](https://www.blake2.net/)|8-512, 256, 384, 512|key, salt, personalization
+[Blake2s](https://www.blake2.net/)|8-256, 224, 256|key, salt, personalization
+[Keccak](https://keccak.team/keccak.html)|8-512, 224, 256, 384, 512|capacity
+[MD4](https://datatracker.ietf.org/doc/html/rfc1320)|128|-
+[MD5](https://datatracker.ietf.org/doc/html/rfc1321)|128|-
+[ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)|8-512|customization
+[RipeMD](https://en.wikipedia.org/wiki/RIPEMD)|128, 160, 256, 320|-
+[SHA-1](https://datatracker.ietf.org/doc/html/rfc3174)|160|-
+[SHA-2](https://en.wikipedia.org/wiki/SHA-2)|224, 256, 384, 512, 512/224, 512/256|-
+[SHA-3](https://en.wikipedia.org/wiki/SHA-3)|224, 256, 384, 512|-
+[TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128, 256)|8-512|customization
+[Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)|512|-
+
+XOF|Capacities|Optional parameters
+-------|-----------|-------------------
+[cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, function name, customization
+[KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, key, customization
+[Shake](https://en.wikipedia.org/wiki/SHAKE128)|128, 256|digest size
+
 
 ### Log
 
@@ -100,7 +108,7 @@ npm install gnablib --ignore-scripts
 ### MAC
 
 - [HMAC](https://en.wikipedia.org/wiki/HMAC) (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
-- [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128,256)
+- [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128, 256, xof128, xof256)
 
 ### Net
 

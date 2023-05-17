@@ -491,6 +491,42 @@ export class Kmac256 extends KMac {
 		super(cap256,pad256,digestSize,key,customization);
 	}
 }
+class KMacXof extends CShake {
+	// KMACXOF(K,X,L,S) K=key, X=inputString,L=digestSize (bits),S=customization
+	constructor(cap:number,pad:number,digestSize: number,key?:Uint8Array|string,customization?:Uint8Array|string) {
+		super(cap,pad,digestSize,kMacFn,customization);
+		this.write(bytePad(pad,encodeString(key)));
+	}
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */    
+	sum():Uint8Array {
+		this.write(rightEncode(0));
+		return super.sum();
+	}
+}
+export class KmacXof128 extends KMacXof {
+	/**
+	 * Build a new KMACXOF 128bit generator
+	 * @param digestSize Digest size in bytes
+	 * @param key Optional key a string (will be utf8 encoded) or in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize:number,key?:Uint8Array|string,customization?:Uint8Array|string) {
+		super(cap128,pad128,digestSize,key,customization);
+	}
+}
+export class KmacXof256 extends KMacXof {
+	/**
+	 * Build a new KMACXOF 256bit generator
+	 * @param digestSize Digest size in bytes
+	 * @param key Optional key a string (will be utf8 encoded) or in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize:number,key?:Uint8Array|string,customization?:Uint8Array|string) {
+		super(cap256,pad256,digestSize,key,customization);
+	}
+}
 
 class TupleHash extends CShake {
 	// TupleHash(K,L,S) X=input sets, L=digestSize(bits), S=customization
@@ -530,6 +566,47 @@ export class TupleHash256 extends TupleHash {
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
 	constructor(digestSize=64,customization?:Uint8Array|string) {
+		super(cap256,pad256,digestSize,customization);
+	}
+}
+class TupleHashXof extends CShake {
+	// TupleHash(K,L,S) X=input sets, L=digestSize(bits), S=customization
+	constructor(cap:number,pad:number,digestSize: number,customization?:Uint8Array|string) {
+		super(cap,pad,digestSize,tupleHashFn,customization);
+	}
+	/**
+     * Write data to the hash (can be called multiple times)
+	 * ! Careful write(a), write(b) is not the same as write(ab)
+     * @param data 
+     */
+	write(data: Uint8Array): void {
+		super.write(encodeString(data));
+	}
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */    
+	sum():Uint8Array {
+		super.write(rightEncode(0));
+		return super.sum();
+	}
+}
+export class TupleHashXof128 extends TupleHashXof {
+	/**
+	 * Build a new TupleHashXof 128bit generator
+	 * @param digestSize Digest size in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize:number,customization?:Uint8Array|string) {
+		super(cap128,pad128,digestSize,customization);
+	}
+}
+export class TupleHashXof256 extends TupleHashXof {
+	/**
+	 * Build a new TupleHashXof 256bit generator
+	 * @param digestSize Digest size in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize:number,customization?:Uint8Array|string) {
 		super(cap256,pad256,digestSize,customization);
 	}
 }

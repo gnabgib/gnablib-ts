@@ -587,32 +587,3 @@ export class Md4 implements IHash {
 		console.log('');
 	}
 }
-
-/**
- * Pad out the starting amount to be a multiple of @see blockSizeBytes including the bit count
- * @param bytes
- * @returns
- */
-export function pad(bytes: Uint8Array): Uint8Array {
-	const reqSpace = bitExt.size64Bytes;
-	const len =
-		bytes.length +
-		reqSpace +
-		blockSize -
-		((bytes.length + reqSpace) % blockSize);
-	const padBytes = new Uint8Array(len);
-	padBytes.set(bytes, 0);
-	padBytes[bytes.length] = 0x80;
-	littleEndian.u32IntoBytes(
-		bytes.length << 3,
-		padBytes,
-		len - bitExt.size64Bytes
-	);
-	//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-	littleEndian.u32IntoBytes(
-		bytes.length / 0x20000000,
-		padBytes,
-		len - bitExt.size32Bytes
-	);
-	return padBytes;
-}
