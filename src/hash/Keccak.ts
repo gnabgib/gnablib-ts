@@ -702,3 +702,94 @@ export class ParallelHash256 extends ParallelHash {
 		super(cap256,pad256,blockSize,digestSize,customization);
 	}
 }
+class ParallelHashXof extends CShake {
+	//ParallelHash(X, B, L, S) X=input, B=blockSize(Bytes), L=digestSize(bits), S=customization
+	readonly #outBlock:Uint8Array;
+	readonly #subHash:CShake;
+	#obPos=0;
+	#obCount=0;
+
+	constructor(cap:number,pad:number,blockSize:number,digestSize: number,customization?:Uint8Array|string) {
+		super(cap,pad,digestSize,parallelHashFn,customization);
+		this.#outBlock=new Uint8Array(blockSize);
+		this.#subHash=new CShake(cap,pad,digestSize,"","");
+		super.write(leftEncode(blockSize));
+	}
+
+	/**
+     * Write data to the hash (can be called multiple times)
+     * @param data 
+     */
+    write(data: Uint8Array): void {
+		let nToWrite = data.length;
+		let dPos = 0;
+		let space = this.#outBlock.length - this.#obPos;
+		while (nToWrite > 0) {
+			//Note this is >, so if there's exactly space this won't trigger
+			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
+			if (space > nToWrite) {
+				//More space than data, copy in verbatim
+				this.#outBlock.set(data.subarray(dPos), this.#obPos);
+				//Update pos
+				this.#obPos += nToWrite;
+				return;
+			}
+			this.#outBlock.set(data.subarray(dPos, dPos + this.#outBlock.length), this.#obPos);
+			this.#obPos += space;
+		
+			//Instead of hash, we subhash, write that result, and rely on the original write (cShake)
+			// to merge things together
+			this.#subHash.reset();
+			this.#subHash.write(this.#outBlock);
+			super.write(this.#subHash.sum());
+			this.#obPos=0;
+			this.#obCount++;
+
+			dPos += space;
+			nToWrite -= space;
+			space = this.#outBlock.length;
+		}
+	}
+
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */    
+	sum():Uint8Array {
+		super.write(rightEncode(this.#obCount));
+		super.write(rightEncode(0));
+		return super.sum();
+	}
+
+	/**
+	 * Set hash state. Any past writes will be forgotten
+	 */
+    reset(): void {
+		super.reset();
+		super.write(leftEncode(this.#outBlock.length));
+		this.#outBlock.fill(0);
+		this.#obPos=0;
+		this.#obCount=0;
+    }
+}
+export class ParallelHashXof128 extends ParallelHashXof {	
+	/**
+	 * Build a new ParallelHashXof 128bit generator
+	 * @param blockSize Block size in bytes
+	 * @param digestSize Digest size in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(blockSize:number,digestSize:number,customization?:Uint8Array|string) {
+		super(cap128,pad128,blockSize,digestSize,customization);
+	}
+}
+export class ParallelHashXof256 extends ParallelHashXof {	
+	/**
+	 * Build a new ParallelHashXof 256bit generator
+	 * @param blockSize Block size in bytes
+	 * @param digestSize Digest size in bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(blockSize:number,digestSize:number,customization?:Uint8Array|string) {
+		super(cap256,pad256,blockSize,digestSize,customization);
+	}
+}

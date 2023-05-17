@@ -82,7 +82,7 @@ Hash|Digest sizes|Optional parameters
 [Keccak](https://keccak.team/keccak.html)|8-512, 224, 256, 384, 512|capacity
 [MD4](https://datatracker.ietf.org/doc/html/rfc1320)|128|-
 [MD5](https://datatracker.ietf.org/doc/html/rfc1321)|128|-
-[ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)|8-512|customization
+[ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)|8-512|block size, customization
 [RipeMD](https://en.wikipedia.org/wiki/RIPEMD)|128, 160, 256, 320|-
 [SHA-1](https://datatracker.ietf.org/doc/html/rfc3174)|160|-
 [SHA-2](https://en.wikipedia.org/wiki/SHA-2)|224, 256, 384, 512, 512/224, 512/256|-
@@ -94,7 +94,9 @@ XOF|Capacities|Optional parameters
 -------|-----------|-------------------
 [cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, function name, customization
 [KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, key, customization
+[ParallelHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|block size, digest size, customization
 [Shake](https://en.wikipedia.org/wiki/SHAKE128)|128, 256|digest size
+[TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, customization
 
 
 ### Log
