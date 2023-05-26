@@ -11,8 +11,8 @@ import * as utf8 from '../encoding/Utf8.js';
 //[Wikipedia: SHA-3](https://en.wikipedia.org/wiki/SHA-3)
 //[Keccak](https://keccak.team/keccak.html)
 //[FIPS PUB 202: SHA3-Standard](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf) (2015)
-//[SHA-3 Derived Functinos](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (2016)
-//[SP 800-185](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)
+//[SP 800-185: SHA-3 Derived Functinos](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (2016)
+//[KangarooTwelve and TurboSHAKE (v10)](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/) (Mar 2023)
 
 const roundConst = [
 	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a, 0x80000000, 0x80008000,
@@ -58,7 +58,7 @@ const piShift = [
 	10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1
 ];
 
-const rounds = 24;
+const k12RoundStart=12;
 const maxBlockSizeU64 = 5 * 5;
 const maxBlockSizeBytes = 200; //1600 bits,8*5*5=200
 const keccak_suffix = 1;
@@ -92,6 +92,7 @@ class KeccakCore implements IHash {
 	 */
 	readonly #block:Uint8Array;
     readonly #suffix:number;
+	readonly #roundStart:number;
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -106,12 +107,13 @@ class KeccakCore implements IHash {
 	 * @param digestSizeBytes Output digest size (bytes)
 	 * @param capacityBytes (default digestSize)
 	 */
-	constructor(suffix: number, digestSizeBytes: number, capacityBytes = 0) {
+	constructor(suffix: number, digestSizeBytes: number, capacityBytes = 0,roundStart=0) {
 		intExt.inRangeInclusive(capacityBytes, 0, maxBlockSizeBytes / 2);
         if (capacityBytes<=0) capacityBytes=digestSizeBytes;
         capacityBytes*=2;
-
+		
 		this.#suffix = suffix;
+		this.#roundStart=roundStart;
         this.size=digestSizeBytes;
         this.blockSize= maxBlockSizeBytes - capacityBytes;
 		this.#block=new Uint8Array(maxBlockSizeBytes);
@@ -134,7 +136,7 @@ class KeccakCore implements IHash {
 		
 		const bc = new Array<Uint64>(5);
 		let t: Uint64;
-		for (let r = 0; r < rounds; r++) {
+		for (let r = this.#roundStart; r < 24; r++) {
 			// Theta
 			//unroll: for (let i = 0; i < 5; i++) bc[i]=st[i].xor(st[i+5]).xor(st[i+10]).xor(st[i+15]).xor(st[i+20]);
 			bc[0] = st[0].xor(st[5]).xor(st[10]).xor(st[15]).xor(st[20]);
@@ -178,6 +180,7 @@ class KeccakCore implements IHash {
 
 			//  Iota
 			st[0] = st[0].xor(new Uint64(roundConst[2 * r + 1], roundConst[2 * r]));
+			//console.log(`r[${r}] : ${hex.fromU64s(st,' ')}`);
 		}
 		//Copy the data back to state
 		littleEndian.u64ArrIntoBytes(st, this.#block);
@@ -212,7 +215,20 @@ class KeccakCore implements IHash {
         alt.#block[alt.blockSize - 1] ^= 0x80;
 		alt.hash();
         //Squeeze
-		return alt.#block.slice(0, alt.size);
+		const ret=new Uint8Array(alt.size);
+		//If alt.size (requested bytes) is larger than our sponge, we take out the first sponge.length
+		// bits, hash, and take out the next, until we obtain enough bits (note there are security implications
+		// of squeezing a lot of data out with weak sources)
+		let retSize=alt.size;
+		let ptr=0;
+		while (retSize>this.blockSize) {
+			ret.set(alt.#block.slice(0,this.blockSize),ptr);
+			ptr+=this.blockSize;
+			retSize-=this.blockSize;
+			alt.hash();
+		}
+		ret.set(alt.#block.slice(0,retSize),ptr);
+		return ret;
     }
 
 	/**
@@ -231,7 +247,7 @@ class KeccakCore implements IHash {
 	 * Create an empty IHash using the same algorithm
 	 */
     newEmpty(): IHash {
-        return new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2);
+        return new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2,this.#roundStart);
     }
 
     /**
@@ -239,7 +255,7 @@ class KeccakCore implements IHash {
 	 * @returns
 	 */
 	private clone(): KeccakCore {
-		const ret = new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2);
+		const ret = new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2,this.#roundStart);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
 		ret.#ingestBytes = this.#ingestBytes;
@@ -453,8 +469,9 @@ export class CShake256 extends CShake {
 	}
 }
 
-class KMac extends CShake {
+abstract class AKmac extends CShake {
 	// KMAC(K,X,L,S) K=key, X=inputString,L=digestSize (bits),S=customization
+	abstract get appendSize():number;
 	constructor(cap:number,pad:number,digestSize: number,key?:Uint8Array|string,customization?:Uint8Array|string) {
 		super(cap,pad,digestSize,kMacFn,customization);
 		this.write(bytePad(pad,encodeString(key)));
@@ -463,8 +480,18 @@ class KMac extends CShake {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */    
 	sum():Uint8Array {
-		this.write(rightEncode(this.size<<3));
+		super.write(rightEncode(this.appendSize));
 		return super.sum();
+	}
+}
+class KMac extends AKmac {
+	get appendSize(): number {
+		return this.size<<3;
+	}
+}
+class KMacXof extends AKmac {
+	get appendSize(): number {
+		return 0;
 	}
 }
 export class Kmac128 extends KMac {
@@ -491,20 +518,6 @@ export class Kmac256 extends KMac {
 		super(cap256,pad256,digestSize,key,customization);
 	}
 }
-class KMacXof extends CShake {
-	// KMACXOF(K,X,L,S) K=key, X=inputString,L=digestSize (bits),S=customization
-	constructor(cap:number,pad:number,digestSize: number,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cap,pad,digestSize,kMacFn,customization);
-		this.write(bytePad(pad,encodeString(key)));
-	}
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */    
-	sum():Uint8Array {
-		this.write(rightEncode(0));
-		return super.sum();
-	}
-}
 export class KmacXof128 extends KMacXof {
 	/**
 	 * Build a new KMACXOF 128bit generator
@@ -528,8 +541,9 @@ export class KmacXof256 extends KMacXof {
 	}
 }
 
-class TupleHash extends CShake {
+abstract class ATupleHash extends CShake {
 	// TupleHash(K,L,S) X=input sets, L=digestSize(bits), S=customization
+	abstract get appendSize():number;
 	constructor(cap:number,pad:number,digestSize: number,customization?:Uint8Array|string) {
 		super(cap,pad,digestSize,tupleHashFn,customization);
 	}
@@ -545,8 +559,18 @@ class TupleHash extends CShake {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */    
 	sum():Uint8Array {
-		super.write(rightEncode(this.size<<3));
+		super.write(rightEncode(this.appendSize));
 		return super.sum();
+	}
+}
+class TupleHash extends ATupleHash {
+	get appendSize(): number {
+		return this.size<<3;
+	}
+}
+class TupleHashXof extends ATupleHash {
+	get appendSize(): number {
+		return 0;
 	}
 }
 export class TupleHash128 extends TupleHash {
@@ -567,27 +591,6 @@ export class TupleHash256 extends TupleHash {
 	 */
 	constructor(digestSize=64,customization?:Uint8Array|string) {
 		super(cap256,pad256,digestSize,customization);
-	}
-}
-class TupleHashXof extends CShake {
-	// TupleHash(K,L,S) X=input sets, L=digestSize(bits), S=customization
-	constructor(cap:number,pad:number,digestSize: number,customization?:Uint8Array|string) {
-		super(cap,pad,digestSize,tupleHashFn,customization);
-	}
-	/**
-     * Write data to the hash (can be called multiple times)
-	 * ! Careful write(a), write(b) is not the same as write(ab)
-     * @param data 
-     */
-	write(data: Uint8Array): void {
-		super.write(encodeString(data));
-	}
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */    
-	sum():Uint8Array {
-		super.write(rightEncode(0));
-		return super.sum();
 	}
 }
 export class TupleHashXof128 extends TupleHashXof {
@@ -611,8 +614,9 @@ export class TupleHashXof256 extends TupleHashXof {
 	}
 }
 
-class ParallelHash extends CShake {
+abstract class AParallelHash extends CShake {
 	//ParallelHash(X, B, L, S) X=input, B=blockSize(Bytes), L=digestSize(bits), S=customization
+	abstract get appendSize():number;
 	readonly #outBlock:Uint8Array;
 	readonly #subHash:CShake;
 	#obPos=0;
@@ -664,8 +668,14 @@ class ParallelHash extends CShake {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */    
 	sum():Uint8Array {
+		//todo: switch this from using.. this (inject alt into sum? sum accepts func?)
+		if (this.#obPos>0) {
+			this.#subHash.reset();
+			this.#subHash.write(this.#outBlock.subarray(0,this.#obPos));
+			super.write(this.#subHash.sum());
+		}
 		super.write(rightEncode(this.#obCount));
-		super.write(rightEncode(this.size<<3));
+		super.write(rightEncode(this.appendSize));
 		return super.sum();
 	}
 
@@ -679,6 +689,16 @@ class ParallelHash extends CShake {
 		this.#obPos=0;
 		this.#obCount=0;
     }
+}
+class ParallelHash extends AParallelHash {
+	get appendSize(): number {
+		return this.size<<3;
+	}
+}
+class ParallelHashXof extends AParallelHash {
+	get appendSize(): number {
+		return 0;
+	}
 }
 export class ParallelHash128 extends ParallelHash {	
 	/**
@@ -702,75 +722,6 @@ export class ParallelHash256 extends ParallelHash {
 		super(cap256,pad256,blockSize,digestSize,customization);
 	}
 }
-class ParallelHashXof extends CShake {
-	//ParallelHash(X, B, L, S) X=input, B=blockSize(Bytes), L=digestSize(bits), S=customization
-	readonly #outBlock:Uint8Array;
-	readonly #subHash:CShake;
-	#obPos=0;
-	#obCount=0;
-
-	constructor(cap:number,pad:number,blockSize:number,digestSize: number,customization?:Uint8Array|string) {
-		super(cap,pad,digestSize,parallelHashFn,customization);
-		this.#outBlock=new Uint8Array(blockSize);
-		this.#subHash=new CShake(cap,pad,digestSize,"","");
-		super.write(leftEncode(blockSize));
-	}
-
-	/**
-     * Write data to the hash (can be called multiple times)
-     * @param data 
-     */
-    write(data: Uint8Array): void {
-		let nToWrite = data.length;
-		let dPos = 0;
-		let space = this.#outBlock.length - this.#obPos;
-		while (nToWrite > 0) {
-			//Note this is >, so if there's exactly space this won't trigger
-			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
-			if (space > nToWrite) {
-				//More space than data, copy in verbatim
-				this.#outBlock.set(data.subarray(dPos), this.#obPos);
-				//Update pos
-				this.#obPos += nToWrite;
-				return;
-			}
-			this.#outBlock.set(data.subarray(dPos, dPos + this.#outBlock.length), this.#obPos);
-			this.#obPos += space;
-		
-			//Instead of hash, we subhash, write that result, and rely on the original write (cShake)
-			// to merge things together
-			this.#subHash.reset();
-			this.#subHash.write(this.#outBlock);
-			super.write(this.#subHash.sum());
-			this.#obPos=0;
-			this.#obCount++;
-
-			dPos += space;
-			nToWrite -= space;
-			space = this.#outBlock.length;
-		}
-	}
-
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */    
-	sum():Uint8Array {
-		super.write(rightEncode(this.#obCount));
-		super.write(rightEncode(0));
-		return super.sum();
-	}
-
-	/**
-	 * Set hash state. Any past writes will be forgotten
-	 */
-    reset(): void {
-		super.reset();
-		super.write(leftEncode(this.#outBlock.length));
-		this.#outBlock.fill(0);
-		this.#obPos=0;
-		this.#obCount=0;
-    }
-}
 export class ParallelHashXof128 extends ParallelHashXof {	
 	/**
 	 * Build a new ParallelHashXof 128bit generator
@@ -793,3 +744,32 @@ export class ParallelHashXof256 extends ParallelHashXof {
 		super(cap256,pad256,blockSize,digestSize,customization);
 	}
 }
+
+export class TurboShake128 extends KeccakCore {
+	//https://eprint.iacr.org/2023/342.pdf
+	/**
+     * Build a new TurboShake 128bit XOF generator
+     * @param digestSize Output digest size (bytes)
+	 * @param domainSep Domain separation byte 01-7F
+     */
+    constructor(digestSize: number,domainSep=0x1F) {
+        super(domainSep,digestSize,16/*128/8*/,k12RoundStart);
+		//console.log(`${this.blockSize}`);
+    }
+}
+export class TurboShake256 extends KeccakCore {
+	//https://eprint.iacr.org/2023/342.pdf
+	/**
+     * Build a new TurboShake 256bit XOF generator
+     * @param digestSize Output digest size (bytes)
+	 * @param domainSep Domain separation byte 01-7F
+     */
+    constructor(digestSize: number,domainSep=0x1F) {
+        super(domainSep,digestSize,32/*128/8*/,k12RoundStart);
+		//console.log(`${this.blockSize}`);
+    }
+}
+//export class KangarooTwelve ext
+//TurboShake128
+//TurboShake256
+//KangarooTwelve

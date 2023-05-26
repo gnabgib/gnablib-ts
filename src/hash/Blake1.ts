@@ -1,10 +1,10 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as bigEndian from '../endian/big.js';
-import * as bitExt from '../primitive/BitExt.js';
+import { asBE } from '../endian/platform.js';
 import { SizeError } from '../primitive/ErrorExt.js';
+import { ror32 } from '../primitive/U32.js';
+import { U64Mut, U64MutArray } from '../primitive/U64.js';
 
-import { Uint64 } from '../primitive/Uint64.js';
 import type { IHash } from './IHash.js';
 
 //[Wikipedia: Blake1](https://en.wikipedia.org/wiki/BLAKE_(hash_function))
@@ -72,6 +72,7 @@ class Blake1_32bit implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSizeEls<<2);
+	readonly #block32=new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -110,21 +111,21 @@ class Blake1_32bit implements IHash {
 		    k = sigma[i2 + 1],
 		    nj = n[j],
     		nk = n[k],
-		    mj = bigEndian.u32FromBytes(this.#block,j*4),
-		    mk = bigEndian.u32FromBytes(this.#block,k*4);
+		    mj = this.#block32[j],
+		    mk = this.#block32[k];
 
 	    //Step 1
 	    v[a] += v[b] + (mj ^ nk); //a ← a + b + (m[j] ⊕ n[k])
-	    v[d] = bitExt.rotRight32(v[d] ^ v[a], 16); //d ← (d ⊕ a) >>> 16
+	    v[d] = ror32(v[d] ^ v[a], 16); //d ← (d ⊕ a) >>> 16
 	    //Step 2
 	    v[c] += v[d]; //c ← c + d
-    	v[b] = bitExt.rotRight32(v[b] ^ v[c], 12); //b ← (b ⊕ c) >>> 12
+    	v[b] = ror32(v[b] ^ v[c], 12); //b ← (b ⊕ c) >>> 12
 	    //Step 3
 	    v[a] += v[b] + (mk ^ nj); //a ← a + b + (m[k] ⊕ n[j])
-    	v[d] = bitExt.rotRight32(v[d] ^ v[a], 8); //d ← (d ⊕ a) >>> 8
+    	v[d] = ror32(v[d] ^ v[a], 8); //d ← (d ⊕ a) >>> 8
 	    //Step 4
 	    v[c] += v[d]; //c ← c + d
-	    v[b] = bitExt.rotRight32(v[b] ^ v[c], 7); //b ← (b ⊕ c) >>> 7
+	    v[b] = ror32(v[b] ^ v[c], 7); //b ← (b ⊕ c) >>> 7
     }
 
     /**
@@ -146,6 +147,8 @@ class Blake1_32bit implements IHash {
         v[13] = n[5] ^ count32a;
         v[14] = n[6] ^ count32b;
         v[15] = n[7] ^ count32b;
+		//Switch (maybe) block to big endian (may mangle storage)
+		for(let i=0;i<blockSizeEls<<2;i+=4) asBE.i32(this.#block,i);
 
 	    for (let r = 0; r < this.#nr; r++) {
 		    const sigma = sigmas[r % 10];
@@ -233,19 +236,21 @@ class Blake1_32bit implements IHash {
         alt.#block[sizeSpace-1]|=1;
 
 		//Write out the data size in big-endian
-
+		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		bigEndian.u32IntoBytes(
-			alt.#ingestBytes / 0x20000000,
-			alt.#block,
-			sizeSpace
-		);
-		bigEndian.u32IntoBytes(alt.#ingestBytes << 3, alt.#block, sizeSpace + 4);
+		alt.#block32[ss32]=alt.#ingestBytes / 0x20000000;
+		alt.#block32[ss32+1]=alt.#ingestBytes << 3;
+		//Because hash will invert, we need to switch to BE to get it back to LE
+		asBE.i32(alt.#block,sizeSpace);
+		asBE.i32(alt.#block,sizeSpace+4);
 		alt.hash(countOverride);
-		const ret = new Uint8Array(this.size);
-        bigEndian.u32ArrIntoBytes(alt.#state, ret);
-		return ret;
+
+		//Project state into bytes
+		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		//Make sure the bytes are BE - this might mangle alt.#state (but we're moments from disposing)
+		for(let i=0;i<this.size;i++) asBE.i32(s8,i*4);
+		return s8.slice(0,this.size);
     }
 
     /**
@@ -306,15 +311,16 @@ class Blake1_64bit implements IHash {
     /**
      * Salt, must be exactly 4 u64 (32 bytes)
      */
-    readonly #salt:Array<Uint64>;
+    readonly #salt:U64MutArray;
     /**
 	 * Runtime state of the hash
 	 */
-	readonly #state = new Array<Uint64>(digestSizeEls);
+	readonly #state=U64MutArray.fromLen(digestSizeEls);
 	/**
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSizeEls<<3);
+	readonly #block64=U64MutArray.fromBytes(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -327,9 +333,9 @@ class Blake1_64bit implements IHash {
     /**
 	 * Build a new Blake-512 hash generator
 	 */
-	constructor(salt?:Uint64[],roundCount=14) {
+	constructor(salt?:U64MutArray,roundCount=14) {
         if (!salt) {
-            this.#salt = new Array<Uint64>(Uint64.zero,Uint64.zero,Uint64.zero,Uint64.zero);
+            this.#salt = U64MutArray.fromLen(4);
         } else if (salt.length!=4) {
             throw new SizeError('salt', salt.length, 4);
         } else {
@@ -344,31 +350,31 @@ class Blake1_64bit implements IHash {
         b: number,
         c: number,
         d: number,
-        v: Uint64[],
+        v: U64MutArray,
         sigma: number[]
     ):void {
         const a = i & 3, //% 4
 		i2 = i << 1,
 		j = sigma[i2],
 		k = sigma[i2 + 1],
-		//Note inverted order of uint constructor (little endian :|)
-		nj = new Uint64(n[2 * j + 1], n[2 * j]),
-		nk = new Uint64(n[2 * k + 1], n[2 * k]), // n[k],
-		mj = Uint64.fromBytes(this.#block,j*8),
-		mk = Uint64.fromBytes(this.#block,k*8);
+		nj = U64Mut.fromUint32Pair(n[2 * j + 1], n[2 * j]),
+		nk = U64Mut.fromUint32Pair(n[2 * k + 1], n[2 * k]),
+		mj=this.#block64.at(j),
+		mk=this.#block64.at(k);
 
+		//NOTE: We can xorEq of the n vars because they're copies (while the m vars is the linked-block-state)
 	    //Step 1
-	    v[a] = v[a].add(v[b]).add(mj.xor(nk)); //a ← a + b + (m[j] ⊕ n[k])
-	    v[d] = v[d].xor(v[a]).rRot(32); //d ← (d ⊕ a) >>> 32
+	    v.at(a).addEq(v.at(b)).addEq(nk.xorEq(mj)); //a ← a + b + (m[j] ⊕ n[k])
+	    v.at(d).xorEq(v.at(a)).rRotEq(32); //d ← (d ⊕ a) >>> 32
 	    //Step 2
-	    v[c] = v[c].add(v[d]); //c ← c + d
-	    v[b] = v[b].xor(v[c]).rRot(25); //b ← (b ⊕ c) >>> 25
+	    v.at(c).addEq(v.at(d)); //c ← c + d
+	    v.at(b).xorEq(v.at(c)).rRotEq(25); //b ← (b ⊕ c) >>> 25
 	    //Step 3
-	    v[a] = v[a].add(v[b]).add(mk.xor(nj)); //a ← a + b + (m[k] ⊕ n[j])
-	    v[d] = v[d].xor(v[a]).rRot(16); //d ← (d ⊕ a) >>> 16
+	    v.at(a).addEq(v.at(b)).addEq(nj.xorEq(mk)); //a ← a + b + (m[k] ⊕ n[j])
+	    v.at(d).xorEq(v.at(a)).rRotEq(16); //d ← (d ⊕ a) >>> 16
 	    //Step 4
-    	v[c] = v[c].add(v[d]); //c ← c + d
-    	v[b] = v[b].xor(v[c]).rRot(11); //b ← (b ⊕ c) >>> 11
+    	v.at(c).addEq(v.at(d)); //c ← c + d
+    	v.at(b).xorEq(v.at(c)).rRotEq(11); //b ← (b ⊕ c) >>> 11
     }
 
     /**
@@ -377,26 +383,24 @@ class Blake1_64bit implements IHash {
      */
     private hash(countOverride?:number):void{
         countOverride=countOverride??this.#ingestBytes;
-        const count64a = new Uint64(countOverride<<3, (countOverride / 0x20000000) | 0);
+        const count64a = U64Mut.fromUint32Pair(countOverride<<3,countOverride/0x20000000);
 	    //const count64b=0;//The counter can never be > a JS number (53 bits) so this will always be 0
-	    const v = new Array<Uint64>(16);
-        v[0]=this.#state[0];
-        v[1]=this.#state[1];
-        v[2]=this.#state[2];
-        v[3]=this.#state[3];
-        v[4]=this.#state[4];
-        v[5]=this.#state[5];
-        v[6]=this.#state[6];
-        v[7]=this.#state[7];
+		const v=U64MutArray.fromLen(16);
+		v.set(this.#state);
 
-        v[8] = new Uint64(n[1], n[0]).xor(this.#salt[0]);
-	    v[9] = new Uint64(n[3], n[2]).xor(this.#salt[1]);
-	    v[10] = new Uint64(n[5], n[4]).xor(this.#salt[2]);
-	    v[11] = new Uint64(n[7], n[6]).xor(this.#salt[3]);
-	    v[12] = new Uint64(n[9], n[8]).xor(count64a);
-	    v[13] = new Uint64(n[11], n[10]).xor(count64a);
-    	v[14] = new Uint64(n[13], n[12]); //.xor(count64b);
-    	v[15] = new Uint64(n[15], n[14]); //.xor(count64b);
+		v.at(8).set(U64Mut.fromUint32Pair(n[1],n[0]).xorEq(this.#salt.at(0)));
+		v.at(9).set(U64Mut.fromUint32Pair(n[3],n[2]).xorEq(this.#salt.at(1)));
+		v.at(10).set(U64Mut.fromUint32Pair(n[5],n[4]).xorEq(this.#salt.at(2)));
+		v.at(11).set(U64Mut.fromUint32Pair(n[7],n[6]).xorEq(this.#salt.at(3)));
+		v.at(12).set(U64Mut.fromUint32Pair(n[9],n[8]).xorEq(count64a));
+		v.at(13).set(U64Mut.fromUint32Pair(n[11],n[10]).xorEq(count64a));
+		v.at(14).set(U64Mut.fromUint32Pair(n[13],n[12])/*.xorEq(count64b)*/);
+		v.at(15).set(U64Mut.fromUint32Pair(n[15],n[14])/*.xorEq(count64b)*/);
+
+		//Switch (maybe) block to big endian (may mangle storage)
+		for(let i=0;i<this.#block.length;i+=8) {
+			asBE.i64(this.#block,i);
+		}
 
 	    for (let r = 0; r < this.#nr; r++) {
 		    const sigma = sigmas[r % 10];
@@ -413,14 +417,14 @@ class Blake1_64bit implements IHash {
 		    this.g(7, 4, 9, 14, v, sigma);
 	    }
 
-        this.#state[0]=this.#state[0].xor(this.#salt[0]).xor(v[0]).xor(v[8]);
-        this.#state[1]=this.#state[1].xor(this.#salt[1]).xor(v[1]).xor(v[9]);
-        this.#state[2]=this.#state[2].xor(this.#salt[2]).xor(v[2]).xor(v[10]);
-        this.#state[3]=this.#state[3].xor(this.#salt[3]).xor(v[3]).xor(v[11]);
-        this.#state[4]=this.#state[4].xor(this.#salt[0]).xor(v[4]).xor(v[12]);
-        this.#state[5]=this.#state[5].xor(this.#salt[1]).xor(v[5]).xor(v[13]);
-        this.#state[6]=this.#state[6].xor(this.#salt[2]).xor(v[6]).xor(v[14]);
-        this.#state[7]=this.#state[7].xor(this.#salt[3]).xor(v[7]).xor(v[15]);
+		this.#state.at(0).xorEq(this.#salt.at(0)).xorEq(v.at(0)).xorEq(v.at(8));
+		this.#state.at(1).xorEq(this.#salt.at(1)).xorEq(v.at(1)).xorEq(v.at(9));
+		this.#state.at(2).xorEq(this.#salt.at(2)).xorEq(v.at(2)).xorEq(v.at(10));
+		this.#state.at(3).xorEq(this.#salt.at(3)).xorEq(v.at(3)).xorEq(v.at(11));
+		this.#state.at(4).xorEq(this.#salt.at(0)).xorEq(v.at(4)).xorEq(v.at(12));
+		this.#state.at(5).xorEq(this.#salt.at(1)).xorEq(v.at(5)).xorEq(v.at(13));
+		this.#state.at(6).xorEq(this.#salt.at(2)).xorEq(v.at(6)).xorEq(v.at(14));
+		this.#state.at(7).xorEq(this.#salt.at(3)).xorEq(v.at(7)).xorEq(v.at(15));
 
         //Reset block pointer
 		this.#bPos = 0;
@@ -485,19 +489,14 @@ class Blake1_64bit implements IHash {
 		//Write out the data size in big-endian
         // There's space for 128 bits of size (spaceForLenBytes64=16) but we can only count
         // up to 2^52 bits (JS limitation), so we only need to write n+2,n+3 values (the others are zero)
-
+		const ss64=sizeSpace>>3;// div 8
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		bigEndian.u32IntoBytes(
-			alt.#ingestBytes / 0x20000000,
-			alt.#block,
-			sizeSpace+8
-		);
-		bigEndian.u32IntoBytes(alt.#ingestBytes << 3, alt.#block, sizeSpace + 12);
+		alt.#block64.at(ss64+1).set(U64Mut.fromUint32Pair(alt.#ingestBytes<<3,alt.#ingestBytes/0x20000000));
+		//Note hash also applies asBE to the block.  We call it twice because we want this value to be LE
+		asBE.i64(alt.#block,sizeSpace+8);
 		alt.hash(countOverride);
-		const ret = new Uint8Array(this.size);
-		bigEndian.u64ArrIntoBytesSafe(alt.#state, ret);
-		return ret;
+		return alt.#state.toBytesBE();
     }
 
 	/**
@@ -505,14 +504,14 @@ class Blake1_64bit implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.#state[0] = new Uint64(iv[1], iv[0]);
-        this.#state[1] = new Uint64(iv[3], iv[2]);
-        this.#state[2] = new Uint64(iv[5], iv[4]);
-        this.#state[3] = new Uint64(iv[7], iv[6]);
-        this.#state[4] = new Uint64(iv[9], iv[8]);
-        this.#state[5] = new Uint64(iv[11], iv[10]);
-        this.#state[6] = new Uint64(iv[13], iv[12]);
-        this.#state[7] = new Uint64(iv[15], iv[14]);
+		this.#state.at(0).set(U64Mut.fromUint32Pair(iv[1],iv[0]));
+		this.#state.at(1).set(U64Mut.fromUint32Pair(iv[3],iv[2]));
+		this.#state.at(2).set(U64Mut.fromUint32Pair(iv[5],iv[4]));
+		this.#state.at(3).set(U64Mut.fromUint32Pair(iv[7],iv[6]));
+		this.#state.at(4).set(U64Mut.fromUint32Pair(iv[9],iv[8]));
+		this.#state.at(5).set(U64Mut.fromUint32Pair(iv[11],iv[10]));
+		this.#state.at(6).set(U64Mut.fromUint32Pair(iv[13],iv[12]));
+		this.#state.at(7).set(U64Mut.fromUint32Pair(iv[15],iv[14]));
 
 		//Reset ingest count
 		this.#ingestBytes = 0;
@@ -533,7 +532,7 @@ class Blake1_64bit implements IHash {
 	 */
 	private clone(): Blake1_64bit {
 		const ret = new Blake1_64bit(this.#salt,this.#nr);
-        for(let i=0;i<this.#state.length;i++) ret.#state[i]=this.#state[i];
+		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
 		ret.#ingestBytes = this.#ingestBytes;
 		ret.#bPos = this.#bPos;
@@ -566,7 +565,7 @@ export class Blake64 extends Blake1_64bit {
      * Build a new Blake64 hash generator
      * @param salt 4*Uint64 (exactly) of salt, or empty
      */
-    constructor(salt?:Uint64[]) {
+    constructor(salt?:U64MutArray) {
         super(salt,b64rounds);
 	}     
 }
@@ -576,7 +575,7 @@ export class Blake512 extends Blake1_64bit {
      * Build a new Blake1-512 hash generator
      * @param salt 4*Uint64 (exactly) of salt, or empty
      */
-    constructor(salt?:Uint64[]) {
+    constructor(salt?:U64MutArray) {
         super(salt,b512rounds);
 	}     
 }

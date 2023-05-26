@@ -151,25 +151,6 @@ export function u64ArrIntoBytesSafe(
 }
 
 /**
- * Output a 32bit signed number from @param sourceBytes at position @param sourcePos
- * WARN: If there isn't enough source data zeros will be used (you probably want @see i32FromBytes)
- * @param sourceBytes Source data
- * @param sourcePos Starting position in @param sourceBytes
- * @returns
- */
-export function i32FromBytesUnsafe(
-	sourceBytes: Uint8Array,
-	sourcePos = 0
-): number {
-	return (
-		(sourceBytes[sourcePos] << 24) |
-		(sourceBytes[sourcePos + 1] << 16) |
-		(sourceBytes[sourcePos + 2] << 8) |
-		sourceBytes[sourcePos + 3]
-	);
-}
-
-/**
  * Output a 32bit unsigned number from @param sourceBytes at position @param sourcePos
  * WARN: If there isn't enough source data zeros will be used (you probably want @see u32FromBytes)
  * @param sourceBytes Source data
@@ -186,29 +167,6 @@ export function u32FromBytesUnsafe(
 			(sourceBytes[sourcePos + 2] << 8) |
 			sourceBytes[sourcePos + 3]) >>>
 		0
-	);
-}
-
-/**
- * Output a 32bit signed number from @param sourceBytes at position @param sourcePos
- * Requires 4 bytes
- * @param sourceBytes Source data
- * @param sourcePos Starting position in @param sourceBytes
- * @throws {SizeError} if there's not enough data in @param sourceBytes
- * @returns
- */
-export function i32FromBytes(sourceBytes: Uint8Array, sourcePos = 0): number {
-	if (sourcePos + size32Bytes > sourceBytes.length)
-		throw new SizeError(
-			'sourceBytes',
-			sourceBytes.length,
-			sourcePos + size32Bytes
-		);
-	return (
-		(sourceBytes[sourcePos] << 24) |
-		(sourceBytes[sourcePos + 1] << 16) |
-		(sourceBytes[sourcePos + 2] << 8) |
-		sourceBytes[sourcePos + 3]
 	);
 }
 

@@ -2,6 +2,7 @@
 
 import { ContentError, Grievous } from '../primitive/ErrorExt.js';
 import type { IReadArray } from '../primitive/IRWArray.js';
+import type { U64MutArray } from '../primitive/U64.js';
 import type { Uint64 } from '../primitive/Uint64.js';
 /*
  * Support: (Uint8Array)
@@ -114,6 +115,32 @@ export function fromU64s(u64s: Uint64[], join = ''): string {
 	let ret = '';
 	for (const u of u64s) {
 		const b = u.toBytes();
+		ret +=
+			tbl[b[0] >> 4] +
+			tbl[b[0] & 0xf] +
+			tbl[b[1] >> 4] +
+			tbl[b[1] & 0xf] +
+			tbl[b[2] >> 4] +
+			tbl[b[2] & 0xf] +
+			tbl[b[3] >> 4] +
+			tbl[b[3] & 0xf] +
+			tbl[b[4] >> 4] +
+			tbl[b[4] & 0xf] +
+			tbl[b[5] >> 4] +
+			tbl[b[5] & 0xf] +
+			tbl[b[6] >> 4] +
+			tbl[b[6] & 0xf] +
+			tbl[b[7] >> 4] +
+			tbl[b[7] & 0xf] +
+			join;
+	}
+	return ret;
+}
+
+export function fromU64a(u64a:U64MutArray,join=''):string {
+	let ret = '';
+	for(let i=0;i<u64a.length;i++) {
+		const b=u64a[i].toBytesBE();
 		ret +=
 			tbl[b[0] >> 4] +
 			tbl[b[0] & 0xf] +

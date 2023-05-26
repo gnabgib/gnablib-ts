@@ -1,12 +1,12 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import * as bigEndian from '../endian/big.js';
-import * as bitExt from '../primitive/BitExt.js';
 import * as hex from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
 import * as intExt from '../primitive/IntExt.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import * as utf8 from '../encoding/Utf8.js';
+import { ror32 } from '../primitive/U32.js';
 
 //[US Secure Hash Algorithms](https://datatracker.ietf.org/doc/html/rfc6234) (2011)
 //[US Secure Hash Algorithms (SHA and HMAC-SHA)](https://datatracker.ietf.org/doc/html/rfc4634) (2006) - obsolete by above
@@ -129,10 +129,8 @@ class Sha2_32bit implements IHash {
 		for (; j < w.length; j++) {
 			const w15 = w[j - 15];
 			const w2 = w[j - 2];
-			const s0 =
-				bitExt.rotRight32(w15, 7) ^ bitExt.rotRight32(w15, 18) ^ (w15 >>> 3);
-			const s1 =
-				bitExt.rotRight32(w2, 17) ^ bitExt.rotRight32(w2, 19) ^ (w2 >>> 10);
+			const s0 = ror32(w15, 7) ^ ror32(w15, 18) ^ (w15 >>> 3);
+			const s1 = ror32(w2, 17) ^ ror32(w2, 19) ^ (w2 >>> 10);
 			w[j] = w[j - 16] + s0 + w[j - 7] + s1;
 		}
 
@@ -146,17 +144,11 @@ class Sha2_32bit implements IHash {
 			h = this.#state[7];
 
 		for (j = 0; j < w.length; j++) {
-			const s1 =
-				bitExt.rotRight32(e, 6) ^
-				bitExt.rotRight32(e, 11) ^
-				bitExt.rotRight32(e, 25);
+			const s1 = ror32(e, 6) ^ ror32(e, 11) ^ ror32(e, 25);
 			//const ch=(e&f)^((~e)&g);//Same as MD4-r1
 			const ch = g ^ (e & (f ^ g)); //Same as MD4-r1
 			const temp1 = h + s1 + ch + k[j * 2] + w[j];
-			const s0 =
-				bitExt.rotRight32(a, 2) ^
-				bitExt.rotRight32(a, 13) ^
-				bitExt.rotRight32(a, 22);
+			const s0 = ror32(a, 2) ^ ror32(a, 13) ^ ror32(a, 22);
 			//const maj=(a&b)^(a&c)^(b&c);
 			const maj = ((a ^ b) & c) ^ (a & b); //Similar to MD4-r2 (| -> ^)
 			const temp2 = s0 + maj;

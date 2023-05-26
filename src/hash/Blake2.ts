@@ -1,12 +1,12 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as bitExt from '../primitive/BitExt.js';
 //import * as hex from '../encoding/Hex.js';
 import * as intExt from '../primitive/IntExt.js';
 import * as littleEndian from '../endian/little.js';
 import { SizeError } from '../primitive/ErrorExt.js';
 import { Uint64, Uint64ish } from '../primitive/Uint64.js';
 import type { IHash } from './IHash.js';
+import { ror32 } from '../primitive/U32.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)
 // [BLAKE2 — fast secure hashing](https://www.blake2.net/)
@@ -145,16 +145,16 @@ class Blake2_32bit implements IHash {
 
 		//Step 1
 		v[a] += v[b] + mj; //a ← a + b + m[j]
-		v[d] = bitExt.rotRight32(v[d]^v[a],rRot1_32); //d ← (d ⊕ a) >>> 32
+		v[d] = ror32(v[d]^v[a],rRot1_32); //d ← (d ⊕ a) >>> 32
 		//Step 2
 		v[c] += v[d]; //c ← c + d
-		v[b] = bitExt.rotRight32(v[b] ^ v[c], rRot2_32); //b ← (b ⊕ c) >>> 12
+		v[b] = ror32(v[b] ^ v[c], rRot2_32); //b ← (b ⊕ c) >>> 12
 		//Step 3
 		v[a] += v[b] + mk; //a ← a + b + m[k]
-		v[d] = bitExt.rotRight32(v[d] ^ v[a], rRot3_32); //d ← (d ⊕ a) >>> 8
+		v[d] = ror32(v[d] ^ v[a], rRot3_32); //d ← (d ⊕ a) >>> 8
 		//Step 4
 		v[c] += v[d]; //c ← c + d
-		v[b] = bitExt.rotRight32(v[b] ^ v[c], rRot4_32); //b ← (b ⊕ c) >>> 7
+		v[b] = ror32(v[b] ^ v[c], rRot4_32); //b ← (b ⊕ c) >>> 7
 	}
 
 	/**

@@ -2,6 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as hex from '../../src/encoding/Hex';
 import { ParallelHash256 } from '../../src/hash/ParallelHash';
+import * as utf8 from '../../src/encoding/Utf8';
 
 const tsts = suite('ParallelHash256');
 
@@ -32,6 +33,7 @@ const tests:hashHex[]=[
         customize:'Parallel Data',
         expect:'69D0FCB764EA055DD09334BC6021CB7E4B61348DFF375DA262671CDEC3EFFA8D1B4568A6CCE16B1CAD946DDDE27F6CE2B8DEE4CD1B24851EBF00EB90D43813E9'
     },
+    //TODO: Find a suitable source for zero len, and size/blockSize!=integer tests (NIST is sorely lacking)
 ];
 
 let count=0;

@@ -1,7 +1,7 @@
 /*! Copyright 2022-2023 gnabgib MPL-2.0 */
 
-import * as littleEndian from '../endian/little.js';
-import * as bitExt from '../primitive/BitExt.js';
+import { asLE } from '../endian/platform.js';
+import { rol32 } from '../primitive/U32.js';
 import type { IHash } from './IHash.js';
 
 //[Wikipedia: RipeMD](https://en.wikipedia.org/wiki/RIPEMD) (1992)
@@ -89,6 +89,7 @@ class RipeMd implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize);
+	readonly #block32=new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -112,9 +113,11 @@ class RipeMd implements IHash {
 	}
 
 	private hash(): void {
-		const x = new Uint32Array(16);
-		littleEndian.u32IntoArrFromBytes(x, 0, 16, this.#block);
-		this.#hash(this.#state, x);
+		//Make sure block is LE (might mangle state, but it's reset after hash)
+		for(let i=0;i<16;i++) asLE.i32(this.#block,i*4);
+
+		// littleEndian.u32IntoArrFromBytes(x, 0, 16, this.#block);
+		this.#hash(this.#state,this.#block32);
 
 		//Reset block pointer
 		this.#bPos = 0;
@@ -170,20 +173,22 @@ class RipeMd implements IHash {
 		//Zero the rest of the block
 		alt.#block.fill(0, alt.#bPos);
 
-		//Write out the data size in big-endian
-
+		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
-		littleEndian.u32IntoBytes(alt.#ingestBytes << 3, alt.#block, sizeSpace);
+		alt.#block32[ss32]=alt.#ingestBytes << 3;
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		littleEndian.u32IntoBytes(
-			alt.#ingestBytes / 0x20000000,
-			alt.#block,
-			sizeSpace + 4
-		);
+		alt.#block32[ss32+1]=alt.#ingestBytes / 0x20000000;
+		//This might mangle #block, but we're about to hash anyway
+		asLE.i32(alt.#block,sizeSpace);
+		asLE.i32(alt.#block,sizeSpace+4);
 		alt.hash();
-		const ret = new Uint8Array(this.size);
-		littleEndian.u32ArrIntoBytesUnsafe(alt.#state, ret);
-		return ret;
+
+		//Project state into bytes
+		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		//Make sure the bytes are LE - this might mangle alt.#state (but we're moments from disposing)
+		for(let i=0;i<this.size;i++) asLE.i32(s8,i*4);
+		//Finally slice (duplicate) the data so caller can't discover hidden state
+		return s8.slice(0,this.size);
 	}
 
 	/**
@@ -234,7 +239,7 @@ export class RipeMd128 extends RipeMd {
 		state[3] = iv[3];
 	}
 
-	private static hash(v: Uint32Array, x: Uint32Array): void {
+	private static hash(v: Uint32Array,x:Uint32Array): void {
 		let t: number;
 
         let a = v[0],
@@ -247,11 +252,11 @@ export class RipeMd128 extends RipeMd {
 			dd = v[3];
 
 		for (let j = 0; j < 64; j++) {
-			const round = Math.floor(j / 16);
-			t = bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
+			const round = j>>4;
+			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
 			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
-			t = bitExt.rotLeft32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
@@ -293,16 +298,12 @@ export class RipeMd160 extends RipeMd {
 
 		for (let j = 0; j < 80; j++) {
 			const round = Math.floor(j / 16);
-			t =
-				e +
-				bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
+			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
 			//Using the rare , to show this is a big swap
-			(a = e), (e = d), (d = bitExt.rotLeft32(c, 10)), (c = b), (b = t);
-			t =
-				ee +
-				bitExt.rotLeft32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
+			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
 			//Using the rare , to show this is a big swap
-			(aa = ee), (ee = dd), (dd = bitExt.rotLeft32(cc, 10)), (cc = bb), (bb = t);
+			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
 		}
 
 		t = v[1] + c + dd;
@@ -346,13 +347,10 @@ export class RipeMd256 extends RipeMd {
 		let j = 0;
 		let round = 0;
 		for (; j < 16; j++) {
-			t = bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
-			t = bitExt.rotLeft32(
-				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
-			);
+			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
@@ -360,36 +358,27 @@ export class RipeMd256 extends RipeMd {
 
 		round = 1;
 		for (; j < 32; j++) {
-			t = bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = bitExt.rotLeft32(
-				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
-			);
+			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = b), (b = bb), (bb = t);
 
 		round = 2;
 		for (; j < 48; j++) {
-			t = bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = bitExt.rotLeft32(
-				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
-			);
+			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = c), (c = cc), (cc = t);
 
 		round = 3;
 		for (; j < 64; j++) {
-			t = bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = bitExt.rotLeft32(
-				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
-			);
+			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = d), (d = dd), (dd = t);
@@ -438,98 +427,48 @@ export class RipeMd320 extends RipeMd {
 		let j = 0;
 		let round = 0;
 		for (; j < 16; j++) {
-			t =
-				e + bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
-			(a = e), (e = d), (d = bitExt.rotLeft32(c, 10)), (c = b), (b = t);
-			t =
-				ee +
-				bitExt.rotLeft32(
-					aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],
-					ss[j]
-				);
+			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
+			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
 			//Using the rare , to show this is a big swap
-			(aa = ee),
-				(ee = dd),
-				(dd = bitExt.rotLeft32(cc, 10)),
-				(cc = bb),
-				(bb = t);
+			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = b), (b = bb), (bb = t);
 
 		round = 1;
 		for (; j < 32; j++) {
-			t =
-				e + bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = bitExt.rotLeft32(c, 10)), (c = b), (b = t);
-			t =
-				ee +
-				bitExt.rotLeft32(
-					aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],
-					ss[j]
-				);
-			(aa = ee),
-				(ee = dd),
-				(dd = bitExt.rotLeft32(cc, 10)),
-				(cc = bb),
-				(bb = t);
+			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
+			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = d), (d = dd), (dd = t);
 
 		round = 2;
 		for (; j < 48; j++) {
-			t =
-				e + bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = bitExt.rotLeft32(c, 10)), (c = b), (b = t);
-			t =
-				ee +
-				bitExt.rotLeft32(
-					aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],
-					ss[j]
-				);
-			(aa = ee),
-				(ee = dd),
-				(dd = bitExt.rotLeft32(cc, 10)),
-				(cc = bb),
-				(bb = t);
+			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
+			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = a), (a = aa), (aa = t);
 
 		round = 3;
 		for (; j < 64; j++) {
-			t =
-				e + bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = bitExt.rotLeft32(c, 10)), (c = b), (b = t);
-			t =
-				ee +
-				bitExt.rotLeft32(
-					aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],
-					ss[j]
-				);
-			(aa = ee),
-				(ee = dd),
-				(dd = bitExt.rotLeft32(cc, 10)),
-				(cc = bb),
-				(bb = t);
+			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
+			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = c), (c = cc), (cc = t);
 
 		round = 4;
 		for (; j < 80; j++) {
-			t =
-				e + bitExt.rotLeft32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = bitExt.rotLeft32(c, 10)), (c = b), (b = t);
-			t =
-				ee +
-				bitExt.rotLeft32(
-					aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],
-					ss[j]
-				);
-			(aa = ee),
-				(ee = dd),
-				(dd = bitExt.rotLeft32(cc, 10)),
-				(cc = bb),
-				(bb = t);
+			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
+			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = e), (e = ee), (ee = t);
 

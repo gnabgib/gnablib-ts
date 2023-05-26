@@ -179,24 +179,6 @@ export function u64ArrIntoBytesSafe(
 	}
 }
 
-/**
- * Output a 32bit signed number from @param sourceBytes at position @param sourcePos
- * WARN: If there isn't enough source data zeros will be used (you probably want @see i32FromBytes)
- * @param sourceBytes Source data
- * @param sourcePos Starting position in @param sourceBytes
- * @returns
- */
-export function i32FromBytesUnsafe(
-	sourceBytes: Uint8Array,
-	sourcePos = 0
-): number {
-	return (
-		sourceBytes[sourcePos] |
-		(sourceBytes[sourcePos + 1] << 8) |
-		(sourceBytes[sourcePos + 2] << 16) |
-		(sourceBytes[sourcePos + 3] << 24)
-	);
-}
 
 /**
  * Output a 32bit unsigned number from @param sourceBytes at position @param sourcePos

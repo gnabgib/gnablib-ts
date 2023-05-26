@@ -24,8 +24,8 @@ export class Uint64 {
 	readonly lowU32: number;
 
 	constructor(lowU32: number, highU32 = 0) {
-		intExt.inRangeInclusive(lowU32, 0, maxU32);
-		intExt.inRangeInclusive(highU32, 0, maxU32);
+		//intExt.inRangeInclusive(lowU32, 0, maxU32);
+		//intExt.inRangeInclusive(highU32, 0, maxU32);
 		this.highU32 = highU32 >>> 0;
 		this.lowU32 = lowU32 >>> 0;
 	}

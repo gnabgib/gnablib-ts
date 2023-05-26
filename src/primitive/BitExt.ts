@@ -1,7 +1,5 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from './IntExt.js';
-
 export const bitsPerByte = 8;
 export const size16Bytes = 2;
 export const i16SizeBits = size16Bytes * bitsPerByte;
@@ -32,9 +30,9 @@ export function lsbs(bitCount: number): number {
 export function reverse(byte:number):number {
 	byte&=0xff;
 	// 01234567 -> 76543210
-	byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
-   	byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
-   	byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
+	byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;//Swap nibble
+   	byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;//Swap pairs
+   	byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;//Swap bits
 	return byte;
 }
 
@@ -60,50 +58,6 @@ export function count1Bits(value: number): number {
 	// }
 	// return count;
 }
-
-/**
- * Rotate the 32 bit int left $by bits, bits that exit stage left join on the right
- * @param i32 32 bit number, can be signed or unsigned (note rot may change)
- * @param by 0-32 integer
- * @throws EnforceTypeError $by not an int
- * @throws OutOfRangeError $by <0 or >32
- * @returns
- */
-export function rotLeft32(i32: number, by: number): number {
-	intExt.inRangeInclusive(by, 0, i32SizeBits);
-	return (i32 << by) | (i32 >>> (i32SizeBits - by));
-	// Fails: << can make it negative too: return (i32<<by)|(i32>>>(32-by));
-}
-
-export function rotRight32(i32: number, by: number): number {
-	intExt.inRangeInclusive(by, 0, i32SizeBits);
-	return (i32 >>> by) | (i32 << (i32SizeBits - by));
-}
-
-/**
- * Rotate the 16 bit int left $by bits, bits that exit stage left join on the right
- * @param i16 16 bit number, can be signed or unsigned (note rot may change)
- * @param by 0-16 integer
- * @throws EnforceTypeError $by not an int
- * @throws OutOfRangeError $by <0 or >16
- * @returns
- */
-export function rotLeft16(i16: number, by: number): number {
-	intExt.inRangeInclusive(by, 0, i16SizeBits);
-	return ((i16 << by) | (i16 >> (i16SizeBits - by))) & 0xffff;
-}
-
-export function rotRight16(i16: number, by: number): number {
-	intExt.inRangeInclusive(by, 0, i16SizeBits);
-	return (i16 >> by) | ((i16 << (i16SizeBits - by)) & 0xffff);
-}
-
-// export function rotLeft(bytes:Uint8Array,by:number):Uint8Array {
-//     const max=bytes.length*bitsPerByte;
-//     bits.inRangeInclusive(by,0,max);
-//     const ret=new Uint8Array(bytes.length);
-//     return ret;
-// }
 
 /**
  * Accumulate data (will overflow if inSize>16, or outSize>16)

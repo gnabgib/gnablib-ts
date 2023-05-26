@@ -1,7 +1,7 @@
 /*! Copyright 2022-2023 gnabgib MPL-2.0 */
 
-import * as bigEndian from '../endian/big.js';
-import * as bitExt from '../primitive/BitExt.js';
+import { asBE } from '../endian/platform.js';
+import { rol32 } from '../primitive/U32.js';
 import type { IHash } from './IHash.js';
 
 //[US Secure Hash Algorithm 1 (SHA1)](https://datatracker.ietf.org/doc/html/rfc3174) (2001)
@@ -34,6 +34,7 @@ export class Sha1 implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize);
+	readonly #block32=new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -49,46 +50,45 @@ export class Sha1 implements IHash {
 	constructor() {
 		this.reset();
 	}
-	private hash() {
-		const w = new Uint32Array(80);
-		let a = this.#state[0],
-			b = this.#state[1],
-			c = this.#state[2],
-			d = this.#state[3],
-			e = this.#state[4];
 
+	private hash() {
+		const w=new Uint32Array(80);
+		let a=this.#state[0],b=this.#state[1],c=this.#state[2],d=this.#state[3],e=this.#state[4];
+
+		let t:number;
 		let j = 0;
-		let t: number;
 		for (; j < 16; j++) {
-			w[j] = bigEndian.u32FromBytes(this.#block,j*4);
+			//Because the block isn't used after this, mutate (possibly) in place into Big Endian encoding
+			asBE.i32(this.#block,j*4);
+			w[j]=this.#block32[j];
 			// (b&c)|((~b)&d) - Same as MD4-r1
-			t = bitExt.rotLeft32(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
+			t = rol32(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
 			//Rare use of comma!  Make it clear there's a 5 stage swap going on
-			(e = d), (d = c), (c = bitExt.rotLeft32(b, 30)), (b = a), (a = t);
+			(e = d), (d = c), (c = rol32(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 20; j++) {
-			w[j] = bitExt.rotLeft32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = rol32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			// (b&c)|((~b)&d) - Same as MD4-r1
-			t = bitExt.rotLeft32(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
-			(e = d), (d = c), (c = bitExt.rotLeft32(b, 30)), (b = a), (a = t);
+			t = rol32(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
+			(e = d), (d = c), (c = rol32(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 40; j++) {
-			w[j] = bitExt.rotLeft32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = rol32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
-			t = bitExt.rotLeft32(a, 5) + (b ^ c ^ d) + e + w[j] + rc[1];
-			(e = d), (d = c), (c = bitExt.rotLeft32(b, 30)), (b = a), (a = t);
+			t = rol32(a, 5) + (b ^ c ^ d) + e + w[j] + rc[1];
+			(e = d), (d = c), (c = rol32(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 60; j++) {
-			w[j] = bitExt.rotLeft32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = rol32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r2
-			t = bitExt.rotLeft32(a, 5) + (((b | c) & d) | (b & c)) + e + w[j] + rc[2];
-			(e = d), (d = c), (c = bitExt.rotLeft32(b, 30)), (b = a), (a = t);
+			t = rol32(a, 5) + (((b | c) & d) | (b & c)) + e + w[j] + rc[2];
+			(e = d), (d = c), (c = rol32(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 80; j++) {
-			w[j] = bitExt.rotLeft32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = rol32(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
-			t = bitExt.rotLeft32(a, 5) + (b ^ c ^ d) + e + w[j] + rc[3];
-			(e = d), (d = c), (c = bitExt.rotLeft32(b, 30)), (b = a), (a = t);
+			t = rol32(a, 5) + (b ^ c ^ d) + e + w[j] + rc[3];
+			(e = d), (d = c), (c = rol32(b, 30)), (b = a), (a = t);
 		}
 
 		(this.#state[0] += a), (this.#state[1] += b), (this.#state[2] += c), (this.#state[3] += d), (this.#state[4] += e);
@@ -148,15 +148,20 @@ export class Sha1 implements IHash {
 		alt.#block.fill(0, alt.#bPos);
 
 		//Write out the data size in big-endian
-
+		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		bigEndian.u32IntoBytes(alt.#ingestBytes / 0x20000000, alt.#block, sizeSpace);
-		bigEndian.u32IntoBytes(alt.#ingestBytes<<3,alt.#block,sizeSpace+4);
+		alt.#block32[ss32]=alt.#ingestBytes / 0x20000000;
+		alt.#block32[ss32+1]=alt.#ingestBytes << 3;
+		asBE.i32(alt.#block,sizeSpace);
+		asBE.i32(alt.#block,sizeSpace+4);
 		alt.hash();
-		const ret = new Uint8Array(digestSize);
-		bigEndian.u32ArrIntoBytesUnsafe(alt.#state, ret);
-		return ret;
+
+		//Project state into bytes
+		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		//Make sure the bytes are BE - this might mangle alt.#state (but we're moments from disposing)
+		for(let i=0;i<digestSize;i++) asBE.i32(s8,i*4);
+		return s8.slice(0,digestSize);
 	}
 
 	/**

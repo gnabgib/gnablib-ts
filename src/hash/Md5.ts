@@ -1,7 +1,7 @@
 /*! Copyright 2022-2023 gnabgib MPL-2.0 */
 
-import * as littleEndian from '../endian/little.js';
-import * as bitExt from '../primitive/BitExt.js';
+import { asLE } from '../endian/platform.js';
+import { rol32 } from '../primitive/U32.js';
 import type { IHash } from './IHash.js';
 
 //[The MD5 Message-Digest Algorithm](https://datatracker.ietf.org/doc/html/rfc1321) (1992)
@@ -31,6 +31,7 @@ export class Md5 implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize);
+	readonly #block32=new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -54,8 +55,8 @@ export class Md5 implements IHash {
 		const cc = this.#state[2];
 		const dd = this.#state[3];
 
-		const x = new Uint32Array(16);
-		littleEndian.u32IntoArrFromBytes(x, 0, 16, this.#block);
+		//Make sure block is LE (might mangle state, but it's reset after hash)
+		for(let i=0;i<blockSize;i+=4) asLE.i32(this.#block,i);
 
 		/* Round 1. */
 		//a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s)
@@ -66,148 +67,148 @@ export class Md5 implements IHash {
 		const round0col3 = 22;
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
 					this.#state[0] +
-					x[0] +
+					this.#block32[0] +
 					0xd76aa478,
 				round0col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
 					this.#state[3] +
-					x[1] +
+					this.#block32[1] +
 					0xe8c7b756,
 				round0col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
 					this.#state[2] +
-					x[2] +
+					this.#block32[2] +
 					0x242070db,
 				round0col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
 					this.#state[1] +
-					x[3] +
+					this.#block32[3] +
 					0xc1bdceee,
 				round0col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
 					this.#state[0] +
-					x[4] +
+					this.#block32[4] +
 					0xf57c0faf,
 				round0col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
 					this.#state[3] +
-					x[5] +
+					this.#block32[5] +
 					0x4787c62a,
 				round0col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
 					this.#state[2] +
-					x[6] +
+					this.#block32[6] +
 					0xa8304613,
 				round0col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
 					this.#state[1] +
-					x[7] +
+					this.#block32[7] +
 					0xfd469501,
 				round0col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
 					this.#state[0] +
-					x[8] +
+					this.#block32[8] +
 					0x698098d8,
 				round0col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
 					this.#state[3] +
-					x[9] +
+					this.#block32[9] +
 					0x8b44f7af,
 				round0col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
 					this.#state[2] +
-					x[10] +
+					this.#block32[10] +
 					0xffff5bb1,
 				round0col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
 					this.#state[1] +
-					x[11] +
+					this.#block32[11] +
 					0x895cd7be,
 				round0col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
 					this.#state[0] +
-					x[12] +
+					this.#block32[12] +
 					0x6b901122,
 				round0col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
 					this.#state[3] +
-					x[13] +
+					this.#block32[13] +
 					0xfd987193,
 				round0col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
 					this.#state[2] +
-					x[14] +
+					this.#block32[14] +
 					0xa679438e,
 				round0col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
 					this.#state[1] +
-					x[15] +
+					this.#block32[15] +
 					0x49b40821,
 				round0col3
 			);
@@ -221,148 +222,148 @@ export class Md5 implements IHash {
 		const round1col3 = 20;
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
 					this.#state[0] +
-					x[1] +
+					this.#block32[1] +
 					0xf61e2562,
 				round1col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
 					this.#state[3] +
-					x[6] +
+					this.#block32[6] +
 					0xc040b340,
 				round1col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
 					this.#state[2] +
-					x[11] +
+					this.#block32[11] +
 					0x265e5a51,
 				round1col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
 					this.#state[1] +
-					x[0] +
+					this.#block32[0] +
 					0xe9b6c7aa,
 				round1col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
 					this.#state[0] +
-					x[5] +
+					this.#block32[5] +
 					0xd62f105d,
 				round1col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
 					this.#state[3] +
-					x[10] +
+					this.#block32[10] +
 					0x02441453,
 				round1col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
 					this.#state[2] +
-					x[15] +
+					this.#block32[15] +
 					0xd8a1e681,
 				round1col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
 					this.#state[1] +
-					x[4] +
+					this.#block32[4] +
 					0xe7d3fbc8,
 				round1col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
 					this.#state[0] +
-					x[9] +
+					this.#block32[9] +
 					0x21e1cde6,
 				round1col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
 					this.#state[3] +
-					x[14] +
+					this.#block32[14] +
 					0xc33707d6,
 				round1col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
 					this.#state[2] +
-					x[3] +
+					this.#block32[3] +
 					0xf4d50d87,
 				round1col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
 					this.#state[1] +
-					x[8] +
+					this.#block32[8] +
 					0x455a14ed,
 				round1col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
 					this.#state[0] +
-					x[13] +
+					this.#block32[13] +
 					0xa9e3e905,
 				round1col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
 					this.#state[3] +
-					x[2] +
+					this.#block32[2] +
 					0xfcefa3f8,
 				round1col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
 					this.#state[2] +
-					x[7] +
+					this.#block32[7] +
 					0x676f02d9,
 				round1col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
 					this.#state[1] +
-					x[12] +
+					this.#block32[12] +
 					0x8d2a4c8a,
 				round1col3
 			);
@@ -376,148 +377,148 @@ export class Md5 implements IHash {
 		const round2col3 = 23;
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
-					x[5] +
+					this.#block32[5] +
 					0xfffa3942,
 				round2col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
-					x[8] +
+					this.#block32[8] +
 					0x8771f681,
 				round2col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
-					x[11] +
+					this.#block32[11] +
 					0x6d9d6122,
 				round2col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
-					x[14] +
+					this.#block32[14] +
 					0xfde5380c,
 				round2col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
-					x[1] +
+					this.#block32[1] +
 					0xa4beea44,
 				round2col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
-					x[4] +
+					this.#block32[4] +
 					0x4bdecfa9,
 				round2col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
-					x[7] +
+					this.#block32[7] +
 					0xf6bb4b60,
 				round2col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
-					x[10] +
+					this.#block32[10] +
 					0xbebfbc70,
 				round2col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
-					x[13] +
+					this.#block32[13] +
 					0x289b7ec6,
 				round2col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
-					x[0] +
+					this.#block32[0] +
 					0xeaa127fa,
 				round2col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
-					x[3] +
+					this.#block32[3] +
 					0xd4ef3085,
 				round2col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
-					x[6] +
+					this.#block32[6] +
 					0x04881d05,
 				round2col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
-					x[9] +
+					this.#block32[9] +
 					0xd9d4d039,
 				round2col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
-					x[12] +
+					this.#block32[12] +
 					0xe6db99e5,
 				round2col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
-					x[15] +
+					this.#block32[15] +
 					0x1fa27cf8,
 				round2col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
-					x[2] +
+					this.#block32[2] +
 					0xc4ac5665,
 				round2col3
 			);
@@ -531,148 +532,148 @@ export class Md5 implements IHash {
 		const round3col3 = 21;
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
-					x[0] +
+					this.#block32[0] +
 					0xf4292244,
 				round3col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
-					x[7] +
+					this.#block32[7] +
 					0x432aff97,
 				round3col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
-					x[14] +
+					this.#block32[14] +
 					0xab9423a7,
 				round3col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
-					x[5] +
+					this.#block32[5] +
 					0xfc93a039,
 				round3col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
-					x[12] +
+					this.#block32[12] +
 					0x655b59c3,
 				round3col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
-					x[3] +
+					this.#block32[3] +
 					0x8f0ccc92,
 				round3col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
-					x[10] +
+					this.#block32[10] +
 					0xffeff47d,
 				round3col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
-					x[1] +
+					this.#block32[1] +
 					0x85845dd1,
 				round3col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
-					x[8] +
+					this.#block32[8] +
 					0x6fa87e4f,
 				round3col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
-					x[15] +
+					this.#block32[15] +
 					0xfe2ce6e0,
 				round3col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
-					x[6] +
+					this.#block32[6] +
 					0xa3014314,
 				round3col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
-					x[13] +
+					this.#block32[13] +
 					0x4e0811a1,
 				round3col3
 			);
 
 		this.#state[0] =
 			this.#state[1] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
-					x[4] +
+					this.#block32[4] +
 					0xf7537e82,
 				round3col0
 			);
 		this.#state[3] =
 			this.#state[0] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
-					x[11] +
+					this.#block32[11] +
 					0xbd3af235,
 				round3col1
 			);
 		this.#state[2] =
 			this.#state[3] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
-					x[2] +
+					this.#block32[2] +
 					0x2ad7d2bb,
 				round3col2
 			);
 		this.#state[1] =
 			this.#state[2] +
-			bitExt.rotLeft32(
+			rol32(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
-					x[9] +
+					this.#block32[9] +
 					0xeb86d391,
 				round3col3
 			);
@@ -709,7 +710,6 @@ export class Md5 implements IHash {
 				return;
 			}
 			this.#block.set(data.subarray(dPos, dPos + blockSize), this.#bPos);
-			this.#bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -737,15 +737,22 @@ export class Md5 implements IHash {
 		alt.#block.fill(0, alt.#bPos);
 
 		//Write out the data size in little-endian
-
+		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
-		littleEndian.u32IntoBytes(alt.#ingestBytes << 3, alt.#block, sizeSpace);
+		alt.#block32[ss32]=alt.#ingestBytes << 3;
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		littleEndian.u32IntoBytes(alt.#ingestBytes / 0x20000000, alt.#block, sizeSpace + 4);
+		alt.#block32[ss32+1]=alt.#ingestBytes / 0x20000000;
+		//This might mangle #block, but we're about to hash anyway
+		asLE.i32(alt.#block,sizeSpace);
+		asLE.i32(alt.#block,sizeSpace+4);
 		alt.hash();
-		const ret = new Uint8Array(digestSize);
-		littleEndian.u32ArrIntoBytesUnsafe(alt.#state, ret);
-		return ret;
+
+		//Project state into bytes
+		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		//Make sure the bytes are LE - this might mangle alt.#state (but we're moments from disposing)
+		for(let i=0;i<digestSize;i++) asLE.i32(s8,i*4);
+		//Finally slice (duplicate) the data so caller can't discover hidden state
+		return s8.slice(0,this.size);
 	}
 
 	/**
