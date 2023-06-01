@@ -529,4 +529,23 @@ for(const [a,expect] of lastByteBETest) {
 	})
 }
 
+const lsbTest:[string,number,number][]=[
+	['0102030405060708',0,8],
+	['0102030405060708',1,7],
+	['0102030405060708',2,6],
+	['0102030405060708',3,5],
+	['0102030405060708',4,4],
+	['0102030405060708',5,3],
+	['0102030405060708',6,2],
+	['0102030405060708',7,1],
+	['0102030405060708',8,8],//Same as 0 because of &7
+]
+for(const [a,lsb,expect] of lsbTest){
+	tsts(`lsb(${a},$lsb)`,()=>{
+		const aBytes = hex.toBytes(a);
+		const aUint = U64.fromBytesBE(aBytes);
+		assert.is(aUint.lsb(lsb),expect);
+	})
+}
+
 tsts.run();

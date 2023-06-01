@@ -97,4 +97,32 @@ tsts('fromBytes',()=> {
     assert.is(hex.fromBytes(u64.toBytesBE()),'000000000000000B'+'000000000000000D'+'0000000000000011');
 });
 
+// prettier-ignore
+const xorTest:[string,string,number,string][]=[
+    // A^0=A: Anything xor zero is anything
+    [
+        'FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF',
+        'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+        1,
+        'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000'
+    ],
+    [
+        'FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF',
+        'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+        0,
+        '0000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+    ]
+];
+let count=0;
+for (const [a,b,startAt,expect] of xorTest) {
+	tsts(`xorEq ${count++}`, () => {
+		const aBytes = hex.toBytes(a);
+        const aArr=U64MutArray.fromBytes(aBytes.buffer);
+		const bBytes = hex.toBytes(b);
+		const bArr=U64MutArray.fromBytes(bBytes.buffer);
+        aArr.xorEq(bArr,startAt);
+		assert.is(hex.fromBytes(aArr.toBytesBE()), expect);
+	});
+}
+
 tsts.run();

@@ -25,40 +25,50 @@ const invert={
 	 * @param b Byte array
 	 * @param pos Position of first byte
 	 */
-	i16(b:Uint8Array,pos=0):void {
-		const t=b[pos];b[pos]=b[pos+1];b[pos]=t;
+	i16(b:Uint8Array,pos=0,count=1):void {
+		do {
+			const t=b[pos];b[pos]=b[pos+1];b[pos]=t;
+			pos+=2;
+		} while (--count>0);
+		
 	},
 	/**
 	 * Maybe switch byte order
 	 * @param b Byte array
 	 * @param pos Position of first byte
 	 */
-	i32(b:Uint8Array,pos=0):void {
+	i32(b:Uint8Array,pos=0,count=1):void {
 		let t:number;
-		t=b[pos];b[pos]=b[pos+3];b[pos+3]=t;
-		t=b[pos+1];b[pos+1]=b[pos+2];b[pos+2]=t;
+		do {
+			t=b[pos];b[pos]=b[pos+3];b[pos+3]=t;
+			t=b[pos+1];b[pos+1]=b[pos+2];b[pos+2]=t;
+			pos+=4;	
+		} while(--count>0);
 	},
 	/**
 	 * Maybe switch byte order
 	 * @param b Byte array
 	 * @param pos Position of first byte
 	 */
-	i64(b:Uint8Array,pos=0):void {
+	i64(b:Uint8Array,pos=0,count=1):void {
 		let t:number;
-		t=b[pos];b[pos]=b[pos+7];b[pos+7]=t;
-		t=b[pos+1];b[pos+1]=b[pos+6];b[pos+6]=t;
-		t=b[pos+2];b[pos+2]=b[pos+5];b[pos+5]=t;
-		t=b[pos+3];b[pos+3]=b[pos+4];b[pos+4]=t;
+		do {
+			t=b[pos];b[pos]=b[pos+7];b[pos+7]=t;
+			t=b[pos+1];b[pos+1]=b[pos+6];b[pos+6]=t;
+			t=b[pos+2];b[pos+2]=b[pos+5];b[pos+5]=t;
+			t=b[pos+3];b[pos+3]=b[pos+4];b[pos+4]=t;
+			pos+=8;	
+		} while (--count>0);
 	},
 }
 
 const leave={
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	i16(_b:Uint8Array,_pos=0):void {},
+	i16(_b:Uint8Array,_pos=0,_count=1):void {},
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	i32(_b:Uint8Array,_pos=0):void {},
+	i32(_b:Uint8Array,_pos=0,_count=1):void {},
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	i64(_b:Uint8Array,_pos=0):void {},
+	i64(_b:Uint8Array,_pos=0,_count=1):void {},
 }
 
 /**
