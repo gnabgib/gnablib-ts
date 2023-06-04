@@ -7,6 +7,7 @@ import * as intExt from '../primitive/IntExt.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import * as utf8 from '../encoding/Utf8.js';
 import { ror32 } from '../primitive/U32.js';
+import { asBE } from '../endian/platform.js';
 
 //[US Secure Hash Algorithms](https://datatracker.ietf.org/doc/html/rfc6234) (2011)
 //[US Secure Hash Algorithms (SHA and HMAC-SHA)](https://datatracker.ietf.org/doc/html/rfc4634) (2006) - obsolete by above
@@ -103,6 +104,7 @@ class Sha2_32bit implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize32);
+	readonly #block32=new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -121,8 +123,8 @@ class Sha2_32bit implements IHash {
 
 	private hash() {
 		const w = new Uint32Array(wSize32);
-		//Copy
-		bigEndian.u32IntoArrFromBytes(w, 0, 16, this.#block);
+		asBE.i32(this.#block,0,16);
+		w.set(this.#block32);
 
 		//Expand
 		let j = 16;
@@ -220,19 +222,20 @@ class Sha2_32bit implements IHash {
 		alt.#block.fill(0, alt.#bPos);
 
 		//Write out the data size in big-endian
-
+		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		bigEndian.u32IntoBytes(
-			alt.#ingestBytes / 0x20000000,
-			alt.#block,
-			sizeSpace
-		);
-		bigEndian.u32IntoBytes(alt.#ingestBytes << 3, alt.#block, sizeSpace + 4);
+		alt.#block32[ss32]=alt.#ingestBytes / 0x20000000;
+		alt.#block32[ss32+1]=alt.#ingestBytes << 3;
+		asBE.i32(alt.#block,sizeSpace);
+		asBE.i32(alt.#block,sizeSpace+4);
 		alt.hash();
-		const ret = new Uint8Array(this.size);
-		bigEndian.u32ArrIntoBytesUnsafe(alt.#state.subarray(0,this.size), ret);
-		return ret;
+
+		//Project state into bytes
+		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		//Make sure the bytes are BE - this might mangle alt.#state (but we're moments from disposing)
+		for(let i=0;i<this.size;i++) asBE.i32(s8,i*4);
+		return s8.slice(0,this.size);
 	}
 
 	/**

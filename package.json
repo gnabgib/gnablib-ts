@@ -116,7 +116,9 @@
 		"ParallelHash",
 		"ParallelHashXof",
 		"TurboShake",
-		"Murmur3"
+		"Murmur3",
+		"Lookup2",
+		"Lookup3"
 	],
 	"author": "gnabgib",
 	"license": "MPL-2.0",

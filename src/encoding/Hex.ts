@@ -140,7 +140,7 @@ export function fromU64s(u64s: Uint64[], join = ''): string {
 export function fromU64a(u64a:U64MutArray,join=''):string {
 	let ret = '';
 	for(let i=0;i<u64a.length;i++) {
-		const b=u64a[i].toBytesBE();
+		const b=u64a.at(i).toBytesBE();
 		ret +=
 			tbl[b[0] >> 4] +
 			tbl[b[0] & 0xf] +

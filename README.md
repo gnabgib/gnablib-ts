@@ -98,6 +98,13 @@ XOF|Capacities|Optional parameters
 [Shake](https://en.wikipedia.org/wiki/SHAKE128)|128, 256|digest size
 [TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, customization
 
+Non Crypto Hash|Digest sizes|Optional parameters
+-------|----------------------|-------------------
+[Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed (u32)
+[Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|Two u32 seeds
+[Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed (u32)
+
+
 
 ### Log
 

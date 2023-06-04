@@ -6,13 +6,12 @@ import * as utf8 from '../../src/encoding/Utf8';
 
 const tsts = suite('Murmur3 (32)');
 
-//Testing sources:
-// - https://md5hashing.net/hash/murmur3
 const tests:{
     data:Uint8Array,
     seed:number,
     expectHex:string
 }[]=[
+    //https://www.pelock.com/products/hash-calculator
     {
         data:new Uint8Array(),
         seed:0,
