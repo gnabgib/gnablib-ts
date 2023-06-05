@@ -11,37 +11,6 @@ const rotMask32 = 0x1f;
 
 export type U64ish = U64 | number;
 
-function add(a: Uint32Array, aPos: number, b: Uint32Array, bPos: number) {
-	const l = a[aPos] + b[bPos];
-	//Carry can only be 0/1
-	const c = l > maxU32 ? 1 : 0;
-	a[aPos] = l;
-	a[aPos + 1] += b[bPos + 1] + c;
-}
-function mul(a: Uint32Array, aPos: number, b: Uint32Array, bPos: number) {
-	//Long multiplication!
-	// FFFF*FFFF (biggest possible uint16s) = FFFE0001
-	// FFFFFFFF*FFFFFFFF (biggest possible uint32s) = FFFFFFFE00000001
-	const this0 = a[aPos] & maxU16;
-	const this1 = a[aPos] >>> 16;
-	const this2 = a[aPos + 1] & maxU16;
-	const this3 = a[aPos + 1] >>> 16;
-	const num0 = b[bPos] & maxU16;
-	const num1 = b[bPos] >>> 16;
-	const num2 = b[bPos + 1] & maxU16;
-	const num3 = b[bPos + 1] >>> 16;
-
-	const m0 = this0 * num0;
-	const c0 = m0 >>> 16;
-	const m1 = this0 * num1 + this1 * num0 + c0;
-	const c1 = (m1 / 0x10000) | 0; //Can be >32bits
-	const m2 = this0 * num2 + this1 * num1 + this2 * num0 + c1;
-	const c2 = (m2 / 0x10000) | 0; //Can be >32bits
-	const m3 = this0 * num3 + this1 * num2 + this2 * num1 + this3 * num0 + c2; //(m2>>>16);
-	//Note there are 3 more stages if we had space)
-	a[aPos] = (m0 & maxU16) | ((m1 & maxU16) << 16);
-	a[aPos + 1] = (m2 & maxU16) | ((m3 & maxU16) << 16);
-}
 function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {
 	//Clone the source (we don't want to mangle the original data)
 	const cpy = source.slice(pos, pos + sizeBytes);
@@ -74,6 +43,23 @@ export class U64 {
 		this.pos = pos;
 	}
 
+	protected _xorEq(a: Uint32Array, aPos: number, b: U64) {
+		a[aPos] ^= b.arr[b.pos];
+		a[aPos + 1] ^= b.arr[b.pos + 1];
+	}
+	protected _orEq(a: Uint32Array, aPos: number, b: U64) {
+		a[aPos] |= b.arr[b.pos];
+		a[aPos + 1] |= b.arr[b.pos + 1];
+	}
+	protected _andEq(a: Uint32Array, aPos: number, b: U64) {
+		a[aPos] &= b.arr[b.pos];
+		a[aPos + 1] &= b.arr[b.pos + 1];
+	}
+	protected _notEq(a: Uint32Array, aPos: number) {
+		a[aPos] = ~a[aPos];
+		a[aPos + 1] = ~a[aPos + 1];
+	}
+
 	/**
 	 * @see value ⊕ @param b
 	 * @param b
@@ -81,8 +67,7 @@ export class U64 {
 	 */
 	xor(b: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
-		arr[0] ^= b.arr[b.pos];
-		arr[1] ^= b.arr[b.pos + 1];
+		this._xorEq(arr, 0, b);
 		return new U64(arr);
 	}
 
@@ -93,8 +78,7 @@ export class U64 {
 	 */
 	or(b: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
-		arr[0] |= b.arr[b.pos];
-		arr[1] |= b.arr[b.pos + 1];
+		this._orEq(arr, 0, b);
 		return new U64(arr);
 	}
 
@@ -105,8 +89,7 @@ export class U64 {
 	 */
 	and(b: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
-		arr[0] &= b.arr[b.pos];
-		arr[1] &= b.arr[b.pos + 1];
+		this._andEq(arr, 0, b);
 		return new U64(arr);
 	}
 
@@ -116,8 +99,7 @@ export class U64 {
 	 */
 	not(): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
-		arr[0] = ~arr[0];
-		arr[1] = ~arr[1];
+		this._notEq(arr, 0);
 		return new U64(arr);
 	}
 
@@ -226,6 +208,55 @@ export class U64 {
 		return new U64(Uint32Array.of(s[3] | s[1], s[2] | s[0]));
 	}
 
+	protected _addEq(a: Uint32Array, aPos: number, b: U64) {
+		const l = a[aPos] + b.arr[b.pos];
+		//Carry can only be 0/1
+		const c = l > maxU32 ? 1 : 0;
+		a[aPos] = l;
+		a[aPos + 1] += b.arr[b.pos + 1] + c;
+	}
+	protected static _negEq(a: U64Mut) {
+		//Not
+		a.arr[a.pos] = ~a.arr[a.pos];
+		a.arr[a.pos + 1] = ~a.arr[a.pos + 1];
+		//Add one, we only need to check for one value for carry
+		if (a.arr[a.pos] === 0xffffffff) {
+			a.arr[a.pos] = 0;
+			a.arr[a.pos + 1] += 1;
+		} else {
+			a.arr[a.pos] += 1;
+		}
+	}
+	protected _subEq(a: Uint32Array, aPos: number, b: U64) {
+		const b2 = b.mut();
+		U64._negEq(b2);
+		this._addEq(a, aPos, b2);
+	}
+	protected _mulEq(a: Uint32Array, aPos: number, b: U64) {
+		//Long multiplication!
+		// FFFF*FFFF (biggest possible uint16s) = FFFE0001
+		// FFFFFFFF*FFFFFFFF (biggest possible uint32s) = FFFFFFFE00000001
+		const this0 = a[aPos] & maxU16;
+		const this1 = a[aPos] >>> 16;
+		const this2 = a[aPos + 1] & maxU16;
+		const this3 = a[aPos + 1] >>> 16;
+		const num0 = b.arr[b.pos] & maxU16;
+		const num1 = b.arr[b.pos] >>> 16;
+		const num2 = b.arr[b.pos + 1] & maxU16;
+		const num3 = b.arr[b.pos + 1] >>> 16;
+
+		const m0 = this0 * num0;
+		const c0 = m0 >>> 16;
+		const m1 = this0 * num1 + this1 * num0 + c0;
+		const c1 = (m1 / 0x10000) | 0; //Can be >32bits
+		const m2 = this0 * num2 + this1 * num1 + this2 * num0 + c1;
+		const c2 = (m2 / 0x10000) | 0; //Can be >32bits
+		const m3 = this0 * num3 + this1 * num2 + this2 * num1 + this3 * num0 + c2; //(m2>>>16);
+		//Note there are 3 more stages if we had space)
+		a[aPos] = (m0 & maxU16) | ((m1 & maxU16) << 16);
+		a[aPos + 1] = (m2 & maxU16) | ((m3 & maxU16) << 16);
+	}
+
 	/**
 	 * @see value + @param b
 	 * @param b
@@ -233,7 +264,18 @@ export class U64 {
 	 */
 	add(b: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
-		add(arr, 0, b.arr, b.pos);
+		this._addEq(arr, 0, b);
+		return new U64(arr, 0);
+	}
+
+	/**
+	 * @see value - @param b
+	 * @param b
+	 * @returns @see value - @param b
+	 */
+	sub(b: U64): U64 {
+		const arr = this.arr.slice(this.pos, this.pos + 2);
+		this._subEq(arr, 0, b);
 		return new U64(arr, 0);
 	}
 
@@ -244,7 +286,7 @@ export class U64 {
 	 */
 	mul(b: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
-		mul(arr, 0, b.arr, b.pos);
+		this._mulEq(arr, 0, b);
 		return new U64(arr);
 	}
 
@@ -340,16 +382,28 @@ export class U64 {
 	}
 
 	/**
+	 * Value as a stream of bytes (little-endian order) COPY
+	 * @returns Uint8Array[8]
+	 */
+	toBytesLE(): Uint8Array {
+		const r32 = this.arr.slice(this.pos, this.pos + 2);
+		const r8 = new Uint8Array(r32.buffer);
+		asLE.i32(r8, 0);
+		asLE.i32(r8, 4);
+		return r8;
+	}
+
+	/**
 	 * Get the least significant byte
 	 * @returns
 	 */
-	lsb(idx=0): number {
-		idx&=7;//Only 8 spaces to chose from (zero indexed)
+	lsb(idx = 0): number {
+		idx &= 7; //Only 8 spaces to chose from (zero indexed)
 		//The MSB indicates which byte to access
-		const shift=idx>>2;
+		const shift = idx >> 2;
 		//Limit IDX to 0-3 (&3) and then switch to bits (<<3)
-		idx=(idx&3)<<3;
-		return (this.arr[this.pos+shift]>>>idx) & 0xff;
+		idx = (idx & 3) << 3;
+		return (this.arr[this.pos + shift] >>> idx) & 0xff;
 	}
 
 	/**
@@ -450,9 +504,8 @@ export class U64Mut extends U64 {
 	 * @param b
 	 * @returns this (chainable)
 	 */
-	xorEq(b: U64Mut): U64Mut {
-		this.arr[this.pos] ^= b.arr[b.pos];
-		this.arr[this.pos + 1] ^= b.arr[b.pos + 1];
+	xorEq(b: U64): U64Mut {
+		this._xorEq(this.arr, this.pos, b);
 		return this;
 	}
 
@@ -461,9 +514,8 @@ export class U64Mut extends U64 {
 	 * @param b
 	 * @returns this (chainable)
 	 */
-	orEq(b: U64Mut): U64Mut {
-		this.arr[this.pos] |= b.arr[b.pos];
-		this.arr[this.pos + 1] |= b.arr[b.pos + 1];
+	orEq(b: U64): U64Mut {
+		this._orEq(this.arr, this.pos, b);
 		return this;
 	}
 
@@ -472,9 +524,8 @@ export class U64Mut extends U64 {
 	 * @param b
 	 * @returns this (chainable)
 	 */
-	andEq(b: U64Mut): U64Mut {
-		this.arr[this.pos] &= b.arr[b.pos];
-		this.arr[this.pos + 1] &= b.arr[b.pos + 1];
+	andEq(b: U64): U64Mut {
+		this._andEq(this.arr, this.pos, b);
 		return this;
 	}
 
@@ -483,8 +534,7 @@ export class U64Mut extends U64 {
 	 * @returns this (chainable)
 	 */
 	notEq(): U64Mut {
-		this.arr[this.pos] = ~this.arr[this.pos];
-		this.arr[this.pos + 1] = ~this.arr[this.pos + 1];
+		this._notEq(this.arr, this.pos);
 		return this;
 	}
 
@@ -545,8 +595,18 @@ export class U64Mut extends U64 {
 	 * @param b
 	 * @returns @see value + @param b
 	 */
-	addEq(b: U64Mut): U64Mut {
-		add(this.arr, this.pos, b.arr, b.pos);
+	addEq(b: U64): U64Mut {
+		this._addEq(this.arr, this.pos, b);
+		return this;
+	}
+
+	/**
+	 * @see value -= @param b
+	 * @param b
+	 * @returns @see value -= @param b
+	 */
+	subEq(b: U64): U64Mut {
+		this._subEq(this.arr, this.pos, b);
 		return this;
 	}
 
@@ -555,15 +615,15 @@ export class U64Mut extends U64 {
 	 * @param b
 	 * @returns @see value * @param b
 	 */
-	mulEq(b: U64Mut): U64Mut {
-		mul(this.arr, this.pos, b.arr, b.pos);
+	mulEq(b: U64): U64Mut {
+		this._mulEq(this.arr, this.pos, b);
 		return this;
 	}
 
 	/**
 	 * Set to a new (provided) value
-	 * @param v 
-	 * @returns 
+	 * @param v
+	 * @returns
 	 */
 	set(v: U64): U64Mut {
 		super.set(v);
@@ -573,8 +633,8 @@ export class U64Mut extends U64 {
 	/**
 	 * Zero out this value
 	 */
-	zero():void {
-		this.arr.fill(0,this.pos,this.pos+2);
+	zero(): void {
+		this.arr.fill(0, this.pos, this.pos + 2);
 	}
 
 	/**
@@ -687,34 +747,34 @@ export class U64MutArray {
 
 	/**
 	 * Set an array of values starting at @param startAt in this
-	 * @param b 
-	 * @param startAt 
+	 * @param b
+	 * @param startAt
 	 */
 	set(b: U64MutArray, startAt = 0): void {
-		this.buf.set(b.buf.subarray(b.pos+ startAt + startAt), this.pos);
+		this.buf.set(b.buf.subarray(b.pos + startAt + startAt), this.pos);
 	}
 
 	/**
 	 * XorEq @param b with this array.  Starting at @param startAt position in this array
 	 * and running until there's no more space (in this array) or the other array runs out
-	 * @param b 
-	 * @param startAt 
+	 * @param b
+	 * @param startAt
 	 */
-	xorEq(b:U64MutArray,startAt=0):void {
-		let n=this.arr.length-startAt;
-		if (b.length<n) n=b.length;
+	xorEq(b: U64MutArray, startAt = 0): void {
+		let n = this.arr.length - startAt;
+		if (b.length < n) n = b.length;
 		//Adjust for N in 64 not 32, and for run over this buf
-		n+=n+this.pos+startAt+startAt;
-		for(let i=this.pos+startAt+startAt,j=b.pos;i<n;i++,j++) {
-			this.buf[i]^=b.buf[j];
+		n += n + this.pos + startAt + startAt;
+		for (let i = this.pos + startAt + startAt, j = b.pos; i < n; i++, j++) {
+			this.buf[i] ^= b.buf[j];
 		}
 	}
 
-	zero(startAt=0):void {
-		let n=this.arr.length-startAt;
-		n+=n;
-		for(let i=this.pos+startAt+startAt;i<n;i++) {
-			this.buf[i]=0;
+	zero(startAt = 0): void {
+		let n = this.arr.length - startAt;
+		n += n;
+		for (let i = this.pos + startAt + startAt; i < n; i++) {
+			this.buf[i] = 0;
 		}
 	}
 
@@ -735,7 +795,9 @@ export class U64MutArray {
 		let i8 = 0;
 		for (let i = 0; i < r32.length; i += 2) {
 			//U32 swap
-			const t = r32[i]; r32[i] = r32[i + 1]; r32[i + 1] = t;
+			const t = r32[i];
+			r32[i] = r32[i + 1];
+			r32[i + 1] = t;
 			//byte fix (maybe)
 			asBE.i32(r8, i8);
 			i8 += 4;
@@ -744,13 +806,13 @@ export class U64MutArray {
 		}
 		return r8;
 	}
-	toBytesLE():Uint8Array {
+	toBytesLE(): Uint8Array {
 		const r32 = this.buf.slice(this.pos, this.pos + this.length + this.length);
 		const r8 = new Uint8Array(r32.buffer);
-		for (let i=0;i<r8.length;i+=4) {
-			asLE.i32(r8,i);
+		for (let i = 0; i < r8.length; i += 4) {
+			asLE.i32(r8, i);
 		}
-		return r8;		
+		return r8;
 	}
 
 	toString(): string {

@@ -428,6 +428,21 @@ for (const [a,b,expect] of addTest) {
 	});
 }
 
+const subTest:[number,number,string][]=[
+	[1,1,'0000000000000000'],
+	[2,1,'0000000000000001'],
+	[0,2,'FFFFFFFFFFFFFFFE'],
+	[0xffffffff,1,'00000000FFFFFFFE'],
+];
+for (const [a,b,expect] of subTest) {
+	tsts(`${a} - ${b}`, () => {
+		const aUint = U64.fromInt(a);
+		const bUint = U64.fromInt(b);
+		const res = aUint.sub(bUint);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
+	});
+}
+
 // prettier-ignore
 const mulTest=[
 	['0000000000000001','0000000000000002','0000000000000002'],
