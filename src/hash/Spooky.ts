@@ -554,10 +554,15 @@ export class SpookyLong extends ASpooky {
 
 /**
  * NOT Cryptographic - It's better to use SpookyShort (<192 bytes) or SpookyLong (>=192 bytes)
- * directly if you know before you build
+ * directly if you know final length before you build, and if the first write isn't large
+ * - While < 192 bytes both long and short will be written to (necessary to support the transition)
+ * - Once >=192 bytes only long will be written to (so if the first write is large there's no performance penalty, 
+ *   but you might as well just use SpookyLong?)
  */
 export class Spooky implements IHash {
-	private _all: ASpooky[] = [];
+	private _s:SpookyShort;
+	private _l:SpookyLong;
+	private _useLong=false;
 	/**
 	 * Digest size in bytes
 	 */
@@ -567,30 +572,46 @@ export class Spooky implements IHash {
 	 * NOTE: This isn't consistent, better to use SpookyShort, SpookyLong
 	 */
 	get blockSize(): number {
-		return this._all[0].blockSize;
+		return this._useLong?this._l.blockSize:this._s.blockSize;
 	}
 
 	constructor(seed = U64.zero, seed2 = U64.zero) {
-		this._all.push(new SpookyShort(seed, seed2));
-		this._all.push(new SpookyLong(seed, seed2));
+		this._s=new SpookyShort(seed, seed2);
+		this._l=new SpookyLong(seed, seed2);
 	}
 
 	write(data: Uint8Array): void {
-		if (this._all.length > 1 && this._all[0].ingestBytes + data.length > sToL) {
-			console.log('removing 0');
-			this._all.splice(0, 1);
+		if (this._useLong) return this._l.write(data);
+		if (data.length+this._s.ingestBytes>sToL) {
+			this._useLong=true;
+			return this._l.write(data);
 		}
-		this._all[0].write(data);
-		if (this._all.length > 1) this._all[1].write(data);
+		//Unfortunately we have to double write data in case another write pushes length over sToL
+		this._s.write(data);
+		this._l.write(data);
 	}
+
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */
 	sum(): Uint8Array {
-		return this._all[0].sum();
+		return this._useLong?this._l.sum():this._s.sum();
 	}
+
+	/**
+	 * Set hash state. Any past writes will be forgotten, both short and 
+	 * long will be available until length exceeds 192
+	 */
 	reset(): void {
-		this._all[0].reset();
-		if (this._all.length > 1) this._all[1].reset();
+		this._useLong=false;
+		this._s.reset();
+		this._l.reset();
 	}
+
+	/**
+	 * Create an empty IHash using the same algorithm
+	 */
 	newEmpty(): IHash {
-		return this._all[0].newEmpty();
+		return this._useLong?this._l.newEmpty():this._s.newEmpty();
 	}
 }

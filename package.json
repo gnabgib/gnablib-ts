@@ -120,7 +120,8 @@
 		"Murmur3",
 		"Lookup2",
 		"Lookup3",
-		"SpookyHash"
+		"SpookyHash",
+		"xxHash"
 	],
 	"author": "gnabgib",
 	"license": "MPL-2.0",

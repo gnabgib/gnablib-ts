@@ -110,11 +110,11 @@ Name|Capacities|Optional parameters
 
 Name|Digest sizes|Optional parameters
 -------|----------------------|-------------------
-[Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed (u32)
-[Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|Two u32 seeds
-[Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed (u32)
-[Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|Two u32 seeds
-
+[Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed
+[Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|seed
+[Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed
+[Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|seed
+[xxHash](https://cyan4973.github.io/xxHash/)|32, 64|seed
 
 ### Log
 
@@ -145,6 +145,9 @@ Name|Digest sizes|Optional parameters
 - Readonly TypedArray
 - Scaling TypedArray
 - StringBuilder
+- U64
+- U64Mut
+- U64MutArray
 - Uint64
 - WindowStr
 
