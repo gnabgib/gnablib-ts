@@ -101,6 +101,7 @@
 		"ReadonlyTypedArray",
 		"TypedArray",
 		"Uint64",
+		"U64MutArray",
 		"RegEx-Escape",
 		"Weighted Random",
 		"WindowStr",
@@ -118,7 +119,8 @@
 		"TurboShake",
 		"Murmur3",
 		"Lookup2",
-		"Lookup3"
+		"Lookup3",
+		"SpookyHash"
 	],
 	"author": "gnabgib",
 	"license": "MPL-2.0",

@@ -15,6 +15,9 @@ const r2=13;
 const m=5;
 const n=0xe6546b64;
 
+/**
+ * NOT Cryptographic
+ */
 export class Murmur3_32 implements IHash {
 	/**
 	 * Digest size in bytes
@@ -108,6 +111,7 @@ export class Murmur3_32 implements IHash {
         alt.#state.xorEq(alt.#state.clone().rShiftEq(16));
 		return alt.#state;
 	}
+	
 
     sum(): Uint8Array {
 		const ret=this._sum().toBytes();

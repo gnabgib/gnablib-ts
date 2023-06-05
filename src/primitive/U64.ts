@@ -1,6 +1,6 @@
 import * as intExt from './IntExt.js';
 import * as hex from '../encoding/Hex.js';
-import { asBE } from '../endian/platform.js';
+import { asBE, asLE } from '../endian/platform.js';
 
 const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
@@ -743,6 +743,14 @@ export class U64MutArray {
 			i8 += 4;
 		}
 		return r8;
+	}
+	toBytesLE():Uint8Array {
+		const r32 = this.buf.slice(this.pos, this.pos + this.length + this.length);
+		const r8 = new Uint8Array(r32.buffer);
+		for (let i=0;i<r8.length;i+=4) {
+			asLE.i32(r8,i);
+		}
+		return r8;		
 	}
 
 	toString(): string {

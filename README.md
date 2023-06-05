@@ -74,23 +74,31 @@ npm install gnablib --ignore-scripts
 
 ### Hash & XOF
 
-Hash|Digest sizes|Optional parameters
+
+#### Hash (Crypto)
+
+Name|Digest sizes|Optional parameters
 -------|----------------------|-------------------
 [Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function))|256, 512|salt
 [Blake2b](https://www.blake2.net/)|8-512, 256, 384, 512|key, salt, personalization
 [Blake2s](https://www.blake2.net/)|8-256, 224, 256|key, salt, personalization
 [Keccak](https://keccak.team/keccak.html)|8-512, 224, 256, 384, 512|capacity
-[MD4](https://datatracker.ietf.org/doc/html/rfc1320)|128|-
-[MD5](https://datatracker.ietf.org/doc/html/rfc1321)|128|-
+[MD4†](https://datatracker.ietf.org/doc/html/rfc1320)|128†|-
+[MD5†](https://datatracker.ietf.org/doc/html/rfc1321)|128†|-
 [ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)|8-512|block size, customization
-[RipeMD](https://en.wikipedia.org/wiki/RIPEMD)|128, 160, 256, 320|-
-[SHA-1](https://datatracker.ietf.org/doc/html/rfc3174)|160|-
+[RipeMD†](https://en.wikipedia.org/wiki/RIPEMD)|128†, 160†, 256, 320|-
+[SHA-1†](https://datatracker.ietf.org/doc/html/rfc3174)|160†|-
 [SHA-2](https://en.wikipedia.org/wiki/SHA-2)|224, 256, 384, 512, 512/224, 512/256|-
 [SHA-3](https://en.wikipedia.org/wiki/SHA-3)|224, 256, 384, 512|-
 [TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128, 256)|8-512|customization
 [Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)|512|-
 
-XOF|Capacities|Optional parameters
+† No longer considered cryptographically safe
+
+
+#### XOF
+
+Name|Capacities|Optional parameters
 -------|-----------|-------------------
 [cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, function name, customization
 [KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, key, customization
@@ -98,12 +106,14 @@ XOF|Capacities|Optional parameters
 [Shake](https://en.wikipedia.org/wiki/SHAKE128)|128, 256|digest size
 [TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, customization
 
-Non Crypto Hash|Digest sizes|Optional parameters
+#### Hash (Non-Crypto)
+
+Name|Digest sizes|Optional parameters
 -------|----------------------|-------------------
 [Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed (u32)
 [Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|Two u32 seeds
 [Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed (u32)
-
+[Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|Two u32 seeds
 
 
 ### Log
