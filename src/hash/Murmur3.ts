@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import type { IHash } from './IHash.js';
-import { U32, U32Mut, U32ish } from '../primitive/U32.js';
+import { U32 } from '../primitive/U32.js';
 import { asLE } from '../endian/platform.js';
 
 const blockSize=4;
@@ -30,15 +30,16 @@ export class Murmur3_32 implements IHash {
     /**
 	 * Runtime state of the hash
 	 */
-	readonly #state:U32Mut;
+	#state:number;
     /**
      * Starting seed
      */
-    readonly #seed:U32;
+    readonly #seed:number;
     /**
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize);
+	readonly #block32=new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -51,16 +52,16 @@ export class Murmur3_32 implements IHash {
     /**
 	 * Build a new Murmur3 32bit (non-crypto) hash generator
 	 */
-	constructor(seed:U32ish=0) {
-        this.#seed=U32.coerce(seed);
-        this.#state=this.#seed.mut();
+	constructor(seed=0) {
+        this.#seed=seed;
+        this.#state=seed;
 	}
 
     hash():void {
         //#block=k1, #state=h1
 		asLE.i32(this.#block);
-        this.#state.xorEq(U32.fromBytes(this.#block).mul(c1).lRot(r1).mul(c2))
-            .lRotEq(r2).mulEq(m).addEq(n);
+		this.#state^=U32.mul(U32.rol(U32.mul(this.#block32[0],c1),r1),c2);
+		this.#state=U32.mul(U32.rol(this.#state,r2),m)+n;
         
         this.#bPos=0;
     }
@@ -95,39 +96,41 @@ export class Murmur3_32 implements IHash {
 		}    
     }
 
-	_sum():U32Mut {
+	_sum():number {
 		const alt = this.clone();
         if (alt.#bPos>0) {
             alt.#block.fill(0,alt.#bPos);
 			asLE.i32(alt.#block);
-            alt.#state.xorEq(U32.fromBytes(alt.#block).mul(c1).lRot(r1).mul(c2));
+			alt.#state^=U32.mul(U32.rol(U32.mul(alt.#block32[0],c1),r1),c2);
         }
 
-        alt.#state.xorEq(alt.#ingestBytes);
+		alt.#state^=alt.#ingestBytes;
 
         //fmix
-        alt.#state.xorEq(alt.#state.clone().rShiftEq(16)).mulEq(c3);
-        alt.#state.xorEq(alt.#state.clone().rShiftEq(13)).mulEq(c4);
-        alt.#state.xorEq(alt.#state.clone().rShiftEq(16));
-		return alt.#state;
+		alt.#state^=alt.#state>>>16;
+		alt.#state=U32.mul(alt.#state,c3);
+		alt.#state^=alt.#state>>>13;
+		alt.#state=U32.mul(alt.#state,c4);
+		alt.#state^=alt.#state>>>16;
+		return alt.#state>>>0;
 	}
 	
 
     sum(): Uint8Array {
-		const ret=this._sum().toBytes();
-		asLE.i32(ret);
-		return ret;
+		const r32=Uint32Array.of(this._sum());
+		const r8=new Uint8Array(r32.buffer);
+		asLE.i32(r8);
+		return r8;
     }
     sum32():number {
-		const ret=this._sum();
-		return ret.value;
+		return this._sum();
     }
 
     /**
 	 * Set hash state. Any past writes will be forgotten
 	 */
 	reset(): void {
-        this.#state.value=0
+        this.#state=0
 		//Reset ingest count
 		this.#ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
@@ -147,7 +150,7 @@ export class Murmur3_32 implements IHash {
 	 */
 	private clone(): Murmur3_32 {
 		const ret = new Murmur3_32(this.#seed);
-        ret.#state.value=this.#state.value;
+        ret.#state=this.#state;
 		ret.#block.set(this.#block);
 		ret.#ingestBytes = this.#ingestBytes;
 		ret.#bPos = this.#bPos;

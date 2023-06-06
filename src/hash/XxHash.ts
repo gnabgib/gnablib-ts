@@ -2,7 +2,7 @@
 
 //import * as hex from '../encoding/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
-import { U32FromBytesLE, mul32, rol32 } from '../primitive/U32.js';
+import { U32 } from '../primitive/U32.js';
 import { U64, U64Mut, U64MutArray } from '../primitive/U64.js';
 import type { IHash } from './IHash.js';
 
@@ -56,6 +56,10 @@ export class XxHash32 implements IHash {
 	 */
 	#ingestBytes = 0;
 
+    /**
+     * Build a new XxHash32 (non-crypto) hash generator
+     * @param seed Optional 32bit seed number
+     */
 	constructor(seed = 0) {
 		this.#seed = seed;
 		this.reset();
@@ -63,20 +67,20 @@ export class XxHash32 implements IHash {
 
 	private hash(): void {
 		asLE.i32(this.#block, 0, 4);
-		this.#state[0] = mul32(
-			rol32(this.#state[0] + mul32(this.#block32[0], p32_2), 13),
+		this.#state[0] = U32.mul(
+			U32.rol(this.#state[0] + U32.mul(this.#block32[0], p32_2), 13),
 			p32_1
 		);
-		this.#state[1] = mul32(
-			rol32(this.#state[1] + mul32(this.#block32[1], p32_2), 13),
+		this.#state[1] = U32.mul(
+			U32.rol(this.#state[1] + U32.mul(this.#block32[1], p32_2), 13),
 			p32_1
 		);
-		this.#state[2] = mul32(
-			rol32(this.#state[2] + mul32(this.#block32[2], p32_2), 13),
+		this.#state[2] = U32.mul(
+			U32.rol(this.#state[2] + U32.mul(this.#block32[2], p32_2), 13),
 			p32_1
 		);
-		this.#state[3] = mul32(
-			rol32(this.#state[3] + mul32(this.#block32[3], p32_2), 13),
+		this.#state[3] = U32.mul(
+			U32.rol(this.#state[3] + U32.mul(this.#block32[3], p32_2), 13),
 			p32_1
 		);
 
@@ -117,10 +121,10 @@ export class XxHash32 implements IHash {
 		let result = this.#ingestBytes;
 		if (this.#ingestBytes >= blockSize32Bytes) {
 			result +=
-				rol32(this.#state[0], 1) +
-				rol32(this.#state[1], 7) +
-				rol32(this.#state[2], 12) +
-				rol32(this.#state[3], 18);
+                U32.rol(this.#state[0], 1) +
+				U32.rol(this.#state[1], 7) +
+				U32.rol(this.#state[2], 12) +
+				U32.rol(this.#state[3], 18);
 		} else {
 			result += this.#seed + p32_5;
 		}
@@ -129,22 +133,25 @@ export class XxHash32 implements IHash {
 		let i = 0;
 		for (; nToAdd >= 4; i++) {
 			asLE.i32(this.#block, i * 4);
-			result = mul32(rol32(result + mul32(this.#block32[i], p32_3), 17), p32_4);
+			result = U32.mul(U32.rol(result + U32.mul(this.#block32[i], p32_3), 17), p32_4);
 			nToAdd -= 4;
 		}
 		//Switch i to byte-pos
 		i *= 4;
 		for (; i < this.#bPos; i++) {
-			result = mul32(rol32(result + this.#block[i] * p32_5, 11), p32_1);
+			result = U32.mul(U32.rol(result + this.#block[i] * p32_5, 11), p32_1);
 		}
 		result ^= result >>> 15;
-		result = mul32(result, p32_2);
+		result = U32.mul(result, p32_2);
 		result ^= result >>> 13;
-		result = mul32(result, p32_3);
+		result = U32.mul(result, p32_3);
 		result ^= result >>> 16;
 		return Uint32Array.of(result);
 	}
 
+    /**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */
 	sum(): Uint8Array {
 		const r32 = this._sum();
 		//Copy the first element and convert to bytes
@@ -152,6 +159,11 @@ export class XxHash32 implements IHash {
 		asBE.i32(r8);
 		return r8;
 	}
+
+    /**
+     * Sum the hash with the all content written so far (does not mutate state)
+     * @returns Unsigned 32bit integer (0-0xffffffff)
+     */
 	sum32(): number {
 		return this._sum()[0];
 	}
@@ -296,6 +308,9 @@ export class XxHash64 implements IHash {
 		}
 	}
 
+    /**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */
 	sum(): Uint8Array {
 		const result = U64Mut.fromIntUnsafe(0);
 		if (this.#ingestBytes.gte(U64.fromInt(blockSize64Bytes))) {
@@ -372,7 +387,7 @@ export class XxHash64 implements IHash {
 		i *= 8;
 		if (nToAdd >= 4) {
 			result.set(
-				U64Mut.fromInt(U32FromBytesLE(this.#block, i))
+				U64Mut.fromIntUnsafe(U32.iFromBytesLE(this.#block, i))
 					.mulEq(p64_1)
 					.xorEq(result)
 					.lRotEq(23)

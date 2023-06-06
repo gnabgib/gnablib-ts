@@ -2,7 +2,7 @@
 
 import { asBE } from '../endian/platform.js';
 import { SizeError } from '../primitive/ErrorExt.js';
-import { ror32 } from '../primitive/U32.js';
+import { U32 } from '../primitive/U32.js';
 import { U64Mut, U64MutArray } from '../primitive/U64.js';
 
 import type { IHash } from './IHash.js';
@@ -116,16 +116,16 @@ class Blake1_32bit implements IHash {
 
 	    //Step 1
 	    v[a] += v[b] + (mj ^ nk); //a ← a + b + (m[j] ⊕ n[k])
-	    v[d] = ror32(v[d] ^ v[a], 16); //d ← (d ⊕ a) >>> 16
+	    v[d] = U32.ror(v[d] ^ v[a], 16); //d ← (d ⊕ a) >>> 16
 	    //Step 2
 	    v[c] += v[d]; //c ← c + d
-    	v[b] = ror32(v[b] ^ v[c], 12); //b ← (b ⊕ c) >>> 12
+    	v[b] = U32.ror(v[b] ^ v[c], 12); //b ← (b ⊕ c) >>> 12
 	    //Step 3
 	    v[a] += v[b] + (mk ^ nj); //a ← a + b + (m[k] ⊕ n[j])
-    	v[d] = ror32(v[d] ^ v[a], 8); //d ← (d ⊕ a) >>> 8
+    	v[d] = U32.ror(v[d] ^ v[a], 8); //d ← (d ⊕ a) >>> 8
 	    //Step 4
 	    v[c] += v[d]; //c ← c + d
-	    v[b] = ror32(v[b] ^ v[c], 7); //b ← (b ⊕ c) >>> 7
+	    v[b] = U32.ror(v[b] ^ v[c], 7); //b ← (b ⊕ c) >>> 7
     }
 
     /**

@@ -1,7 +1,7 @@
 /*! Copyright 2022-2023 gnabgib MPL-2.0 */
 
 import { asLE } from '../endian/platform.js';
-import { rol32 } from '../primitive/U32.js';
+import { U32 } from '../primitive/U32.js';
 import type { IHash } from './IHash.js';
 
 //[Wikipedia: RipeMD](https://en.wikipedia.org/wiki/RIPEMD) (1992)
@@ -253,10 +253,10 @@ export class RipeMd128 extends RipeMd {
 
 		for (let j = 0; j < 64; j++) {
 			const round = j>>4;
-			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
+			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
 			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
-			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
@@ -298,12 +298,12 @@ export class RipeMd160 extends RipeMd {
 
 		for (let j = 0; j < 80; j++) {
 			const round = Math.floor(j / 16);
-			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
+			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
 			//Using the rare , to show this is a big swap
-			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
-			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
+			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
 			//Using the rare , to show this is a big swap
-			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
+			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 
 		t = v[1] + c + dd;
@@ -347,10 +347,10 @@ export class RipeMd256 extends RipeMd {
 		let j = 0;
 		let round = 0;
 		for (; j < 16; j++) {
-			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
-			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
@@ -358,27 +358,27 @@ export class RipeMd256 extends RipeMd {
 
 		round = 1;
 		for (; j < 32; j++) {
-			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = b), (b = bb), (bb = t);
 
 		round = 2;
 		for (; j < 48; j++) {
-			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = c), (c = cc), (cc = t);
 
 		round = 3;
 		for (; j < 64; j++) {
-			t = rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = rol32(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = d), (d = dd), (dd = t);
@@ -427,48 +427,48 @@ export class RipeMd320 extends RipeMd {
 		let j = 0;
 		let round = 0;
 		for (; j < 16; j++) {
-			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
-			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
-			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
+			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
 			//Using the rare , to show this is a big swap
-			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
+			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = b), (b = bb), (bb = t);
 
 		round = 1;
 		for (; j < 32; j++) {
-			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
-			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
-			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
+			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
+			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = d), (d = dd), (dd = t);
 
 		round = 2;
 		for (; j < 48; j++) {
-			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
-			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
+			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
+			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = a), (a = aa), (aa = t);
 
 		round = 3;
 		for (; j < 64; j++) {
-			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
-			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
+			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
+			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = c), (c = cc), (cc = t);
 
 		round = 4;
 		for (; j < 80; j++) {
-			t = e + rol32(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = rol32(c, 10)), (c = b), (b = t);
-			t = ee + rol32(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = rol32(cc, 10)), (cc = bb), (bb = t);
+			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
+			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
+			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = e), (e = ee), (ee = t);
 

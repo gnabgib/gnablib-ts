@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as hex from '../../src/encoding/Hex';
-import { U32Mut, U32ish } from '../../src/primitive/U32';
+import { U32, U32Mut, U32ish } from '../../src/primitive/U32';
 import { asBE, asLE } from '../../src/endian/platform';
 
 const tsts = suite('Uint32Mut');
@@ -33,7 +33,7 @@ const xor=[
 for (const [a,b,result] of xor) {
 	tsts(a + ' ^ ' + b, () => {
         const u=U32Mut.fromInt(a);
-        u.xorEq(b);
+        u.xorEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
 	});
 }
@@ -69,7 +69,7 @@ const or=[
 for (const [a,b,result] of or) {
 	tsts(a + ' | ' + b, () => {
         const u=U32Mut.fromInt(a);
-        u.orEq(b);
+        u.orEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
 	});
 }
@@ -105,7 +105,7 @@ const and=[
 for (const [a,b,result] of and) {
 	tsts(a + ' & ' + b, () => {
         const u=U32Mut.fromInt(a);
-        u.andEq(b);
+        u.andEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
 	});
 }
@@ -324,7 +324,7 @@ const add=[
 for (const [a,b,result] of add) {
 	tsts(a + ' + ' + b, () => {
         const u=U32Mut.fromInt(a);
-        u.addEq(b);
+        u.addEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
 	});
 }
@@ -361,7 +361,7 @@ const mul=[
 for (const [a,b,result] of mul) {
 	tsts(a + ' * ' + b, () => {
         const u=U32Mut.fromInt(a);
-        u.mulEq(b);
+        u.mulEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
 	});
 }
@@ -373,11 +373,11 @@ tsts('clone',()=>{
     assert.is(u.value,1,'Starting original');
     assert.is(u.value,1,'Starting clone');
 
-    u.addEq(5);
+    u.addEq(U32.fromInt(5));
     assert.is(u.value,6,'Original after add');
     assert.is(u2.value,1,'Clone after original-add (unchanged)');
     
-    u2.addEq(3);
+    u2.addEq(U32.fromInt(3));
     assert.is(u.value,6,'Original after clone-add (unchanged)');
     assert.is(u2.value,4,'Clone after add');
 });
@@ -387,10 +387,13 @@ tsts('toString',()=>{
     assert.is(u.toString(),'u32{12345678}')
 });
 
-tsts('toBytes',()=> {
-    //littleEndian
+tsts('toBytesLE',()=> {
     const u=U32Mut.fromInt(0x01020304);
-    assert.is(hex.fromBytes(u.toBytes()),'04030201');
+    assert.is(hex.fromBytes(u.toBytesLE()),'04030201');
+});
+tsts('toBytesBE',()=> {
+    const u=U32Mut.fromInt(0x01020304);
+    assert.is(hex.fromBytes(u.toBytesBE()),'01020304');
 });
 
 const fromInt:[number,number|undefined][]=[
@@ -423,17 +426,17 @@ tsts('fromArray',()=> {
     assert.is(u1.value,29);//no change
 
     //Confirm src is tied to u0 - change u0
-    u0.addEq(11);
+    u0.addEq(U32.fromInt(11));
     assert.is(src[0],55);//changed by u0 update
     assert.is(u1.value,29);//no change
 });
 
-tsts('fromBytes',()=> {
+tsts('fromBuffer-8',()=> {
     const src=new Uint8Array([0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80]);
     asBE.i32(src,0);
     asLE.i32(src,4);
-    const u0=U32Mut.fromBytes(src,0);
-    const u1=U32Mut.fromBytes(src,4);
+    const u0=U32Mut.fromBuffer(src.buffer,0);
+    const u1=U32Mut.fromBuffer(src.buffer,4);
     assert.is(u0.value,0x01020408);
     assert.is(u1.value,0x80402010);
 
@@ -446,8 +449,8 @@ tsts('fromBytes',()=> {
     assert.is(src[0],0);
 });
 
-tsts('fromBuffer',()=> {
-    const src=new Uint8Array([0,1,2,3,4,5,6,7,8]);
+tsts('fromBuffer-9',()=> {
+    const src=new Uint8Array([0,1,2,3,4,5,6,7,8,9]);
     const u0=U32Mut.fromBuffer(src.buffer,4);
     assert.is(u0.value,0x07060504);
 
@@ -503,10 +506,5 @@ for(const test of coerces) {
         }
     });
 }
-
-tsts('1 ^ -1',()=> {
-    const u=U32Mut.fromInt(1);
-    assert.throws(()=>u.xorEq(-1));
-})
 
 tsts.run();

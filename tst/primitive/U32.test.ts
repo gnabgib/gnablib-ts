@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as hex from '../../src/encoding/Hex';
 import { asLE} from '../../src/endian/platform';
-import { U32, U32Mut, rol32, ror32 } from '../../src/primitive/U32';
+import { U32, U32Mut } from '../../src/primitive/U32';
 
 const tsts = suite('Uint32');
 
@@ -33,7 +33,7 @@ const xor=[
 for (const [a,b,result] of xor) {
 	tsts(a + ' ^ ' + b, () => {
         const u=U32.fromInt(a);
-        assert.is(u.xor(b).value,result);
+        assert.is(u.xor(U32.fromInt(b)).value,result);
 	});
 }
 
@@ -68,7 +68,7 @@ const or=[
 for (const [a,b,result] of or) {
 	tsts(a + ' | ' + b, () => {
         const u=U32.fromInt(a);        
-        assert.is(u.or(b).value,result);
+        assert.is(u.or(U32.fromInt(b)).value,result);
 	});
 }
 
@@ -103,7 +103,7 @@ const and=[
 for (const [a,b,result] of and) {
 	tsts(a + ' & ' + b, () => {
         const u=U32.fromInt(a);
-        assert.is(u.and(b).value,result);
+        assert.is(u.and(U32.fromInt(b)).value,result);
 	});
 }
 
@@ -286,7 +286,7 @@ for (const [start,by,result] of rRot) {
 	});
 }
 
-const add=[
+const addTest=[
     // A+0=A: Anything plus zero is anything (like or)
     [0x00000000,0xFFFFFFFF,0xFFFFFFFF],
     [0x00000000,0x01234567,0x01234567],
@@ -313,10 +313,23 @@ const add=[
     [0x00000001,0x00000002,0x00000003],
     [0x00000001,0xFFFFFFFF,0x00000000],//Overflow
 ];
-for (const [a,b,result] of add) {
+for (const [a,b,result] of addTest) {
 	tsts(a + ' + ' + b, () => {
         const u=U32.fromInt(a);
-        assert.is(u.add(b).value,result);
+        assert.is(u.add(U32.fromInt(b)).value,result);
+	});
+}
+
+const subTest=[
+    [1,1,0],
+    [2,1,1],
+    [0,1,0xFFFFFFFF],
+    [0,2,0xFFFFFFFE]
+];
+for(const [a,b,result] of subTest) {
+	tsts(a + ' - ' + b, () => {
+        const u=U32.fromInt(a);
+        assert.is(u.sub(U32.fromInt(b)).value,result);
 	});
 }
 
@@ -352,7 +365,7 @@ const mul=[
 for (const [a,b,result] of mul) {
 	tsts(a + ' * ' + b, () => {
         const u=U32.fromInt(a);
-        assert.is(u.mul(b).value,result);
+        assert.is(u.mul(U32.fromInt(b)).value,result);
 	});
 }
 
@@ -362,11 +375,11 @@ tsts('toString',()=>{
     assert.is(u.toString(),'u32{12345678}')
 });
 
-tsts('toBytes',()=> {
+tsts('toBytesLE',()=> {
     //littleEndian
     const u=U32.fromInt(0x01020304);
     assert.is(u.value,0x01020304);
-    const b=u.toBytes();
+    const b=u.toBytesLE();
     //Because toBytes is PLATFORM encoded, let's fix
     asLE.i32(b);
     assert.is(u.value,0x01020304);
@@ -594,13 +607,13 @@ const rot32 = [
 ];
 
 for (const [start,by,expectLeft] of rot32) {
-	const left = rol32(start, by) >>> 0;
+	const left = U32.rol(start, by) >>> 0;
 	tsts('rol32:' + start + ',' + by, () => {
 		assert.is(left, expectLeft);
 	});
 
 	tsts('ror32:' + left + ',' + by, () => {
-		assert.is(ror32(left, by) >>> 0, start);
+		assert.is(U32.ror(left, by) >>> 0, start);
 	});
 }
 
@@ -616,7 +629,7 @@ const rol32OversizedTests=[
 ];
 for (const [start,by,expect] of rol32OversizedTests) {
     tsts(`rol32 (${hex.fromI32(start)},${by})`,()=>{
-        const actual=rol32(start,by)>>>0;
+        const actual=U32.rol(start,by)>>>0;
         assert.is(actual,expect);
     })
 }
@@ -632,7 +645,7 @@ const ror32OversizedTests=[
 ];
 for (const [start,by,expect] of ror32OversizedTests) {
     tsts(`ror32 (${hex.fromI32(start)},${by})`,()=>{
-        const actual=ror32(start,by)>>>0;
+        const actual=U32.ror(start,by)>>>0;
         assert.is(actual,expect);
     })
 }

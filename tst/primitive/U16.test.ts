@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as hex from '../../src/encoding/Hex';
-import { rol16, ror16 } from '../../src/primitive/U16';
+import { U16 } from '../../src/primitive/U16';
 
 const tsts = suite('U16');
 
@@ -68,13 +68,13 @@ const rot16 = [
 ];
 
 for (const [start,by,expectLeft] of rot16) {
-	const left = rol16(start, by);
+	const left = U16.rol(start, by);
 	tsts(`rol16(${hex.fromI32(start)}, ${by})`, () => {
 		assert.is(left, expectLeft);
 	});
 
     tsts(`rol16(${hex.fromI32(left)}, ${by})`, () => {
-		assert.is(ror16(left, by), start);
+		assert.is(U16.ror(left, by), start);
 	});
 }
 
@@ -90,7 +90,7 @@ const rol16OversizedTests=[
 ];
 for (const [start,by,expect] of rol16OversizedTests) {
     tsts(`rol16 (${hex.fromI32(start)},${by})`,()=>{
-        const actual=rol16(start,by)>>>0;
+        const actual=U16.rol(start,by)>>>0;
         assert.is(actual,expect);
     })
 }
@@ -106,9 +106,44 @@ const ror16OversizedTests=[
 ];
 for (const [start,by,expect] of ror16OversizedTests) {
     tsts(`ror16 (${hex.fromI32(start)},${by})`,()=>{
-        const actual=ror16(start,by)>>>0;
+        const actual=U16.ror(start,by)>>>0;
         assert.is(actual,expect);
     })
 }
+
+const bytesLETests:[Uint8Array,number,number][]=[
+	[new Uint8Array(0),0,0],
+	[Uint8Array.of(1),0,1],
+	[Uint8Array.of(2,1),0,0x102],
+	[Uint8Array.of(2,1),1,1],
+	[Uint8Array.of(3,2,1),0,0x203],//Note source can be oversized (it's funny)
+	[Uint8Array.of(3,2,1),1,0x102],
+	[Uint8Array.of(3,2,1),2,1],
+	[Uint8Array.of(3,2,1),3,0],//Note pos can be out of bounds
+];
+for (const [src,pos,expect] of bytesLETests) {
+    tsts(`iFromBytesLE(${hex.fromBytes(src)}, ${pos}):`,()=>{
+		const actual=U16.iFromBytesLE(src,pos);
+        assert.is(actual,expect);
+    })
+}
+
+const bytesBETests:[Uint8Array,number,number][]=[
+	[new Uint8Array(0),0,0],
+	[Uint8Array.of(1),0,1],
+	[Uint8Array.of(2,1),0,0x201],
+	[Uint8Array.of(2,1),1,1],
+	[Uint8Array.of(3,2,1),0,0x302],//Note source can be oversized (it's funny)
+	[Uint8Array.of(3,2,1),1,0x201],
+	[Uint8Array.of(3,2,1),2,1],
+	[Uint8Array.of(3,2,1),3,0],//Note pos can be out of bounds
+];
+for (const [src,pos,expect] of bytesBETests) {
+    tsts(`iFromBytesBE(0x${hex.fromBytes(src)}, ${pos}):`,()=>{
+		const actual=U16.iFromBytesBE(src,pos);
+        assert.is(actual,expect);
+    })
+}
+
 
 tsts.run();
