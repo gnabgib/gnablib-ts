@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
-import assert from '../../src/test/assert';
+import {Assert} from '../../src/test/assert';
 import * as uAssert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { Sha1 } from '../../src/hash/Sha1';
 
 const tsts = suite('SHA1/RFC 3174');
@@ -187,7 +187,7 @@ for (const [source,expect] of asciiHexPairs) {
 		const hash=new Sha1();
 		hash.write(b);
 		const md=hash.sum();
-		uAssert.is(hex.fromBytes(md), expect);
+		uAssert.is(Hex.fromBytes(md), expect);
 	});
 }
 
@@ -195,14 +195,14 @@ tsts('Sequential Hash: a/ab/b',()=> {
 	const hash=new Sha1();
 	//md(a)
 	hash.write(utf8.toBytes('a'));
-	assert.bytesMatchHex(hash.sum(), '86F7E437FAA5A7FCE15D1DDCB9EAEAEA377667B8');
+	Assert.bytesMatchHex(hash.sum(), '86F7E437FAA5A7FCE15D1DDCB9EAEAEA377667B8');
 	//md(ab)
 	hash.write(utf8.toBytes('b'));
-	assert.bytesMatchHex(hash.sum(), 'DA23614E02469A0D7C7BD1BDAB5C9C474B1904DC');
+	Assert.bytesMatchHex(hash.sum(), 'DA23614E02469A0D7C7BD1BDAB5C9C474B1904DC');
 	//md(b)
 	hash.reset();
 	hash.write(utf8.toBytes('b'));
-	assert.bytesMatchHex(hash.sum(), 'E9D71F5EE7C92D6DC9E92FFDAD17B8BD49418F98');
+	Assert.bytesMatchHex(hash.sum(), 'E9D71F5EE7C92D6DC9E92FFDAD17B8BD49418F98');
 });
 
 tsts.run();

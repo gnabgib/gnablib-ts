@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import * as ieee754 from '../../src/encoding/ieee754-fp64';
 
 const tsts = suite('IEEE754/Float64');
@@ -57,17 +57,17 @@ const encode64Pairs = [
 
 for (const test of encode64Pairs) {
 	tsts('decode: ' + test[1].toString(16), () => {
-		const b = hex.toBytes(test[1] as string);
+		const b = Hex.toBytes(test[1] as string);
 		assert.is(ieee754.fp64FromBytes(b), test[0]);
 	});
 	tsts('encode: ' + test[0], () => {
 		const b = ieee754.fp64ToBytes(test[0] as number);
-		assert.is(hex.fromBytes(b), test[1] as string);
+		assert.is(Hex.fromBytes(b), test[1] as string);
 	});
 }
 
 const nanHex = '7FFFFFFFFFFFFFFF';
-const nanBytes = hex.toBytes(nanHex);
+const nanBytes = Hex.toBytes(nanHex);
 
 tsts(`decode: 0x${nanHex} (NaN)`, () => {
 	//NaN!==NaN, so we need to use a specialized test
@@ -76,21 +76,21 @@ tsts(`decode: 0x${nanHex} (NaN)`, () => {
 
 tsts('encode: NaN', () => {
 	const ie = ieee754.fp64ToBytes(NaN);
-	assert.is(hex.fromBytes(ie), nanHex);
+	assert.is(Hex.fromBytes(ie), nanHex);
 });
 
 tsts(`decode other NaNs:`, () => {
 	//As long as mantissa>0 then it's NaN so there are quite a few variants
 	assert.is(
-		isNaN(ieee754.fp64FromBytes(hex.toBytes('7FF0000000000001'))),
+		isNaN(ieee754.fp64FromBytes(Hex.toBytes('7FF0000000000001'))),
 		true
 	);
 	assert.is(
-		isNaN(ieee754.fp64FromBytes(hex.toBytes('7FF8000000000000'))),
+		isNaN(ieee754.fp64FromBytes(Hex.toBytes('7FF8000000000000'))),
 		true
 	); //JS uses this
 	assert.is(
-		isNaN(ieee754.fp64FromBytes(hex.toBytes('7FF0000001000000'))),
+		isNaN(ieee754.fp64FromBytes(Hex.toBytes('7FF0000001000000'))),
 		true
 	);
 });

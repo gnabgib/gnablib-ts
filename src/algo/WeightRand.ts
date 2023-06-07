@@ -8,11 +8,12 @@ import prng from './Prng.js';
  * Weighted Randomness
  */
 
-function wtRnd(cweights: number[], rs: randSrc): number {
-	const n = prng.floatBetween(rs, 0, cweights[cweights.length - 1]);
-	for (let i = 0; i < cweights.length; i++) {
-		if (n < cweights[i]) return i;
+function wtRnd(cWeights: number[], rs: randSrc): number {
+	const n = prng.floatBetween(rs, 0, cWeights[cWeights.length - 1]);
+	for (let i = 0; i < cWeights.length; i++) {
+		if (n < cWeights[i]) return i;
 	}
+	/* c8 ignore next */
 	throw new Grievous('Generated a spurious random number');
 }
 

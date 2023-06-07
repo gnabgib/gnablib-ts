@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { VariedRangeError } from '../primitive/ErrorExt.js';
-import * as hex from './Hex.js';
+import { Hex } from './Hex.js';
 
 /**
  * Support: (Uint8Array)
@@ -41,15 +41,15 @@ export function v4FromBytes(bytes: Uint8Array): string {
 				ret += '-';
 				break;
 			case 6:
-				ret += '-' + ind_v4 + hex.fromByte(byte);
+				ret += '-' + ind_v4 + Hex.fromByte(byte);
 				continue;
 			case 8:
-				ret += '-' + hex.fromByte((byte & ind_var1_mask) | ind_var1_prefix);
+				ret += '-' + Hex.fromByte((byte & ind_var1_mask) | ind_var1_prefix);
 				continue;
 			case 16:
 				break eachByte2;
 		}
-		ret += hex.fromByte(byte);
+		ret += Hex.fromByte(byte);
 	}
 	return ret;
 }

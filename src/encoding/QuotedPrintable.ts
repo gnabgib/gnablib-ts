@@ -2,7 +2,7 @@
 
 import { ContentError } from '../primitive/ErrorExt.js';
 import { inRangeInclusive } from '../primitive/IntExt.js';
-import * as hex from './Hex.js';
+import { Hex } from './Hex.js';
 
 interface EncodeOpts {
 	/**
@@ -51,7 +51,7 @@ export function fromBytes(bytes: Uint8Array, opts?: EncodeOpts): string {
 		} else if (byte >= 32 && byte <= 127) {
 			pushStr(String.fromCodePoint(byte));
 		} else {
-			pushStr('=' + hex.fromByte(byte));
+			pushStr('=' + Hex.fromByte(byte));
 		}
 	}
 	return ret;
@@ -76,7 +76,7 @@ export function toBytes(quotedPrintable: string): Uint8Array {
 			//Eat escaped newlines
 			if (pair === '\r\n') continue;
 			try {
-				ret[outPtr++] = hex.toByte(pair);
+				ret[outPtr++] = Hex.toByte(pair);
 			} catch (e) {
 				//Not a pair, invalid hex chars
 				throw new ContentError(

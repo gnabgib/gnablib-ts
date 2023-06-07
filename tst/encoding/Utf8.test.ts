@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 
 const tsts = suite('Utf8/RFC 3629'); //(2044)
 
@@ -21,8 +21,8 @@ for (const pair of bytesPairs) {
 	});
 	tsts('bytesFromCodePoint: ' + pair[1], () => {
 		assert.is(
-			hex.fromBytes(new Uint8Array(utf8.bytesFromCodePoint(pair[1] as number))),
-			hex.fromBytes(new Uint8Array(pair[0] as number[]))
+			Hex.fromBytes(new Uint8Array(utf8.bytesFromCodePoint(pair[1] as number))),
+			Hex.fromBytes(new Uint8Array(pair[0] as number[]))
 		);
 	});
 }
@@ -41,10 +41,10 @@ const stringHexPairs = [
 for (const pair of stringHexPairs) {
 	tsts('toBytes: ' + pair[0], () => {
 		const b = utf8.toBytes(pair[0]);
-		assert.is(hex.fromBytes(b), pair[1]);
+		assert.is(Hex.fromBytes(b), pair[1]);
 	});
 	tsts('fromBytes: ' + pair[0], () => {
-		const b = hex.toBytes(pair[1]);
+		const b = Hex.toBytes(pair[1]);
 		assert.is(utf8.fromBytes(b), pair[0]);
 	});
 

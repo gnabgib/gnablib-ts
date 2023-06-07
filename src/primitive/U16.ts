@@ -1,3 +1,5 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 const sizeBytes = 2;
 const sizeBits = 16;
 const i16Mask = 0xffff;
@@ -67,4 +69,12 @@ export class U16 {
 		if (rem < 0) ret >>>= (sizeBytes + rem) << 3;
 		return ret;
 	}
+
+    static toBytesLE(src:number):Uint8Array {
+        return Uint8Array.of(src,src>>8);
+    }
+
+    static toBytesBE(src:number):Uint8Array {
+        return Uint8Array.of(src>>8,src);
+    }
 }

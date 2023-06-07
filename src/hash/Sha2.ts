@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import * as bigEndian from '../endian/big.js';
-import * as hex from '../encoding/Hex.js';
+import { Hex } from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
 import * as intExt from '../primitive/IntExt.js';
 import { Uint64 } from '../primitive/Uint64.js';
@@ -491,7 +491,7 @@ class Sha2_64bit implements IHash {
     gen.write(utf8.toBytes('SHA-512/' + t.toString()));
     const hash=gen.sum();
     for(let i=0;i<hash.length;i+=8)
-        console.log(`0x${hex.fromBytes(hash.subarray(i,i+4))}, 0x${hex.fromBytes(hash.subarray(i+4,i+8))},`);
+        console.log(`0x${Hex.fromBytes(hash.subarray(i,i+4))}, 0x${Hex.fromBytes(hash.subarray(i+4,i+8))},`);
 }
 
 export class Sha224 extends Sha2_32bit {

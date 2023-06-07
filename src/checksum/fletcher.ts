@@ -1,7 +1,8 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as littleEndian from '../endian/little.js';
-import * as bigEndian from '../endian/big.js';
+import { asLE } from '../endian/platform.js';
+import { U16 } from '../primitive/U16.js';
+import { U32 } from '../primitive/U32.js';
 
 //http://www.zlib.net/maxino06_fletcher-adler.pdf -> Lower cpu and Adler and mostly more effective (in their tests)
 //https://datatracker.ietf.org/doc/html/rfc1146 (Appendix I)
@@ -48,7 +49,8 @@ export function fletcher32(bytes: Uint8Array): number {
 		// (0xffffffff * 0xffff (max byte) still fits in 2^48 bits)
 		const safeLen = Math.min(0xffffffff, bytes.length);
 		for (; ptr < safeLen; ptr += 2) {
-			c0 += littleEndian.u16FromBytesUnsafe(bytes, ptr);
+			asLE.i16(bytes,ptr);
+			c0 += U16.iFromBytesLE(bytes,ptr);
 			c1 += c0;
 		}
 		//The mod operation (%) is in math(53bit max) not bit(32bit max)
@@ -76,13 +78,14 @@ export function fletcher64(bytes: Uint8Array): Uint8Array {
 		// (0xffff * 0xffffffff (max byte) still fits in 2^48 bits)
 		const safeLen = Math.min(0xffff, bytes.length);
 		for (; ptr < safeLen; ptr += 4) {
-			c0 += littleEndian.u32FromBytesUnsafe(bytes, ptr);
+			asLE.i32(bytes,ptr);
+			c0 += U32.iFromBytesLE(bytes,ptr)>>>0;
 			c1 += c0;
 		}
 		c0 %= mod;
 		c1 %= mod;
 	}
-	bigEndian.u32IntoBytes(c1, ret, 0);
-	bigEndian.u32IntoBytes(c0, ret, 4);
+	ret.set(U32.toBytesBE(c1),0);
+	ret.set(U32.toBytesBE(c0),4);
 	return ret;
 }

@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
-import * as bigEndian from '../../src/endian/big';
+import { Hex } from '../../src/encoding/Hex';
 import * as ieee754 from '../../src/encoding/ieee754-fp32';
+import { U32 } from '../../src/primitive/U32';
 
 const tsts = suite('IEEE754/Float32');
 
@@ -49,18 +49,18 @@ const encode32Pairs = [
 
 for (const test of encode32Pairs) {
 	tsts('decode: ' + test[1].toString(16), () => {
-		const b = bigEndian.u32ToBytes(test[1]);
+		const b = U32.toBytesBE(test[1]);
 		assert.is(ieee754.fp32FromBytes(b), test[0]);
 	});
 	tsts('encode: ' + test[0], () => {
 		const b = ieee754.fp32ToBytes(test[0]);
-		const expHex = hex.fromBytes(bigEndian.u32ToBytes(test[1]));
-		assert.is(hex.fromBytes(b), expHex);
+		const expHex = Hex.fromBytes(U32.toBytesBE(test[1]));
+		assert.is(Hex.fromBytes(b), expHex);
 	});
 }
 
 const nanHex = '7FFFFFFF';
-const nanBytes = hex.toBytes(nanHex);
+const nanBytes = Hex.toBytes(nanHex);
 
 tsts('decode: 0x7fffffff (NaN)', () => {
 	//NaN!==NaN, so we need to use a specialized test
@@ -69,14 +69,14 @@ tsts('decode: 0x7fffffff (NaN)', () => {
 
 tsts('encode: NaN', () => {
 	const ie = ieee754.fp32ToBytes(NaN);
-	assert.is(hex.fromBytes(ie), nanHex);
+	assert.is(Hex.fromBytes(ie), nanHex);
 });
 
 tsts(`decode other NaNs:`, () => {
 	//As long as mantissa>0 then it's NaN so there are quite a few variants
-	assert.is(isNaN(ieee754.fp32FromBytes(hex.toBytes('7F800001'))), true);
-	assert.is(isNaN(ieee754.fp32FromBytes(hex.toBytes('7FC00000'))), true); //JS uses this form
-	assert.is(isNaN(ieee754.fp32FromBytes(hex.toBytes('7F801000'))), true);
+	assert.is(isNaN(ieee754.fp32FromBytes(Hex.toBytes('7F800001'))), true);
+	assert.is(isNaN(ieee754.fp32FromBytes(Hex.toBytes('7FC00000'))), true); //JS uses this form
+	assert.is(isNaN(ieee754.fp32FromBytes(Hex.toBytes('7F801000'))), true);
 });
 
 tsts('encode oversized', () => {

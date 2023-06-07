@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-//import * as hex from '../encoding/Hex.js';
+//import { Hex } from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
 import { asLE } from '../endian/platform.js';
 

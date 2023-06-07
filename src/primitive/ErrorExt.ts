@@ -93,7 +93,7 @@ export class NotEnoughDataError extends RangeError {
 	}
 }
 
-interface VariedRangeConditions<T> {
+export interface VariedRangeConditions<T> {
 	'>'?: T;
 	'>='?: T;
 	'<'?: T;
@@ -225,8 +225,8 @@ export class NullError extends TypeError {
 /**
  * Not supported|$reason
  */
-export class NotSupported extends TypeError {
-	constructor(reason:string|undefined=undefined) {
+export class NotSupportedError extends TypeError {
+	constructor(reason?:string) {
 		super(reason??"Not supported");
 	}
 }

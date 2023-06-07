@@ -54,10 +54,10 @@ function vowToInt(char: string): number {
 			return 1;
 		case ord_O:
 			return 2;
-		case ord_U:
+		default:
+		//case ord_U:
 			return 3;
 	}
-	return -1;
 }
 
 /**

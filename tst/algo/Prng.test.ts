@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import prng from "../../src/algo/Prng.js";
 //import { floatBetween, intBetween } from '../../src/algo/Prng';
-import assert from '../../src/test/assert';
+import {Assert} from '../../src/test/assert';
 
 const tsts = suite('PRNG');
 
@@ -29,7 +29,7 @@ for (const set of intSet) {
 		//Generate numbers and measure
 		for (let i = 0; i < sampleSize; i++) {
 			const n = prng.intBetween(rs, lowInc, highExc);
-            assert.inClosedOpen(n,lowInc,highExc);
+            Assert.inClosedOpen(n,lowInc,highExc);
             sum+=n;
 			//assert.equal(n >= lowInc && n < highExc, true, 'Number in range');
 			counts[n]++;
@@ -46,13 +46,13 @@ for (const set of intSet) {
         // It can be smoothed out by more samples, but not eliminated
         const expectAvg=(highExc-1-lowInc)/2;
         const foundAvg=sum/sampleSize;
-        assert.equalish(foundAvg,expectAvg,{percent:2});
+        Assert.equalish(foundAvg,expectAvg,{percent:2});
 
 
 		//Assert sample reasonable
 		for (let i = 0; i < highExc; i++) {
             //Again quantization and sampleSize come into play
-            assert.equalish(counts[i],perfectDist,{percent:15});
+            Assert.equalish(counts[i],perfectDist,{percent:15});
 		}
 	});
 }
@@ -70,13 +70,13 @@ for (const set of floatSet) {
 		for (let i = 0; i < sampleSize; i++) {
 			const n = prng.floatBetween(rs, lowInc, highExc);
             sum+=n;
-            assert.inClosedOpen(n,lowInc,highExc);
+            Assert.inClosedOpen(n,lowInc,highExc);
 		}
         const expectAvg=(highExc-lowInc)/2;
         const foundAvg=sum/sampleSize;
         //Because the values aren't quantized, the float average 
         // should be much closer to the expected average
-        assert.equalish(foundAvg,expectAvg,{percent:.5});
+        Assert.equalish(foundAvg,expectAvg,{percent:.5});
     });
 }
 

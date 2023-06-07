@@ -1,5 +1,7 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from './IntExt.js';
-import * as hex from '../encoding/Hex.js';
+import { Hex } from '../encoding/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
 
 const maxU32 = 0xffffffff;
@@ -177,7 +179,7 @@ export class U32 {
 	 * @returns
 	 */
 	toString(): string {
-		return 'u32{' + hex.fromI32(this.arr[this.pos]) + '}';
+		return 'u32{' + Hex.fromI32(this.arr[this.pos]) + '}';
 	}
 
 	/**
@@ -383,6 +385,15 @@ export class U32 {
 		if (rem < 0) ret >>>= (sizeBytes + rem) << 3;
 		return ret;
 	}
+
+    static toBytesLE(src:number):Uint8Array {
+        return Uint8Array.of(src,src>>8,src>>16,src>>>24);
+    }
+
+    static toBytesBE(src:number):Uint8Array {
+        return Uint8Array.of(src>>>24,src>>16,src>>8,src);
+    }
+
 }
 const zero = U32.fromIntUnsafe(0);
 const max = U32.fromIntUnsafe(0xffffffff);

@@ -2,8 +2,8 @@
 
 import * as intExt from '../primitive/IntExt.js';
 import * as objExt from '../primitive/ObjExt.js';
-import * as hex from '../encoding/Hex.js';
-import { EnforceTypeError, NotSupported, SizeError } from './ErrorExt.js';
+import { Hex } from '../encoding/Hex.js';
+import { EnforceTypeError, NotSupportedError, SizeError } from './ErrorExt.js';
 
 const maxU32 = 0xffffffff;
 //const maxI32 = 2147483647; // 0x7fffffff
@@ -346,11 +346,11 @@ export class Int64 {
 	}
 
 	toBigInt(): bigint {
-		throw new NotSupported();
+		throw new NotSupportedError();
 	}
 
 	toString(): string {
-		return 'i64{' + hex.fromBytes(this.toBytes()) + '}';
+		return 'i64{' + Hex.fromBytes(this.toBytes()) + '}';
 	}
 
 	toSafeInt(): number | undefined {
@@ -396,7 +396,7 @@ export class Int64 {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	static fromBigInt(num: bigint): Int64 {
-		throw new NotSupported();
+		throw new NotSupportedError();
 	}
 
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Int64 {

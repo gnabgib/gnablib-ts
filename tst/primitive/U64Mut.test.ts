@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { U64Mut,U64 } from '../../src/primitive/U64';
 
 const tsts = suite('U64Mut');
@@ -36,12 +36,12 @@ const xorTest=[
 ];
 for (const [a,b,expect] of xorTest) {
 	tsts(`${a} ^= ${b}`, () => {
-		const aBytes = hex.toBytes(a);
+		const aBytes = Hex.toBytes(a);
 		const aUint = U64Mut.fromBytesBE(aBytes);
-		const bBytes = hex.toBytes(b);
+		const bBytes = Hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
         aUint.xorEq(bUint);
-		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(aUint.toBytesBE()), expect);
 	});
 }
 
@@ -76,12 +76,12 @@ const orTest=[
 ];
 for (const [a,b,expect] of orTest) {
 	tsts(`${a} |= ${b}`, () => {
-		const aBytes = hex.toBytes(a);
+		const aBytes = Hex.toBytes(a);
 		const aUint = U64Mut.fromBytesBE(aBytes);
-		const bBytes = hex.toBytes(b);
+		const bBytes = Hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		aUint.orEq(bUint);
-		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(aUint.toBytesBE()), expect);
 	});
 }
 
@@ -116,12 +116,12 @@ const andTest=[
 ];
 for (const [a,b,expect] of andTest) {
 	tsts(`${a} &= ${b}`, () => {
-		const aBytes = hex.toBytes(a);
+		const aBytes = Hex.toBytes(a);
 		const aUint = U64Mut.fromBytesBE(aBytes);
-		const bBytes = hex.toBytes(b);
+		const bBytes = Hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		aUint.andEq(bUint);
-		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(aUint.toBytesBE()), expect);
 	});
 }
 
@@ -137,10 +137,10 @@ const notTest = [
 ];
 for (const [start,expect] of notTest) {
 	tsts(`~${start}`, () => {
-		const aBytes = hex.toBytes(start);
+		const aBytes = Hex.toBytes(start);
 		const aUint = U64Mut.fromBytesBE(aBytes);
 		aUint.notEq();
-		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(aUint.toBytesBE()), expect);
 	});
 }
 
@@ -190,11 +190,11 @@ const lShiftTest:[string,number,string][] = [
 ];
 for (const [start,by,expect] of lShiftTest) {
 	tsts(`${start} <<= ${by}`, () => {
-		const aBytes = hex.toBytes(start);
+		const aBytes = Hex.toBytes(start);
 		const a = U64Mut.fromBytesBE(aBytes);
 		a.lShiftEq(by);
 		//console.log('start',start,'res',res);
-		assert.is(hex.fromBytes(a.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(a.toBytesBE()), expect);
 	});
 }
 
@@ -251,10 +251,10 @@ const lRotTest:[string,number,string][] = [
 ];
 for (const [start,by,expect] of lRotTest) {
 	tsts(`${start} ROL= ${by}`, () => {
-		const aBytes = hex.toBytes(start);
+		const aBytes = Hex.toBytes(start);
 		const a = U64Mut.fromBytesBE(aBytes);
 		a.lRotEq(by);
-		assert.is(hex.fromBytes(a.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(a.toBytesBE()), expect);
 	});
 }
 
@@ -304,10 +304,10 @@ for (const [start,by,expect] of rShiftTest) {
 	//Note JS has >> (sign aware) and >>> (zero fill) right shift,
 	// but since this is an unsigned int, they have the same meaning
 	tsts(`${start} >>>= ${by}`, () => {
-		const aBytes = hex.toBytes(start);
+		const aBytes = Hex.toBytes(start);
 		const a = U64Mut.fromBytesBE(aBytes);
 		a.rShiftEq(by);
-		assert.is(hex.fromBytes(a.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(a.toBytesBE()), expect);
 	});
 }
 
@@ -364,10 +364,10 @@ const rRotTest:[string,number,string][] = [
 ];
 for (const [start,by,expect] of rRotTest) {
 	tsts(`${start} ROR= ${by}`, () => {
-		const aBytes = hex.toBytes(start);
+		const aBytes = Hex.toBytes(start);
 		const a = U64Mut.fromBytesBE(aBytes);
 		a.rRotEq(by);
-		assert.is(hex.fromBytes(a.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(a.toBytesBE()), expect);
 	});
 }
 
@@ -403,12 +403,12 @@ const addTest=[
 ];
 for (const [a,b,expect] of addTest) {
 	tsts(`${a} += ${b}`, () => {
-		const aBytes = hex.toBytes(a);
+		const aBytes = Hex.toBytes(a);
 		const aUint = U64Mut.fromBytesBE(aBytes);
-		const bBytes = hex.toBytes(b);
+		const bBytes = Hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		aUint.addEq(bUint);
-		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(aUint.toBytesBE()), expect);
 	});
 }
 
@@ -464,12 +464,12 @@ const mulTest=[
 ];
 for (const [a,b,expect] of mulTest) {
 	tsts(`${a} *= ${b}`, () => {
-		const aBytes = hex.toBytes(a);
+		const aBytes = Hex.toBytes(a);
 		const aUint = U64Mut.fromBytesBE(aBytes);
-		const bBytes = hex.toBytes(b);
+		const bBytes = Hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		aUint.mulEq(bUint);
-		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+		assert.is(Hex.fromBytes(aUint.toBytesBE()), expect);
 	});
 }
 

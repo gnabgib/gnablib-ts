@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import {
 	RipeMd320,
 } from '../../src/hash/RipeMd';
@@ -66,7 +66,7 @@ for (const [source,expect] of ascii320HexPairs) {
 		const hash=new RipeMd320();
 		hash.write(b);
 		const md=hash.sum();
-		assert.is(hex.fromBytes(md), expect);
+		assert.is(Hex.fromBytes(md), expect);
 	});
 }
 

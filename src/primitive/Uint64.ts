@@ -2,11 +2,11 @@
 
 import * as intExt from '../primitive/IntExt.js';
 import * as objExt from '../primitive/ObjExt.js';
-import * as hex from '../encoding/Hex.js';
+import { Hex } from '../encoding/Hex.js';
 import {
 	EnforceTypeError,
 	NegativeError,
-	NotSupported,
+	NotSupportedError,
 	SizeError,
 } from './ErrorExt.js';
 
@@ -330,11 +330,11 @@ export class Uint64 {
 	// }
 
 	toBigInt(): bigint {
-		throw new NotSupported();
+		throw new NotSupportedError();
 	}
 
 	toString(): string {
-		return 'u64{' + hex.fromBytes(this.toBytes()) + '}';
+		return 'u64{' + Hex.fromBytes(this.toBytes()) + '}';
 	}
 
 	toSafeInt(): number | undefined {
@@ -361,7 +361,7 @@ export class Uint64 {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	static fromBigInt(num: bigint): Uint64 {
-		throw new NotSupported();
+		throw new NotSupportedError();
 	}
 
 	/**

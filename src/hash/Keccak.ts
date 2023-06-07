@@ -1,10 +1,10 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as hex from '../encoding/Hex.js';
+//import { Hex } from '../encoding/Hex.js';
 import type { IHash } from "./IHash.js";
 import * as littleEndian from '../endian/little.js';
 import { Uint64 } from '../primitive/Uint64.js';
-import * as bitExt from '../primitive/BitExt.js';
+//import * as bitExt from '../primitive/BitExt.js';
 import * as intExt from '../primitive/IntExt.js';
 import * as utf8 from '../encoding/Utf8.js';
 

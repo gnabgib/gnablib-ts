@@ -44,5 +44,21 @@ for (const pairs of buildLsb) {
 	});
 }
 
+const reverseTests:[number,number][]=[
+	[0,0],
+	[1,128],
+];
+for (const [start,expect] of reverseTests) {
+	tsts(`reverse(${start})`, () => {
+		assert.is(bitExt.reverse(start),expect);
+	});
+}
+
+tsts('Code coverage',()=>{
+	const c=new bitExt.Carrier(1,2);
+	assert.is(c.size,0);
+	assert.is(c.empty,true);
+});
+
 
 tsts.run();

@@ -6,7 +6,7 @@ import {
 	fletcher64,
 } from '../../src/checksum/fletcher';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 
 const tsts = suite('Fletcher/RFC 1146');
 
@@ -124,7 +124,7 @@ for (const pair of fletcher64Set) {
 	tsts('fletcher64: ' + pair[0], () => {
 		const b = utf8.toBytes(pair[0] as string);
 		const f = fletcher64(b);
-		assert.is(hex.fromBytes(f), pair[1]);
+		assert.is(Hex.fromBytes(f), pair[1]);
 	});
 }
 

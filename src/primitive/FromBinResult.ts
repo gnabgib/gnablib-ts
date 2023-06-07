@@ -17,7 +17,7 @@ export class FromBinResult<T> {
 	constructor(
 		bytes: number,
 		value?: T,
-		reason: string | undefined = undefined
+		reason?: string
 	) {
 		this.byteLen = bytes;
 		this.value = value;

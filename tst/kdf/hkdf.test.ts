@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { hkdf } from '../../src/kdf/Hkdf';
 import { Sha1 } from '../../src/hash/Sha1';
 import { Sha256 } from '../../src/hash/Sha2';
@@ -40,11 +40,11 @@ for (const test of sha256Hex) {
     //Note we reuse the hash object
     const hash=new Sha256();
     tsts('hkdf-sha256: '+test.ikm+'->'+test.len,()=>{
-        const ikm=hex.toBytes(test.ikm);
-        const salt=test.salt?hex.toBytes(test.salt):new Uint8Array();
-        const info=test.info?hex.toBytes(test.info):new Uint8Array();
+        const ikm=Hex.toBytes(test.ikm);
+        const salt=test.salt?Hex.toBytes(test.salt):new Uint8Array();
+        const info=test.info?Hex.toBytes(test.info):new Uint8Array();
         const found=hkdf(hash,ikm,test.len,salt,info);
-        assert.is(hex.fromBytes(found),test.expect);
+        assert.is(Hex.fromBytes(found),test.expect);
     });
 }
 
@@ -79,11 +79,11 @@ for (const test of sha1Hex) {
     //Note we reuse the hash object
     const hash=new Sha1();
     tsts('hkdf-sha1: '+test.ikm+'->'+test.len,()=>{
-        const ikm=hex.toBytes(test.ikm);
-        const salt=test.salt?hex.toBytes(test.salt):new Uint8Array();
-        const info=test.info?hex.toBytes(test.info):new Uint8Array();
+        const ikm=Hex.toBytes(test.ikm);
+        const salt=test.salt?Hex.toBytes(test.salt):new Uint8Array();
+        const info=test.info?Hex.toBytes(test.info):new Uint8Array();
         const found=hkdf(hash,ikm,test.len,salt,info);
-        assert.is(hex.fromBytes(found),test.expect);
+        assert.is(Hex.fromBytes(found),test.expect);
     });
 }
 

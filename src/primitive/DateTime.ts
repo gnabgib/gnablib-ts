@@ -2,7 +2,7 @@
 
 import { FromBinResult } from './FromBinResult.js';
 import { inRangeInclusive, zeroPad } from './IntExt.js';
-import { Uint64 } from './Uint64.js';
+import { U64 } from './U64.js';
 
 const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const microPerSec = 1000000;
@@ -118,7 +118,7 @@ export class DateTime {
 	/**
 	 * Value as a UInt64, in a uint8 array (since JS doesn't support 64bit integers)
 	 */
-	serialize(): Uint64 {
+	serialize(): U64 {
 		//27 bits: year/month/day
 		let days = this._day - 1; //There is no day 0 so drop 1 from count
 		for (let i = 1; i < this._month; i++) days += daysInMonth[i - 1];
@@ -136,14 +136,14 @@ export class DateTime {
 		const rm = Math.floor(hms / 0x100000000);
 		const high = (ymd << 5) | rm;
 
-		return new Uint64(low, high >>> 0);
+		return U64.fromUint32Pair(low, high >>> 0);
 	}
 	toBin(): Uint8Array {
-		return this.serialize().toBytes();
+		return this.serialize().toBytesBE();
 	}
 
-	static deserialize(ser: Uint64): DateTime {
-		const ymd = ser.highU32 >>> 5;
+	static deserialize(ser: U64): DateTime {
+		const ymd = ser.high >>> 5;
 		let d = (ymd % 366) + 1;
 		const y = Math.floor(ymd / 366) + minYear;
 		let m = 0;
@@ -169,7 +169,7 @@ export class DateTime {
 		//Because DIM is zero based, add one to month
 		m += 1;
 
-		let hms = (ser.highU32 & (0x1f >>> 0)) * 0x100000000 + ser.lowU32;
+		let hms = (ser.high & (0x1f >>> 0)) * 0x100000000 + ser.low;
 		const u = hms % microPerSec;
 		hms = Math.floor(hms / microPerSec);
 		const s = hms % secPerMin;
@@ -180,7 +180,8 @@ export class DateTime {
 		return new DateTime(y, m, d, h, i, s, u);
 	}
 	static fromBin(bin: Uint8Array, pos = 0): FromBinResult<DateTime> {
-		const u = Uint64.fromBytes(bin, pos);
+		const u=U64.fromBytesBE(bin,pos);
+		//const u = Uint64.fromBytes(bin, pos);
 		try {
 			const dt = this.deserialize(u);
 			return new FromBinResult(8, dt);

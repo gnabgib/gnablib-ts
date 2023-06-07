@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { asLE} from '../../src/endian/platform';
 import { U32, U32Mut } from '../../src/primitive/U32';
 
@@ -383,7 +383,7 @@ tsts('toBytesLE',()=> {
     //Because toBytes is PLATFORM encoded, let's fix
     asLE.i32(b);
     assert.is(u.value,0x01020304);
-    assert.is(hex.fromBytes(b),'04030201');
+    assert.is(Hex.fromBytes(b),'04030201');
 });
 
 const fromInt:[number,number|undefined][]=[
@@ -628,7 +628,7 @@ const rol32OversizedTests=[
     [0xf0f0f0f0f0,8,0xf0f0f0f0],
 ];
 for (const [start,by,expect] of rol32OversizedTests) {
-    tsts(`rol32 (${hex.fromI32(start)},${by})`,()=>{
+    tsts(`rol32 (${Hex.fromI32(start)},${by})`,()=>{
         const actual=U32.rol(start,by)>>>0;
         assert.is(actual,expect);
     })
@@ -644,7 +644,7 @@ const ror32OversizedTests=[
     [0xf0f0f0f0f0,8,0xf0f0f0f0],
 ];
 for (const [start,by,expect] of ror32OversizedTests) {
-    tsts(`ror32 (${hex.fromI32(start)},${by})`,()=>{
+    tsts(`ror32 (${Hex.fromI32(start)},${by})`,()=>{
         const actual=U32.ror(start,by)>>>0;
         assert.is(actual,expect);
     })

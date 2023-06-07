@@ -11,8 +11,7 @@ export const isLE = (() => {
 	// bigEndian: 0x0001
 	// littleEndian: 0x0100
 	//Mapping a uint8 array over the top, we can check if the first byte is not zero (LE)
-	const u16 = new Uint16Array([1]);
-	const u8 = new Uint8Array(u16.buffer);
+	const u8 = new Uint8Array(Uint16Array.of(1).buffer);
 	return u8[0] > 0;
 
 	//JS seems to assume platform can only be little or big (by only using boolean endian flags)
@@ -27,7 +26,7 @@ const invert={
 	 */
 	i16(b:Uint8Array,pos=0,count=1):void {
 		do {
-			const t=b[pos];b[pos]=b[pos+1];b[pos]=t;
+			const t=b[pos];b[pos]=b[pos+1];b[pos+1]=t;
 			pos+=2;
 		} while (--count>0);
 		

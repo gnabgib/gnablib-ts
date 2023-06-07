@@ -1,5 +1,7 @@
+/*! Copyright 2023 gnabgib MPL-2.0 */
+
 import * as intExt from './IntExt.js';
-import * as hex from '../encoding/Hex.js';
+import { Hex } from '../encoding/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
 
 const maxU32 = 0xffffffff;
@@ -28,6 +30,20 @@ function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {
 export class U64 {
 	protected arr: Uint32Array;
 	protected pos: number;
+
+	/**
+	 * Bottom 32 bits (1-32)
+	 */
+	get low(): number {
+		return this.arr[this.pos];
+	}
+	
+	/**
+	 * Top 32 bits (33-64)
+	 */
+	get high(): number {
+		return this.arr[this.pos+1];
+	}
 
 	/**
 	 * Uint32 is platform ordered, but the first number is low, and the second high
@@ -368,7 +384,7 @@ export class U64 {
 	 * @returns 
 	 */
 	toString(): string {
-		return 'u64{' + hex.fromBytes(this.toBytesBE()) + '}';
+		return 'u64{' + Hex.fromBytes(this.toBytesBE()) + '}';
 	}
 
 	/**

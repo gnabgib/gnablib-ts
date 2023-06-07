@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
-import assert from '../../src/test/assert';
-import * as uAssert from 'uvu/assert';
+import {Assert} from '../../src/test/assert';
+import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { Md4 } from '../../src/hash/Md4';
 
 const tsts = suite('MD4/RFC 1320');
@@ -152,7 +152,7 @@ for (const [source,expect] of asciiHexPairs) {
 		const hash=new Md4();
 		hash.write(b);
 		const md=hash.sum();
-		assert.bytesMatchHex(md, expect);
+		Assert.bytesMatchHex(md, expect);
 	});
 }
 
@@ -160,14 +160,14 @@ tsts('Sequential Hash: a/ab/b',()=> {
 	const hash=new Md4();
 	//md(a)
 	hash.write(utf8.toBytes('a'));
-	assert.bytesMatchHex(hash.sum(), 'BDE52CB31DE33E46245E05FBDBD6FB24');
+	Assert.bytesMatchHex(hash.sum(), 'BDE52CB31DE33E46245E05FBDBD6FB24');
 	//md(ab)
 	hash.write(utf8.toBytes('b'));
-	assert.bytesMatchHex(hash.sum(), 'EC388DD78999DFC7CF4632465693B6BF');
+	Assert.bytesMatchHex(hash.sum(), 'EC388DD78999DFC7CF4632465693B6BF');
 	//md(b)
 	hash.reset();
 	hash.write(utf8.toBytes('b'));
-	assert.bytesMatchHex(hash.sum(), '7AEAFCB2818E533B384433DEA80992F5');
+	Assert.bytesMatchHex(hash.sum(), '7AEAFCB2818E533B384433DEA80992F5');
 });
 
 tsts('MD4 Collision example:',()=>{
@@ -180,17 +180,17 @@ tsts('MD4 Collision example:',()=>{
 			 'b3719dc69891e9f9'+'5e809fd7e8b23ba6'+'318edc45e51fe397'+'08bf9427e9c3e8b9';
 	//        ----------------   ----------------   -----^----------   ----------------
 
-	uAssert.not.equal(k1,k2);
+	assert.not.equal(k1,k2);
 
 	const hash=new Md4();
-	hash.write(hex.toBytes(k1));
+	hash.write(Hex.toBytes(k1));
 	const digest1=hash.sum();
 	hash.reset();
 
-	hash.write(hex.toBytes(k2));
+	hash.write(Hex.toBytes(k2));
 	const digest2=hash.sum();
 
-	uAssert.is(hex.fromBytes(digest1),hex.fromBytes(digest2));
+	assert.is(Hex.fromBytes(digest1),Hex.fromBytes(digest2));
 });
 
 

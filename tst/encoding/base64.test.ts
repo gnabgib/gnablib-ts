@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as base64 from '../../src/encoding/Base64';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import * as stringExt from '../../src/primitive/StringExt';
 
 const tsts = suite('Base64/RFC 4648');
@@ -49,13 +49,13 @@ const hexSet = [
 
 for (const pair of hexSet) {
 	tsts('Encode:' + pair[0], () => {
-		const u = hex.toBytes(pair[0]);
+		const u = Hex.toBytes(pair[0]);
 		assert.is(base64.fromBytes(u, { cPad: true }), pair[1]);
 	});
 
 	tsts('Decode:' + pair[1], () => {
 		const u = base64.toBytes(pair[1]);
-		assert.is(hex.fromBytes(u), pair[0]);
+		assert.is(Hex.fromBytes(u), pair[0]);
 	});
 }
 

@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { Keccak224 } from '../../src/hash/Keccak';
 
 const tsts = suite('Keccak');
@@ -32,7 +32,7 @@ for (const [source,expect] of ascii224Pairs) {
 		const hash=new Keccak224();
 		hash.write(b);
 		const md=hash.sum();
-		assert.is(hex.fromBytes(md), expect);
+		assert.is(Hex.fromBytes(md), expect);
 		assert.is(hash.size,28);
 	});
 }

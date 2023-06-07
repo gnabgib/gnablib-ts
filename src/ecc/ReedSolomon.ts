@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as hex from '../encoding/Hex.js';
+import { Hex } from '../encoding/Hex.js';
 import * as intExt from '../primitive/IntExt.js';
 import {
 	ContentError,
@@ -211,7 +211,7 @@ class Gf8 implements Gf<Uint8Array> {
 	}
 
 	toString(): string {
-		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${
+		return `GF(0x${Hex.fromI32Compress(this.primitive)}, ${
 			this._lastSpot + 1
 		}, ${this.base})`;
 	}
@@ -484,7 +484,7 @@ class Gf16 implements Gf<Uint16Array> {
 	}
 
 	toString(): string {
-		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${
+		return `GF(0x${Hex.fromI32Compress(this.primitive)}, ${
 			this._lastSpot + 1
 		}, ${this.base})`;
 	}

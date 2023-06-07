@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { Uint64 } from '../../src/primitive/Uint64';
 
 const tsts = suite('UInt64');
@@ -62,11 +62,11 @@ const lShiftSet = [
 
 for (const test of lShiftSet) {
 	tsts(test[0] + '<<' + test[1], () => {
-		const b = hex.toBytes(test[0] as string);
+		const b = Hex.toBytes(test[0] as string);
 		const start = Uint64.fromBytes(b);
 		const res = start.lShift(test[1] as number);
 		//console.log('start',start,'res',res);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -124,10 +124,10 @@ const lRotSet = [
 
 for (const test of lRotSet) {
 	tsts(test[0] + '<<(rot)' + test[1], () => {
-		const b = hex.toBytes(test[0] as string);
+		const b = Hex.toBytes(test[0] as string);
 		const start = Uint64.fromBytes(b);
 		const res = start.lRot(test[1] as number);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -178,11 +178,11 @@ for (const test of rShiftSet) {
 	//Note JS has >> (sign aware) and >>> (zero fill) right shift,
 	// but since this is an unsigned int, they have the same meaning
 	tsts(test[0] + '>>>' + test[1], () => {
-		const b = hex.toBytes(test[0] as string);
+		const b = Hex.toBytes(test[0] as string);
 		const start = Uint64.fromBytes(b);
 		const res = start.rShift(test[1] as number);
 		//console.log('start',start,'res',res);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -240,10 +240,10 @@ const rRotSet = [
 
 for (const test of rRotSet) {
 	tsts(test[0] + '>>>(rot)' + test[1], () => {
-		const b = hex.toBytes(test[0] as string);
+		const b = Hex.toBytes(test[0] as string);
 		const start = Uint64.fromBytes(b);
 		const res = start.rRot(test[1] as number);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -279,12 +279,12 @@ const xorSet=[
 
 for (const test of xorSet) {
 	tsts(test[0] + '^' + test[1], () => {
-		const aBytes = hex.toBytes(test[0] as string);
+		const aBytes = Hex.toBytes(test[0] as string);
 		const aUint = Uint64.fromBytes(aBytes);
-		const bBytes = hex.toBytes(test[1] as string);
+		const bBytes = Hex.toBytes(test[1] as string);
 		const bUint = Uint64.fromBytes(bBytes);
 		const res = aUint.xor(bUint);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -320,12 +320,12 @@ const orSet=[
 
 for (const test of orSet) {
 	tsts(test[0] + '|' + test[1], () => {
-		const aBytes = hex.toBytes(test[0] as string);
+		const aBytes = Hex.toBytes(test[0] as string);
 		const aUint = Uint64.fromBytes(aBytes);
-		const bBytes = hex.toBytes(test[1] as string);
+		const bBytes = Hex.toBytes(test[1] as string);
 		const bUint = Uint64.fromBytes(bBytes);
 		const res = aUint.or(bUint);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -361,12 +361,12 @@ const andSet=[
 
 for (const test of andSet) {
 	tsts(test[0] + '&' + test[1], () => {
-		const aBytes = hex.toBytes(test[0] as string);
+		const aBytes = Hex.toBytes(test[0] as string);
 		const aUint = Uint64.fromBytes(aBytes);
-		const bBytes = hex.toBytes(test[1] as string);
+		const bBytes = Hex.toBytes(test[1] as string);
 		const bUint = Uint64.fromBytes(bBytes);
 		const res = aUint.and(bUint);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -383,10 +383,10 @@ const notSet = [
 
 for (const test of notSet) {
 	tsts('~' + test[0], () => {
-		const b = hex.toBytes(test[0] as string);
+		const b = Hex.toBytes(test[0] as string);
 		const start = Uint64.fromBytes(b);
 		const res = start.not();
-		assert.is(hex.fromBytes(res.toBytes()), test[1]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[1]);
 	});
 }
 
@@ -423,12 +423,12 @@ const addSet=[
 
 for (const test of addSet) {
 	tsts(test[0] + '+' + test[1], () => {
-		const aBytes = hex.toBytes(test[0] as string);
+		const aBytes = Hex.toBytes(test[0] as string);
 		const aUint = Uint64.fromBytes(aBytes);
-		const bBytes = hex.toBytes(test[1] as string);
+		const bBytes = Hex.toBytes(test[1] as string);
 		const bUint = Uint64.fromBytes(bBytes);
 		const res = aUint.add(bUint);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 
@@ -485,12 +485,12 @@ const mulSet=[
 
 for (const test of mulSet) {
 	tsts(test[0] + '*' + test[1], () => {
-		const aBytes = hex.toBytes(test[0] as string);
+		const aBytes = Hex.toBytes(test[0] as string);
 		const aUint = Uint64.fromBytes(aBytes);
-		const bBytes = hex.toBytes(test[1] as string);
+		const bBytes = Hex.toBytes(test[1] as string);
 		const bUint = Uint64.fromBytes(bBytes);
 		const res = aUint.mul(bUint);
-		assert.is(hex.fromBytes(res.toBytes()), test[2]);
+		assert.is(Hex.fromBytes(res.toBytes()), test[2]);
 	});
 }
 

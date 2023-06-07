@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
-import gAssert from '../../src/test/assert';
+import {Assert} from '../../src/test/assert';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { Sha3_512} from '../../src/hash/Sha3';
 
 const tsts = suite('SHA3/FIPS-202 (512)');
@@ -41,7 +41,7 @@ for (const [source,expect] of ascii512Pairs) {
 		const hash=new Sha3_512();
 		hash.write(b);
 		const md=hash.sum();
-		assert.is(hex.fromBytes(md), expect);
+		assert.is(Hex.fromBytes(md), expect);
 		assert.is(hash.size,64);
 		assert.is(hash.blockSize,72);
 	});
@@ -51,14 +51,14 @@ tsts('Sequential Hash & reset: a/ab/b',()=> {
 	const hash=new Sha3_512();
 	//md(a)
 	hash.write(utf8.toBytes('a'));
-	gAssert.bytesMatchHex(hash.sum(), '697F2D856172CB8309D6B8B97DAC4DE344B549D4DEE61EDFB4962D8698B7FA803F4F93FF24393586E28B5B957AC3D1D369420CE53332712F997BD336D09AB02A');
+	Assert.bytesMatchHex(hash.sum(), '697F2D856172CB8309D6B8B97DAC4DE344B549D4DEE61EDFB4962D8698B7FA803F4F93FF24393586E28B5B957AC3D1D369420CE53332712F997BD336D09AB02A');
 	//md(ab)
 	hash.write(utf8.toBytes('b'));
-	gAssert.bytesMatchHex(hash.sum(), '01C87B5E8F094D8725ED47BE35430DE40F6AB6BD7C6641A4ECF0D046C55CB468453796BB61724306A5FB3D90FBE3726A970E5630AE6A9CF9F30D2AA062A0175E');
+	Assert.bytesMatchHex(hash.sum(), '01C87B5E8F094D8725ED47BE35430DE40F6AB6BD7C6641A4ECF0D046C55CB468453796BB61724306A5FB3D90FBE3726A970E5630AE6A9CF9F30D2AA062A0175E');
 	//md(b)
 	hash.reset();
 	hash.write(utf8.toBytes('b'));
-	gAssert.bytesMatchHex(hash.sum(), '8446C46EE03793BA6E5813BA0DB4480008926DD1D19EFE2C8EB92F9034DA974D2171AE483F29CE3A79ED4FDD621AE1ED14FE12532AF95DDD0728779CE5AA842D');
+	Assert.bytesMatchHex(hash.sum(), '8446C46EE03793BA6E5813BA0DB4480008926DD1D19EFE2C8EB92F9034DA974D2171AE483F29CE3A79ED4FDD621AE1ED14FE12532AF95DDD0728779CE5AA842D');
 });
 
 tsts.run();

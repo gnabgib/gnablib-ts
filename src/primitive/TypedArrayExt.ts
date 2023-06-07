@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { nextPow2 } from '../algo/nextPow2.js';
-import { NotEnoughSpaceError, NotSupported } from './ErrorExt.js';
+import { NotEnoughSpaceError, NotSupportedError } from './ErrorExt.js';
 import { strictParseDecUint } from './IntExt.js';
 import type { IReadArray, IReadWriteArray } from './IRWArray.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -782,7 +782,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 	 * @param dataSizeBytes Number of bytes the new buffer should be
 	 */
 	private _resize(dataSizeBytes: number, viewSizeEls: number) {
-		if (this._sizeLocked) throw new NotSupported('This array is locked');
+		if (this._sizeLocked) throw new NotSupportedError('This array is locked');
 		//No need to check dataSizeBytes<= viewSizeEls * bytes per (this is an internal call)
 		if (dataSizeBytes < this._data.byteLength) {
 			//Downsize

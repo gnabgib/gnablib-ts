@@ -10,6 +10,7 @@
 		"format:check": "prettier --check \"src/**/*.{js,ts}\"",
 		"lint": "eslint \"src/**/*.{js,ts}\"",
 		"test": "uvu -r tsm -i \"(.slow.test.ts|.log)$\" tst",
+		"test:coverage": "c8 --include=src npm test",
 		"deeptest": "uvu -r tsm -i .log$ tst",
 		"prebuild": "rm -rf dist",
 		"build": "tsc --sourceMap false"
@@ -132,6 +133,7 @@
 	"devDependencies": {
 		"@typescript-eslint/eslint-plugin": "^5.48.1",
 		"@typescript-eslint/parser": "^5.48.1",
+		"c8": "^7.14.0",
 		"eslint": "^8.31.0",
 		"eslint-config-prettier": "^8.6.0",
 		"eslint-plugin-import": "^2.26.0",

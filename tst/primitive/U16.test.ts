@@ -1,9 +1,15 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { U16 } from '../../src/primitive/U16';
 
 const tsts = suite('U16');
+
+tsts('max min zero',()=>{
+	assert.is(U16.max,0xffff);
+	assert.is(U16.min,0);
+	assert.is(U16.zero,0);
+});
 
 const rot16 = [
 	[0, 0, 0],
@@ -66,14 +72,13 @@ const rot16 = [
 	[0x8000, 7, 0x40],
 	[0x8000, 15, 0x4000],
 ];
-
 for (const [start,by,expectLeft] of rot16) {
 	const left = U16.rol(start, by);
-	tsts(`rol16(${hex.fromI32(start)}, ${by})`, () => {
+	tsts(`rol16(${Hex.fromI32(start)}, ${by})`, () => {
 		assert.is(left, expectLeft);
 	});
 
-    tsts(`rol16(${hex.fromI32(left)}, ${by})`, () => {
+    tsts(`rol16(${Hex.fromI32(left)}, ${by})`, () => {
 		assert.is(U16.ror(left, by), start);
 	});
 }
@@ -89,7 +94,7 @@ const rol16OversizedTests=[
     [0xf0f0f0f0f0,8,0xf0f0],
 ];
 for (const [start,by,expect] of rol16OversizedTests) {
-    tsts(`rol16 (${hex.fromI32(start)},${by})`,()=>{
+    tsts(`rol16 (${Hex.fromI32(start)},${by})`,()=>{
         const actual=U16.rol(start,by)>>>0;
         assert.is(actual,expect);
     })
@@ -105,7 +110,7 @@ const ror16OversizedTests=[
     [0xf0f0f0f0f0,8,0xf0f0],
 ];
 for (const [start,by,expect] of ror16OversizedTests) {
-    tsts(`ror16 (${hex.fromI32(start)},${by})`,()=>{
+    tsts(`ror16 (${Hex.fromI32(start)},${by})`,()=>{
         const actual=U16.ror(start,by)>>>0;
         assert.is(actual,expect);
     })
@@ -122,7 +127,7 @@ const bytesLETests:[Uint8Array,number,number][]=[
 	[Uint8Array.of(3,2,1),3,0],//Note pos can be out of bounds
 ];
 for (const [src,pos,expect] of bytesLETests) {
-    tsts(`iFromBytesLE(${hex.fromBytes(src)}, ${pos}):`,()=>{
+    tsts(`iFromBytesLE(${Hex.fromBytes(src)}, ${pos}):`,()=>{
 		const actual=U16.iFromBytesLE(src,pos);
         assert.is(actual,expect);
     })
@@ -139,11 +144,19 @@ const bytesBETests:[Uint8Array,number,number][]=[
 	[Uint8Array.of(3,2,1),3,0],//Note pos can be out of bounds
 ];
 for (const [src,pos,expect] of bytesBETests) {
-    tsts(`iFromBytesBE(0x${hex.fromBytes(src)}, ${pos}):`,()=>{
+    tsts(`iFromBytesBE(0x${Hex.fromBytes(src)}, ${pos}):`,()=>{
 		const actual=U16.iFromBytesBE(src,pos);
         assert.is(actual,expect);
     })
 }
+
+tsts('toBytesLE',()=>{
+	assert.equal(U16.toBytesLE(0x0201),Uint8Array.of(0x01,0x02));
+});
+
+tsts('toBytesBE',()=>{
+	assert.equal(U16.toBytesBE(0x0201),Uint8Array.of(0x02,0x01));
+});
 
 
 tsts.run();

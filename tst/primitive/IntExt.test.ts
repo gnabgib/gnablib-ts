@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import * as intExt from '../../src/primitive/IntExt';
 import {
 	sign16,
@@ -173,11 +173,11 @@ for (const test of scaleCodes) {
 	tsts('Encode:' + test[0], () => {
 		const num = test[0] as number;
 		const enc = uintToScaleBytes(num);
-		assert.equal(hex.fromBytes(enc), test[1]);
+		assert.equal(Hex.fromBytes(enc), test[1]);
 	});
 	tsts('Decode:' + test[1], () => {
 		const num = test[0] as number;
-		const bytes = hex.toBytes(test[1] as string);
+		const bytes = Hex.toBytes(test[1] as string);
 		const res = uintFromScaleBytes(bytes);
 		assert.equal(res.value, num);
 	});

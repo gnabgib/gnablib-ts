@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import {Hex} from '../../src/encoding/Hex';
 import { ArrayBufferWindow } from '../../src/encoding/ArrayBufferWindow';
 import { Uint64 } from '../../src/primitive/Uint64';
 import { Int64 } from '../../src/primitive/Int64';
@@ -45,7 +45,7 @@ for (const test of write_1_2_4set) {
 
 		const binReader = buff.getReader(LE);
 		assert.is(binReader.space, len);
-		assert.is(le, hex.fromBytes(binReader.readUint1Array(len)));
+		assert.is(le, Hex.fromBytes(binReader.readUint1Array(len)));
 	});
 
 	tsts('i1-i2-i4 BE', () => {
@@ -65,7 +65,7 @@ for (const test of write_1_2_4set) {
 
 		const binReader = buff.getReader(LE);
 		assert.is(binReader.space, len);
-		assert.is(be, hex.fromBytes(binReader.readUint1Array(len)));
+		assert.is(be, Hex.fromBytes(binReader.readUint1Array(len)));
 	});
 
 	tsts('u1-u2-u4 LE', () => {
@@ -85,7 +85,7 @@ for (const test of write_1_2_4set) {
 
 		const binReader = buff.getReader(LE);
 		assert.is(binReader.space, len);
-		assert.is(le, hex.fromBytes(binReader.readUint1Array(len)));
+		assert.is(le, Hex.fromBytes(binReader.readUint1Array(len)));
 	});
 
 	tsts('u1-u2-u4 BE', () => {
@@ -105,7 +105,7 @@ for (const test of write_1_2_4set) {
 
 		const binReader = buff.getReader(LE);
 		assert.is(binReader.space, len);
-		assert.is(be, hex.fromBytes(binReader.readUint1Array(len)));
+		assert.is(be, Hex.fromBytes(binReader.readUint1Array(len)));
 	});
 }
 
@@ -122,7 +122,7 @@ const decodeFloat4NaN = [
 for (const test of decodeFloat4NaN) {
 	const be = test[0];
 	const le = test[1];
-	const beBytes = hex.toBytes(be);
+	const beBytes = Hex.toBytes(be);
 
 	const buff = ArrayBufferWindow.ofCapacity(beBytes.length);
 	tsts(`float4 decode BE ${be}`, () => {
@@ -137,7 +137,7 @@ for (const test of decodeFloat4NaN) {
 	tsts(`float4 decode LE ${le}`, () => {
 		const writer = buff.getWriter(LE);
 		const reader = buff.getReader(LE);
-		writer.writeUint1Array(hex.toBytes(le));
+		writer.writeUint1Array(Hex.toBytes(le));
 		assert.is(writer.space, 0);
 
 		const val = reader.readFloat4();
@@ -157,7 +157,7 @@ const decodeFloat8NaN = [
 for (const test of decodeFloat8NaN) {
 	const be = test[0];
 	const le = test[1];
-	const beBytes = hex.toBytes(be);
+	const beBytes = Hex.toBytes(be);
 	const buff = ArrayBufferWindow.ofCapacity(beBytes.length);
 
 	tsts(`float8 decode BE ${be}`, () => {
@@ -172,7 +172,7 @@ for (const test of decodeFloat8NaN) {
 	tsts(`float8 decode LE ${le}`, () => {
 		const writer = buff.getWriter(LE);
 		const reader = buff.getReader(LE);
-		writer.writeUint1Array(hex.toBytes(le));
+		writer.writeUint1Array(Hex.toBytes(le));
 		assert.is(writer.space, 0);
 
 		const val = reader.readFloat8();
@@ -204,7 +204,7 @@ for (const test of write1ByteSet) {
 		const read = reader.readInt1Array(len);
 		assert.is(reader.space, cap - len * byteSize, 'reader space consumed');
 
-		assert.is(hex.fromBytes(read), hexStr);
+		assert.is(Hex.fromBytes(read), hexStr);
 	});
 	tsts(`uint${byteSize} ${hexStr}`, () => {
 		const u8 = Uint8Array.from(test[0] as number[]);
@@ -218,7 +218,7 @@ for (const test of write1ByteSet) {
 		const read = reader.readUint1Array(len);
 		assert.is(reader.space, cap - len, 'reader space consumed');
 
-		assert.is(hex.fromBytes(read), hexStr);
+		assert.is(Hex.fromBytes(read), hexStr);
 	});
 }
 
@@ -258,7 +258,7 @@ for (const test of write2ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), le, 'le encoded');
+		assert.is(Hex.fromBytes(bytes), le, 'le encoded');
 	});
 	tsts(`int${byteSize}-be ${be}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -278,7 +278,7 @@ for (const test of write2ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), be, 'be encoded');
+		assert.is(Hex.fromBytes(bytes), be, 'be encoded');
 	});
 	tsts(`uint${byteSize}-le ${le}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -298,7 +298,7 @@ for (const test of write2ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), le, 'le encoded');
+		assert.is(Hex.fromBytes(bytes), le, 'le encoded');
 	});
 	tsts(`uint${byteSize}-be ${be}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -318,7 +318,7 @@ for (const test of write2ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), be, 'be encoded');
+		assert.is(Hex.fromBytes(bytes), be, 'be encoded');
 	});
 }
 
@@ -355,7 +355,7 @@ for (const test of write4ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), le, 'le encoded');
+		assert.is(Hex.fromBytes(bytes), le, 'le encoded');
 	});
 	tsts(`int${byteSize}-be ${be}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -375,7 +375,7 @@ for (const test of write4ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), be, 'be encoded');
+		assert.is(Hex.fromBytes(bytes), be, 'be encoded');
 	});
 	tsts(`uint${byteSize}-le ${le}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -395,7 +395,7 @@ for (const test of write4ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), le, 'le encoded');
+		assert.is(Hex.fromBytes(bytes), le, 'le encoded');
 	});
 	tsts(`uint${byteSize}-be ${be}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -415,7 +415,7 @@ for (const test of write4ByteSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), be, 'be encoded');
+		assert.is(Hex.fromBytes(bytes), be, 'be encoded');
 	});
 }
 
@@ -555,7 +555,7 @@ for (const test of write4ByteFloatSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), le, 'le encoded');
+		assert.is(Hex.fromBytes(bytes), le, 'le encoded');
 	});
 	tsts(`float${byteSize}array-be ${be}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -575,7 +575,7 @@ for (const test of write4ByteFloatSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), be, 'be encoded');
+		assert.is(Hex.fromBytes(bytes), be, 'be encoded');
 	});
 }
 
@@ -624,7 +624,7 @@ for (const test of write8ByteFloatSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), le, 'le encoded');
+		assert.is(Hex.fromBytes(bytes), le, 'le encoded');
 	});
 	tsts(`float${byteSize}array-be ${be}`, () => {
 		assert.is(buff.byteLength, cap);
@@ -644,7 +644,7 @@ for (const test of write8ByteFloatSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(byteSize * len);
-		assert.is(hex.fromBytes(bytes), be, 'be encoded');
+		assert.is(Hex.fromBytes(bytes), be, 'be encoded');
 	});
 }
 
@@ -699,7 +699,7 @@ for (const test of compositeSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(len);
-		assert.is(hex.fromBytes(bytes), be, 'be encoded');
+		assert.is(Hex.fromBytes(bytes), be, 'be encoded');
 	});
 
 	tsts('compositeSet uint-LE', () => {
@@ -724,7 +724,7 @@ for (const test of compositeSet) {
 		//Confirm the storage format
 		const bReader = buff.getReader(false);
 		const bytes = bReader.readUint1Array(len);
-		assert.is(hex.fromBytes(bytes), le, 'le encoded');
+		assert.is(Hex.fromBytes(bytes), le, 'le encoded');
 	});
 }
 
@@ -793,7 +793,7 @@ for (const test of subWindowReadSet) {
 	const buff2 = buff1.subWindow(pos);
 	//Write the data.. note this is after buff2 is created because it shares the same
 	// memory that doesn't matter
-	buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+	buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 	//We need to create a reader each time, so the pointer is at the start (=pos)
 
 	//UInts
@@ -1045,46 +1045,46 @@ for (const test of subWindowWriteSet) {
 
 	//UInts
 	tsts('write uint1array', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeUint1Array(new Uint8Array([0xfe, 0xdc]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[2]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[2]);
 	});
 
 	tsts('write uint2array BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeUint2Array(new Uint16Array([0xfe00, 0xdc00]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[3]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[3]);
 	});
 	tsts('write uint2array LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeUint2Array(new Uint16Array([0xfe00, 0xdc00]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[4]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[4]);
 	});
 
 	tsts('write uint4array BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeUint4Array(new Uint32Array([0xfe000000, 0xdc000000]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[5]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[5]);
 	});
 	tsts('write uint4array LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeUint4Array(new Uint32Array([0xfe000000, 0xdc000000]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[6]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[6]);
 	});
 
 	// tsts('write uint8array BE', () => {
@@ -1110,46 +1110,46 @@ for (const test of subWindowWriteSet) {
 
 	//Ints
 	tsts('write int1array', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeInt1Array(new Int8Array([0xfe, 0xdc]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[2]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[2]);
 	});
 
 	tsts('write int2array BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeInt2Array(new Int16Array([0xfe00, 0xdc00]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[3]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[3]);
 	});
 	tsts('write int2array LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeInt2Array(new Int16Array([0xfe00, 0xdc00]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[4]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[4]);
 	});
 
 	tsts('write int4array BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeInt4Array(new Int32Array([0xfe000000, 0xdc000000]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[5]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[5]);
 	});
 	tsts('write int4array LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeInt4Array(new Int32Array([0xfe000000, 0xdc000000]));
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[6]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[6]);
 	});
 
 	// tsts('write int8array BE', () => {
@@ -1175,46 +1175,46 @@ for (const test of subWindowWriteSet) {
 
 	//Uint
 	tsts('write uint1', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeUint1(0xfe);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[9]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[9]);
 	});
 
 	tsts('write uint2 BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeUint2(0xfedc);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[10]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[10]);
 	});
 	tsts('write uint2 LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeUint2(0xfedc);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[11]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[11]);
 	});
 
 	tsts('write uint4 BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeUint4(0xfedcba98);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[12]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[12]);
 	});
 	tsts('write uint4 LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeUint4(0xfedcba98);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[13]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[13]);
 	});
 
 	// tsts('write uint8 BE', () => {
@@ -1236,56 +1236,56 @@ for (const test of subWindowWriteSet) {
 
 	//Int
 	tsts('write int1', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeInt1(0xfe);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[9]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[9]);
 	});
 
 	tsts('write int2 BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeInt2(0xfedc);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[10]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[10]);
 	});
 	tsts('write int2 LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeInt2(0xfedc);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[11]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[11]);
 	});
 
 	tsts('write int4 BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeInt4(0xfedcba98);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[12]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[12]);
 	});
 	tsts('write int4 LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeInt4(0xfedcba98);
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[13]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[13]);
 	});
 
-	// tsts('write int8 BE', () => {
-	// 	buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+	tsts('write int8 BE', () => {
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
-	// 	const writer = buff2.getWriter(BE);
-	// 	writer.writeInt8(new Int64(0x76543210, 0xfedcba98));
-	// 	const reader = buff1.getReader(BE);
-	// 	assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[14]);
-	// });
+		const writer = buff2.getWriter(BE);
+		writer.writeInt8(new Int64(0x76543210, 0xfedcba98));
+		const reader = buff1.getReader(BE);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[14]);
+	});
 	// tsts('write int8 LE', () => {
 	// 	buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
 
@@ -1298,89 +1298,117 @@ for (const test of subWindowWriteSet) {
 	//Floats
 	const f4s = Float32Array.of(12.375, 1);
 	tsts('write F4s BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeFloat4Array(f4s);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[16]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[16]);
 	});
 	tsts('write F4s LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeFloat4Array(f4s);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[17]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[17]);
 	});
 
 	const f8s = Float64Array.of(3.141592653589793, 0.9999999999999999);
 	//400921FB54442D18 3FEFFFFFFFFFFFFF
 	//182D4454FB210940 FFFFFFFFFFFFEF3F
 	tsts('write F8s BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeFloat8Array(f8s);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[18]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[18]);
 	});
 	tsts('write F8s LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeFloat8Array(f8s);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[19]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[19]);
 	});
 
 	//Float
 	const f4 = 12.375;
 	tsts('write F4 BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeFloat4(f4);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[20]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[20]);
 	});
 	tsts('write F4 LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeFloat4(f4);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[21]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[21]);
 	});
 
 	const f8 = 1 / 3; //Note FP makes this approx
 	tsts('write F8 BE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(BE);
 		writer.writeFloat8(f8);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[22]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[22]);
 	});
 	tsts('write F8 LE', () => {
-		buff1.getWriter(BE).writeUint1Array(hex.toBytes(hexStr));
+		buff1.getWriter(BE).writeUint1Array(Hex.toBytes(hexStr));
 
 		const writer = buff2.getWriter(LE);
 		writer.writeFloat8(f8);
 
 		const reader = buff1.getReader(BE);
-		assert.equal(hex.fromBytes(reader.readUint1Array(cap)), test[23]);
+		assert.equal(Hex.fromBytes(reader.readUint1Array(cap)), test[23]);
 	});
 }
 
 //Because certain binary encodings are not valid floats, we need to specially build the setup
+
+tsts('ArrayBufferWindowReader basics',()=>{
+	const b=ArrayBufferWindow.ofCapacity(1);
+	const r=b.getReader(true);
+	assert.is(r.position,0);
+	assert.throws(()=>r.readInt1Array(2));
+	assert.throws(()=>r.readInt2Array(1));
+	assert.throws(()=>r.readInt4Array(1));
+	assert.throws(()=>r.readUint1Array(2));
+	assert.throws(()=>r.readUint2Array(1));
+	assert.throws(()=>r.readUint4Array(1));
+	assert.throws(()=>r.readFloat4Array(1));
+	assert.throws(()=>r.readFloat8Array(1));
+});
+
+tsts('ArrayBufferWindowWriter basics',()=>{
+	const b=ArrayBufferWindow.ofCapacity(1);
+	const r=b.getWriter(true);
+	assert.is(r.position,0);
+	assert.throws(()=>r.writeInt1Array(Int8Array.of(1,2)));
+	assert.throws(()=>r.writeInt2Array(Int16Array.of(1)));
+	assert.throws(()=>r.writeInt4Array(Int32Array.of(1)));
+	assert.throws(()=>r.writeUint1Array(Uint8Array.of(1,2)));
+	assert.throws(()=>r.writeUint2Array(Uint16Array.of(1)));
+	assert.throws(()=>r.writeUint4Array(Uint32Array.of(1)));
+	assert.throws(()=>r.writeFloat4Array(Float32Array.of(1)));
+	assert.throws(()=>r.writeFloat8Array(Float64Array.of(1)));
+});
 
 //Float4 subWindowRead
 {

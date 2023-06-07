@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 //import * as assert from 'uvu/assert';
 import {md5sum} from '../../src/checksum/md5sum';
 import * as utf8 from '../../src/encoding/Utf8';
-import assert from '../../src/test/assert';
+import {Assert} from '../../src/test/assert';
 
 const tsts = suite('MD5sum/RFC 1321');
 
@@ -14,7 +14,7 @@ const asciiHexPairs = [
 for (const [source,expect] of asciiHexPairs) {
 	tsts('md5sum: ' + source, () => {
 		const b = utf8.toBytes(source as string);
-		assert.bytesMatchHex(md5sum(b), expect);
+		Assert.bytesMatchHex(md5sum(b), expect);
 	});
 }
 

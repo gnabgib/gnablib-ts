@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { Lookup3 } from '../../src/hash/Lookup3';
 import * as utf8 from '../../src/encoding/Utf8';
 

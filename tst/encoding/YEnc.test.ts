@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as yenc from '../../src/encoding/YEnc';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 
 const tsts = suite('yEnc');
 
@@ -75,13 +75,13 @@ const hexPairs = [
 
 for (const pair of hexPairs) {
 	tsts('fromBytes: ' + pair[0], () => {
-		const b = hex.toBytes(pair[0]);
+		const b = Hex.toBytes(pair[0]);
 		assert.is(yenc.fromBytes(b), pair[1]);
 	});
 
 	tsts('toBytes: ' + pair[1], () => {
 		const b = yenc.toBytes(pair[1]);
-		assert.is(hex.fromBytes(b), pair[0]);
+		assert.is(Hex.fromBytes(b), pair[0]);
 	});
 }
 

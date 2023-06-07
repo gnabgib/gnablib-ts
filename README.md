@@ -2,6 +2,10 @@
 
 A library for building web/node/deno applications.
 
+[![CI](https://github.com/gnabgib/gnablib-ts/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gnabgib/gnablib-ts/actions)
+[![NPM Version](https://img.shields.io/npm/v/gnablib?color=33cd56&logo=npm)](https://www.npmjs.com/package/gnablib)
+![Depfu](https://img.shields.io/depfu/dependencies/github/gnabgib/gnablib-ts)
+
 ## Installation
 
 This module is available through [NPM](https://www.npmjs.com/). There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)

@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-//import * as hex from '../encoding/Hex.js';
+//import { Hex } from '../encoding/Hex.js';
 import * as intExt from '../primitive/IntExt.js';
 import * as littleEndian from '../endian/little.js';
 import { SizeError } from '../primitive/ErrorExt.js';
@@ -100,7 +100,7 @@ class Blake2_32bit implements IHash {
 	}
 
 	get leafLen(): number {
-		return littleEndian.u32FromBytes(this.#params, 4);
+		return U32.iFromBytesLE(this.#params,4);
 	}
 
 	get nodeOffset(): Uint64 {
@@ -138,8 +138,8 @@ class Blake2_32bit implements IHash {
 			i2 = i << 1,
 			j = sigma[i2],
 			k = sigma[i2 + 1],
-			mj = littleEndian.u32FromBytes(this.#block, j * 4), //m[j]
-			mk = littleEndian.u32FromBytes(this.#block, k * 4); //m[k]
+			mj = U32.iFromBytesLE(this.#block, j * 4), //m[j]
+			mk = U32.iFromBytesLE(this.#block, k * 4); //m[k]
 		// console.log(`mj=${hex.fromBytes(mj.toBytes())}`);
 		// console.log(`mk=${hex.fromBytes(mk.toBytes())}`);
 
@@ -262,14 +262,14 @@ class Blake2_32bit implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.#state[0] = iv[0] ^ littleEndian.u32FromBytes(this.#params, 0);
-        this.#state[1] = iv[2] ^ littleEndian.u32FromBytes(this.#params, 4);
-        this.#state[2] = iv[4] ^ littleEndian.u32FromBytes(this.#params, 8);
-        this.#state[3] = iv[6] ^ littleEndian.u32FromBytes(this.#params, 12);
-        this.#state[4] = iv[8] ^ littleEndian.u32FromBytes(this.#params, 16);
-        this.#state[5] = iv[10] ^ littleEndian.u32FromBytes(this.#params, 20);
-        this.#state[6] = iv[12] ^ littleEndian.u32FromBytes(this.#params, 24);
-        this.#state[7] = iv[14] ^ littleEndian.u32FromBytes(this.#params, 28);
+		this.#state[0] = iv[0] ^ U32.iFromBytesLE(this.#params, 0);
+        this.#state[1] = iv[2] ^ U32.iFromBytesLE(this.#params, 4);
+        this.#state[2] = iv[4] ^ U32.iFromBytesLE(this.#params, 8);
+        this.#state[3] = iv[6] ^ U32.iFromBytesLE(this.#params, 12);
+        this.#state[4] = iv[8] ^ U32.iFromBytesLE(this.#params, 16);
+        this.#state[5] = iv[10] ^ U32.iFromBytesLE(this.#params, 20);
+        this.#state[6] = iv[12] ^ U32.iFromBytesLE(this.#params, 24);
+        this.#state[7] = iv[14] ^ U32.iFromBytesLE(this.#params, 28);
 
 		//Reset ingest count
 		this.#ingestBytes = Uint64.zero;
@@ -355,7 +355,7 @@ class Blake2_64bit implements IHash {
 	}
 
 	get leafLen(): number {
-		return littleEndian.u32FromBytes(this.#params, 4);
+		return U32.iFromBytesLE(this.#params, 4);
 	}
 
 	get nodeOffset(): Uint64 {
@@ -525,36 +525,36 @@ class Blake2_64bit implements IHash {
 	reset(): void {
 		//Setup state
 		this.#state[0] = new Uint64(
-			(iv[1] ^ littleEndian.u32FromBytes(this.#params, 0)) >>> 0,
-			(iv[0] ^ littleEndian.u32FromBytes(this.#params, 4)) >>> 0
+			(iv[1] ^ U32.iFromBytesLE(this.#params, 0)) >>> 0,
+			(iv[0] ^ U32.iFromBytesLE(this.#params, 4)) >>> 0
 		);
 		this.#state[1] = new Uint64(
-			(iv[3] ^ littleEndian.u32FromBytes(this.#params, 8)) >>> 0,
-			(iv[2] ^ littleEndian.u32FromBytes(this.#params, 12)) >>> 0
+			(iv[3] ^ U32.iFromBytesLE(this.#params, 8)) >>> 0,
+			(iv[2] ^ U32.iFromBytesLE(this.#params, 12)) >>> 0
 		);
 		this.#state[2] = new Uint64(
-			(iv[5] ^ littleEndian.u32FromBytes(this.#params, 16)) >>> 0,
-			(iv[4] ^ littleEndian.u32FromBytes(this.#params, 20)) >>> 0
+			(iv[5] ^ U32.iFromBytesLE(this.#params, 16)) >>> 0,
+			(iv[4] ^ U32.iFromBytesLE(this.#params, 20)) >>> 0
 		);
 		this.#state[3] = new Uint64(
-			(iv[7] ^ littleEndian.u32FromBytes(this.#params, 24)) >>> 0,
-			(iv[6] ^ littleEndian.u32FromBytes(this.#params, 28)) >>> 0
+			(iv[7] ^ U32.iFromBytesLE(this.#params, 24)) >>> 0,
+			(iv[6] ^ U32.iFromBytesLE(this.#params, 28)) >>> 0
 		);
 		this.#state[4] = new Uint64(
-			(iv[9] ^ littleEndian.u32FromBytes(this.#params, 32)) >>> 0,
-			(iv[8] ^ littleEndian.u32FromBytes(this.#params, 36)) >>> 0
+			(iv[9] ^ U32.iFromBytesLE(this.#params, 32)) >>> 0,
+			(iv[8] ^ U32.iFromBytesLE(this.#params, 36)) >>> 0
 		);
 		this.#state[5] = new Uint64(
-			(iv[11] ^ littleEndian.u32FromBytes(this.#params, 40)) >>> 0,
-			(iv[10] ^ littleEndian.u32FromBytes(this.#params, 44)) >>> 0
+			(iv[11] ^ U32.iFromBytesLE(this.#params, 40)) >>> 0,
+			(iv[10] ^ U32.iFromBytesLE(this.#params, 44)) >>> 0
 		);
 		this.#state[6] = new Uint64(
-			(iv[13] ^ littleEndian.u32FromBytes(this.#params, 48)) >>> 0,
-			(iv[12] ^ littleEndian.u32FromBytes(this.#params, 52)) >>> 0
+			(iv[13] ^ U32.iFromBytesLE(this.#params, 48)) >>> 0,
+			(iv[12] ^ U32.iFromBytesLE(this.#params, 52)) >>> 0
 		);
 		this.#state[7] = new Uint64(
-			(iv[15] ^ littleEndian.u32FromBytes(this.#params, 56)) >>> 0,
-			(iv[14] ^ littleEndian.u32FromBytes(this.#params, 60)) >>> 0
+			(iv[15] ^ U32.iFromBytesLE(this.#params, 56)) >>> 0,
+			(iv[14] ^ U32.iFromBytesLE(this.#params, 60)) >>> 0
 		);
 
 		//Reset ingest count
@@ -610,7 +610,7 @@ export class Blake2s extends Blake2_32bit {
 		p[1] = key.length;
 		p[2] = fanOut;
 		p[3] = maxDepth;
-		littleEndian.u32IntoBytesUnsafe(leafMaxLen, p, 4);
+		p.set(U32.toBytesLE(leafMaxLen),4);
 		littleEndian.u64IntoBytesUnsafe(Uint64.coerce(nodeOffset), p, 8);
 		p[14] = nodeDepth;
 		p[15] = innerHashLen;
@@ -678,7 +678,7 @@ export class Blake2b extends Blake2_64bit {
 		p[1] = key.length;
 		p[2] = fanOut;
 		p[3] = maxDepth;
-		littleEndian.u32IntoBytesUnsafe(leafMaxLen, p, 4);
+		p.set(U32.toBytesLE(leafMaxLen),4);
 		littleEndian.u64IntoBytesUnsafe(Uint64.coerce(nodeOffset), p, 8);
 		p[16] = nodeDepth;
 		p[17] = innerHashLen;

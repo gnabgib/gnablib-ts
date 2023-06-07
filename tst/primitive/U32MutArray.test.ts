@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import {U32, U32MutArray } from '../../src/primitive/U32';
 
 const tsts = suite('U32MutArray');

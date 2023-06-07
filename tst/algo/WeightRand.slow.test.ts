@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import wtRnd from '../../src/algo/WeightRand';
-import assert from '../../src/test/assert';
+import {Assert} from '../../src/test/assert';
 
 const tsts = suite('WeightRand');
 
@@ -27,14 +27,14 @@ for (const set of relativeSet) {
 		const counts = new Uint32Array(wtCount);
 		for (let i = 0; i < sampleSize; i++) {
 			const n = wtRnd.relative(wts, Math.random);
-			assert.inClosedOpen(n, 0, wtCount);
+			Assert.inClosedOpen(n, 0, wtCount);
 			counts[n]++;
 		}
 
 		//Assert sample reasonable
 		for (let i = 0; i < wtCount; i++) {
 			//2.5% error margin
-            assert.equalish(counts[i],(wts[i] / wtMax) * sampleSize,{percent:2.5},`wt[${i}]`)
+            Assert.equalish(counts[i],(wts[i] / wtMax) * sampleSize,{percent:2.5},`wt[${i}]`)
 			//assertEqualish(counts[i], (wts[i] / wtMax) * sampleSize, 2.5, `wt[${i}]`);
 		}
 	});
@@ -55,7 +55,7 @@ for (const set of cumulativeSet) {
 		const counts = new Uint32Array(wtCount);
 		for (let i = 0; i < sampleSize; i++) {
 			const n = wtRnd.cumulative(wts, Math.random);
-			assert.inClosedOpen(n, 0, wtCount);
+			Assert.inClosedOpen(n, 0, wtCount);
 			counts[n]++;
 		}
 
@@ -63,7 +63,7 @@ for (const set of cumulativeSet) {
 		let pastWt = 0;
 		for (let i = 0; i < wtCount; i++) {
 			//2.5% error margin
-			assert.equalish(
+			Assert.equalish(
 				counts[i],
 				((wts[i] - pastWt) / wtMax) * sampleSize,
 				{percent:2.5},

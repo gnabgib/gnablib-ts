@@ -15,19 +15,7 @@ import type {
 	ReadonlyUint32Array,
 	ReadonlyUint8Array,
 } from '../primitive/ReadonlyTypedArray.js';
-
-export const platformIsLE = (() => {
-	//Since TypedArrays use system-endianness, putting 1 in a U16 will be:
-	// bigEndian: 0x0001
-	// littleEndian: 0x0100
-	//Mapping a uint8 array over the top, we can check if the first byte is not zero (LE)
-	const u16 = new Uint16Array([1]);
-	const u8 = new Uint8Array(u16.buffer);
-	return u8[0] > 0;
-
-	//JS seems to assume platform can only be little or big (by only using boolean endian flags)
-	// .. presumably any implementations using middle will accommodate this
-})();
+import { isLE } from '../endian/platform.js';
 
 class ArrayBufferWindowReader {
 	private readonly _view: DataView;
@@ -136,7 +124,7 @@ class ArrayBufferWindowReader {
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
 		let ret: Int16Array;
-		if (this._isLittleEndian === platformIsLE) {
+		if (this._isLittleEndian === isLE) {
 			const start = this._pos + this._view.byteOffset;
 			ret = new Int16Array(this._view.buffer.slice(start, start + sizeBytes));
 			this._pos += sizeBytes;
@@ -159,7 +147,7 @@ class ArrayBufferWindowReader {
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
 		let ret: Int32Array;
-		if (this._isLittleEndian === platformIsLE) {
+		if (this._isLittleEndian === isLE) {
 			const start = this._pos + this._view.byteOffset;
 			ret = new Int32Array(this._view.buffer.slice(start, start + sizeBytes));
 			this._pos += sizeBytes;
@@ -218,7 +206,7 @@ class ArrayBufferWindowReader {
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
 		let ret: Uint16Array;
-		if (this._isLittleEndian === platformIsLE) {
+		if (this._isLittleEndian === isLE) {
 			const start = this._pos + this._view.byteOffset;
 			ret = new Uint16Array(this._view.buffer.slice(start, start + sizeBytes));
 			this._pos += sizeBytes;
@@ -241,7 +229,7 @@ class ArrayBufferWindowReader {
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
 		let ret: Uint32Array;
-		if (this._isLittleEndian === platformIsLE) {
+		if (this._isLittleEndian === isLE) {
 			const start = this._pos + this._view.byteOffset;
 			ret = new Uint32Array(this._view.buffer.slice(start, start + sizeBytes));
 			this._pos += sizeBytes;
@@ -285,7 +273,7 @@ class ArrayBufferWindowReader {
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
 		let ret: Float32Array;
-		if (this._isLittleEndian === platformIsLE) {
+		if (this._isLittleEndian === isLE) {
 			const start = this._pos + this._view.byteOffset;
 			ret = new Float32Array(this._view.buffer.slice(start, start + sizeBytes));
 			this._pos += sizeBytes;
@@ -308,7 +296,7 @@ class ArrayBufferWindowReader {
 		//!Byte alignment issue - if start isn't a multiple of byteSize(2) we cannot build
 		//!Endian issue - if platform is different from preferred, viewing straight into the data is bad (mkay)
 		let ret: Float64Array;
-		if (this._isLittleEndian === platformIsLE) {
+		if (this._isLittleEndian === isLE) {
 			const start = this._pos + this._view.byteOffset;
 			ret = new Float64Array(this._view.buffer.slice(start, start + sizeBytes));
 			this._pos += sizeBytes;

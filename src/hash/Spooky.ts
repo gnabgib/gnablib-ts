@@ -1,12 +1,12 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as hex from '../encoding/Hex.js';
+//import { Hex } from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
 import { asLE } from '../endian/platform.js';
 import { U64, U64Mut, U64MutArray } from '../primitive/U64.js';
 
 //[Wikipedia: Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function)
-//[SpookyHash: a 128-bit noncryptographic hash](http://burtleburtle.net/bob/hash/spooky.html)
+//[SpookyHash: a 128-bit non-cryptographic hash](http://burtleburtle.net/bob/hash/spooky.html)
 //[SpookyV2.cpp](http://burtleburtle.net/bob/c/SpookyV2.cpp) (2012)
 //SpookyHash v2 was released shortly after V1, and improved on it, so no v1 implementation planned
 

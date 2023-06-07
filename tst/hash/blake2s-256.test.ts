@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import * as utf8 from '../../src/encoding/Utf8';
-import * as hex from '../../src/encoding/Hex';
+import { Hex } from '../../src/encoding/Hex';
 import { Blake2s_256 } from '../../src/hash/Blake2';
 
 const tsts = suite('Blake2/RFC 7693 (s256)');
@@ -52,7 +52,7 @@ for (const [source,expect] of ascii2sHexPairs) {
         const hash=new Blake2s_256();
         hash.write(b);
 		const md=hash.sum();
-		assert.is(hex.fromBytes(md), expect);
+		assert.is(Hex.fromBytes(md), expect);
 	});
 }
 

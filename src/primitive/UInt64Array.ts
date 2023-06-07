@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as hex from '../encoding/Hex.js';
+import {Hex} from '../encoding/Hex.js';
 
 export class Uint64Array {
 	private readonly _buff: Uint32Array;
@@ -11,7 +11,7 @@ export class Uint64Array {
 				this._buff = new Uint32Array(sizeOrData * 2);
 				break;
 			case 'string':
-				this._buff = new Uint32Array(hex.toBytes(sizeOrData));
+				this._buff = new Uint32Array(Hex.toBytes(sizeOrData));
 				break;
 			default:
 				this._buff = new Uint32Array(0);

@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { ContentError } from '../primitive/ErrorExt.js';
-import * as hex from './Hex.js';
+import { Hex } from './Hex.js';
 import * as utf8 from './Utf8.js';
 //https://datatracker.ietf.org/doc/html/rfc3986#page-11
 const ord_dash = 45; //ASCII -
@@ -34,7 +34,7 @@ export function fromBytes(bytes: Uint8Array): string {
 				continue;
 			}
 		}
-		ret += '%' + hex.fromByte(byte);
+		ret += '%' + Hex.fromByte(byte);
 	}
 	return ret;
 }
@@ -89,7 +89,7 @@ export function toBytes(uriEncoded: string, opts?: DecodeOpts): Uint8Array {
 		if (char === '%') {
 			const pair = uriEncoded.substring(inPtr, inPtr + 2);
 			try {
-				ret[outPtr++] = hex.toByte(pair);
+				ret[outPtr++] = Hex.toByte(pair);
 			} catch (e) {
 				//Not a pair, invalid hex chars
 				throw new ContentError('URI encoding', 'invalid escape', '%' + pair);
