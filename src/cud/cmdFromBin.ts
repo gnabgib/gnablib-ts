@@ -8,7 +8,7 @@ import { Plane } from './types/Plane.js';
 import { ACmdData } from './CommandData.js';
 import type { ACmd } from './ACmd.js';
 import { ACmdCtrl } from './CommandCtrl.js';
-import { Uint64 } from '../primitive/Uint64.js';
+import { U64 } from '../primitive/U64.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)
@@ -17,7 +17,7 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	try {
 		//Bytes->u64 will work, but DateTime may through if byte values
 		// are invalid.. leap seconds, and some other holes in the ranges
-		s = DateTime.deserialize(Uint64.fromBytes(bin, ptr));
+		s = DateTime.deserialize(U64.fromBytesBE(bin, ptr));
 	} catch {
 		return new FromBinResult<ACmd>(
 			0,

@@ -50,7 +50,7 @@ export abstract class ACmd {
 		// <extra>
 		// min 14 bytes
 		// NOTE: You can jump to byte 11 (first, potentially only U) to find the next row (remain are scaled)
-		const s = this.started.serialize().toBytes();
+		const s = this.started.serialize().toBytesBE();
 		const p = this.plane.toBin();
 		const c = this.cmd.toBin();
 		const u = uintToScaleBytes(this.userId);

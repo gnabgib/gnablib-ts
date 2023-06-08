@@ -37,7 +37,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 		ret = new Uint8Array(1);
 		//ret[0]=0;
 	} else if (value instanceof DateTime) {
-		const d = value.serialize().toBytes();
+		const d = value.serialize().toBytesBE();
 		ret = new Uint8Array(1 + d.length);
 		ret[0] = d.length;
 		ret.set(d, 1);
