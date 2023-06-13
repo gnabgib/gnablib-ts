@@ -149,6 +149,8 @@ Name|Digest sizes|Optional parameters
 - Readonly TypedArray
 - Scaling TypedArray
 - StringBuilder
+- U16
+- U32
 - U64
 - U64Mut
 - U64MutArray
@@ -192,7 +194,7 @@ Resume after checkout
 pnpm install
 ```
 
-Format in VSCode: CTRL+SHIFT+P: Format
+Format in VSCode: CTRL+SHIFT+P: Format  
 -->
 
 ## License
