@@ -11,7 +11,7 @@ tsts('fromLen',()=>{
     const len=3;
     const a=U64MutArray.fromLen(len);
     assert.is(a.length,len);
-    for(let i=0;i<len;i++) assert.is(a.at(i).equals(U64.zero),true,'=0');
+    for(let i=0;i<len;i++) assert.is(a.at(i).eq(U64.zero),true,'=0');
 
     assert.is(a.toString(),'u64array{len=3}')
 

@@ -97,3 +97,44 @@ export function padStart(
 	if (over > 0) ret = ret.substring(over);
 	return ret;
 }
+
+/**
+ * Compare string contents in constant time
+ * **NOTE** will immediately exit/false if lengths don't match
+ * @param a 
+ * @param b 
+ */
+export function ctEq(a:string,b:string):boolean {
+	if (a.length!=b.length) return false;
+	let zero=0;
+	for(let i=0;i<a.length;i++)
+		zero|=a.charCodeAt(i)^b.charCodeAt(i);
+	return zero===0;
+}
+
+/**
+ * Constant time select `a` if `first==true` or `b` if `first==false`
+ * **NOTE** This is quite expensive (exploding both strings into codepoints, choosing each, 
+ *  and imploding codepoints back to a new string)
+ * @param a 
+ * @param b 
+ * @param first 
+ * @throws If strings are different things
+ * @returns A clone of a or b
+ */
+export function ctSelect(a:string,b:string,first:boolean):string {
+	// @ts-expect-error: We're casting bool->number on purpose
+	const fNum = (first | 0) - 1; //-1 or 0
+	const aArr=splitChars(a);
+	const bArr=splitChars(b);
+	if (aArr.length!=bArr.length) throw new Error('Inputs are of different length');
+
+	//String are immutable, 
+	const arr:number[]=[];
+	for(let i=0;i<aArr.length;i++) {
+		//This will never be null, so stop ESLint complaining
+		// eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
+		arr.push(((~fNum)&aArr[i].codePointAt(0)!) | (fNum&bArr[i].codePointAt(0)!));
+	}
+	return String.fromCodePoint(...arr);
+}

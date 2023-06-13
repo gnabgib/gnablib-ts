@@ -43,6 +43,80 @@ export class U16 {
 	//mul is handled by JS natively
 
 	/**
+	 * Compare two numbers for equality in constant time
+	 * @param a16 uint16/int16, if larger than 16 bits it'll be truncated
+	 * @param b16 uint16/int16, if larger than 16 bits it'll be truncated
+	 * @returns
+	 */
+	static ctEq(a16: number, b16: number): boolean {
+		a16 &= i16Mask;
+		b16 &= i16Mask;
+		return (a16 ^ b16) === 0;
+	}
+
+	/**
+	 * ` a16 <= b16` in constant time
+	 * **NOTE** Behaviour is undefined if params are int16 (because in 2s compliment negative numbers are > positive)
+	 * @param a16 uint16, if larger than 16 bits it'll be truncated
+	 * @param b16 uint16, if larger than 16 bits it'll be truncated
+	 * @returns
+	 */
+	static ctLte(a16: number, b16: number): boolean {
+		const l = ((a16 & i16Mask) - (b16 & i16Mask) - 1) >>> 31;
+		return l === 1;
+	}
+
+	/**
+	 * `a16 >= b16` in constant time
+	 * **NOTE** Behaviour is undefined if params are int16 (because in 2s compliment negative numbers are > positive)
+	 * @param a16 uint16, if larger than 16 bits it'll be truncated
+	 * @param b16 uint16, if larger than 16 bits it'll be truncated
+	 * @returns
+	 */
+	static ctGte(a16: number, b16: number): boolean {
+		const l = ((b16 & i16Mask) - (a16 & i16Mask) - 1) >>> 31;
+		return l === 1;
+	}
+
+	/**
+	 * `a16 > b16` in constant time
+	 * **NOTE** Behaviour is undefined if params are int16 (because in 2s compliment negative numbers are > positive)
+	 * @param a16 uint16, if larger than 16 bits it'll be truncated
+	 * @param b16 uint16, if larger than 16 bits it'll be truncated
+	 * @returns
+	 */
+	static ctGt(a16: number, b16: number): boolean {
+		const l = ((a16 & i16Mask) - (b16 & i16Mask) - 1) >>> 31;
+		return l === 0;
+	}
+
+	/**
+	 * `a16 < b16` in constant time
+	 * **NOTE** Behaviour is undefined if params are int16 (because in 2s compliment negative numbers are > positive)
+	 * @param a16 uint16, if larger than 16 bits it'll be truncated
+	 * @param b16 uint16, if larger than 16 bits it'll be truncated
+	 * @returns
+	 */
+	static ctLt(a16: number, b16: number): boolean {
+		const l = ((b16 & i16Mask) - (a16 & i16Mask) - 1) >>> 31;
+		return l === 0;
+	}
+
+	/**
+	 * Constant time select returns `a16` if `first==true`, or `b16` if `first==false`
+	 * Result may be negative (`>>>0` to fix)
+	 * @param a16 uint16/int16, if larger than 16 bits it'll be truncated
+	 * @param b16 uint16/int16, if larger than 16 bits it'll be truncated
+	 * @param first
+	 * @returns a16 or b16
+	 */
+	static ctSelect(a16: number, b16: number, first: boolean): number {
+		// @ts-expect-error: We're casting bool->number on purpose
+		const fNum = (first | 0) - 1; //-1 or 0
+		return ((~fNum & a16) | (fNum & b16)) & i16Mask;
+	}
+
+	/**
 	 * Convert 0-2 bytes from @param src starting at @param pos into a u16/i16 in little endian order (smallest byte first)
 	 * Zeros will be appended if src is short (ie 0xff will be considered 256)
 	 * @param src
@@ -70,11 +144,11 @@ export class U16 {
 		return ret;
 	}
 
-    static toBytesLE(src:number):Uint8Array {
-        return Uint8Array.of(src,src>>8);
-    }
+	static toBytesLE(src: number): Uint8Array {
+		return Uint8Array.of(src, src >> 8);
+	}
 
-    static toBytesBE(src:number):Uint8Array {
-        return Uint8Array.of(src>>8,src);
-    }
+	static toBytesBE(src: number): Uint8Array {
+		return Uint8Array.of(src >> 8, src);
+	}
 }

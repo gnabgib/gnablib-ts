@@ -46,13 +46,47 @@ export function pushInt(
  * many bytes follow.
  * @param input A series of bytes 0-256 in length
  * @param start Where in the input stream to start (default: begining)
- * @param end Where in the input stream to end (default: end)
+ * @param len How many bytes to include
  */
-export function toSizedBytes(input: Uint8Array, start = 0, end = 0): Uint8Array {
-	intExt.inRangeInclusive(start, 0, input.length - 1);
-	intExt.inRangeInclusive(end, 0, input.length - start);
-	if (end === 0) end = input.length;
-	const len = end - start;
-	if (len > 255) throw new SizeError('input length', len, start, end);
-	return new Uint8Array([len, ...input.slice(start, len)]);
+export function toSizedBytes(input: Uint8Array, start = 0, len?:number): Uint8Array {
+	if (len===undefined) len=input.length-start;
+	if (len > 255) throw new SizeError('len', len, 0, 255);
+	const ret=new Uint8Array(len+1);
+	ret[0]=len;
+	ret.set(input.subarray(start,start+len),1);
+	return ret;
+}
+
+/**
+ * Compare byte array contents in constant time
+ * **NOTE** will immediately exit/false if array lengths don't match
+ * @param a 
+ * @param b 
+ * @returns 
+ */
+export function ctEq(a:Uint8Array,b:Uint8Array):boolean {
+	if (a.length!=b.length) return false;
+	let zero=0;
+	for(let i=0;i<a.length;i++)
+		zero|=a[i]^b[i];
+	return zero===0;
+}
+
+/**
+ * Constant time select `a` if `first==true` or `b` if `first==false`
+ * @param a 
+ * @param b 
+ * @param first 
+ * @throws If arrays are different things
+ * @returns A clone of a or b
+ */
+export function ctSelect(a:Uint8Array,b:Uint8Array,first:boolean):Uint8Array {
+	if (a.length!=b.length) throw new Error('Inputs are of different length');
+	// @ts-expect-error: We're casting bool->number on purpose
+	const fNum = (first | 0) - 1; //-1 or 0
+	const ret=new Uint8Array(a.length);
+	for(let i=0;i<a.length;i++) {
+		ret[i]=((~fNum)&a[i]) | (fNum&b[i]);
+	}
+	return ret;
 }

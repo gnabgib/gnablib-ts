@@ -528,7 +528,7 @@ for(const [a,b,expect] of eqTest) {
 	tsts(`u64{${a}}==u64{${b}}`,()=>{
 		const a64=U64.fromInt(a);
 		const b64=U64.fromInt(b);
-		assert.is(a64.equals(b64),expect);
+		assert.is(a64.eq(b64),expect);
 	})
 }
 
@@ -562,5 +562,166 @@ for(const [a,lsb,expect] of lsbTest){
 		assert.is(aUint.lsb(lsb),expect);
 	})
 }
+
+const lt64Test:[string,string][]=[
+	['0102030405060708','0102030405060709'],
+	['0000000000000000','FFFFFFFFFFFFFFFF'],
+	['0000000000000000','0000000000000001'],
+	['FFFFFFFFFFFFFFF0','FFFFFFFFFFFFFFFF'],
+];
+for (const [aHex,bHex] of lt64Test) {
+	const aBytes=Hex.toBytes(aHex);
+	const bBytes=Hex.toBytes(bHex);
+	const a=U64.fromBytesBE(aBytes);
+	const b=U64.fromBytesBE(bBytes);
+
+	tsts(`${aHex} < ${bHex}`,()=>{
+		assert.is(a.lt(b),true);
+	});
+	tsts(`! ${bHex} < ${aHex}`,()=>{
+		assert.is(b.lt(a),false);
+	});
+
+	tsts(`${aHex} <= ${bHex}`,()=>{
+		assert.is(a.lte(b),true);
+	});
+	tsts(`! ${bHex} < ${aHex}`,()=>{
+		assert.is(b.lte(a),false);
+	});
+
+	tsts(`${bHex} > ${aHex}`,()=>{
+		assert.is(b.gt(a),true);
+	});
+	tsts(`! ${aHex} > ${bHex}`,()=>{
+		assert.is(a.gt(b),false);
+	});
+
+	tsts(`${bHex} >= ${aHex}`,()=>{
+		assert.is(b.gte(a),true);
+	});
+	tsts(`! ${aHex} >= ${bHex}`,()=>{
+		assert.is(a.gte(b),false);
+	});
+
+
+	//Constant time
+	tsts(`${aHex} <=.ct ${bHex}`,()=>{
+		assert.is(a.ctLte(b),true);
+	});
+	tsts(`! ${bHex} <=.ct ${aHex}`,()=>{
+		assert.is(b.ctLte(a),false);
+	});
+
+	tsts(`${aHex} <.ct ${bHex}`,()=>{
+		assert.is(a.ctLt(b),true);
+	});
+	tsts(`! ${bHex} <.ct ${aHex}`,()=>{
+		assert.is(b.ctLt(a),false);
+	});
+
+
+	tsts(`${bHex} >=.ct ${aHex}`,()=>{
+		assert.is(b.ctGte(a),true);
+	});
+	tsts(`! ${aHex} >=.ct ${bHex}`,()=>{
+		assert.is(a.ctGte(b),false);
+	});
+
+	tsts(`${bHex} >.ct ${aHex}`,()=>{
+		assert.is(b.ctGt(a),true);
+	});
+	tsts(`! ${aHex} >.ct ${bHex}`,()=>{
+		assert.is(a.ctGt(b),false);
+	});
+
+	tsts(`! ${aHex} ==.ct ${bHex}`,()=>{
+		assert.is(a.ctEq(b),false);
+	});
+	tsts(`! ${bHex} ==.ct ${aHex}`,()=>{
+		assert.is(b.ctEq(a),false);
+	});
+
+}
+
+const eq64Test:string[]=[
+	'0000000000000000',
+	'0000000000000001',
+	'0102030405060708',
+	'0102030405060709',
+	'FFFFFFFFFFFFFFF0',
+	'FFFFFFFFFFFFFFFF'
+];
+for (const aHex of eq64Test) {
+	const aBytes=Hex.toBytes(aHex);
+	const a=U64.fromBytesBE(aBytes);
+	const b=U64.fromBytesBE(aBytes);
+
+	tsts(`${aHex} == ${aHex}`,()=>{
+		assert.is(a.eq(b),true);
+	});
+
+	tsts(`${aHex} <= ${aHex}`,()=>{
+		assert.is(a.lte(b),true);
+	});
+
+	tsts(`! ${aHex} < ${aHex}`,()=>{
+		assert.is(a.lt(b),false);
+	});
+
+	tsts(`${aHex} >= ${aHex}`,()=>{
+		assert.is(b.gte(a),true);
+	});
+
+	tsts(`! ${aHex} > ${aHex}`,()=>{
+		assert.is(b.gt(a),false);
+	});
+
+
+	//Constant time
+	tsts(`${aHex} ==.ct ${aHex}`,()=>{
+		assert.is(a.ctEq(b),true);
+	});
+
+	tsts(`${aHex} <=.ct ${aHex}`,()=>{
+		assert.is(a.ctLte(b),true);
+	});
+
+	tsts(`! ${aHex} <.ct ${aHex}`,()=>{
+		assert.is(a.ctLt(b),false);
+	});
+	
+	tsts(`${aHex} >=.ct ${aHex}`,()=>{
+		assert.is(a.ctGte(b),true);
+	});
+
+	tsts(`! ${aHex} >.ct ${aHex}`,()=>{
+		assert.is(a.ctGt(b),false);
+	});
+}
+
+tsts(`ctSelect`,()=>{
+	const aHex='0102030405060708';
+	const bHex='F0E0D0C0B0A09080';
+	const aBytes=Hex.toBytes(aHex);
+	const bBytes=Hex.toBytes(bHex);
+	const a=U64.fromBytesBE(aBytes);
+	const b=U64.fromBytesBE(bBytes);
+
+	assert.equal(U64.ctSelect(a,b,true).toBytesBE(),aBytes);
+	assert.equal(U64.ctSelect(a,b,false).toBytesBE(),bBytes);
+})
+
+tsts(`ctSwitch`,()=>{
+	const aHex='0102030405060708';
+	const bHex='F0E0D0C0B0A09080';
+	const aBytes=Hex.toBytes(aHex);
+	const bBytes=Hex.toBytes(bHex);
+	const a=U64.fromBytesBE(aBytes);
+	const b=U64.fromBytesBE(bBytes);
+
+	assert.equal(a.ctSwitch(b,true).toBytesBE(),bBytes);
+	assert.equal(a.ctSwitch(b,false).toBytesBE(),aBytes);
+})
+
 
 tsts.run();

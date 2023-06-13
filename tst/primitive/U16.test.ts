@@ -158,5 +158,92 @@ tsts('toBytesBE',()=>{
 	assert.equal(U16.toBytesBE(0x0201),Uint8Array.of(0x02,0x01));
 });
 
+const ltTest:[number,number][]=[
+	[0x0102,0x0103],
+	[0x0000,0xFFFF],
+	[0x0000,0x0001],
+	[0xFFF0,0xFFFF],
+];
+for (const [a,b] of ltTest) {
+
+	//Constant time
+	tsts(`${a} <=.ct ${b}`,()=>{
+		assert.is(U16.ctLte(a,b),true);
+	});
+	tsts(`! ${b} <=.ct ${a}`,()=>{
+		assert.is(U16.ctLte(b,a),false);
+	});
+
+	tsts(`${a} <.ct ${b}`,()=>{
+		assert.is(U16.ctLt(a,b),true);
+	});
+	tsts(`! ${b} <.ct ${a}`,()=>{
+		assert.is(U16.ctLt(b,a),false);
+	});
+
+
+	tsts(`${b} >=.ct ${a}`,()=>{
+		assert.is(U16.ctGte(b,a),true);
+	});
+	tsts(`! ${a} >=.ct ${b}`,()=>{
+		assert.is(U16.ctGte(a,b),false);
+	});
+
+	tsts(`${b} >.ct ${a}`,()=>{
+		assert.is(U16.ctGt(b,a),true);
+	});
+	tsts(`! ${a} >.ct ${b}`,()=>{
+		assert.is(U16.ctGt(a,b),false);
+	});
+
+	tsts(`! ${a} ==.ct ${b}`,()=>{
+		assert.is(U16.ctEq(a,b),false);
+	});
+	tsts(`! ${b} ==.ct ${a}`,()=>{
+		assert.is(U16.ctEq(b,a),false);
+	});
+}
+
+const eq64Test:number[]=[
+	0x0000,
+	0x0001,
+	0x0102,
+	0x0103,
+	0xFFF0,
+	0xFFFF
+];
+for (const a of eq64Test) {
+    const b=a;
+
+	//Constant time
+	tsts(`${a} ==.ct ${a}`,()=>{
+		assert.is(U16.ctEq(a,b),true);
+	});
+
+	tsts(`${a} <=.ct ${a}`,()=>{
+		assert.is(U16.ctLte(a,b),true);
+	});
+
+	tsts(`! ${a} <.ct ${a}`,()=>{
+		assert.is(U16.ctLt(a,b),false);
+	});
+	
+	tsts(`${a} >=.ct ${a}`,()=>{
+		assert.is(U16.ctGte(a,b),true);
+	});
+
+	tsts(`! ${a} >.ct ${a}`,()=>{
+		assert.is(U16.ctGt(a,b),false);
+	});
+}
+
+tsts(`ctSelect`,()=>{
+	const a=0x0102;
+	const b=0xF0E0;
+
+	assert.equal(U16.ctSelect(a,b,true)>>>0,a);
+	assert.equal(U16.ctSelect(a,b,false)>>>0,b);
+})
+
 
 tsts.run();

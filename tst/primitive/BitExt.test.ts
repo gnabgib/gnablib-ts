@@ -60,5 +60,4 @@ tsts('Code coverage',()=>{
 	assert.is(c.empty,true);
 });
 
-
 tsts.run();

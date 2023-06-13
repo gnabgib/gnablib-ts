@@ -23,7 +23,9 @@ function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {
 	const c32 = new Uint32Array(cpy.buffer);
 	//Swap the position (we store L,H BE would be H,L)
 	//note if you inspect these they may have strange values (depending on platform endianness)
-	const t = c32[0]; c32[0] = c32[1]; c32[1] = t;
+	const t = c32[0];
+	c32[0] = c32[1];
+	c32[1] = t;
 	return c32;
 }
 
@@ -37,12 +39,12 @@ export class U64 {
 	get low(): number {
 		return this.arr[this.pos];
 	}
-	
+
 	/**
 	 * Top 32 bits (33-64)
 	 */
 	get high(): number {
-		return this.arr[this.pos+1];
+		return this.arr[this.pos + 1];
 	}
 
 	/**
@@ -67,7 +69,7 @@ export class U64 {
 	protected _setValue(v: U64): void {
 		this.arr[this.pos] = v.arr[v.pos];
 		this.arr[this.pos + 1] = v.arr[v.pos + 1];
-	}	
+	}
 	protected _xorEq(a: Uint32Array, aPos: number, b: U64) {
 		a[aPos] ^= b.arr[b.pos];
 		a[aPos + 1] ^= b.arr[b.pos + 1];
@@ -167,7 +169,9 @@ export class U64 {
 	 * @returns ¬ @see value
 	 */
 	not(): U64 {
-		return new U64(Uint32Array.of(~this.arr[this.pos],~this.arr[this.pos+1]));
+		return new U64(
+			Uint32Array.of(~this.arr[this.pos], ~this.arr[this.pos + 1])
+		);
 	}
 
 	// prettier-ignore
@@ -313,55 +317,206 @@ export class U64 {
 	 * @param u64
 	 * @returns
 	 */
-	equals(u64: U64): boolean {
-		const l = this.arr[this.pos] == u64.arr[u64.pos];
-		const h = this.arr[this.pos + 1] == u64.arr[u64.pos + 1];
-		//non-constant time (fast exit on h===false):
-		return h && l;
+	eq(u64: U64): boolean {
+		//Will fast exit if lows don't match (not constant)
+		return (
+			this.arr[this.pos] == u64.arr[u64.pos] &&
+			this.arr[this.pos + 1] == u64.arr[u64.pos + 1]
+		);
 	}
 
 	/**
-	 * Whether this is > @param other
-	 * @param other
+	 * Whether this is > @param u64
+	 * @param u64
 	 * @returns
 	 */
-	gt(other: U64): boolean {
+	gt(u64: U64): boolean {
 		//Compare high
-		const hgt = this.arr[this.pos + 1] > other.arr[other.pos + 1];
-		const heq = this.arr[this.pos + 1] === other.arr[other.pos + 1];
-		const lgt = this.arr[this.pos] > other.arr[other.pos];
-		//Not constant time, fast exit on hgt===true
-		return hgt || (heq && lgt);
+		const hGt = this.arr[this.pos + 1] > u64.arr[u64.pos + 1];
+		const hEq = this.arr[this.pos + 1] === u64.arr[u64.pos + 1];
+		const lGt = this.arr[this.pos] > u64.arr[u64.pos];
+		return hGt || (hEq && lGt);
 	}
 
 	/**
-	 * Whether this < @param other
-	 * @param other
+	 * Whether this < @param u64
+	 * @param u64
 	 * @returns
 	 */
-	lt(other: U64): boolean {
-		// this<other is the same as other>this
-		return other.gt(this);
+	lt(u64: U64): boolean {
+		//Compare high
+		const hLt = this.arr[this.pos + 1] < u64.arr[u64.pos + 1];
+		const hEq = this.arr[this.pos + 1] === u64.arr[u64.pos + 1];
+		const lLt = this.arr[this.pos] < u64.arr[u64.pos];
+		return hLt || (hEq && lLt);
 	}
 
 	/**
-	 * Whether this >= @param other
-	 * @param other
+	 * Whether this >= @param u64
+	 * @param u64
 	 * @returns
 	 */
-	gte(other: U64): boolean {
-		// this>=other is the same as !other<this
-		return !this.lt(other);
+	gte(u64: U64): boolean {
+		const hGt = this.arr[this.pos + 1] > u64.arr[u64.pos + 1];
+		const hEq = this.arr[this.pos + 1] === u64.arr[u64.pos + 1];
+		const lGte = this.arr[this.pos] >= u64.arr[u64.pos];
+		return hGt || (hEq && lGte);
 	}
 
 	/**
-	 * Whether this <= @param other
-	 * @param other
+	 * Whether this <= @param u64
+	 * @param u64
 	 * @returns
 	 */
-	lte(other: U64): boolean {
-		//this<=other is the same as !this>other
-		return !this.gt(other);
+	lte(u64: U64): boolean {
+		const hLt = this.arr[this.pos + 1] < u64.arr[u64.pos + 1];
+		const hEq = this.arr[this.pos + 1] === u64.arr[u64.pos + 1];
+		const lLte = this.arr[this.pos] <= u64.arr[u64.pos];
+		return hLt || (hEq && lLte);
+	}
+
+	/**
+	 * Whether @param u64 has the same value as this
+	 * CONSTANT TIME
+	 * @param u64
+	 * @returns
+	 */
+	ctEq(u64: U64): boolean {
+		const zero =
+			(this.arr[this.pos] ^ u64.arr[u64.pos]) |
+			(this.arr[this.pos + 1] ^ u64.arr[u64.pos + 1]);
+		return zero === 0;
+	}
+
+	/**
+	 * Whether this is <= @param u64
+	 * CONSTANT TIME
+	 * @param u64
+	 * @returns
+	 */
+	ctLte(u64: U64): boolean {
+		const ll = (
+			(this.arr[this.pos] & maxU16) - 
+			(u64.arr[u64.pos] & maxU16) - 
+			1) >>> 31;
+		const lh = (
+			((this.arr[this.pos] >>> 16) & maxU16) -
+			((u64.arr[u64.pos] >>> 16) & maxU16) -
+			1) >>> 31;
+		const hl = (
+			(this.arr[this.pos + 1] & maxU16) -
+			(u64.arr[u64.pos + 1] & maxU16) -
+			1) >>> 31;
+		const hh = (
+			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
+			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
+			1) >>> 31;
+		return (ll & lh & hl & hh) === 1;
+	}
+
+	/**
+	 * Whether this is >= @param u64
+	 * CONSTANT TIME
+	 * @param u64
+	 * @returns
+	 */
+	ctGte(u64: U64): boolean {
+		const ll = (
+			(u64.arr[u64.pos] & maxU16) - 
+			(this.arr[this.pos] & maxU16) - 
+			1) >>> 31;
+		const lh = (
+			((u64.arr[u64.pos] >>> 16) & maxU16) -
+			((this.arr[this.pos] >>> 16) & maxU16) -
+			1) >>> 31;
+		const hl = (
+			(u64.arr[u64.pos + 1] & maxU16) -
+			(this.arr[this.pos + 1] & maxU16) -
+			1) >>> 31;
+		const hh = (
+			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
+			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
+			1) >>> 31;
+		return (ll & lh & hl & hh) === 1;
+	}
+
+	/**
+	 * Whether this is > @param u64
+	 * CONSTANT TIME
+	 * @param u64
+	 * @returns
+	 */
+	ctGt(u64: U64): boolean {
+		const ll = (
+			(this.arr[this.pos] & maxU16) - 
+			(u64.arr[u64.pos] & maxU16) - 
+			1) >>> 31;
+		const lh = (
+			((this.arr[this.pos] >>> 16) & maxU16) -
+			((u64.arr[u64.pos] >>> 16) & maxU16) -
+			1) >>> 31;
+		const hl = (
+			(this.arr[this.pos + 1] & maxU16) -
+			(u64.arr[u64.pos + 1] & maxU16) -
+			1) >>> 31;
+		const hh = (
+			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
+			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
+			1) >>> 31;
+		return (ll & lh & hl & hh) === 0;
+	}
+
+	/**
+	 * Whether this is < @param u64
+	 * CONSTANT TIME
+	 * @param u64
+	 * @returns
+	 */
+	ctLt(u64: U64): boolean {
+		const ll = (
+			(u64.arr[u64.pos] & maxU16) - 
+			(this.arr[this.pos] & maxU16) - 
+			1) >>> 31;
+		const lh = (
+			((u64.arr[u64.pos] >>> 16) & maxU16) -
+			((this.arr[this.pos] >>> 16) & maxU16) -
+			1) >>> 31;
+		const hl = (
+			(u64.arr[u64.pos + 1] & maxU16) -
+			(this.arr[this.pos + 1] & maxU16) -
+			1) >>> 31;
+		const hh = (
+			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
+			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
+			1) >>> 31;
+		return (ll & lh & hl & hh) === 0;
+	}
+
+	/**
+	 * Constatnt time switch to u64 if yes==true or stay the the same (yes==false)
+	 * @param u64
+	 * @param yes Whether to switch
+	 * @returns this or u64
+	 */
+	ctSwitch(u64: U64, yes: boolean): U64 {
+		// @ts-expect-error: We're casting bool->number on purpose
+		const yNum = (yes | 0) - 1; //-1 or 0
+		const y64 = U64.fromUint32Pair(yNum, yNum);
+		return y64.not().and(u64).or(y64.and(this));
+	}
+
+	/**
+	 * Constant time select returns a64 if first==true, or b64 if first==false
+	 * @param a64
+	 * @param b64
+	 * @param first
+	 * @returns a64 or b64
+	 */
+	static ctSelect(a64: U64, b64: U64, first: boolean): U64 {
+		// @ts-expect-error: We're casting bool->number on purpose
+		const fNum = (first | 0) - 1; //-1 or 0
+		const f64 = U64.fromUint32Pair(fNum, fNum);
+		return f64.not().and(a64).or(f64.and(b64));
 	}
 
 	/**
@@ -381,7 +536,7 @@ export class U64 {
 
 	/**
 	 * String version of this value, in big endian
-	 * @returns 
+	 * @returns
 	 */
 	toString(): string {
 		return 'u64{' + Hex.fromBytes(this.toBytesBE()) + '}';
@@ -393,7 +548,9 @@ export class U64 {
 	 */
 	toBytesBE(): Uint8Array {
 		//Invert l/h & project into bytes
-		const r = new Uint8Array(Uint32Array.of(this.arr[this.pos + 1], this.arr[this.pos]).buffer);
+		const r = new Uint8Array(
+			Uint32Array.of(this.arr[this.pos + 1], this.arr[this.pos]).buffer
+		);
 		asBE.i32(r, 0);
 		asBE.i32(r, 4);
 		return r;
@@ -416,8 +573,8 @@ export class U64 {
 	 * @returns
 	 */
 	lsb(idx = 0): number {
-        //NOTE: This relies on numbers always being reported as Big Endian
-        // no matter the platform endianness		
+		//NOTE: This relies on numbers always being reported as Big Endian
+		// no matter the platform endianness
 		idx &= 7; //Only 8 spaces to chose from (zero indexed)
 		//The MSB indicates which byte to access
 		const shift = idx >> 2;
@@ -468,9 +625,9 @@ export class U64 {
 
 	/**
 	 * Create from a copy of `src`
-	 * @param src 
-	 * @param pos 
-	 * @returns 
+	 * @param src
+	 * @param pos
+	 * @returns
 	 */
 	static fromBytesBE(src: Uint8Array, pos = 0): U64 {
 		return new U64(fromBytesBE(src, pos));
@@ -484,9 +641,9 @@ export class U64 {
 	 * 	- Platform-LE, bytes should be in LE order: 0,1,2,3,4,5,6,7
 	 *  - Platform-BE, bytes should be in mixed: 3,2,1,0,7,6,5,4
 	 * **USE WITH CAUTION**
-	 * @param src 
-	 * @param bytePos 
-	 * @returns 
+	 * @param src
+	 * @param bytePos
+	 * @returns
 	 */
 	static fromBuffer(src: ArrayBuffer, bytePos = 0): U64 {
 		return new U64(new Uint32Array(src, bytePos, 2));
@@ -568,7 +725,7 @@ export class U64Mut extends U64 {
 	 */
 	notEq(): U64Mut {
 		this.arr[this.pos] = ~this.arr[this.pos];
-		this.arr[this.pos+1] = ~this.arr[this.pos+1];
+		this.arr[this.pos + 1] = ~this.arr[this.pos + 1];
 		return this;
 	}
 
@@ -714,7 +871,7 @@ export class U64Mut extends U64 {
 	 * **NOTE** the memory is shared, changing a value in `src` will mutate the return, and
 	 *  changes to the Uint32Mut will alter `src`
 	 * **NOTE** The first element is considered LOW, the second HIGH
-	 * 
+	 *
 	 * If you don't need the shared-memory aspect append a `.slice()` to the source (creates a memory copy)
 	 * @param src
 	 * @param pos Position to link (default 0), note this is an array-position not bytes
@@ -726,9 +883,9 @@ export class U64Mut extends U64 {
 
 	/**
 	 * Create from a copy of `src`
-	 * @param src 
-	 * @param pos 
-	 * @returns 
+	 * @param src
+	 * @param pos
+	 * @returns
 	 */
 	static fromBytesBE(src: Uint8Array, pos = 0): U64Mut {
 		return new U64Mut(fromBytesBE(src, pos));
@@ -757,7 +914,7 @@ export class U64MutArray {
 	private arr: Array<U64Mut>;
 
 	/**
-	 * 
+	 *
 	 * @param buf backing memory
 	 * @param bufPos position in backing memory to start at (needs to be uint32 aligned)
 	 * @param len number of elements in this array (buf needs to be at least 2x in size)
@@ -800,9 +957,12 @@ export class U64MutArray {
 	 * @param thisOffset Called `targetOffset` in TypedArray (default 0)
 	 * @param srcOffset (default 0)
 	 */
-	set(src: U64MutArray, thisOffset = 0, srcOffset=0): void {
+	set(src: U64MutArray, thisOffset = 0, srcOffset = 0): void {
 		//Note because the buffers are 2x the size, the offsets need to be doubled (added twice)
-		this.buf.set(src.buf.subarray(src.bufPos+srcOffset+srcOffset), this.bufPos+thisOffset+thisOffset);
+		this.buf.set(
+			src.buf.subarray(src.bufPos + srcOffset + srcOffset),
+			this.bufPos + thisOffset + thisOffset
+		);
 	}
 
 	/**
@@ -813,13 +973,13 @@ export class U64MutArray {
 	 */
 	xorEq(b: U64MutArray, thisOffset = 0): void {
 		//Offset(el) needs to be doubled for buf
-		const bufStart=this.bufPos + thisOffset + thisOffset;
+		const bufStart = this.bufPos + thisOffset + thisOffset;
 		//For all the space of this array
 		let elLen = this.arr.length - thisOffset;
 		//OR all the provided array if it's shorter
 		if (b.length < elLen) elLen = b.length;
 		//Adjust n for the buffer starting position, and double it (buf-len instead of el-len)
-		const bufLen=elLen+elLen+bufStart;
+		const bufLen = elLen + elLen + bufStart;
 		for (let i = bufStart, j = b.bufPos; i < bufLen; i++, j++) {
 			this.buf[i] ^= b.buf[j];
 		}
@@ -827,11 +987,11 @@ export class U64MutArray {
 
 	zero(thisOffset = 0): void {
 		//Offset(el) needs to be doubled for buf
-		const bufStart=this.bufPos+thisOffset+thisOffset;
+		const bufStart = this.bufPos + thisOffset + thisOffset;
 		//End element We only need to zero this length - thisOffset
-		const elLen=this.arr.length-thisOffset;
+		const elLen = this.arr.length - thisOffset;
 		//Need to double elEnd for buf
-		this.buf.fill(0,bufStart,bufStart+elLen+elLen);
+		this.buf.fill(0, bufStart, bufStart + elLen + elLen);
 	}
 
 	clone(): U64MutArray {
@@ -845,14 +1005,14 @@ export class U64MutArray {
 	 * Create a section of this array which SHARES the same memory
 	 * NOTE: This is the same semantics as TypedArray.subarray, which feels ambiguous with Go:slices
 	 * @param start Starting element to copy from (default 0/first)
-	 * @param len 
+	 * @param len
 	 */
-	span(start?:number,len?:number):U64MutArray {
-		if (start===undefined) {
-			start=0;
+	span(start?: number, len?: number): U64MutArray {
+		if (start === undefined) {
+			start = 0;
 		}
-		start+=this.bufPos;
-		return new U64MutArray(this.buf,start,len);
+		start += this.bufPos;
+		return new U64MutArray(this.buf, start, len);
 	}
 
 	/**
@@ -860,7 +1020,10 @@ export class U64MutArray {
 	 * @returns Uint8Array[8]
 	 */
 	toBytesBE(): Uint8Array {
-		const r32 = this.buf.slice(this.bufPos, this.bufPos + this.length + this.length);
+		const r32 = this.buf.slice(
+			this.bufPos,
+			this.bufPos + this.length + this.length
+		);
 		const r8 = new Uint8Array(r32.buffer);
 		let i8 = 0;
 		for (let i = 0; i < r32.length; i += 2) {
@@ -877,7 +1040,10 @@ export class U64MutArray {
 		return r8;
 	}
 	toBytesLE(): Uint8Array {
-		const r32 = this.buf.slice(this.bufPos, this.bufPos + this.length + this.length);
+		const r32 = this.buf.slice(
+			this.bufPos,
+			this.bufPos + this.length + this.length
+		);
 		const r8 = new Uint8Array(r32.buffer);
 		for (let i = 0; i < r8.length; i += 4) {
 			asLE.i32(r8, i);

@@ -348,6 +348,106 @@ export class U32 {
 	}
 
 	/**
+	 * Compare two numbers for equality in constant time
+	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
+	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
+	 * @returns 
+	 */
+	static ctEq(a32:number,b32:number):boolean {
+		return (a32^b32)===0;
+	}
+
+	/**
+	 * ` a32 <= b32` in constant time
+	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
+	 * @param a32 uint32, if larger than 32 bits it'll be truncated
+	 * @param b32 uint32, if larger than 32 bits it'll be truncated
+	 * @returns 
+	 */
+	static ctLte(a32:number,b32:number):boolean {
+		const l = (
+			(a32 & maxU16) - 
+			(b32 & maxU16) - 
+			1) >>> 31;
+		const h = (
+			((a32 >>> 16) & maxU16) -
+			((b32 >>> 16) & maxU16) -
+			1) >>> 31;		
+		return (l&h)===1;
+	}
+
+	/**
+	 * `a32 >= b32` in constant time
+	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
+	 * @param a32 uint32, if larger than 32 bits it'll be truncated
+	 * @param b32 uint32, if larger than 32 bits it'll be truncated
+	 * @returns 
+	 */
+	static ctGte(a32:number,b32:number):boolean {
+		const l = (
+			(b32 & maxU16) - 
+			(a32 & maxU16) - 
+			1) >>> 31;
+		const h = (
+			((b32 >>> 16) & maxU16) -
+			((a32 >>> 16) & maxU16) -
+			1) >>> 31;		
+		return (l&h)===1;
+	}
+
+	/**
+	 * `a32 > b32` in constant time
+	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
+	 * @param a32 uint32, if larger than 32 bits it'll be truncated
+	 * @param b32 uint32, if larger than 32 bits it'll be truncated
+	 * @returns 
+	 */
+	static ctGt(a32:number,b32:number):boolean {
+		const l = (
+			(a32 & maxU16) - 
+			(b32 & maxU16) - 
+			1) >>> 31;
+		const h = (
+			((a32 >>> 16) & maxU16) -
+			((b32 >>> 16) & maxU16) -
+			1) >>> 31;		
+		return (l&h)===0;
+	}
+
+	/**
+	 * `a32 < b32` in constant time
+	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
+	 * @param a32 uint32, if larger than 32 bits it'll be truncated
+	 * @param b32 uint32, if larger than 32 bits it'll be truncated
+	 * @returns 
+	 */
+	static ctLt(a32:number,b32:number):boolean {
+		const l = (
+			(b32 & maxU16) - 
+			(a32 & maxU16) - 
+			1) >>> 31;
+		const h = (
+			((b32 >>> 16) & maxU16) -
+			((a32 >>> 16) & maxU16) -
+			1) >>> 31;		
+		return (l&h)===0;
+	}
+
+	/**
+	 * Constant time select returns a32 if first==true, or b32 if first==false
+	 * Result may be negative (`>>>0` to fix)
+	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
+	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
+	 * @param first
+	 * @returns a32 or b32
+	 */
+	static ctSelect(a32: number, b32: number, first: boolean): number {
+		// @ts-expect-error: We're casting bool->number on purpose
+		const fNum = (first | 0) - 1; //-1 or 0
+		return ((~fNum)&a32) | (fNum&b32);
+	}
+
+	/**
 	 * Convert 0-4 bytes from @param src starting at @param pos into a u32/i32 in little endian order (smallest byte first)
 	 * Zeros will be appended if src is short (ie 0xff will be considered 256)
 	 * Result may be negative (`>>>0` to fix)

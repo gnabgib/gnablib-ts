@@ -650,4 +650,92 @@ for (const [start,by,expect] of ror32OversizedTests) {
     })
 }
 
+const ltTest:[number,number][]=[
+	[0x01020304,0x01020305],
+	[0x00000000,0xFFFFFFFF],
+	[0x00000000,0x00000001],
+	[0xFFFFFFF0,0xFFFFFFFF],
+];
+for (const [a,b] of ltTest) {
+
+	//Constant time
+	tsts(`${a} <=.ct ${b}`,()=>{
+		assert.is(U32.ctLte(a,b),true);
+	});
+	tsts(`! ${b} <=.ct ${a}`,()=>{
+		assert.is(U32.ctLte(b,a),false);
+	});
+
+	tsts(`${a} <.ct ${b}`,()=>{
+		assert.is(U32.ctLt(a,b),true);
+	});
+	tsts(`! ${b} <.ct ${a}`,()=>{
+		assert.is(U32.ctLt(b,a),false);
+	});
+
+
+	tsts(`${b} >=.ct ${a}`,()=>{
+		assert.is(U32.ctGte(b,a),true);
+	});
+	tsts(`! ${a} >=.ct ${b}`,()=>{
+		assert.is(U32.ctGte(a,b),false);
+	});
+
+	tsts(`${b} >.ct ${a}`,()=>{
+		assert.is(U32.ctGt(b,a),true);
+	});
+	tsts(`! ${a} >.ct ${b}`,()=>{
+		assert.is(U32.ctGt(a,b),false);
+	});
+
+    tsts(`! ${a} ==.ct ${b}`,()=>{
+		assert.is(U32.ctEq(a,b),false);
+	});
+    tsts(`! ${b} ==.ct ${a}`,()=>{
+		assert.is(U32.ctEq(b,a),false);
+	});
+}
+
+const eq64Test:number[]=[
+	0x00000000,
+	0x00000001,
+	0x01020304,
+	0x01020305,
+	0xFFFFFFF0,
+	0xFFFFFFFF
+];
+for (const a of eq64Test) {
+    const b=a;
+
+	//Constant time
+	tsts(`${a} ==.ct ${a}`,()=>{
+		assert.is(U32.ctEq(a,b),true);
+	});
+
+	tsts(`${a} <=.ct ${a}`,()=>{
+		assert.is(U32.ctLte(a,b),true);
+	});
+
+	tsts(`! ${a} <.ct ${a}`,()=>{
+		assert.is(U32.ctLt(a,b),false);
+	});
+	
+	tsts(`${a} >=.ct ${a}`,()=>{
+		assert.is(U32.ctGte(a,b),true);
+	});
+
+	tsts(`! ${a} >.ct ${a}`,()=>{
+		assert.is(U32.ctGt(a,b),false);
+	});
+}
+
+tsts(`ctSelect`,()=>{
+	const a=0x01020304;
+	const b=0xF0E0D0C0;
+
+	assert.equal(U32.ctSelect(a,b,true)>>>0,a);
+	assert.equal(U32.ctSelect(a,b,false)>>>0,b);
+})
+
+
 tsts.run();
