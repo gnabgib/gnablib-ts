@@ -175,7 +175,7 @@ Name|Digest sizes|Optional parameters
 Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runner /w [uvu/assert](https://github.com/lukeed/uvu/blob/master/docs/api.assert.md)
 
 ```base
-npm test
+npm test 
 ```
 
 Content will be output into `/dist/**`
@@ -187,6 +187,12 @@ npm run build
 Update version
 ```bash
 npm version patch -m "Upgrade to %s, <reason>"
+```
+NOW: `npm version patch -m "Upgrade to %s, <reason>"` and the publish/provenance is done on github
+
+Review code coverage
+```bash
+npm run test:coverage
 ```
 
 Resume after checkout
