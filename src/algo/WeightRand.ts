@@ -1,6 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { Grievous, OutOfRangeError } from '../primitive/ErrorExt.js';
+import { Grievous } from '../primitive/ErrorExt.js';
+import { safety } from '../primitive/Safety.js';
 import type { randSrc } from './Prng.js';
 import prng from './Prng.js';
 
@@ -13,7 +14,7 @@ function wtRnd(cWeights: number[], rs: randSrc): number {
 	for (let i = 0; i < cWeights.length; i++) {
 		if (n < cWeights[i]) return i;
 	}
-	/* c8 ignore next */
+	/* c8 ignore next 2 */
 	throw new Grievous('Generated a spurious random number');
 }
 
@@ -27,8 +28,7 @@ function wtRnd(cWeights: number[], rs: randSrc): number {
 function cumulative(weights: number[], rs: randSrc = Math.random): number {
 	let last = 0;
 	for (let i = 0; i < weights.length; i++) {
-		if (weights[i] < last)
-			throw new OutOfRangeError(`weights[${i}]`, weights[i], last);
+		safety.numGte(weights[i],last,`weights[${i}]`);
 		last = weights[i];
 	}
 	//Todo make sure weights are logical (w[n]>=0, w[n]>=w[n-1])

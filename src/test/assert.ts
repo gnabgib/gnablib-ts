@@ -1,4 +1,4 @@
-import { Hex } from '../encoding/Hex.js';
+import { hex } from '../encoding/Hex.js';
 
 export type errorSetting = {
 	percent?: number;
@@ -84,7 +84,7 @@ export class Assert {
 	}
 
 	static bytesMatchHex(actual: Uint8Array, expectHex: string): void {
-		const found = Hex.fromBytes(actual);
+		const found = hex.fromBytes(actual);
 		if (found === expectHex) return;
 		throw new Error(`Expect: ${expectHex}\n    Found : ${found}`);
 	}

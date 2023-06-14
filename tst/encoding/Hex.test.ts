@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Hex} from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { U64, U64MutArray } from '../../src/primitive/U64';
 
 const tsts = suite('Hex/RFC 4648');
@@ -33,11 +33,11 @@ const byteTests:[number,string][] = [
 
 for (const [num,str] of byteTests) {
 	tsts('fromByte: ' + num, () => {
-		assert.is(Hex.fromByte(num), str);
+		assert.is(hex.fromByte(num), str);
 	});
 
 	tsts('toByte: ' + str, () => {
-		assert.is(Hex.toByte(str), num);
+		assert.is(hex.toByte(str), num);
 	});
 }
 
@@ -53,7 +53,7 @@ const i32Tests:[number,string][]=[
 
 for (const [num,str] of i32Tests) {
 	tsts('fromI32: ' + num, () => {
-		assert.is(Hex.fromI32(num), str);
+		assert.is(hex.fromI32(num), str);
 	});
 }
 
@@ -68,7 +68,7 @@ const i32CompressTests:[number,string][]=[
 ];
 for (const [num,str] of i32CompressTests) {
 	tsts('fromI32Compress: ' + num, () => {
-		assert.is(Hex.fromI32Compress(num), str);
+		assert.is(hex.fromI32Compress(num), str);
 	});
 }
 
@@ -77,7 +77,7 @@ const fromBytesTests:[Uint8Array,string][]=[
 ];
 for (const [arr,str] of fromBytesTests) {
 	tsts('fromBytes: ' + str, () => {
-		assert.is(Hex.fromBytes(arr), str);
+		assert.is(hex.fromBytes(arr), str);
 	});
 }
 
@@ -92,9 +92,9 @@ const toBytesTests:[string,Uint8Array|undefined][]=[
 for (const [str,arr] of toBytesTests) {
 	tsts('toBytes: ' + str, () => {
 		if (arr===undefined) {
-			assert.throws(()=>Hex.toBytes(str));
+			assert.throws(()=>hex.toBytes(str));
 		} else {
-			assert.equal(Hex.toBytes(str),arr);	
+			assert.equal(hex.toBytes(str),arr);	
 		}
 	});
 }
@@ -104,7 +104,7 @@ const fromU32sTests:[Uint32Array,string][]=[
 ];
 for (const [arr,str] of fromU32sTests) {
 	tsts('fromU32s: ' + str, () => {
-		assert.is(Hex.fromU32s(arr), str);
+		assert.is(hex.fromU32s(arr), str);
 	});
 }
 
@@ -113,7 +113,7 @@ const fromU64Tests:[U64,string][]=[
 ];
 for (const [num,str] of fromU64Tests) {
 	tsts('fromU64: ' + str, () => {
-		assert.is(Hex.fromU64(num), str);
+		assert.is(hex.fromU64(num), str);
 	});
 }
 
@@ -122,7 +122,7 @@ const fromU64aTests:[U64MutArray,string][]=[
 ];
 for (const [arr,str] of fromU64aTests) {
 	tsts('fromU64a: ' + str, () => {
-		assert.is(Hex.fromU64a(arr), str);
+		assert.is(hex.fromU64a(arr), str);
 	});
 }
 
@@ -136,12 +136,12 @@ const badHexTests:string[]=[
 ];
 for (const str of badHexTests) {
 	tsts(`bad hex '${str}'`, () => {
-		assert.throws(()=>Hex.toBytes(str));
+		assert.throws(()=>hex.toBytes(str));
 	});
 }
 
 tsts('ignore',()=>{
-	assert.equal(Hex.toBytes('A A',' '),Uint8Array.of(0xAA));
+	assert.equal(hex.toBytes('A A',' '),Uint8Array.of(0xAA));
 })
 
 tsts.run();

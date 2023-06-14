@@ -1,13 +1,11 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
-import * as objExt from '../primitive/ObjExt.js';
-import { Hex } from '../encoding/Hex.js';
+import { safety } from './Safety.js';
+import { hex } from '../encoding/Hex.js';
 import {
 	EnforceTypeError,
 	NegativeError,
 	NotSupportedError,
-	SizeError,
 } from './ErrorExt.js';
 
 const maxU32 = 0xffffffff;
@@ -36,7 +34,7 @@ export class Uint64 {
 	 * @returns this^num
 	 */
 	xor(num: Uint64): Uint64 {
-		objExt.notNull(num, 'xor(num)');
+		safety.notNull(num, 'xor(num)');
 		return new Uint64(
 			(this.lowU32 ^ num.lowU32) >>> 0,
 			(this.highU32 ^ num.highU32) >>> 0
@@ -49,7 +47,7 @@ export class Uint64 {
 	 * @returns this|num
 	 */
 	or(num: Uint64): Uint64 {
-		objExt.notNull(num, 'or(num)');
+		safety.notNull(num, 'or(num)');
 		return new Uint64(
 			(this.lowU32 | num.lowU32) >>> 0,
 			(this.highU32 | num.highU32) >>> 0
@@ -62,7 +60,7 @@ export class Uint64 {
 	 * @returns this&num
 	 */
 	and(num: Uint64): Uint64 {
-		objExt.notNull(num, 'and(num)');
+		safety.notNull(num, 'and(num)');
 		return new Uint64(
 			(this.lowU32 & num.lowU32) >>> 0,
 			(this.highU32 & num.highU32) >>> 0
@@ -144,7 +142,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	lShift(by: number): Uint64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		const o = this.lShiftOut(by);
 		return new Uint64(o[3] >>> 0, o[2] >>> 0);
 	}
@@ -155,7 +153,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	lRot(by: number): Uint64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		const o = this.lShiftOut(by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -166,7 +164,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	rShift(by: number): Uint64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		//Shifting right can be emulated by using the shift-out registers of
 		// a left shift.  eg. In <<1 the outgoing register has 1 bit in it,
 		// the same result as >>>63
@@ -180,7 +178,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): Uint64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		const o = this.lShiftOut(64 - by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -203,7 +201,7 @@ export class Uint64 {
 	 * @returns new value
 	 */
 	add(num: Uint64): Uint64 {
-		objExt.notNull(num, 'add(num)');
+		safety.notNull(num, 'add(num)');
 		return this.addUnsafe(num);
 	}
 
@@ -250,7 +248,7 @@ export class Uint64 {
 	 * @returns boolean
 	 */
 	equals(other: Uint64): boolean {
-		objExt.notNull(other, 'equals(other)');
+		safety.notNull(other, 'equals(other)');
 		return this.lowU32 == other.lowU32 && this.highU32 == other.highU32;
 	}
 
@@ -334,7 +332,7 @@ export class Uint64 {
 	}
 
 	toString(): string {
-		return 'u64{' + Hex.fromBytes(this.toBytes()) + '}';
+		return 'u64{' + hex.fromBytes(this.toBytes()) + '}';
 	}
 
 	toSafeInt(): number | undefined {
@@ -369,13 +367,12 @@ export class Uint64 {
 	 * Requires 8 bytes (big-endian order)
 	 * @param sourceBytes Source data
 	 * @param sourcePos Starting position in @param sourceBytes
-	 * @throws {SizeError} if there's not enough data in @param sourceBytes
+	 * @throws {NotInRangeError} if there's not enough data in @param sourceBytes
 	 * @returns
 	 */
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
 		const end = sourcePos + 8;
-		if (end > sourceBytes.length)
-			throw new SizeError('sourceBytes', sourceBytes.length, end);
+		safety.numInRangeInc(end,0,sourceBytes.length,'end');
 		const high =
 			((sourceBytes[sourcePos++] << 24) |
 				(sourceBytes[sourcePos++] << 16) |
@@ -392,10 +389,9 @@ export class Uint64 {
 	}
 
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Uint64 {
-		intExt.inRangeInclusive(len, 0, 8);
+		safety.intInRangeInc(len,0,8,'len');
 		const end = sourcePos + len;
-		if (end > sourceBytes.length)
-			throw new SizeError('sourceBytes', sourceBytes.length, end);
+		safety.numInRangeInc(end,0,sourceBytes.length,'end');
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

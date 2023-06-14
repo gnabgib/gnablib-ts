@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { TupleHashXof128 } from '../../src/hash/TupleHash';
 
 const tsts = suite('TupleHashXof128');
@@ -15,18 +15,18 @@ type hashHex={
 const tests:hashHex[]=[
     //https://csrc.nist.gov/csrc/media/projects/cryptographic-standards-and-guidelines/documents/examples/tuplehashxof_samples.pdf
     {
-        data:[Hex.toBytes('000102'),Hex.toBytes('101112131415')],
+        data:[hex.toBytes('000102'),hex.toBytes('101112131415')],
         size:256/8,
         expect:'2F103CD7C32320353495C68DE1A8129245C6325F6F2A3D608D92179C96E68488'
     },
     {
-        data:[Hex.toBytes('000102'),Hex.toBytes('101112131415')],
+        data:[hex.toBytes('000102'),hex.toBytes('101112131415')],
         size:256/8,
         customize:'My Tuple App',
         expect:'3FC8AD69453128292859A18B6C67D7AD85F01B32815E22CE839C49EC374E9B9A'
     },
     {
-        data:[Hex.toBytes('000102'),Hex.toBytes('101112131415'),Hex.toBytes('202122232425262728')],
+        data:[hex.toBytes('000102'),hex.toBytes('101112131415'),hex.toBytes('202122232425262728')],
         size:256/8,
         customize:'My Tuple App',
         expect:'900FE16CAD098D28E74D632ED852F99DAAB7F7DF4D99E775657885B4BF76D6F8'
@@ -39,7 +39,7 @@ for (const test of tests) {
         const hash=new TupleHashXof128(test.size,test.customize);
         for(let i=0;i<test.data.length;i++) hash.write(test.data[i]);
         const md=hash.sum();
-        assert.is(Hex.fromBytes(md),test.expect);
+        assert.is(hex.fromBytes(md),test.expect);
     });
 }
 

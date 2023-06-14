@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { U32, U32Mut, U32ish } from '../../src/primitive/U32';
 import { asBE, asLE } from '../../src/endian/platform';
 
@@ -389,11 +389,11 @@ tsts('toString',()=>{
 
 tsts('toBytesLE',()=> {
     const u=U32Mut.fromInt(0x01020304);
-    assert.is(Hex.fromBytes(u.toBytesLE()),'04030201');
+    assert.is(hex.fromBytes(u.toBytesLE()),'04030201');
 });
 tsts('toBytesBE',()=> {
     const u=U32Mut.fromInt(0x01020304);
-    assert.is(Hex.fromBytes(u.toBytesBE()),'01020304');
+    assert.is(hex.fromBytes(u.toBytesBE()),'01020304');
 });
 
 const fromInt:[number,number|undefined][]=[

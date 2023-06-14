@@ -10,8 +10,8 @@ import {
 	aztecData10,
 	aztecData12,
 } from '../../src/ecc/ReedSolomon';
-import * as utf8 from '../../src/encoding/Utf8';
-import {Hex} from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
+import {hex} from '../../src/encoding/Hex';
 
 const tsts = suite('Reed-Solomon');
 
@@ -76,7 +76,7 @@ const encodeQrCodeAsciiHex = [
 ];
 for (const test of encodeQrCodeAsciiHex) {
 	const msg = utf8.toBytes(test[0]);
-	const ecc = Hex.toBytes(test[1]);
+	const ecc = hex.toBytes(test[1]);
 	tsts('QrEncode ' + test[0], () => {
 		const fullMsg = new Uint8Array(msg.length + ecc.length);
 		fullMsg.set(msg);

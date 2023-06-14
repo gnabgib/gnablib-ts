@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { ContentError } from '../primitive/ErrorExt.js';
-import * as bconv from './_bitConverter.js';
+import { bitConverter } from './_bitConverter.js';
 
 const tbl_con = 'bdfghjklmnprstvz';
 const tbl_vow = 'aiou';
@@ -43,6 +43,7 @@ function conToInt(char: string): number {
 	if (ord < ord_A || ord > ord_Z) return -1;
 	return tbl_conBack[ord - ord_A];
 }
+
 function vowToInt(char: string): number {
 	let ord = char.charCodeAt(0);
 	//Fold lower over upper
@@ -55,7 +56,7 @@ function vowToInt(char: string): number {
 		case ord_O:
 			return 2;
 		default:
-		//case ord_U:
+			//case ord_U:
 			return 3;
 	}
 }
@@ -77,49 +78,61 @@ function wordToQuint(word: number): string {
 	);
 }
 
-export function fromBytes(bytes: Uint8Array): string {
-	const ret = bconv.fromBytes(bytes, 16, wordToQuint);
-	return ret.slice(0, ret.length - 1);
-}
+export const proquint = {
+	/**
+	 * Convert a series of bytes into proquint
+	 * @param bytes
+	 * @returns
+	 */
+	fromBytes: function (bytes: Uint8Array): string {
+		const ret = bitConverter.fromBytes(bytes, 16, wordToQuint);
+		return ret.slice(0, ret.length - 1);
+	},
+	/**
+	 * Convert proquint encoded data into bytes
+	 * @param proquint
+	 * @throws If an unknown character is found or if the content is malformed (wrong length, wrong character in place)
+	 * @returns
+	 */
+	toBytes: function (proquint: string): Uint8Array {
+		const arr = new Uint8Array((proquint.length / 5) * 2);
+		let outputPtr = 0;
+		let carry = 0;
+		let pos = 0;
+		let dec = 0;
+		for (const char of proquint) {
+			if (char === '-') continue; //Ignore dashes
+			switch (pos++) {
+				case 0:
+				case 2:
+					dec = conToInt(char);
+					if (dec < 0) throw new ContentError('Character', 'unknown', char);
+					carry = (carry << 4) | dec;
+					break;
+				case 1:
+				case 3:
+					dec = vowToInt(char);
+					if (dec < 0) throw new ContentError('Character', 'unknown', char);
+					carry = (carry << 2) | dec;
+					break;
 
-export function toBytes(proquint: string): Uint8Array {
-	const arr = new Uint8Array((proquint.length / 5) * 2);
-	let outputPtr = 0;
-	let carry = 0;
-	let pos = 0;
-	let dec = 0;
-	for (const char of proquint) {
-		if (char === '-') continue; //Ignore dashes
-		switch (pos++) {
-			case 0:
-			case 2:
-				dec = conToInt(char);
-				if (dec < 0) throw new ContentError('Character', 'unknown', char);
-				carry = (carry << 4) | dec;
-				break;
-			case 1:
-			case 3:
-				dec = vowToInt(char);
-				if (dec < 0) throw new ContentError('Character', 'unknown', char);
-				carry = (carry << 2) | dec;
-				break;
+				case 4:
+					dec = conToInt(char);
+					if (dec < 0) throw new ContentError('Character', 'unknown', char);
+					carry = (carry << 4) | dec;
 
-			case 4:
-				dec = conToInt(char);
-				if (dec < 0) throw new ContentError('Character', 'unknown', char);
-				carry = (carry << 4) | dec;
-
-				arr[outputPtr++] = (carry >> 8) & 0xff;
-				arr[outputPtr++] = carry & 0xff;
-				pos = 0;
-				break;
+					arr[outputPtr++] = (carry >> 8) & 0xff;
+					arr[outputPtr++] = carry & 0xff;
+					pos = 0;
+					break;
+			}
 		}
-	}
-	if (pos != 0)
-		throw new ContentError(
-			'Size',
-			'Should be a multiple of 5, have leftovers',
-			pos
-		);
-	return arr;
-}
+		if (pos != 0)
+			throw new ContentError(
+				'Size',
+				'Should be a multiple of 5, have leftovers',
+				pos
+			);
+		return arr;
+	},
+};

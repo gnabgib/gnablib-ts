@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
-import * as utf8 from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
 import { Hmac } from '../../src/mac/Hmac';
 import { Md5 } from '../../src/hash/Md5';
 
@@ -16,7 +16,7 @@ type hashHex={
 const md5Hex:hashHex[]=[
     //From RFC 2104
     {
-        key:Hex.toBytes('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'),
+        key:hex.toBytes('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'),
         data:'Hi There',
         expect:'9294727A3638BB1C13F48EF8158BFC9D'},
     {
@@ -24,8 +24,8 @@ const md5Hex:hashHex[]=[
         data:'what do ya want for nothing?',
         expect:'750C783E6AB0B503EAA86E310A5DB738'},
     {
-        key:Hex.toBytes('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'),
-        data:Hex.toBytes('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD'),
+        key:hex.toBytes('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'),
+        data:hex.toBytes('DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD'),
         expect:'56BE34521D144C88DBB8C733F0E8B3F6'},
     //Wikipedia
     {
@@ -43,7 +43,7 @@ for (const test of md5Hex) {
         const mac=new Hmac(hash,bKey);
         mac.write(bMsg);
         const found=mac.sum();
-        assert.is(Hex.fromBytes(found),test.expect);
+        assert.is(hex.fromBytes(found),test.expect);
     });
 }
 

@@ -1,9 +1,9 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { DateTime } from '../primitive/DateTime.js';
-import { uintToScaleBytes } from '../primitive/IntExt.js';
-import * as Utf8 from '../encoding/Utf8.js';
-import { fp64ToBytes } from '../encoding/ieee754-fp64.js';
+import { intExt } from '../primitive/IntExt.js';
+import { utf8 } from '../encoding/Utf8.js';
+import { fp64 } from '../encoding/ieee754-fp64.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import { intToMinBytes, uintToMinBytes } from '../endian/big.js';
 import { Int64 } from '../primitive/Int64.js';
@@ -12,8 +12,8 @@ import { FromBinResult } from '../primitive/FromBinResult.js';
 export function unknownToBin(value: unknown): Uint8Array {
 	let ret: Uint8Array;
 	if (typeof value === 'string') {
-		const enc = Utf8.toBytes(value);
-		const len = uintToScaleBytes(enc.length);
+		const enc = utf8.toBytes(value);
+		const len = intExt.uintToScaleBytes(enc.length);
 		ret = new Uint8Array(len.length + enc.length);
 		ret.set(len);
 		ret.set(enc, len.length);
@@ -28,7 +28,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 			ret[0] = n.length;
 			ret.set(n, 1);
 		} else {
-			const f = fp64ToBytes(value);
+			const f = fp64.toBytes(value);
 			ret = new Uint8Array(1 + f.length);
 			ret[0] = f.length;
 			ret.set(f, 1);

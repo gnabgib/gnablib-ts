@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { cksum } from '../../src/checksum/cksum';
-import * as utf8 from '../../src/encoding/Utf8';
+import { utf8 } from '../../src/encoding/Utf8';
 
 const tsts = suite('CKSUM');
 

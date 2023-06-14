@@ -8,7 +8,7 @@ import { Md5 } from '../hash/Md5.js';
  * @param bytes
  * @returns
  */
-export function md5sum(bytes: Uint8Array): Uint8Array {
+export function md5Sum(bytes: Uint8Array): Uint8Array {
 	const hash=new Md5();
 	hash.write(bytes);
 	return hash.sum();

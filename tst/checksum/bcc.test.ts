@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as bcc from '../../src/checksum/bcc';
+import { bcc } from '../../src/checksum/bcc';
 
 const tsts = suite('BCC/RFC 914');
 
@@ -24,7 +24,7 @@ const sum = [
 
 for (const pair of sum) {
 	tsts('Sum: ' + pair[0], () => {
-		assert.is(bcc.sum(new Uint8Array(pair[0] as number[])), pair[1]);
+		assert.is(bcc(new Uint8Array(pair[0] as number[])), pair[1]);
 	});
 }
 

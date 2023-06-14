@@ -1,18 +1,18 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { lenInRangeInclusive } from '../../primitive/StringExt.js';
-import * as Utf8 from '../../encoding/Utf8.js';
+import { utf8 } from '../../encoding/Utf8.js';
+import { safety } from '../../primitive/Safety.js';
 
 export class Command {
 	readonly char: string;
 	readonly human: string;
 	constructor(char: string, human: string) {
-		lenInRangeInclusive(char, 1);
+		safety.lenExactly(char,1,'char');
 		this.char = char;
 		this.human = human;
 	}
 	toBin(): Uint8Array {
-		return Utf8.toBytes(this.char);
+		return utf8.toBytes(this.char);
 	}
 }
 

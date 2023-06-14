@@ -2,7 +2,6 @@
 
 import type { Int64 } from '../primitive/Int64.js';
 import type { Uint64 } from '../primitive/Uint64.js';
-import { inRangeInclusive } from '../primitive/IntExt.js';
 import type {
 	// ReadonlyBigInt64Array,
 	// ReadonlyBigUint64Array,
@@ -16,6 +15,7 @@ import type {
 	ReadonlyUint8Array,
 } from '../primitive/ReadonlyTypedArray.js';
 import { isLE } from '../endian/platform.js';
+import { safety } from '../primitive/Safety.js';
 
 class ArrayBufferWindowReader {
 	private readonly _view: DataView;
@@ -540,12 +540,12 @@ export class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		inRangeInclusive(start, 0, buffer.byteLength - 1, 'start');
+		safety.intInRangeIncExc(start, 0, buffer.byteLength, 'start');
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {
 			//Note when end===start (allowed) the window has 0 length
-			inRangeInclusive(end, start, buffer.byteLength, 'end');
+			safety.intInRangeInc(end, start, buffer.byteLength, 'end');
 		}
 		if (buffer instanceof ArrayBufferWindow) {
 			this._buffer = buffer._buffer;

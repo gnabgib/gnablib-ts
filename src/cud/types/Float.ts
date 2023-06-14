@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { fp32FromBytes, fp32ToBytes } from '../../encoding/ieee754-fp32.js';
-import { fp64FromBytes, fp64ToBytes } from '../../encoding/ieee754-fp64.js';
+import { fp32 } from '../../encoding/ieee754-fp32.js';
+import { fp64 } from '../../encoding/ieee754-fp64.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
@@ -74,7 +74,7 @@ export class Float4 extends AFloat {
 		if (typeof value !== 'number') {
 			throw new TypeError('Float required');
 		}
-		const f = fp32ToBytes(value);
+		const f = fp32.toBytes(value);
 		//We known f.length==4
 		const ret = new Uint8Array(f.length + 1);
 		ret[0] = f.length;
@@ -86,7 +86,7 @@ export class Float4 extends AFloat {
 		const bytes = this._binUnknown(bin, pos, 4);
 		//Propagate null or error (notice type change)
 		if (bytes.value === undefined) return bytes.switchT<number | undefined>();
-		return new FromBinResult(5, fp32FromBytes(bytes.value));
+		return new FromBinResult(5, fp32.fromBytes(bytes.value));
 	}
 }
 
@@ -108,7 +108,7 @@ export class Float8 extends AFloat {
 		if (typeof value !== 'number') {
 			throw new TypeError('Float required');
 		}
-		const f = fp64ToBytes(value);
+		const f = fp64.toBytes(value);
 		//We known f.length==8
 		const ret = new Uint8Array(f.length + 1);
 		ret[0] = f.length;
@@ -120,6 +120,6 @@ export class Float8 extends AFloat {
 		const bytes = this._binUnknown(bin, pos, 8);
 		//Propagate null or error (notice type change)
 		if (bytes.value === undefined) return bytes.switchT<number | undefined>();
-		return new FromBinResult(9, fp64FromBytes(bytes.value));
+		return new FromBinResult(9, fp64.fromBytes(bytes.value));
 	}
 }

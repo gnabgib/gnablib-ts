@@ -1,5 +1,20 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
+export class NotInRangeError<T> extends RangeError {
+	/**
+	 * ${noun} should be ${low}${lowOp}x${highOp}${high}, got ${value}
+	 * @param noun 
+	 * @param value 
+	 * @param lowOp <|<=
+	 * @param low 
+	 * @param highOp <|<=
+	 * @param high 
+	 */
+	constructor(readonly noun:string,readonly value:T,readonly lowOp:string|undefined,readonly low:T|undefined,readonly highOp:string,readonly high:T) {
+		super(`${noun} should be ${low}${lowOp}x${highOp}${high}, got ${value}`);
+	}
+}
+
 /**
  * $noun should be $lowInc<=x<=$highInc, got: $value
  * $noun should be $lowInc, got: $value
@@ -82,143 +97,48 @@ export class NotEnoughSpaceError extends RangeError {
 	}
 }
 export class NotEnoughDataError extends RangeError {
-	readonly noun: string;
-	readonly length: number;
-	readonly available: number;
-	constructor(noun: string, units: string, length: number, available: number) {
-		super(`${noun} needs ${length} ${units}, found ${available}`);
-		this.noun = noun;
-		this.length = length;
-		this.available = available;
-	}
-}
-
-export interface VariedRangeConditions<T> {
-	'>'?: T;
-	'>='?: T;
-	'<'?: T;
-	'<='?: T;
-}
-
-/**
- * $noun should be conditions.l <= | < x < | <= conditions.g, got $value
- * $noun should be <= | < conditions.l, got $value
- * $noun should be > | >= conditions.h, got $value
- */
-export class VariedRangeError<T> extends RangeError {
-	readonly noun: string;
-	readonly value: T;
-	readonly conditions: VariedRangeConditions<T>;
-
-	constructor(noun: string, value: T, conditions: VariedRangeConditions<T>) {
-		super(VariedRangeError.reason(noun, value, conditions));
-		this.noun = noun;
-		this.value = value;
-		this.conditions = conditions;
-	}
-
-	private static reason<T>(noun: string, value: T, conditions: VariedRangeConditions<T>): string {
-		interface Op<T> {
-			o:string,
-			v:T
-		}
-		let lt:Op<T>|undefined=undefined;
-		let gt:Op<T>|undefined=undefined;
-
-		if (conditions['<'] !== undefined) {
-			lt={o:'<',v:conditions['<']}
-			// lto = '<';
-			// ltv = conditions['<'];
-		} else if (conditions['<='] !== undefined) {
-			lt={o:'<=',v:conditions['<=']}
-		}
-		if (conditions['>'] !== undefined) {
-			gt={o:'>',v:conditions['>']}
-		} else if (conditions['>='] !== undefined) {
-			gt={o:'>=',v:conditions['>=']}
-		}
-
-		if (lt != undefined) {
-			if (gt != undefined) {
-				return `${noun} should be ${lt.v}${lt.o}x${gt.o}${gt.v}, got: ${value}`;
-			}
-			return `${noun} should be ${lt.o}${lt.v}, got: ${value}`;
-		} else if (gt!=undefined) {
-			return `${noun} should be ${gt.o}${gt.v}, got: ${value}`;
-		} else {
-			return 'missing conditions';
-		}
-	}
-}
-
-/**
- * $noun should be $low-$high in length, got $count |
- * $noun should be $low in length, got: $count
- */
-export class SizeError extends RangeError {
-	readonly noun: string;
-	readonly count: number;
-	readonly low: number;
-	readonly high: number;
 	/**
-	 * $noun should be $low-$high in length, got $count |
-	 * $noun should be $low in length, got: $count
-	 * @param noun
-	 * @param count
-	 * @param low
-	 * @param high
+	 * `${noun} needs ${length} ${units}, found ${available}`
+	 * @param noun 
+	 * @param units 
+	 * @param length 
+	 * @param available 
 	 */
-	constructor(noun: string, count: number, low: number, high?: number) {
-		if (high !== undefined) {
-			super(`${noun} should be ${low}-${high} in length, got: ${count}`);
-		} else {
-			super(`${noun} should be ${low} in length, got: ${count}`);
-		}
-		this.noun = noun;
-		this.count = count;
-		this.low = low;
-		this.high = high ?? low;
+	constructor(readonly noun: string, units: string, readonly length: number, readonly available: number) {
+		super(`${noun} needs ${length} ${units}, found ${available}`);
 	}
 }
 
-/**
- * Expected {$expectedType}, got: typeof($value)=$value
- */
 export class EnforceTypeError extends TypeError {
-	readonly type: string;
-	readonly value: unknown;
-	constructor(expectedType: string, value: unknown) {
+	/**
+	 * Expected ${expectedType}, got: ${typeof value}=${value}
+	 * @param expectedType 
+	 * @param value 
+	 */
+	constructor(readonly expectedType: string, readonly value: unknown) {
 		super(`Expected ${expectedType}, got: ${typeof value}=${value}`);
-		this.type = expectedType;
-		this.value = value;
 	}
 }
 
-/**
- * Invalid $noun; $reason ($value)
- */
 export class ContentError extends SyntaxError {
-	readonly noun: string;
-	readonly value: unknown;
-	readonly reason: string;
-
-	constructor(noun: string, reason: string, value?: unknown) {
+	/**
+	 * Invalid ${noun}; ${reason} (${value})
+	 * @param noun 
+	 * @param reason 
+	 * @param value 
+	 */
+	constructor(readonly noun: string, readonly reason: string, readonly value?: unknown) {
 		super(`Invalid ${noun}; ${reason} (${value})`);
-		this.noun = noun;
-		this.reason = reason;
-		this.value = value;
 	}
 }
 
-/**
- * $noun cannot be null ($value)
- * Cannot be null ($value)
- */
 export class NullError extends TypeError {
-	readonly noun: string | undefined;
-	constructor(noun?: string) {
-		super((noun ? `${noun} c` : 'C') + `annot be null`);
-		this.noun = noun;
+	/**
+	 * [$noun ]cannot be null
+	 * @param noun 
+	 */
+	constructor(readonly noun?: string) {
+		super((noun ? `${noun} ` : '') + `annot be null`);
 	}
 }
 

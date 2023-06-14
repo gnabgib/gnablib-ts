@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { inRangeInclusive } from './IntExt.js';
+import { safety } from './Safety.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const NOT_FOUND = -1;
 // type splitter= {
@@ -8,7 +8,7 @@ const NOT_FOUND = -1;
 // }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export type WindowStrish = WindowStr|string|String;
+export type WindowStrish = WindowStr | string | String;
 
 export class WindowStr {
 	//Strings are immutable in JS
@@ -28,11 +28,11 @@ export class WindowStr {
 	 * @param end Integer 0 < (source.length-start) (default source.length-start)
 	 */
 	constructor(source: string | WindowStr, start = 0, length?: number) {
-		inRangeInclusive(start, 0, source.length, 'start');
+		safety.intInRangeInc(start, 0, source.length, 'start');
 		if (length === undefined) {
 			length = source.length - start;
 		} else {
-			inRangeInclusive(length, 0, source.length - start, 'end');
+			safety.intInRangeInc(length, 0, source.length - start, 'length');
 		}
 		if (source instanceof WindowStr) {
 			this._src = source._src;
@@ -71,11 +71,7 @@ export class WindowStr {
 	 */
 	charAt(idx: number): string {
 		if (idx < 0) idx += this._length;
-		if (this._length===0) {
-			inRangeInclusive(idx, 0, 0, 'idx');	
-			return '';
-		}
-		inRangeInclusive(idx, 0, this._length - 1, 'idx');
+		safety.intInRangeIncExc(idx, 0, this._length, 'idx');
 		return this._src.charAt(idx + this._start);
 	}
 
@@ -87,11 +83,7 @@ export class WindowStr {
 	 * @returns Integer 0-65535|NaN
 	 */
 	charCodeAt(idx: number): number {
-		if (this._length===0) {
-			inRangeInclusive(idx, 0, 0, 'idx');	
-			return NaN;
-		}
-		inRangeInclusive(idx, 0, this._length - 1, 'idx');
+		safety.intInRangeIncExc(idx, 0, this._length, 'idx');
 		return this._src.charCodeAt(idx + this._start);
 	}
 
@@ -126,7 +118,7 @@ export class WindowStr {
 	 */
 	indexOf(searchString: string, start?: number): number {
 		if (start === undefined) start = 0;
-		inRangeInclusive(start, 0, this._length, 'start');
+		safety.intInRangeInc(start, 0, this._length, 'start');
 		let pos = this._src.indexOf(searchString, this._start + start);
 		//Not found - return
 		if (pos < 0) return NOT_FOUND;
@@ -142,8 +134,11 @@ export class WindowStr {
 	 * @param length Integer, 0 < length - length of window to search in (default=length/whole window)
 	 */
 	lastIndexOf(searchString: string, length?: number): number {
-		if (length === undefined) length = this._length;
-		inRangeInclusive(length, 0, this._length, 'length');
+		if (length === undefined) {
+			length = this._length;
+		} else {
+			safety.intInRangeInc(length, 0, this._length, 'length');
+		}
 		const lastIndexPos = this._start + length - searchString.length;
 		//Because JS treats <=0 as 0 in lastIndexPos we need to catch negative
 		if (lastIndexPos < 0) return NOT_FOUND;
@@ -164,7 +159,7 @@ export class WindowStr {
 	 * @returns
 	 */
 	left(length: number): WindowStr {
-		inRangeInclusive(length, 0, this._length, 'length');
+		safety.intInRangeInc(length, 0, this._length, 'length');
 		return new WindowStr(this, 0, length);
 	}
 
@@ -184,7 +179,7 @@ export class WindowStr {
 	 * @returns
 	 */
 	right(length: number): WindowStr {
-		inRangeInclusive(length, 0, this._length, 'length');
+		safety.intInRangeInc(length, 0, this._length, 'length');
 		return new WindowStr(this, this._length - length);
 	}
 
@@ -262,19 +257,19 @@ export class WindowStr {
 		return this[Symbol.toPrimitive]();
 	}
 
-    /**
-     * Coerce a string or String into a WindowStr if it isn't already
-     * @param value 
-     * @returns 
-     */
-    static coerce(value:WindowStrish):WindowStr {
-        if (value instanceof WindowStr) {
-            return value;
-        } if (value instanceof String) {
-            return new WindowStr(value.valueOf());
-        } else {
-            return new WindowStr(value);
-        }
-    }
+	/**
+	 * Coerce a string or String into a WindowStr if it isn't already
+	 * @param value
+	 * @returns
+	 */
+	static coerce(value: WindowStrish): WindowStr {
+		if (value instanceof WindowStr) {
+			return value;
+		}
+		if (value instanceof String) {
+			return new WindowStr(value.valueOf());
+		} else {
+			return new WindowStr(value);
+		}
+	}
 }
-

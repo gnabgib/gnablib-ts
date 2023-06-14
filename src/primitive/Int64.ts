@@ -1,9 +1,8 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
-import * as objExt from '../primitive/ObjExt.js';
-import { Hex } from '../encoding/Hex.js';
-import { EnforceTypeError, NotSupportedError, SizeError } from './ErrorExt.js';
+import { safety } from './Safety.js';
+import { hex } from '../encoding/Hex.js';
+import { EnforceTypeError, NotSupportedError } from './ErrorExt.js';
 
 const maxU32 = 0xffffffff;
 //const maxI32 = 2147483647; // 0x7fffffff
@@ -22,8 +21,8 @@ export class Int64 {
 		// when using hex for numbers (which we frequently do for readability)
 		// JS considers them unsigned, so 0xFFFFFFFF isn't -1, it's +4M so..
 		//We allow between ~ -2M and +4M (even though you should choose one or the other range)
-		intExt.inRangeInclusive(lowI32, minI32, maxU32);
-		intExt.inRangeInclusive(lowI32, minI32, maxU32);
+		safety.intInRangeInc(lowI32,minI32,maxU32);
+		safety.intInRangeInc(highI32,minI32,maxU32);
 		this.highU32 = highI32 >>> 0;
 		this.lowU32 = lowI32 >>> 0;
 	}
@@ -50,7 +49,7 @@ export class Int64 {
 	 * @returns this^num
 	 */
 	xor(num: Int64): Int64 {
-		objExt.notNull(num, 'xor(num)');
+		safety.notNull(num, 'xor(num)');
 		return new Int64(this.lowU32 ^ num.lowU32, this.highU32 ^ num.highU32);
 	}
 
@@ -60,7 +59,7 @@ export class Int64 {
 	 * @returns this|num
 	 */
 	or(num: Int64): Int64 {
-		objExt.notNull(num, 'or(num)');
+		safety.notNull(num, 'or(num)');
 		return new Int64(this.lowU32 | num.lowU32, this.highU32 | num.highU32);
 	}
 
@@ -70,7 +69,7 @@ export class Int64 {
 	 * @returns this&num
 	 */
 	and(num: Int64): Int64 {
-		objExt.notNull(num, 'and(num)');
+		safety.notNull(num, 'and(num)');
 		return new Int64(this.lowU32 & num.lowU32, this.highU32 & num.highU32);
 	}
 
@@ -149,7 +148,7 @@ export class Int64 {
 	 * @returns shifted value
 	 */
 	lShift(by: number): Int64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		const o = this.lShiftOut(by);
 		return new Int64(o[3], o[2]);
 	}
@@ -160,7 +159,7 @@ export class Int64 {
 	 * @returns rotated value
 	 */
 	lRot(by: number): Int64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		const o = this.lShiftOut(by);
 		return new Int64(o[3] | o[1], o[2] | o[0]);
 	}
@@ -171,7 +170,7 @@ export class Int64 {
 	 * @returns shifted value
 	 */
 	rShift(by: number): Int64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		//Shifting right can be emulated by using the shift-out registers of
 		// a left shift.  eg. In <<1 the outgoing register has 1 bit in it,
 		// the same result as >>>63
@@ -185,7 +184,7 @@ export class Int64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): Int64 {
-		intExt.inRangeInclusive(by, 0, 64);
+		safety.intInRangeInc(by,0,64,'by');
 		const o = this.lShiftOut(64 - by);
 		return new Int64(o[3] | o[1], o[2] | o[0]);
 	}
@@ -206,7 +205,7 @@ export class Int64 {
 	 * @returns new value
 	 */
 	add(num: Int64): Int64 {
-		objExt.notNull(num, 'add(num)');
+		safety.notNull(num, 'add(num)');
 		return this.addUnsafe(num);
 	}
 
@@ -233,7 +232,7 @@ export class Int64 {
 	 * @returns boolean
 	 */
 	equals(other: Int64): boolean {
-		objExt.notNull(other, 'equals(other)');
+		safety.notNull(other, 'equals(other)');
 		return this.lowU32 === other.lowU32 && this.highU32 === other.highU32;
 	}
 
@@ -350,7 +349,7 @@ export class Int64 {
 	}
 
 	toString(): string {
-		return 'i64{' + Hex.fromBytes(this.toBytes()) + '}';
+		return 'i64{' + hex.fromBytes(this.toBytes()) + '}';
 	}
 
 	toSafeInt(): number | undefined {
@@ -401,8 +400,7 @@ export class Int64 {
 
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Int64 {
 		const end = sourcePos + 8;
-		if (end > sourceBytes.length)
-			throw new SizeError('sourceBytes', sourceBytes.length, end);
+		safety.numInRangeInc(end,0,sourceBytes.length,'sourceBytes');
 		const high =
 			(sourceBytes[sourcePos++] << 24) |
 			(sourceBytes[sourcePos++] << 16) |
@@ -417,10 +415,9 @@ export class Int64 {
 	}
 
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Int64 {
-		intExt.inRangeInclusive(len, 0, 8);
+		safety.intInRangeInc(len,0,8,'len');
 		const end = sourcePos + len;
-		if (end > sourceBytes.length)
-			throw new SizeError('sourceBytes', sourceBytes.length, end);
+		safety.numInRangeInc(end,0,sourceBytes.length,'sourceBytes');
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

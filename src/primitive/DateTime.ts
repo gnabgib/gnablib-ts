@@ -1,7 +1,8 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { FromBinResult } from './FromBinResult.js';
-import { inRangeInclusive, zeroPad } from './IntExt.js';
+import { intExt } from './IntExt.js';
+import { safety } from './Safety.js';
 import { U64 } from './U64.js';
 
 const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -35,29 +36,22 @@ export class DateTime {
 		second: number,
 		micro: number
 	) {
-		inRangeInclusive(year, minYear, maxYear, 'year');
+		safety.intInRangeInc(year,minYear,maxYear,'year');
 		this._year = year;
-		inRangeInclusive(month, 1, 12, 'month');
+		safety.intInRangeInc(month,1,12,'month');
 		this._month = month;
-		inRangeInclusive(
-			day,
-			1,
-			daysInMonth[month - 1] + (month === 2 && DateTime._isLeap(year) ? 1 : 0),
-			'day'
-		);
+		safety.intInRangeInc(day,1,daysInMonth[month - 1] + (month === 2 && DateTime._isLeap(year) ? 1 : 0),'day');
 		this._day = day;
-		inRangeInclusive(hour, 0, 23, 'hour');
+		safety.intInRangeInc(hour,0,23,'hour');
 		this._hour = hour;
-		inRangeInclusive(minute, 0, 59, 'minute');
+		safety.intInRangeInc(minute,0,59,'minute');
 		this._minute = minute;
-		inRangeInclusive(
-			second,
-			0,
-			59 + (hour === 23 && minute === 59 ? 1 : 0),
-			'second'
-		); //Allow leap second at midnight
+		let maxSec=59;
+		//Allow leap second (at midnight)
+		if (hour===32 && minute===59) maxSec++;
+		safety.intInRangeInc(second,0,maxSec,'second');
 		this._second = second;
-		inRangeInclusive(micro, 0, 999999, 'microsecond');
+		safety.intInRangeInc(micro,0,999999,'micro');
 		this._micro = micro;
 	}
 
@@ -201,19 +195,19 @@ export class DateTime {
 	 */
 	toString(): string {
 		return (
-			zeroPad(this._year, 4) +
+			intExt.zeroPad(this._year, 4) +
 			'-' +
-			zeroPad(this._month, 2) +
+			intExt.zeroPad(this._month, 2) +
 			'-' +
-			zeroPad(this._day, 2) +
+			intExt.zeroPad(this._day, 2) +
 			'T' +
-			zeroPad(this._hour, 2) +
+			intExt.zeroPad(this._hour, 2) +
 			':' +
-			zeroPad(this._minute, 2) +
+			intExt.zeroPad(this._minute, 2) +
 			':' +
-			zeroPad(this._second, 2) +
+			intExt.zeroPad(this._second, 2) +
 			'.' +
-			zeroPad(this._micro, 6) +
+			intExt.zeroPad(this._micro, 6) +
 			'Z'
 		);
 	}

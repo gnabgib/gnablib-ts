@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import {Assert} from '../../src/test/assert';
 import * as assert from 'uvu/assert';
-import * as utf8 from '../../src/encoding/Utf8';
-import { Hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
 import { Md5 } from '../../src/hash/Md5';
 
 const tsts = suite('MD5/RFC 1321');
@@ -195,14 +195,14 @@ tsts('MD5 Collision example:',()=>{
 	assert.not.equal(k1,k2);
 
 	const hash=new Md5();
-	hash.write(Hex.toBytes(k1));
+	hash.write(hex.toBytes(k1));
 	const digest1=hash.sum();
 	hash.reset();
 
-	hash.write(Hex.toBytes(k2));
+	hash.write(hex.toBytes(k2));
 	const digest2=hash.sum();
 
-	assert.is(Hex.fromBytes(digest1),Hex.fromBytes(digest2));
+	assert.is(hex.fromBytes(digest1),hex.fromBytes(digest2));
 });
 
 tsts.run();

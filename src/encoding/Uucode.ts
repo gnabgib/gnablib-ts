@@ -1,6 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { ContentError, VariedRangeError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/ErrorExt.js';
+import { safety } from '../primitive/Safety.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -16,7 +17,8 @@ import { ContentError, VariedRangeError } from '../primitive/ErrorExt.js';
  * Deno: >=0.10
  */
 
-export const tbl = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`';
+export const tbl =
+	' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`';
 const final_line = '`';
 const last6Bits = 0x3f; // 00111111
 const notSeventhBit = 0xbf; //1011 1111
@@ -54,7 +56,7 @@ function mapUueCharToInt(char: string): number {
  * @returns
  */
 function mapLine(bytes: Uint8Array, charMap: (int: number) => string): string {
-	if (bytes.length > 45) throw new VariedRangeError('Bytes', bytes.length, { '<=': 45 });
+	safety.lenInRangeInc(bytes,0,45,'bytes');
 	//Start with size char
 	let ret = charMap(bytes.length);
 	let i = 0;
@@ -83,55 +85,61 @@ function mapLine(bytes: Uint8Array, charMap: (int: number) => string): string {
 	return ret + '\n';
 }
 
-/**
- * Convert an array of bytes into an uuencoded string
- * @param bytes
- * @param opts
- * @returns
- */
-export function fromBytes(bytes: Uint8Array, opts?: EncodeOpts): string {
-	opts = opts || {};
+export const uucode = {
+	/**
+	 * Convert an array of bytes into an uuencoded string
+	 * @param bytes
+	 * @param opts
+	 * @returns
+	 */
+	fromBytes: function (bytes: Uint8Array, opts?: EncodeOpts): string {
+		opts = opts || {};
 
-	//Convert an integer [0-63] into a Uue character
-	const charMap = opts.cSpaceZero
-		? (int: number) => String.fromCharCode(int + 32) //0-63, SP-_
-		: (int: number) => String.fromCharCode(((int + 63) % 64) + 33); //1-64, !-`
+		//Convert an integer [0-63] into a Uue character
+		const charMap = opts.cSpaceZero
+			? (int: number) => String.fromCharCode(int + 32) //0-63, SP-_
+			: (int: number) => String.fromCharCode(((int + 63) % 64) + 33); //1-64, !-`
 
-	let ret = '';
-	let ptr = 0;
-	while (ptr < bytes.length) {
-		ret += mapLine(bytes.slice(ptr, ptr + 45), charMap);
-		ptr += 45;
-	}
-	return ret + final_line + '\n';
-}
-
-/**
- * Convert uuencoded text into an array of bytes
- * @param uuencoded
- * @returns
- */
-export function toBytes(uuencoded: string): Uint8Array {
-	const arr = new Uint8Array(Math.ceil((uuencoded.length * 3) / 4));
-	let inPtr = 0;
-	let outPtr = 0;
-	while (inPtr < uuencoded.length) {
-		const byteStart = outPtr;
-		const byteLen = mapUueCharToInt(uuencoded[inPtr++]);
-		const lineLen = inPtr + Math.ceil(byteLen / 3) * 4;
-		while (inPtr < lineLen) {
-			const u0 = mapUueCharToInt(uuencoded[inPtr++]);
-			const u1 = mapUueCharToInt(uuencoded[inPtr++]);
-			const u2 = mapUueCharToInt(uuencoded[inPtr++]);
-			const u3 = mapUueCharToInt(uuencoded[inPtr++]);
-			arr[outPtr++] = (u0 << 2) | (u1 >> 4);
-			arr[outPtr++] = (u1 << 4) | (u2 >> 2);
-			arr[outPtr++] = (u2 << 6) | u3;
+		let ret = '';
+		let ptr = 0;
+		while (ptr < bytes.length) {
+			ret += mapLine(bytes.slice(ptr, ptr + 45), charMap);
+			ptr += 45;
 		}
-		//Drop the padding bytes on output
-		outPtr = byteStart + byteLen;
-		if (uuencoded[inPtr++] != '\n')
-			throw new ContentError('Uuencoded', 'Unknown char @ pos ' + inPtr, uuencoded[inPtr - 1]);
-	}
-	return arr.slice(0, outPtr);
-}
+		return ret + final_line + '\n';
+	},
+
+	/**
+	 * Convert uuencoded text into an array of bytes
+	 * @param uuencoded
+	 * @returns
+	 */
+	toBytes: function (uuencoded: string): Uint8Array {
+		const arr = new Uint8Array(Math.ceil((uuencoded.length * 3) / 4));
+		let inPtr = 0;
+		let outPtr = 0;
+		while (inPtr < uuencoded.length) {
+			const byteStart = outPtr;
+			const byteLen = mapUueCharToInt(uuencoded[inPtr++]);
+			const lineLen = inPtr + Math.ceil(byteLen / 3) * 4;
+			while (inPtr < lineLen) {
+				const u0 = mapUueCharToInt(uuencoded[inPtr++]);
+				const u1 = mapUueCharToInt(uuencoded[inPtr++]);
+				const u2 = mapUueCharToInt(uuencoded[inPtr++]);
+				const u3 = mapUueCharToInt(uuencoded[inPtr++]);
+				arr[outPtr++] = (u0 << 2) | (u1 >> 4);
+				arr[outPtr++] = (u1 << 4) | (u2 >> 2);
+				arr[outPtr++] = (u2 << 6) | u3;
+			}
+			//Drop the padding bytes on output
+			outPtr = byteStart + byteLen;
+			if (uuencoded[inPtr++] != '\n')
+				throw new ContentError(
+					'Uuencoded',
+					'Unknown char @ pos ' + inPtr,
+					uuencoded[inPtr - 1]
+				);
+		}
+		return arr.slice(0, outPtr);
+	},
+};

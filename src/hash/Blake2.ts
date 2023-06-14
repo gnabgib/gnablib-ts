@@ -1,12 +1,10 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-//import { Hex } from '../encoding/Hex.js';
-import * as intExt from '../primitive/IntExt.js';
 import * as littleEndian from '../endian/little.js';
-import { SizeError } from '../primitive/ErrorExt.js';
 import { Uint64, Uint64ish } from '../primitive/Uint64.js';
 import type { IHash } from './IHash.js';
 import { U32 } from '../primitive/U32.js';
+import { safety } from '../primitive/Safety.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)
 // [BLAKE2 — fast secure hashing](https://www.blake2.net/)
@@ -25,8 +23,10 @@ const bRounds = 12;
 const iv = [
 	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2,3,5,7,11,13,17,19):
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
-	0x6a09e667, 0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1, /*..*/
-	0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179, /*..*/
+	0x6a09e667,
+	0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a,
+	0x5f1d36f1 /*..*/, 0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab,
+	0xfb41bd6b, 0x5be0cd19, 0x137e2179 /*..*/,
 ];
 const sigmas = [
 	[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
@@ -81,7 +81,7 @@ class Blake2_32bit implements IHash {
 	#bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		if (key.length > 32) throw new SizeError('key', key.length, 0, 64);
+		safety.lenInRangeInc(key, 0, 32, 'key');
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -100,7 +100,7 @@ class Blake2_32bit implements IHash {
 	}
 
 	get leafLen(): number {
-		return U32.iFromBytesLE(this.#params,4);
+		return U32.iFromBytesLE(this.#params, 4);
 	}
 
 	get nodeOffset(): Uint64 {
@@ -145,7 +145,7 @@ class Blake2_32bit implements IHash {
 
 		//Step 1
 		v[a] += v[b] + mj; //a ← a + b + m[j]
-		v[d] = U32.ror(v[d]^v[a],rRot1_32); //d ← (d ⊕ a) >>> 32
+		v[d] = U32.ror(v[d] ^ v[a], rRot1_32); //d ← (d ⊕ a) >>> 32
 		//Step 2
 		v[c] += v[d]; //c ← c + d
 		v[b] = U32.ror(v[b] ^ v[c], rRot2_32); //b ← (b ⊕ c) >>> 12
@@ -263,13 +263,13 @@ class Blake2_32bit implements IHash {
 	reset(): void {
 		//Setup state
 		this.#state[0] = iv[0] ^ U32.iFromBytesLE(this.#params, 0);
-        this.#state[1] = iv[2] ^ U32.iFromBytesLE(this.#params, 4);
-        this.#state[2] = iv[4] ^ U32.iFromBytesLE(this.#params, 8);
-        this.#state[3] = iv[6] ^ U32.iFromBytesLE(this.#params, 12);
-        this.#state[4] = iv[8] ^ U32.iFromBytesLE(this.#params, 16);
-        this.#state[5] = iv[10] ^ U32.iFromBytesLE(this.#params, 20);
-        this.#state[6] = iv[12] ^ U32.iFromBytesLE(this.#params, 24);
-        this.#state[7] = iv[14] ^ U32.iFromBytesLE(this.#params, 28);
+		this.#state[1] = iv[2] ^ U32.iFromBytesLE(this.#params, 4);
+		this.#state[2] = iv[4] ^ U32.iFromBytesLE(this.#params, 8);
+		this.#state[3] = iv[6] ^ U32.iFromBytesLE(this.#params, 12);
+		this.#state[4] = iv[8] ^ U32.iFromBytesLE(this.#params, 16);
+		this.#state[5] = iv[10] ^ U32.iFromBytesLE(this.#params, 20);
+		this.#state[6] = iv[12] ^ U32.iFromBytesLE(this.#params, 24);
+		this.#state[7] = iv[14] ^ U32.iFromBytesLE(this.#params, 28);
 
 		//Reset ingest count
 		this.#ingestBytes = Uint64.zero;
@@ -336,7 +336,7 @@ class Blake2_64bit implements IHash {
 	#bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		if (key.length > 64) throw new SizeError('key', key.length, 0, 64);
+		safety.lenInRangeInc(key, 0, 64, 'key');
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -604,13 +604,13 @@ export class Blake2s extends Blake2_32bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
-		intExt.inRangeInclusive(digestSize, 1, 32, 'digestSize');
-		intExt.inRangeInclusive(fanOut, 0, 255, 'fanOut');
+		safety.intInRangeInc(digestSize, 1, 32, 'digestSize');
+		safety.intInRangeInc(fanOut, 0, 255, 'fanOut');
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
 		p[3] = maxDepth;
-		p.set(U32.toBytesLE(leafMaxLen),4);
+		p.set(U32.toBytesLE(leafMaxLen), 4);
 		littleEndian.u64IntoBytesUnsafe(Uint64.coerce(nodeOffset), p, 8);
 		p[14] = nodeDepth;
 		p[15] = innerHashLen;
@@ -618,7 +618,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!salt || salt.length == 0) {
 			//nop
 		} else if (salt.length != saltSize32) {
-			throw new SizeError('salt', salt.length, saltSize32);
+			safety.lenExactly(salt, saltSize32, 'salt');
 		} else {
 			p.set(salt, 16);
 		}
@@ -626,11 +626,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!personalization || personalization.length == 0) {
 			//nop
 		} else if (personalization.length != saltSize32) {
-			throw new SizeError(
-				'personalization',
-				personalization.length,
-				saltSize32
-			);
+			safety.lenExactly(personalization, saltSize32, 'personalization');
 		} else {
 			p.set(personalization, 24);
 		}
@@ -672,13 +668,13 @@ export class Blake2b extends Blake2_64bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
-		intExt.inRangeInclusive(digestSize, 1, 64, 'digestSize');
-		intExt.inRangeInclusive(fanOut, 0, 255, 'fanOut');
+		safety.intInRangeInc(digestSize, 1, 64, 'digestSize');
+		safety.intInRangeInc(fanOut, 0, 255, 'fanOut');
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
 		p[3] = maxDepth;
-		p.set(U32.toBytesLE(leafMaxLen),4);
+		p.set(U32.toBytesLE(leafMaxLen), 4);
 		littleEndian.u64IntoBytesUnsafe(Uint64.coerce(nodeOffset), p, 8);
 		p[16] = nodeDepth;
 		p[17] = innerHashLen;
@@ -686,7 +682,7 @@ export class Blake2b extends Blake2_64bit {
 		if (!salt || salt.length == 0) {
 			//nop
 		} else if (salt.length != saltSize64) {
-			throw new SizeError('salt', salt.length, saltSize64);
+			safety.lenExactly(salt,saltSize64,'salt');
 		} else {
 			p.set(salt, 32);
 		}
@@ -694,11 +690,7 @@ export class Blake2b extends Blake2_64bit {
 		if (!personalization || personalization.length == 0) {
 			//nop
 		} else if (personalization.length != saltSize64) {
-			throw new SizeError(
-				'personalization',
-				personalization.length,
-				saltSize64
-			);
+			safety.lenExactly(personalization,saltSize64,'personalization');
 		} else {
 			p.set(personalization, 48);
 		}

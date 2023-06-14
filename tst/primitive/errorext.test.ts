@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Grievous, NegativeError, NotEnoughDataError, NotEnoughSpaceError, NotSupportedError, NullError, OutOfRangeError, SizeError, VariedRangeConditions, VariedRangeError, ZeroError } from '../../src/primitive/ErrorExt';
+import { Grievous, NegativeError, NotEnoughDataError, NotEnoughSpaceError, NotSupportedError, NullError, OutOfRangeError, ZeroError } from '../../src/primitive/ErrorExt';
 
 const tsts = suite('ErrorExt');
 
@@ -37,34 +37,6 @@ tsts('NotEnoughDataError',()=>{
     const e=new NotEnoughDataError('irrelevant','hefferlumps',2,1);
     assert.instance(e,Error);
 });
-
-const vrTests:[VariedRangeConditions<number>][]=[
-    [{'<':2}],
-    [{'<=':2}],
-    [{'>':2}],
-    [{'>=':2}],
-    [{'>':2,'<':4}],
-    [{}],
-];
-count=0;
-for(const [conditions] of vrTests) {
-    tsts(`VariedRangeError[${count++}]`,()=>{
-        const e=new VariedRangeError('irrelevant',3,conditions);
-        assert.instance(e,Error);
-    });
-}
-
-const seTests:[number,number|undefined][]=[
-    [1,undefined],
-    [1,3],
-];
-count=0;
-for(const [low,high] of seTests) {
-    tsts(`SizeError[${count++}]`,()=>{
-        const e=new SizeError('irrelevant',0,low,high);
-        assert.instance(e,Error);
-    });
-}
 
 const neTests:[string|undefined][]=[
     ['irrelevant'],

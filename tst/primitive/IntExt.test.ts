@@ -1,14 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
-import * as intExt from '../../src/primitive/IntExt';
-import {
-	sign16,
-	sign32,
-	sign8,
-	uintFromScaleBytes,
-	uintToScaleBytes,
-} from '../../src/primitive/IntExt';
+import { hex } from '../../src/encoding/Hex';
+import { intExt } from '../../src/primitive/IntExt';
 
 const tsts = suite('IntExt');
 
@@ -27,7 +20,7 @@ const sign8Set = [
 ];
 for (const test of sign8Set) {
 	tsts('sign8 ' + test[0], () => {
-		assert.is(sign8(test[0]), test[1]);
+		assert.is(intExt.sign8(test[0]), test[1]);
 	});
 }
 
@@ -46,7 +39,7 @@ const sign16Set = [
 ];
 for (const test of sign16Set) {
 	tsts('sign16 ' + test[0], () => {
-		assert.is(sign16(test[0]), test[1]);
+		assert.is(intExt.sign16(test[0]), test[1]);
 	});
 }
 
@@ -65,7 +58,7 @@ const sign32Set = [
 ];
 for (const test of sign32Set) {
 	tsts('sign32 ' + test[0], () => {
-		assert.is(sign32(test[0]), test[1]);
+		assert.is(intExt.sign32(test[0]), test[1]);
 	});
 }
 
@@ -172,13 +165,13 @@ const scaleCodes = [
 for (const test of scaleCodes) {
 	tsts('Encode:' + test[0], () => {
 		const num = test[0] as number;
-		const enc = uintToScaleBytes(num);
-		assert.equal(Hex.fromBytes(enc), test[1]);
+		const enc = intExt.uintToScaleBytes(num);
+		assert.equal(hex.fromBytes(enc), test[1]);
 	});
 	tsts('Decode:' + test[1], () => {
 		const num = test[0] as number;
-		const bytes = Hex.toBytes(test[1] as string);
-		const res = uintFromScaleBytes(bytes);
+		const bytes = hex.toBytes(test[1] as string);
+		const res = intExt.uintFromScaleBytes(bytes);
 		assert.equal(res.value, num);
 	});
 }
@@ -200,7 +193,7 @@ const strictParseIntDec = [
 
 for (const test of strictParseIntDec) {
 	tsts('Parse base 10 ' + test[0], () => {
-		assert.equal(intExt.strictParseDecInt(test[0] as string, 10), test[1]);
+		assert.equal(intExt.strictParseDecInt(test[0] as string), test[1]);
 	});
 }
 

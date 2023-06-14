@@ -1,9 +1,9 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as base32 from '../../src/encoding/Base32';
-import * as utf8 from '../../src/encoding/Utf8';
-import { Hex } from '../../src/encoding/Hex';
-import * as stringExt from '../../src/primitive/StringExt';
+import { base32 } from '../../src/encoding/Base32';
+import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
+import { stringExt } from '../../src/primitive/StringExt';
 
 const tsts = suite('Base32/RFC 4648');
 
@@ -36,27 +36,35 @@ for (const pair of asciiSet) {
 //Test the complete mapping (every char)
 const hexSet = [
 	//Hex,                                              enc
-	['00443214C74254B635CF84653A56D7C675BE77DF', base32.tbl],
-	['FFBBCDEB38BDAB49CA307B9AC5A928398A418820', stringExt.reverse(base32.tbl)], //'765432ZYXWVUTSRQPONMLKJIHGFEDCBA'],
+	[
+		'00443214C74254B635CF84653A56D7C675BE77DF',
+		'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+	],
+	[
+		'FFBBCDEB38BDAB49CA307B9AC5A928398A418820',
+		stringExt.reverse('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
+	], //'765432ZYXWVUTSRQPONMLKJIHGFEDCBA'],
 ];
 
 for (const pair of hexSet) {
 	tsts('Encode:' + pair[0], () => {
-		const u = Hex.toBytes(pair[0]);
+		const u = hex.toBytes(pair[0]);
 		assert.is(base32.fromBytes(u), pair[1]);
 	});
 
 	tsts('Decode:' + pair[1], () => {
 		const u = base32.toBytes(pair[1]);
-		assert.is(Hex.fromBytes(u), pair[0]);
+		assert.is(hex.fromBytes(u), pair[0]);
 	});
 }
 
 tsts('toBytes:', () => {
-	assert.throws(()=>base32.toBytes('['));
-	assert.equal(base32.toBytes(' MY======',{ignore:' '}),Uint8Array.of(102));
+	assert.throws(() => base32.toBytes('['));
+	assert.equal(
+		base32.toBytes(' MY======', { ignore: ' ' }),
+		Uint8Array.of(102)
+	);
 });
-
 
 //todo:undo
 tsts.run();

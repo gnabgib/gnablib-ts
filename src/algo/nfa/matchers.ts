@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { OutOfRangeError } from "../../primitive/ErrorExt.js";
+import { safety } from "../../primitive/Safety.js";
 import { asciiCased, printable } from "../../primitive/Utf.js";
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -21,7 +21,7 @@ export class CharMatch implements IMatcher {
     
     constructor(code:number|string) {
         if (typeof code === 'string') {
-            if (code.length<1) throw new OutOfRangeError('Code-string',code.length,1);
+            safety.lenGte(code,1,'code');
             this._code=code.charCodeAt(0);
         } else {
             this._code=code;
@@ -49,7 +49,7 @@ export class InsensitiveMatch implements IMatcher {
 
     constructor(code:number|string) {
         if (typeof code === 'string') {
-            if (code.length<1) throw new OutOfRangeError('Code-string',code.length,1);
+            safety.lenGte(code,1,'code');
             code=code.charCodeAt(0);
         }
         if (asciiCased(code)) {

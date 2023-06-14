@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { inRangeInclusive, isGreaterThanEqual, isPositive } from "../../primitive/IntExt.js";
+import { safety } from "../../primitive/Safety.js";
 import { StringBuilder } from "../../primitive/StringBuilder.js";
 import type { WindowStr } from "../../primitive/WindowStr.js";
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -145,11 +145,11 @@ export class Nfa {
         // [x]->[x]->..(min) ->()->[x]->()->[x]->()..(max)
         //                      \        \_________//^
         //                       \________________/
-        isPositive(min,'min');
+        safety.intGte(min,0,'min');
         if (max===undefined) {
             max=min;
         } else {
-            isGreaterThanEqual(max,min,'max');
+            safety.intGte(max,min,'max');
         }
 
         //Add required nodes

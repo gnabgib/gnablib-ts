@@ -1,8 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
-//import * as bigEndian from '../../src/endian/big';
-import * as ieee754 from '../../src/encoding/ieee754-fp16';
+import { hex } from '../../src/encoding/Hex';
+import { fp16 } from '../../src/encoding/ieee754-fp16';
 import { U16 } from '../../src/primitive/U16';
 
 const tsts = suite('IEEE754/Float16');
@@ -19,12 +18,12 @@ const encode16Pairs = [
 	//Largest <1
 	[0.99951171875, 0x3bff],
 	//Largest representable int
-	[ieee754.FP16_MAX_INT, 0x6800],
-	[-ieee754.FP16_MAX_INT, 0xe800],
-	[ieee754.FP16_MAX_INT - 1, 0x67ff],
-	[1 - ieee754.FP16_MAX_INT, 0xe7ff],
-	[ieee754.FP16_MAX_INT - 2, 0x67fe],
-	[2 - ieee754.FP16_MAX_INT, 0xe7fe],
+	[fp16.MAX_INT, 0x6800],
+	[-fp16.MAX_INT, 0xe800],
+	[fp16.MAX_INT - 1, 0x67ff],
+	[1 - fp16.MAX_INT, 0xe7ff],
+	[fp16.MAX_INT - 2, 0x67fe],
+	[2 - fp16.MAX_INT, 0xe7fe],
 
 	[1, 0x3c00],
 	[-1, 0xbc00],
@@ -46,38 +45,38 @@ const encode16Pairs = [
 for (const test of encode16Pairs) {
 	tsts('decode: ' + test[1].toString(16), () => {
 		const b = U16.toBytesBE(test[1]);
-		assert.is(ieee754.fp16FromBytes(b), test[0]);
+		assert.is(fp16.fromBytes(b), test[0]);
 	});
 	tsts('encode: ' + test[0], () => {
-		const b = ieee754.fp16ToBytes(test[0]);
-		const expHex = Hex.fromBytes(U16.toBytesBE(test[1]));
-		assert.is(Hex.fromBytes(b), expHex);
+		const b = fp16.toBytes(test[0]);
+		const expHex = hex.fromBytes(U16.toBytesBE(test[1]));
+		assert.is(hex.fromBytes(b), expHex);
 	});
 }
 
 const nanHex = '7FFF';
-const nanBytes = Hex.toBytes(nanHex);
+const nanBytes = hex.toBytes(nanHex);
 
 tsts('decode: 0x7fffffff (NaN)', () => {
 	//NaN!==NaN, so we need to use a specialized test
-	assert.is(isNaN(ieee754.fp16FromBytes(nanBytes)), true);
+	assert.is(isNaN(fp16.fromBytes(nanBytes)), true);
 });
 
 tsts('encode: NaN', () => {
-	const ie = ieee754.fp16ToBytes(NaN);
-	assert.is(Hex.fromBytes(ie), nanHex);
+	const ie = fp16.toBytes(NaN);
+	assert.is(hex.fromBytes(ie), nanHex);
 });
 
 tsts(`decode other NaNs:`, () => {
 	//As long as mantissa>0 then it's NaN so there are quite a few variants
-	assert.is(isNaN(ieee754.fp16FromBytes(Hex.toBytes('7C01'))), true);
-	assert.is(isNaN(ieee754.fp16FromBytes(Hex.toBytes('7E00'))), true);
-	assert.is(isNaN(ieee754.fp16FromBytes(Hex.toBytes('7C10'))), true);
+	assert.is(isNaN(fp16.fromBytes(hex.toBytes('7C01'))), true);
+	assert.is(isNaN(fp16.fromBytes(hex.toBytes('7E00'))), true);
+	assert.is(isNaN(fp16.fromBytes(hex.toBytes('7C10'))), true);
 });
 
 tsts('encode oversized', () => {
-	const enc = ieee754.fp16ToBytes(66000);
-	const dec = ieee754.fp16FromBytes(enc);
+	const enc = fp16.toBytes(66000);
+	const dec = fp16.fromBytes(enc);
 	assert.is(isFinite(dec), false);
 });
 

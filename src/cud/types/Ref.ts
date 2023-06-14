@@ -4,7 +4,6 @@ import {
 	EnforceTypeError,
 	NullError,
 	OutOfRangeError,
-	SizeError,
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
@@ -13,6 +12,7 @@ import { Int64 } from '../../primitive/Int64.js';
 import { TableName } from '../TableName.js';
 import { ColName } from '../ColName.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
+import { safety } from '../../primitive/Safety.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = new Int64(0, 0);
@@ -87,8 +87,7 @@ abstract class ARef extends ACudColType implements Valid<number | Int64> {
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		if (n.length > this._maxByteLen)
-			throw new SizeError('Ref bytes', n.length, 0, this._maxByteLen);
+		safety.lenInRangeInc(n,0,this._maxByteLen,'i64-bytes');
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;

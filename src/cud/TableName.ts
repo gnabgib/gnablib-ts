@@ -1,8 +1,8 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as Utf8 from '../encoding/Utf8.js';
-import { OutOfRangeError } from '../primitive/ErrorExt.js';
+import { utf8 } from '../encoding/Utf8.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
+import { safety } from '../primitive/Safety.js';
 
 const minLen = 1; //We don't support empty names
 const maxLen = 63;
@@ -33,14 +33,8 @@ export class TableName {
 	 * @returns
 	 */
 	static fromStr(name: string): TableName {
-		const bytes = Utf8.toBytes(name);
-		if (bytes.length > maxLen || bytes.length < minLen)
-			throw new OutOfRangeError(
-				'Length in bytes',
-				bytes.length,
-				minLen,
-				maxLen
-			);
+		const bytes = utf8.toBytes(name);
+		safety.lenInRangeInc(bytes,minLen,maxLen,'name-bytes');
 		return new TableName(name, bytes);
 	}
 
@@ -50,14 +44,8 @@ export class TableName {
 	 * @returns
 	 */
 	static fromUtf8Bytes(utf8bytes: Uint8Array): TableName {
-		if (utf8bytes.length > maxLen || utf8bytes.length < minLen)
-			throw new OutOfRangeError(
-				'Length in bytes',
-				utf8bytes.length,
-				minLen,
-				maxLen
-			);
-		const n = Utf8.fromBytes(utf8bytes);
+		safety.lenInRangeInc(utf8bytes,minLen,maxLen,'utf8bytes');
+		const n = utf8.fromBytes(utf8bytes);
 		return new TableName(n, utf8bytes);
 	}
 
@@ -87,7 +75,7 @@ export class TableName {
 			);
 
 		const b = bin.slice(pos, end);
-		const n = Utf8.fromBytes(b);
+		const n = utf8.fromBytes(b);
 		//DRY: We duplicate fromUtf8Bytes features, without exceptions (/w l check above) vs try/catch
 		return new FromBinResult(l + 1, new TableName(n, b));
 	}

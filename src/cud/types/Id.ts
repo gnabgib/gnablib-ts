@@ -3,14 +3,13 @@
 import { Int64 } from '../../primitive/Int64.js';
 import {
 	EnforceTypeError,
-	NullError,
 	OutOfRangeError,
-	SizeError,
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { Valid } from './Valid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
+import { safety } from '../../primitive/Safety.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = new Int64(0, 0);
@@ -25,10 +24,8 @@ abstract class AId extends ACudColType implements Valid<number | Int64> {
 
 	valid(input: number | Int64 | undefined): Error | undefined {
 		let i64: Int64;
-		if (input === undefined || input === null) {
-			//Cannot be null
-			return new NullError('Id');
-		} else if (input instanceof Int64) {
+		safety.notNull(input,'input');
+		if (input instanceof Int64) {
 			i64 = input;
 			//if (input.lt(min64) || input.gt(max64)) return new OutOfRangeError('Id', input, min64, max64);
 		} else if (typeof input === 'number' && Number.isInteger(input)) {
@@ -47,9 +44,8 @@ abstract class AId extends ACudColType implements Valid<number | Int64> {
 
 	unknownBin(value: number | Int64): Uint8Array {
 		let i64: Int64;
-		if (value === null || value === undefined) {
-			throw new NullError('Id');
-		} else if (value instanceof Int64) {
+		safety.notNull(value,'value');
+		if (value instanceof Int64) {
 			//Good
 			i64 = value;
 		} else if (typeof value === 'number' && Number.isInteger(value)) {
@@ -59,8 +55,7 @@ abstract class AId extends ACudColType implements Valid<number | Int64> {
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		if (n.length > this._maxByteLen)
-			throw new SizeError('Id bytes', n.length, 0, this._maxByteLen);
+		safety.lenInRangeInc(n,0,this._maxByteLen,'i64-bytes');
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;

@@ -3,12 +3,11 @@
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import {
 	NullError,
-	OutOfRangeError,
-	SizeError,
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { Valid } from './Valid.js';
+import { safety } from '../../primitive/Safety.js';
 
 const len1Byte = 255;
 const len2Byte = 65536; //65k
@@ -31,8 +30,7 @@ abstract class ABin extends ACudColType implements Valid<Uint8Array> {
 		if (input === undefined || input === null) {
 			if (!this.nullable) return new NullError('Bin');
 		} else {
-			if (input.length > maxLen)
-				return new OutOfRangeError('Data length', input.length, 0, maxLen);
+			safety.lenInRangeInc(input,0,maxLen,'input');
 		}
 	}
 
@@ -57,8 +55,7 @@ export class Bin1 extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len1Byte)
-			throw new SizeError('Bin size', value.length, 0, len1Byte);
+		safety.lenInRangeInc(value,0,len1Byte,'value');
 		const ret = new Uint8Array(1 + value.length);
 		ret[0] = value.length;
 		ret.set(value, 1);
@@ -110,8 +107,7 @@ export class Bin2 extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len2Byte)
-			throw new SizeError('Bin size', value.length, 0, len2Byte);
+		safety.lenInRangeInc(value,0,len2Byte,'value');
 		const ret = new Uint8Array(2 + value.length);
 		ret[0] = value.length >> 8;
 		ret[1] = value.length;
@@ -164,8 +160,7 @@ export class Bin3 extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len3Byte)
-			throw new SizeError('Bin size', value.length, 0, len3Byte);
+		safety.lenInRangeInc(value,0,len3Byte,'value');
 		const ret = new Uint8Array(3 + value.length);
 		ret[0] = value.length >> 16;
 		ret[1] = value.length >> 8;
@@ -221,8 +216,7 @@ export class Bin4ish extends ABin {
 			if (!this.nullable) throw new NullError('Bin');
 			return new Uint8Array([0]);
 		}
-		if (value.length > len4Byte)
-			throw new SizeError('Bin size', value.length, 0, len4Byte);
+		safety.lenInRangeInc(value,0,len4Byte,'value');
 		const ret = new Uint8Array(4 + value.length);
 		ret[0] = value.length >>> 24;
 		ret[1] = value.length >> 16;

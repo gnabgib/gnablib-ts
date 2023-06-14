@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { OutOfRangeError } from '../primitive/ErrorExt.js';
+import { safety } from '../primitive/Safety.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -22,7 +22,7 @@ export function toBytes(bytes: string): Uint8Array {
 	let idx = 0;
 	for (const strByte of stringBytes) {
 		const int = parseInt(strByte, 10);
-		if (int < 0 || int > 255) throw new OutOfRangeError('byte', int, 0, 255);
+		safety.intInRangeInc(int,0,255,`bytes[${idx}]`);
 		ret[idx++] = int;
 	}
 	return ret;

@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { Cidr } from './Cidr.js';
-import * as ip from './Ip.js';
+import { IpV4 } from './Ip.js';
 
 interface ITreeNode<T> {
 	readonly value: T | undefined;
@@ -152,7 +152,7 @@ export class IpTree<T> {
 		this._merge = merge || pickFirst;
 	}
 
-	addIp(ipv4: ip.V4, value: T): void {
+	addIp(ipv4: IpV4, value: T): void {
 		this._root = TreeNode.add(
 			this._root,
 			ipv4.toInt(),
@@ -163,7 +163,7 @@ export class IpTree<T> {
 		);
 	}
 
-	addRange(start: ip.V4, end: ip.V4, value: T): void {
+	addRange(start: IpV4, end: IpV4, value: T): void {
 		let startInt = start.toInt();
 		const endInt = end.toInt();
 		while (startInt <= endInt) {
@@ -200,14 +200,14 @@ export class IpTree<T> {
 		);
 	}
 
-	contains(ipv4: ip.V4): boolean {
+	contains(ipv4: IpV4): boolean {
 		return this._root.contains(ipv4.toInt(), 31);
 	}
 
 	listCidr(): CidrValue<T>[] {
 		const ret: CidrValue<T>[] = [];
 		this._root.output(0, 31, (p, b, v) =>
-			ret.push({ cidr: new Cidr(ip.V4.fromInt(p), b), value: v })
+			ret.push({ cidr: new Cidr(IpV4.fromInt(p), b), value: v })
 		);
 		return ret;
 	}

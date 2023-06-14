@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { asBE } from '../endian/platform.js';
-import { SizeError } from '../primitive/ErrorExt.js';
+import { safety } from '../primitive/Safety.js';
 import { U32 } from '../primitive/U32.js';
 import { U64Mut, U64MutArray } from '../primitive/U64.js';
 
@@ -88,9 +88,8 @@ class Blake1_32bit implements IHash {
 	constructor(salt?:Uint32Array,roundCount=10) {
         if (!salt || salt.length===0) {
             this.#salt = new Uint32Array(4);
-        } else if (salt.length!=4) {
-            throw new SizeError('salt', salt.length, 4);
         } else {
+			safety.lenExactly(salt,4,'salt');
             this.#salt=salt;
         }
         this.#nr=roundCount;
@@ -336,9 +335,8 @@ class Blake1_64bit implements IHash {
 	constructor(salt?:U64MutArray,roundCount=14) {
         if (!salt) {
             this.#salt = U64MutArray.fromLen(4);
-        } else if (salt.length!=4) {
-            throw new SizeError('salt', salt.length, 4);
         } else {
+			safety.lenExactly(salt,4,'salt');
             this.#salt=salt;
         }
         this.#nr=roundCount;

@@ -2,7 +2,7 @@
 
 import { DateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
-import { uintFromScaleBytes, uintToScaleBytes } from '../primitive/IntExt.js';
+import { intExt } from '../primitive/IntExt.js';
 import { ACmd } from './ACmd.js';
 import { ColValue } from './ColValue.js';
 import type { TableName } from './TableName.js';
@@ -32,7 +32,7 @@ export abstract class ACmdData extends ACmd {
 
 	toBin(extraSpace = 0): Uint8Array {
 		//Always include the rowId (in extra)
-		const i = uintToScaleBytes(this.recId);
+		const i = intExt.uintToScaleBytes(this.recId);
 		const finalExtraSpace = i.length + extraSpace;
 		const ret = super.toBin(finalExtraSpace);
 		ret.set(i, ret.length - finalExtraSpace);
@@ -142,7 +142,7 @@ export class CmdDataInsert extends ADataCols {
 	): FromBinResult<CmdDataInsert> {
 		let ptr = pos;
 		let spaceRem = e;
-		const iFrom = uintFromScaleBytes(bin, ptr);
+		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
 		if (!iFrom.success)
 			return new FromBinResult<CmdDataInsert>(
 				0,
@@ -209,7 +209,7 @@ export class CmdDataPut extends ADataCols {
 	): FromBinResult<CmdDataPut> {
 		let ptr = pos;
 		let spaceRem = e;
-		const iFrom = uintFromScaleBytes(bin, ptr);
+		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
 		if (!iFrom.success)
 			return new FromBinResult<CmdDataPut>(
 				0,
@@ -275,7 +275,7 @@ export class CmdDataPatch extends ADataCols {
 	): FromBinResult<CmdDataPatch> {
 		let ptr = pos;
 		let spaceRem = e;
-		const iFrom = uintFromScaleBytes(bin, ptr);
+		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
 		if (!iFrom.success)
 			return new FromBinResult<CmdDataPatch>(
 				0,
@@ -334,7 +334,7 @@ export class CmdDataDelete extends ACmdData {
 		pos: number
 	): FromBinResult<CmdDataDelete> {
 		let ptr = pos;
-		const iFrom = uintFromScaleBytes(bin, ptr);
+		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
 		if (!iFrom.success)
 			return new FromBinResult<CmdDataDelete>(
 				0,

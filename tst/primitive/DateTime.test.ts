@@ -1,8 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { DateTime } from '../../src/primitive/DateTime';
-import { Hex } from '../../src/encoding/Hex';
-import { Uint64 } from '../../src/primitive/Uint64';
+import { hex } from '../../src/encoding/Hex';
 import { U64 } from '../../src/primitive/U64';
 
 const tsts = suite('DateTime');
@@ -60,7 +59,7 @@ for (const create of creates) {
 
 for (const create of creates) {
 	tsts('Ser/deser:' + create.str, () => {
-		const b = Hex.toBytes(create.ser);
+		const b = hex.toBytes(create.ser);
 		const ser = U64.fromBytesBE(b);
 		const dt = new DateTime(
 			create.y,

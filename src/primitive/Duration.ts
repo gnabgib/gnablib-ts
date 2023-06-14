@@ -19,8 +19,9 @@
 
  */
 
-import { EnforceTypeError, OutOfRangeError } from './ErrorExt.js';
-import { padStart } from './StringExt.js';
+import { EnforceTypeError } from './ErrorExt.js';
+import { safety } from './Safety.js';
+import { stringExt } from './StringExt.js';
 
 const microPerSec = 1000000;
 const secPerMin = 60;
@@ -54,13 +55,13 @@ export class Duration {
 		second = 0,
 		micro = 0
 	) {
-		if (year < 0) throw new OutOfRangeError('year', year, 0);
-		if (month < 0) throw new OutOfRangeError('month', month, 0);
-		if (day < 0) throw new OutOfRangeError('day', day, 0);
-		if (hour < 0) throw new OutOfRangeError('hour', hour, 0);
-		if (minute < 0) throw new OutOfRangeError('minute', minute, 0);
-		if (second < 0) throw new OutOfRangeError('second', second, 0);
-		if (micro < 0) throw new OutOfRangeError('micro', micro, 0);
+		safety.numGte(year,0,'year');
+		safety.numGte(month,0,'month');
+		safety.numGte(day,0,'day');
+		safety.numGte(hour,0,'hour');
+		safety.numGte(minute,0,'minute');
+		safety.numGte(second,0,'second');
+		safety.numGte(micro,0,'micro');
 
 		if (!Number.isInteger(micro))
 			throw new EnforceTypeError('Integer micro', micro);
@@ -181,8 +182,8 @@ export class Duration {
 		const padMin = h.length > 0 || ymd.length > 0;
 		const padSec = padMin || m.length > 0;
 
-		if (padMin) m = ':' + padStart(m, 2, '0'); // stringExt.padStart(m,2,'0');
-		if (padSec) s = ':' + padStart(s, 2, '0');
+		if (padMin) m = ':' + stringExt.padStart(m, 2, '0'); // stringExt.padStart(m,2,'0');
+		if (padSec) s = ':' + stringExt.padStart(s, 2, '0');
 		let hms = h + m + s;
 
 		//Don't show null time if we
@@ -207,7 +208,7 @@ export class Duration {
 		//SU will always be at least 1 char, add a leading zero when s=0-9
 		if (s < 10) su = '0' + su;
 
-		return padStart(m.toString(), 2, '0') + ':' + su;
+		return stringExt.padStart(m.toString(), 2, '0') + ':' + su;
 	}
 
 	toMSShiftNumber(): number {

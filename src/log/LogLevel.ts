@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
+import { safety } from '../primitive/Safety.js';
 
 //Note these are upper bounds of their range, eg debug is 0-63
 const debugLevelUpper = 63;
@@ -22,22 +22,22 @@ export class LogLevel {
 	}
 
 	static debug(depth = 0): LogLevel {
-		intExt.inRangeInclusive(depth, 0, 63);
+		safety.intInRangeInc(depth, 0, 63, 'depth');
 		return new LogLevel(debugLevelUpper - depth);
 	}
 
 	static info(depth = 0): LogLevel {
-		intExt.inRangeInclusive(depth, 0, 63);
+		safety.intInRangeInc(depth, 0, 63, 'depth');
 		return new LogLevel(infoLevelUpper - depth);
 	}
 
 	static warn(depth = 0): LogLevel {
-		intExt.inRangeInclusive(depth, 0, 63);
+		safety.intInRangeInc(depth, 0, 63, 'depth');
 		return new LogLevel(warnLevelUpper - depth);
 	}
 
 	static error(depth = 0): LogLevel {
-		intExt.inRangeInclusive(depth, 0, 63);
+		safety.intInRangeInc(depth, 0, 63, 'depth');
 		return new LogLevel(errorLevelUpper - depth);
 	}
 

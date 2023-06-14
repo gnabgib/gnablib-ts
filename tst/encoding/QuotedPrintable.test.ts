@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as quotedPrintable from '../../src/encoding/QuotedPrintable';
-import * as utf8 from '../../src/encoding/Utf8';
+import { quotedPrintable } from '../../src/encoding/QuotedPrintable';
+import { utf8 } from '../../src/encoding/Utf8';
 
 const tsts = suite('QuotedPrintable/RFC 2045');
 

@@ -1,14 +1,15 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { ContentError, SizeError } from '../primitive/ErrorExt.js';
-import * as intExt from '../primitive/IntExt.js';
-import * as objExt from '../primitive/ObjExt.js';
+import { ContentError } from '../primitive/ErrorExt.js';
+import { intExt } from '../primitive/IntExt.js';
+import { safety } from '../primitive/Safety.js';
+import { U32 } from '../primitive/U32.js';
 
-export class V4 {
+export class IpV4 {
 	readonly bytes: Uint8Array;
 
 	constructor(bytes: Uint8Array) {
-		if (bytes.length != 4) throw new SizeError('Bytes', bytes.length, 4);
+		safety.lenExactly(bytes,4,'bytes');
 		this.bytes = bytes;
 	}
 
@@ -31,8 +32,8 @@ export class V4 {
 		);
 	}
 
-	equals(other: V4): boolean {
-		objExt.notNull(other, 'ip.V4.equals(other)');
+	equals(other: IpV4): boolean {
+		safety.notNull(other, 'ip.V4.equals(other)');
 		return (
 			this.bytes[0] === other.bytes[0] &&
 			this.bytes[1] === other.bytes[1] &&
@@ -56,12 +57,12 @@ export class V4 {
 		part1: number,
 		part2: number,
 		part3: number
-	): V4 {
-		intExt.inRangeInclusive(part0, 0, 0xff);
-		intExt.inRangeInclusive(part1, 0, 0xff);
-		intExt.inRangeInclusive(part2, 0, 0xff);
-		intExt.inRangeInclusive(part3, 0, 0xff);
-		return new V4(Uint8Array.of(part0, part1, part2, part3));
+	): IpV4 {
+		safety.intInRangeInc(part0,0,0xff,'part0');
+		safety.intInRangeInc(part1,0,0xff,'part1');
+		safety.intInRangeInc(part2,0,0xff,'part2');
+		safety.intInRangeInc(part3,0,0xff,'part3');
+		return new IpV4(Uint8Array.of(part0, part1, part2, part3));
 	}
 
 	/**
@@ -73,9 +74,9 @@ export class V4 {
 	 * @param value
 	 * @returns
 	 */
-	static fromString(value: string): V4 {
+	static fromString(value: string): IpV4 {
 		const parts = value.split('.');
-		if (parts.length != 4) throw new SizeError('Part count', parts.length, 4);
+		safety.lenExactly(parts,4,'part');
 
 		const p0 = intExt.strictParseDecUint(parts[0]);
 		if (p0 === undefined)
@@ -112,7 +113,7 @@ export class V4 {
 		return this.fromParts(p0, p1, p2, p3);
 	}
 
-	static fromInt(value: number): V4 {
-		return new V4(intExt.int32AsBytes(value));
+	static fromInt(value: number): IpV4 {
+		return new IpV4(U32.toBytesBE(value));
 	}
 }

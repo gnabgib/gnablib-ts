@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as utf8 from '../../src/encoding/Utf8';
-import { Hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
 import {
 	Sha384,
 } from '../../src/hash/Sha2';
@@ -100,7 +100,7 @@ for (const [source,expect] of ascii384Pairs) {
 		const hash=new Sha384();
 		hash.write(b);
 		const md=hash.sum();
-		assert.is(Hex.fromBytes(md), expect);
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
@@ -122,11 +122,11 @@ const hex384Pairs=[
 ];
 for (const [source,expect] of hex384Pairs) {
 	tsts('Sha384: 0x' + source, () => {
-		const h = Hex.toBytes(source);
+		const h = hex.toBytes(source);
 		const hash=new Sha384();
 		hash.write(h);
 		const md=hash.sum();
-		assert.is(Hex.fromBytes(md), expect);
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 

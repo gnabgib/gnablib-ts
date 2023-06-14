@@ -1,8 +1,8 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from './IntExt.js';
-import { Hex } from '../encoding/Hex.js';
+import { hex } from '../encoding/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
+import { safety } from './Safety.js';
 
 const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
@@ -539,7 +539,7 @@ export class U64 {
 	 * @returns
 	 */
 	toString(): string {
-		return 'u64{' + Hex.fromBytes(this.toBytesBE()) + '}';
+		return 'u64{' + hex.fromBytes(this.toBytesBE()) + '}';
 	}
 
 	/**
@@ -598,7 +598,7 @@ export class U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64 {
-		intExt.isGreaterThanEqual(uint51, 0, 'uint51');
+		safety.intGte(uint51,0,'uint51');
 		return new U64(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -680,7 +680,7 @@ export class U64 {
 		if (uint64 instanceof U64) {
 			return uint64;
 		} else {
-			intExt.isGreaterThanEqual(uint64, 0, 'uint64');
+			safety.intGte(uint64,0,'uint64');
 			return new U64(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}
@@ -852,7 +852,7 @@ export class U64Mut extends U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64Mut {
-		intExt.isGreaterThanEqual(uint51, 0, 'uint51');
+		safety.intGte(uint51,0,'uint51');
 		return new U64Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -902,7 +902,7 @@ export class U64Mut extends U64 {
 		if (uint64 instanceof U64) {
 			return uint64.mut();
 		} else {
-			intExt.isGreaterThanEqual(uint64, 0, 'uint64');
+			safety.intGte(uint64,0,'uint64');
 			return new U64Mut(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}

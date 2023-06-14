@@ -1,8 +1,9 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from './IntExt.js';
-import { Hex } from '../encoding/Hex.js';
+import { intExt } from './IntExt.js';
+import { hex } from '../encoding/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
+import { safety } from './Safety.js';
 
 const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
@@ -179,7 +180,7 @@ export class U32 {
 	 * @returns
 	 */
 	toString(): string {
-		return 'u32{' + Hex.fromI32(this.arr[this.pos]) + '}';
+		return 'u32{' + hex.fromI32(this.arr[this.pos]) + '}';
 	}
 
 	/**
@@ -233,7 +234,7 @@ export class U32 {
 	 * @returns
 	 */
 	static fromInt(uint32: number): U32 {
-		intExt.inRangeInclusive(uint32, 0, maxU32, 'uint32');
+		safety.intInRangeInc(uint32, 0, maxU32, 'uint32');
 		return new U32(Uint32Array.of(uint32));
 	}
 
@@ -297,7 +298,7 @@ export class U32 {
 		} else if (uint32 instanceof Uint32Array) {
 			return new U32(uint32);
 		} else {
-			intExt.inRangeInclusive(uint32, 0, maxU32, 'uint32');
+			safety.intInRangeInc(uint32, 0, maxU32, 'uint32');
 			return new U32(Uint32Array.of(uint32), 0);
 		}
 	}
@@ -639,7 +640,7 @@ export class U32Mut extends U32 {
 	 * @returns
 	 */
 	static fromInt(uint32: number): U32Mut {
-		intExt.inRangeInclusive(uint32, 0, maxU32, 'uint32');
+		safety.intInRangeInc(uint32, 0, maxU32, 'uint32');
 		return new U32Mut(Uint32Array.of(uint32));
 	}
 
@@ -685,7 +686,7 @@ export class U32Mut extends U32 {
 		} else if (uint32 instanceof Uint32Array) {
 			return new U32Mut(uint32);
 		} else {
-			intExt.inRangeInclusive(uint32, 0, maxU32, 'uint32');
+			safety.intInRangeInc(uint32, 0, maxU32, 'uint32');
 			return new U32Mut(Uint32Array.of(uint32), 0);
 		}
 	}

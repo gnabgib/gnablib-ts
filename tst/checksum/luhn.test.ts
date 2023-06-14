@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as luhn from '../../src/checksum/luhn';
+import { luhnInt, luhnStr } from '../../src/checksum/luhn';
 
 const tsts = suite('Luhn/ISO 7812');
 
@@ -38,7 +38,7 @@ const sumStr = [
 
 for (const pair of sumStr) {
 	tsts('SumStr: ' + pair[0], () => {
-		assert.is(luhn.sumStr(pair[0] as string), pair[1]);
+		assert.is(luhnStr(pair[0] as string), pair[1]);
 	});
 }
 
@@ -73,7 +73,7 @@ const sumInt = [
 
 for (const pair of sumInt) {
 	tsts('SumInt: ' + pair[0], () => {
-		assert.is(luhn.sumInt(pair[0]), pair[1]);
+		assert.is(luhnInt(pair[0]), pair[1]);
 	});
 }
 

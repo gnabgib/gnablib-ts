@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { XxHash64 } from '../../src/hash/XxHash';
-import * as utf8 from '../../src/encoding/Utf8';
+import { utf8 } from '../../src/encoding/Utf8';
 import { U64 } from '../../src/primitive/U64';
 
 const tsts = suite('XxHash64');
@@ -32,7 +32,7 @@ for (const [data,seed,expect] of tests) {
 		const hash=new XxHash64(seed);
 		hash.write(data);
         const md=hash.sum();
-        assert.is(Hex.fromBytes(md),expect);
+        assert.is(hex.fromBytes(md),expect);
 	});
 }
 

@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as utf8 from '../../src/encoding/Utf8';
-import { Hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
 import { Sha3_256 } from '../../src/hash/Sha3';
 
 const tsts = suite('SHA3/FIPS-202 (256)');
@@ -39,7 +39,7 @@ for (const [source,expect] of ascii256Pairs) {
 		const hash=new Sha3_256();
 		hash.write(b);
 		const md=hash.sum();
-		assert.is(Hex.fromBytes(md), expect);
+		assert.is(hex.fromBytes(md), expect);
 		assert.is(hash.size,32);
 		assert.is(hash.blockSize,1088/8);
 	});

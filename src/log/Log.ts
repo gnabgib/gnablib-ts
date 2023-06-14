@@ -1,10 +1,10 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
 import { LogLevel } from './LogLevel.js';
 import type { IStructuredLogger } from './IStructuredLogger.js';
 import { LogEntry } from './LogEntry.js';
 import { LogConsole } from './LogConsole.js';
+import { safety } from '../primitive/Safety.js';
 
 class Log {
 	private _log: IStructuredLogger;
@@ -20,7 +20,7 @@ class Log {
 	}
 
 	set ignoreUnder(value: number) {
-		intExt.inRangeInclusive(value, 0, 255);
+		safety.intInRangeInc(value,0,255,'value');
 		this._ignoreUnder = value;
 	}
 

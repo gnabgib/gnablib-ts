@@ -40,15 +40,15 @@ function mapCharToInt(char: string): number {
 	return ord - ord_A + 10;
 }
 
-export class Hex {
+export const hex = {
 	/**
 	 * Convert the 8LSB into two hex chars
 	 * @param byte
 	 * @returns
 	 */
-	static fromByte(byte: number): string {
+	fromByte: function (byte: number): string {
 		return tbl[(byte >> 4) & 0xf] + tbl[byte & 0xf];
-	}
+	},
 
 	/**
 	 * Convert 2 hex digits into a byte 0-255
@@ -56,11 +56,11 @@ export class Hex {
 	 * @throws ContentError - if there aren't exactly 2 chars, or either char isn't valid hex
 	 * @returns
 	 */
-	static toByte(hex: string): number {
+	toByte: function(hex: string): number {
 		if (hex.length !== 2)
 			throw new ContentError('hex', 'need pairs of (zero padded)', hex);
 		return (mapCharToInt(hex[0]) << 4) | mapCharToInt(hex[1]);
-	}
+	},
 
 	/**
 	 * Given a large int 0-32 bits, return the hex form, compress
@@ -68,7 +68,7 @@ export class Hex {
 	 * @param u32
 	 * @returns
 	 */
-	static fromI32Compress(u32: number): string {
+	fromI32Compress: function(u32: number): string {
 		//2 chars
 		let ret = tbl[(u32 >> 4) & 0xf] + tbl[u32 & 0xf];
 		if (u32 < 0x100) return ret;
@@ -82,9 +82,9 @@ export class Hex {
 		if (u32 < 0x1000000) return ret;
 
 		return tbl[(u32 >>> 28) & 0xf] + tbl[(u32 >> 24) & 0xf] + ret;
-	}
+	},
 
-	static fromI32(i32: number): string {
+	fromI32: function(i32: number): string {
 		return (
 			tbl[(i32 >>> 28) & 0xf] +
 			tbl[(i32 >> 24) & 0xf] +
@@ -95,9 +95,9 @@ export class Hex {
 			tbl[(i32 >> 4) & 0xf] +
 			tbl[i32 & 0xf]
 		);
-	}
+	},
 
-	static fromBytes(
+	fromBytes: function(
 		bytes:
 			| Uint8Array
 			| Int8Array
@@ -111,9 +111,9 @@ export class Hex {
 			ret += tbl[byte >> 4] + tbl[byte & 0xf];
 		}
 		return ret;
-	}
+	},
 
-	static fromU32s(
+	fromU32s: function(
 		u32s: Uint32Array | IReadArray<Uint32Array>,
 		join = ''
 	): string {
@@ -131,9 +131,9 @@ export class Hex {
 				join;
 		}
 		return ret;
-	}
+	},
 
-	static fromU64(u64: U64): string {
+	fromU64: function(u64: U64): string {
 		const b = u64.toBytesBE();
 		return (
 			tbl[b[0] >> 4] +
@@ -153,9 +153,9 @@ export class Hex {
 			tbl[b[7] >> 4] +
 			tbl[b[7] & 0xf]
 		);
-	}
+	},
 
-	static fromU64a(u64a: U64MutArray, join = ''): string {
+	fromU64a: function(u64a: U64MutArray, join = ''): string {
 		let ret = '';
 		for (let i = 0; i < u64a.length; i++) {
 			const b = u64a.at(i).toBytesBE();
@@ -179,9 +179,9 @@ export class Hex {
 				join;
 		}
 		return ret;
-	}
+	},
 
-	static toBytes(hex: string, ignore?: string): Uint8Array {
+	toBytes: function(hex: string, ignore?: string): Uint8Array {
 		ignore = ignore ?? whitespace;
 		const arr = new Uint8Array(Math.ceil(hex.length / 2));
 		let carry = 0;
@@ -204,5 +204,5 @@ export class Hex {
 				carry & 0xf
 			);
 		return arr.slice(0, arrPtr);
-	}
+	},
 }

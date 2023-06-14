@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as bconv from './_bitConverter.js';
+import { bitConverter } from './_bitConverter.js';
 
 /**
  * Support: (Uint8Array)
@@ -17,7 +17,7 @@ import * as bconv from './_bitConverter.js';
  * Deno: >=0.10
  */
 
-export const tbl = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const tbl = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const ord_A = 65;
 const ord_0 = 48;
 const ord_9 = 57;
@@ -67,37 +67,39 @@ function crockford32CharToInt(char: string): number {
 	return ord + 6; //v-z
 }
 
-/**
- * Convert an array of bytes into crockford32 text
- * @param bytes
- * @param opts
- * @returns
- */
-export function fromBytes(bytes: Uint8Array): string {
-	return bconv.fromBytes(bytes, 5, intToCrockford32Char);
-}
+export const crockford32 = {
+	/**
+	 * Convert an array of bytes into crockford32 text
+	 * @param bytes
+	 * @param opts
+	 * @returns
+	 */
+	fromBytes: function (bytes: Uint8Array): string {
+		return bitConverter.fromBytes(bytes, 5, intToCrockford32Char);
+	},
 
-/**
- * Convert crockford 32 text into an array of bytes
- * @param base32
- * @param opts
- * @throws ContentError - Bad options, Bad content, bad padding
- * @returns
- */
-export function toBytes(crockford32: string, opts?: DecodeOpts): Uint8Array {
-	const ignore = opts?.ignore ?? '-';
+	/**
+	 * Convert crockford 32 text into an array of bytes
+	 * @param base32
+	 * @param opts
+	 * @throws ContentError - Bad options, Bad content, bad padding
+	 * @returns
+	 */
+	toBytes: function (crockford32: string, opts?: DecodeOpts): Uint8Array {
+		const ignore = opts?.ignore ?? '-';
 
-	const isWhitespace = (c: string) => ignore.indexOf(c) >= 0;
-	const isPadding = () => false;
+		const isWhitespace = (c: string) => ignore.indexOf(c) >= 0;
+		const isPadding = () => false;
 
-	const arr = new Uint8Array(Math.ceil((crockford32.length * 5) / 8)); //Note it may be shorter if ignored chars
-	const arrPtr = bconv.toBytes(
-		crockford32,
-		5,
-		isWhitespace,
-		isPadding,
-		crockford32CharToInt,
-		arr
-	);
-	return arr.slice(0, arrPtr);
-}
+		const arr = new Uint8Array(Math.ceil((crockford32.length * 5) / 8)); //Note it may be shorter if ignored chars
+		const arrPtr = bitConverter.toBytes(
+			crockford32,
+			5,
+			isWhitespace,
+			isPadding,
+			crockford32CharToInt,
+			arr
+		);
+		return arr.slice(0, arrPtr);
+	},
+};

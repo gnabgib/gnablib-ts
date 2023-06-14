@@ -8,7 +8,7 @@ import { Sha1 } from '../hash/Sha1.js';
  * @param bytes
  * @returns
  */
-export function sha1sum(bytes: Uint8Array): Uint8Array {
+export function sha1Sum(bytes: Uint8Array): Uint8Array {
 	const hash=new Sha1();
 	hash.write(bytes);
 	return hash.sum();

@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { asBE, asE, asLE, isLE } from '../../src/endian/platform';
 
 const tsts = suite('Platform');
@@ -12,24 +12,24 @@ const u16tests:[string,number,number,string][]=[
 ];
 for(const [src,pos,count,invert] of u16tests) {
     tsts(`asLE.i16(${src},${pos},${count})`,()=>{
-        const s=Hex.toBytes(src);
+        const s=hex.toBytes(src);
         asLE.i16(s,pos,count);
         if (isLE) {
-            assert.is(Hex.fromBytes(s),src);
+            assert.is(hex.fromBytes(s),src);
         } else {
-            assert.is(Hex.fromBytes(s),invert);
+            assert.is(hex.fromBytes(s),invert);
         }
     });
 }
 for(const [src,pos,count,invert] of u16tests) {
     tsts(`asBE.i16(${src},${pos},${count})`,()=>{
-        const s=Hex.toBytes(src);
+        const s=hex.toBytes(src);
         //const inv=hex.toBytes(invert);
         asBE.i16(s,pos,count);
         if (isLE) {
-            assert.is(Hex.fromBytes(s),invert);            
+            assert.is(hex.fromBytes(s),invert);            
         } else {
-            assert.is(Hex.fromBytes(s),src);
+            assert.is(hex.fromBytes(s),src);
         }
     });
 }
@@ -41,24 +41,24 @@ const u32tests:[string,number,number,string][]=[
 ];
 for(const [src,pos,count,invert] of u32tests) {
     tsts(`asLE.i32(${src},${pos},${count})`,()=>{
-        const s=Hex.toBytes(src);
+        const s=hex.toBytes(src);
         asLE.i32(s,pos,count);
         if (isLE) {
-            assert.is(Hex.fromBytes(s),src);
+            assert.is(hex.fromBytes(s),src);
         } else {
-            assert.is(Hex.fromBytes(s),invert);
+            assert.is(hex.fromBytes(s),invert);
         }
     });
 }
 for(const [src,pos,count,invert] of u32tests) {
     tsts(`asBE.i32(${src},${pos},${count})`,()=>{
-        const s=Hex.toBytes(src);
+        const s=hex.toBytes(src);
         //const inv=hex.toBytes(invert);
         asBE.i32(s,pos,count);
         if (isLE) {
-            assert.is(Hex.fromBytes(s),invert);            
+            assert.is(hex.fromBytes(s),invert);            
         } else {
-            assert.is(Hex.fromBytes(s),src);
+            assert.is(hex.fromBytes(s),src);
         }
     });
 }
@@ -70,24 +70,24 @@ const u64tests:[string,number,number,string][]=[
 ];
 for(const [src,pos,count,invert] of u64tests) {
     tsts(`asLE.i64(${src},${pos},${count})`,()=>{
-        const s=Hex.toBytes(src);
+        const s=hex.toBytes(src);
         asLE.i64(s,pos,count);
         if (isLE) {
-            assert.is(Hex.fromBytes(s),src);
+            assert.is(hex.fromBytes(s),src);
         } else {
-            assert.is(Hex.fromBytes(s),invert);
+            assert.is(hex.fromBytes(s),invert);
         }
     });
 }
 for(const [src,pos,count,invert] of u64tests) {
     tsts(`asBE.i64(${src},${pos},${count})`,()=>{
-        const s=Hex.toBytes(src);
+        const s=hex.toBytes(src);
         //const inv=hex.toBytes(invert);
         asBE.i64(s,pos,count);
         if (isLE) {
-            assert.is(Hex.fromBytes(s),invert);            
+            assert.is(hex.fromBytes(s),invert);            
         } else {
-            assert.is(Hex.fromBytes(s),src);
+            assert.is(hex.fromBytes(s),src);
         }
     });
 }
@@ -96,11 +96,11 @@ for(const [src,pos,count,invert] of u64tests) {
 tsts('asB',()=>{
     const src='0102';
     const inv='0201';
-    const s=Hex.toBytes(src);
+    const s=hex.toBytes(src);
     asE(!isLE).i16(s);
-    assert.is(Hex.fromBytes(s),src);
+    assert.is(hex.fromBytes(s),src);
     asE(isLE).i16(s);
-    assert.is(Hex.fromBytes(s),inv);
+    assert.is(hex.fromBytes(s),inv);
 });
 
 // //We write in big endian

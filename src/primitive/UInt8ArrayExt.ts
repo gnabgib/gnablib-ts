@@ -1,16 +1,17 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { NotEnoughSpaceError, OutOfRangeError, SizeError } from './ErrorExt.js';
-import * as intExt from './IntExt.js';
+import { NotEnoughSpaceError } from './ErrorExt.js';
+import { safety } from './Safety.js';
 
-export const Uint8ArrayExt = {
+export const uint8ArrayExt = {
 	/**
 	 * Encode arbitrary binary data as a set of bytes, the first byte indicating how
 	 * many bytes follow.
 	 * @param input A series of bytes 0-255 in length
 	 * @param start Where in the input stream to start (default: begining)
 	 * @param len How many bytes to include
-	 * @throws @see SizeError If input is >255 bytes
+	 * @throws {EnforceTypeError} Expected len as integer, got: typeof($len)=$len
+	 * @throws {OutOfRangeError} len should be 0<=x<=255, got: $len
 	 * @returns Encoded form (will be 1 byte longer than @param input)
 	 */
 	toSizedBytes: function (
@@ -19,7 +20,7 @@ export const Uint8ArrayExt = {
 		len?: number
 	): Uint8Array {
 		if (len === undefined) len = input.length - start;
-		if (len > 255) throw new SizeError('len', len, 0, 255);
+		safety.intInRangeInc(len,0,255,'len');
 		const ret = new Uint8Array(len + 1);
 		ret[0] = len;
 		ret.set(input.subarray(start, start + len), 1);
@@ -71,7 +72,7 @@ export const Uint8ArrayExt = {
 	): number {
 		const finalBitPos = currentBitPos + bitSize;
 		const bitLen = bytes.length << 3;
-		intExt.inRangeInclusive(bitSize, 0, 32, 'bitSize');
+		safety.intInRangeInc(bitSize,0,32,'bitSize');
 		if (bitSize < 1) return currentBitPos;
 		if (finalBitPos > bitLen)
 			throw new NotEnoughSpaceError('bytes', currentBitPos + bitSize, bitLen);

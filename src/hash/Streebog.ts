@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
+import { safety } from '../primitive/Safety.js';
 
 const blockSize256Bytes = 32; //512bits
 const blockSize512Bytes = 64; //512bits
@@ -14,7 +14,7 @@ class Ctx {
 	private readonly _digestSizeBytes;
 
 	constructor(digestSize256: number) {
-		intExt.inRangeInclusive(digestSize256, 1, 2);
+		safety.intInRangeInc(digestSize256,1,2,'digestSize256');
 		this._digestSizeBytes = digestSize256 * 256;
 		if (digestSize256 === 1) {
 			for (let i = 0; i < blockSize512Bytes; i++) this._h[i] = 0x01;

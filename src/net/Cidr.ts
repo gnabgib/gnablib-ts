@@ -1,27 +1,27 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
-import * as bitExt from '../primitive/BitExt.js';
-import * as objExt from '../primitive/ObjExt.js';
-import * as ip from './Ip.js';
-import { ContentError, SizeError } from '../primitive/ErrorExt.js';
+import { intExt } from '../primitive/IntExt.js';
+import { bitExt } from '../primitive/BitExt.js';
+import { safety } from '../primitive/Safety.js';
+import { ContentError } from '../primitive/ErrorExt.js';
+import { IpV4 } from './Ip.js';
 
 export class Cidr {
 	/**
 	 * Starting IP (first/lowest)
 	 */
-	readonly startIp: ip.V4;
+	readonly startIp: IpV4;
 	private readonly dist: number;
 	private readonly bitMask: number;
 	readonly mask: number;
 
-	constructor(ipv4: ip.V4, mask: number) {
-		intExt.inRangeInclusive(mask, 0, 32);
+	constructor(ipv4: IpV4, mask: number) {
+		safety.intInRangeInc(mask, 0, 32, 'mask');
 		const ipv4Int = ipv4.toInt();
 		this.bitMask = bitExt.lsbs(32 - mask);
 		const startInt = (ipv4Int & ~this.bitMask) >>> 0;
 		this.dist = ipv4Int - startInt;
-		this.startIp = ip.V4.fromInt(startInt);
+		this.startIp = IpV4.fromInt(startInt);
 
 		this.mask = mask;
 	}
@@ -47,15 +47,15 @@ export class Cidr {
 	/**
 	 * End IP (last/highest)
 	 */
-	get endIp(): ip.V4 {
-		return ip.V4.fromInt(this.startIp.toInt() | this.bitMask);
+	get endIp(): IpV4 {
+		return IpV4.fromInt(this.startIp.toInt() | this.bitMask);
 	}
 
 	/**
 	 * Whether the given IP is within this CIDR
 	 * @param ipv4
 	 */
-	containsIp(ipv4: ip.V4): boolean {
+	containsIp(ipv4: IpV4): boolean {
 		return (ipv4.toInt() & ~this.bitMask) === this.startIp.toInt();
 	}
 
@@ -69,7 +69,7 @@ export class Cidr {
 	 */
 	equals(other: Cidr): boolean {
 		//We only consider normal form (so 10.10.10.10/24===10.10.10.0/24)
-		objExt.notNull(other, 'Cidr.equals(other)');
+		safety.notNull(other, 'Cidr.equals(other)');
 		return (
 			this.mask === other.mask && this.startIp.toInt() === other.startIp.toInt()
 		);
@@ -96,8 +96,8 @@ export class Cidr {
 	 */
 	static fromString(value: string): Cidr {
 		const parts = value.split('/');
-		if (parts.length != 2) throw new SizeError('Part count', parts.length, 2);
-		const ipv4 = ip.V4.fromString(parts[0]);
+		safety.lenExactly(parts,2,'part');
+		const ipv4 = IpV4.fromString(parts[0]);
 		const mask = intExt.strictParseDecUint(parts[1]);
 		if (mask === undefined)
 			throw new ContentError('Mask', 'Expecting integer 0-32', parts[1]);

@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as uucode from '../../src/encoding/Uucode';
-import * as utf8 from '../../src/encoding/Utf8';
-import { Hex } from '../../src/encoding/Hex';
+import { uucode } from '../../src/encoding/Uucode';
+import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
 
 const tsts = suite('Uucode');
 
@@ -51,13 +51,13 @@ const hexSet = [
 
 for (const pair of hexSet) {
 	tsts('Encode hex:' + pair[0], () => {
-		const bytes = Hex.toBytes(pair[0]);
+		const bytes = hex.toBytes(pair[0]);
 		assert.is(uucode.fromBytes(bytes), pair[1]);
 	});
 
 	tsts('Decode hex:' + pair[1], () => {
 		const u = uucode.toBytes(pair[1]);
-		assert.is(Hex.fromBytes(u), pair[0]);
+		assert.is(hex.fromBytes(u), pair[0]);
 	});
 }
 

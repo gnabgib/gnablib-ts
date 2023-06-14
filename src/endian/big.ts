@@ -1,9 +1,9 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { SizeError } from '../primitive/ErrorExt.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
 import { Int64 } from '../primitive/Int64.js';
+import { safety } from '../primitive/Safety.js';
 
 
 /**
@@ -14,8 +14,8 @@ import { Int64 } from '../primitive/Int64.js';
  * @param targetSize Length of data to copy (*8 in bytes)
  * @param sourceBytes Source data
  * @param sourcePos Starting position in @param sourceBytes
- * @throws {SizeError} If source doesn't have enough data
- * @throws {SizeError} If target doesn't have enough space
+ * @throws {OutOfRangeError} If source doesn't have enough data
+ * @throws {OutOfRangeError} If target doesn't have enough space
  */
 export function u64IntoArrFromBytes(
 	target: Uint64[],
@@ -25,12 +25,10 @@ export function u64IntoArrFromBytes(
 	sourcePos = 0
 ): void {
 	const byteCount = targetSize * size64Bytes;
-	const n = sourcePos + byteCount;
-	if (n > sourceBytes.length)
-		throw new SizeError('sourceBytes', sourceBytes.length, n);
-	if (targetPos + targetSize > target.length)
-		throw new SizeError('target', target.length, targetPos + targetSize);
+	safety.numInRangeInc(sourcePos,0,sourceBytes.length-byteCount);
+	safety.numInRangeInc(targetPos,0,target.length-targetSize,'targetPos');
 
+	const n = sourcePos + byteCount;
 	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
 		target[targetPos++] = new Uint64(
 			u32FromBytesUnsafe(sourceBytes, rPos + size32Bytes),
@@ -139,19 +137,14 @@ export function intToMinBytes(int: number | Int64): Uint8Array {
  * @param u32 Number to copy in (only 0xFFFFFFFF will be used)
  * @param targetBytes Destination of data starting at @param targetPos
  * @param targetPos Starting position in @param targetBytes
- * @throws {SizeError} if there's not enough space in @param targetBytes
+ * @throws {OutOfRangeError} if there's not enough space in @param targetBytes
  */
 export function u32IntoBytes(
 	u32: number,
 	targetBytes: Uint8Array,
 	targetPos = 0
 ): void {
-	if (targetPos + size32Bytes > targetBytes.length)
-		throw new SizeError(
-			'targetBytes',
-			targetBytes.length,
-			targetPos + size32Bytes
-		);
+	safety.numInRangeInc(targetPos,0,targetBytes.length-size32Bytes,'targetBytes');
 	targetBytes[targetPos] = u32 >> 24;
 	targetBytes[targetPos + 1] = u32 >> 16;
 	targetBytes[targetPos + 2] = u32 >> 8;
@@ -162,7 +155,3 @@ export function u32IntoBytes(
 //No meaning: (endian is about byte order)
 // - u8FromBytes
 // - u8ToBytes
-
-export { fp64ToBytes, fp64FromBytes } from '../encoding/ieee754-fp64.js';
-export { fp32ToBytes, fp32FromBytes } from '../encoding/ieee754-fp32.js';
-export { fp16ToBytes, fp16FromBytes } from '../encoding/ieee754-fp16.js';

@@ -2,7 +2,7 @@
 
 import { LogField } from './LogField.js';
 import type { LogLevel } from './LogLevel.js';
-import * as objExt from '../primitive/ObjExt.js';
+import { safety } from '../primitive/Safety.js';
 
 /**
  * A complete log entry
@@ -28,7 +28,7 @@ export class LogEntry {
 	}
 
 	addField(field: LogField): void {
-		objExt.notNull(field, 'Field');
+		safety.notNull(field, 'Field');
 		this.fields.push(field);
 	}
 }

@@ -1,13 +1,13 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import * as bigEndian from '../endian/big.js';
-import { Hex } from '../encoding/Hex.js';
+import { hex } from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
-import * as intExt from '../primitive/IntExt.js';
 import { Uint64 } from '../primitive/Uint64.js';
-import * as utf8 from '../encoding/Utf8.js';
+import { utf8 } from '../encoding/Utf8.js';
 import { U32 } from '../primitive/U32.js';
 import { asBE } from '../endian/platform.js';
+import { safety } from '../primitive/Safety.js';
 
 //[US Secure Hash Algorithms](https://datatracker.ietf.org/doc/html/rfc6234) (2011)
 //[US Secure Hash Algorithms (SHA and HMAC-SHA)](https://datatracker.ietf.org/doc/html/rfc4634) (2006) - obsolete by above
@@ -469,7 +469,7 @@ class Sha2_64bit implements IHash {
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 /*export*/ function generateIV(t: number): void {
-	intExt.satisfiesRules(t, (t) => t >= 8 && t <= 504 && t % 8 == 0 && t != 384);
+	safety.intSatisfies(t,(t) => t >= 8 && t <= 504 && t % 8 == 0 && t != 384);
 	//First we xor 0xa5a5a5a5a5a5a5a5 with the initial IV
 	// In two parts: 0xa5a5a5a5 0xa5a5a5a5
 	const init = new Array<number>(iv512.length);
@@ -491,7 +491,7 @@ class Sha2_64bit implements IHash {
     gen.write(utf8.toBytes('SHA-512/' + t.toString()));
     const hash=gen.sum();
     for(let i=0;i<hash.length;i+=8)
-        console.log(`0x${Hex.fromBytes(hash.subarray(i,i+4))}, 0x${Hex.fromBytes(hash.subarray(i+4,i+8))},`);
+        console.log(`0x${hex.fromBytes(hash.subarray(i,i+4))}, 0x${hex.fromBytes(hash.subarray(i+4,i+8))},`);
 }
 
 export class Sha224 extends Sha2_32bit {

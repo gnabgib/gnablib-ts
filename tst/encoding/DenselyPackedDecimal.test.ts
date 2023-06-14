@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import {
 	toDense2,
 	toDense2Unsafe,
@@ -325,7 +325,7 @@ for (const test of push2digits) {
 			test[1] as number
 		);
 		assert.is(size, test[3]);
-		assert.is(Hex.fromBytes(bytes), test[2]);
+		assert.is(hex.fromBytes(bytes), test[2]);
 	});
 }
 

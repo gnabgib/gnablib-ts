@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as utf8 from '../../src/encoding/Utf8';
-import { Hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
 import {streebog512} from '../../src/hash/Streebog';
 
 const tsts=suite('Streebog, GOST 34.11-2012/RFC 6986, ISO 10118-3:2018');

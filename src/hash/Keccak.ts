@@ -1,12 +1,10 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-//import { Hex } from '../encoding/Hex.js';
 import type { IHash } from "./IHash.js";
 import * as littleEndian from '../endian/little.js';
 import { Uint64 } from '../primitive/Uint64.js';
-//import * as bitExt from '../primitive/BitExt.js';
-import * as intExt from '../primitive/IntExt.js';
-import * as utf8 from '../encoding/Utf8.js';
+import { utf8 } from '../encoding/Utf8.js';
+import { safety } from "../primitive/Safety.js";
 
 //[Wikipedia: SHA-3](https://en.wikipedia.org/wiki/SHA-3)
 //[Keccak](https://keccak.team/keccak.html)
@@ -108,7 +106,7 @@ class KeccakCore implements IHash {
 	 * @param capacityBytes (default digestSize)
 	 */
 	constructor(suffix: number, digestSizeBytes: number, capacityBytes = 0,roundStart=0) {
-		intExt.inRangeInclusive(capacityBytes, 0, maxBlockSizeBytes / 2);
+		safety.intInRangeInc(capacityBytes,0,maxBlockSizeBytes/2,'capacityBytes');
         if (capacityBytes<=0) capacityBytes=digestSizeBytes;
         capacityBytes*=2;
 		
@@ -403,7 +401,7 @@ function encodeString(x:string|Uint8Array|undefined):Uint8Array {
 	return ret;
 }
 function bytePad(w:number,... x:Uint8Array[]):Uint8Array {
-	intExt.isGreaterThanEqual(w,1,'w');
+	safety.intGte(w,1,'w');
 	//w;
 	const l=leftEncode(w);
 	//Sum all the inputs (x)

@@ -8,56 +8,58 @@ export const i32SizeBits = size32Bytes * bitsPerByte;
 export const size64Bytes = 8;
 export const i64SizeBits = size64Bytes * bitsPerByte;
 
-/**
- * Compose a least significant mask off @see bitCount width
- * @param bitCount With of mask
- * @returns Mask
- */
-export function lsbs(bitCount: number): number {
-	// (1<<bitCount)-1 works for 0-31 bit masks
-	//   - JS 32bit limit means 1<<32(=1)-1(=0) isn't the correct mask
-	// ((1<<bitCount-1)-1)*2|1 works for 1-32 bit masks
-	//   - since the caller asking for a pointless 0 mask, it's behind
-	//      an if statement.. hopefully the branch predictor favours the other
-	return bitCount > 0 ? ((((1 << (bitCount - 1)) - 1) * 2) | 1) >>> 0 : 0;
-}
+export const bitExt = {
+	/**
+	 * Compose a least significant mask off @see bitCount width
+	 * @param bitCount With of mask
+	 * @returns Mask
+	 */
+	lsbs: function (bitCount: number): number {
+		// (1<<bitCount)-1 works for 0-31 bit masks
+		//   - JS 32bit limit means 1<<32(=1)-1(=0) isn't the correct mask
+		// ((1<<bitCount-1)-1)*2|1 works for 1-32 bit masks
+		//   - since the caller asking for a pointless 0 mask, it's behind
+		//      an if statement.. hopefully the branch predictor favours the other
+		return bitCount > 0 ? ((((1 << (bitCount - 1)) - 1) * 2) | 1) >>> 0 : 0;
+	},
 
-/**
- * Invert the significance of the bits in a byte eg 0x01->0x80, 0x02->0x40
- * @param byte 
- * @returns 
- */
-export function reverse(byte:number):number {
-	byte&=0xff;
-	// 01234567 -> 76543210
-	byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;//Swap nibble
-   	byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;//Swap pairs
-   	byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;//Swap bits
-	return byte;
-}
+	/**
+	 * Invert the significance of the bits in a byte eg 0x01->0x80, 0x02->0x40
+	 * @param byte
+	 * @returns
+	 */
+	reverse: function (byte: number): number {
+		byte &= 0xff;
+		// 01234567 -> 76543210
+		byte = ((byte & 0xf0) >> 4) | ((byte & 0x0f) << 4); //Swap nibble
+		byte = ((byte & 0xcc) >> 2) | ((byte & 0x33) << 2); //Swap pairs
+		byte = ((byte & 0xaa) >> 1) | ((byte & 0x55) << 1); //Swap bits
+		return byte;
+	},
 
-/**
- * Counter the number of binary 1s in a number (1==a multiple of 2)
- * count1Bits(2)=1
- * count1Bits(3)=2
- * count1Bits(0xf)=4
- * @param value
- */
-export function count1Bits(value: number): number {
-	value -= (value >>> 1) & 0x55555555;
-	value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
-	value = (value + (value >>> 4)) & 0x0f0f0f0f;
-	value += value >>> 8;
-	value += value >>> 16;
-	return value & 0x3f;
-	// Naive form:
-	// let count=0;
-	// while(value) {
-	//     value&=(value-1);
-	//     count++;
-	// }
-	// return count;
-}
+	/**
+	 * Counter the number of binary 1s in a number (1==a multiple of 2)
+	 * count1Bits(2)=1
+	 * count1Bits(3)=2
+	 * count1Bits(0xf)=4
+	 * @param value
+	 */
+	count1Bits: function (value: number): number {
+		value -= (value >>> 1) & 0x55555555;
+		value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
+		value = (value + (value >>> 4)) & 0x0f0f0f0f;
+		value += value >>> 8;
+		value += value >>> 16;
+		return value & 0x3f;
+		// Naive form:
+		// let count=0;
+		// while(value) {
+		//     value&=(value-1);
+		//     count++;
+		// }
+		// return count;
+	},
+};
 
 /**
  * Accumulate data (will overflow if inSize>16, or outSize>16)
@@ -79,8 +81,8 @@ export class Carrier {
 	constructor(inSize: number, outSize: number) {
 		this.inSize = inSize;
 		this.outSize = outSize;
-		this._inMask = lsbs(inSize);
-		this._outMask = lsbs(outSize);
+		this._inMask = bitExt.lsbs(inSize);
+		this._outMask = bitExt.lsbs(outSize);
 	}
 
 	/**

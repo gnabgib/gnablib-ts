@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Uint8ArrayExt } from '../../src/primitive/UInt8ArrayExt';
-import { Hex } from '../../src/encoding/Hex';
+import { uint8ArrayExt } from '../../src/primitive/UInt8ArrayExt';
+import { hex } from '../../src/encoding/Hex';
 
 const tsts = suite('UInt8Array');
 
@@ -16,16 +16,16 @@ const toSizedBytesTest: [Uint8Array, number, number | undefined, Uint8Array][] =
 let i = 0;
 for (const [input, start, end, expect] of toSizedBytesTest) {
 	tsts(`toSizedBytes[${i++}]`, () => {
-		assert.equal(Uint8ArrayExt.toSizedBytes(input, start, end), expect);
+		assert.equal(uint8ArrayExt.toSizedBytes(input, start, end), expect);
 	});
 }
 
 const eqTest: string[] = ['00', 'ffffffff', 'ff00ff00ff00ff00', 'aabbcc'];
 for (const aHex of eqTest) {
-	const a = Hex.toBytes(aHex);
-	const b = Hex.toBytes(aHex);
+	const a = hex.toBytes(aHex);
+	const b = hex.toBytes(aHex);
 	tsts(`${aHex} ==.ct ${aHex}`, () => {
-		assert.equal(Uint8ArrayExt.ctEq(a, b), true);
+		assert.equal(uint8ArrayExt.ctEq(a, b), true);
 	});
 }
 const neqTest: [string, string][] = [
@@ -35,10 +35,10 @@ const neqTest: [string, string][] = [
 	['fe00ff00ff00ff00', 'ff00ff00ff00ff00'],
 ];
 for (const [aHex, bHex] of neqTest) {
-	const a = Hex.toBytes(aHex);
-	const b = Hex.toBytes(bHex);
+	const a = hex.toBytes(aHex);
+	const b = hex.toBytes(bHex);
 	tsts(`!${aHex} ==.ct ${bHex}`, () => {
-		assert.equal(Uint8ArrayExt.ctEq(a, b), false);
+		assert.equal(uint8ArrayExt.ctEq(a, b), false);
 	});
 }
 
@@ -50,46 +50,46 @@ const selTest: [string, string][] = [
 	['fe00ff00ff00ff00', 'ff00ff00ff00ff00'],
 ];
 for (const [aHex, bHex] of selTest) {
-	const a = Hex.toBytes(aHex);
-	const b = Hex.toBytes(bHex);
+	const a = hex.toBytes(aHex);
+	const b = hex.toBytes(bHex);
 	tsts(`select(${aHex},${bHex},true)`, () => {
-		assert.equal(Uint8ArrayExt.ctSelect(a, b, true), a);
+		assert.equal(uint8ArrayExt.ctSelect(a, b, true), a);
 	});
 	tsts(`select(${aHex},${bHex},false)`, () => {
-		assert.equal(Uint8ArrayExt.ctSelect(a, b, false), b);
+		assert.equal(uint8ArrayExt.ctSelect(a, b, false), b);
 	});
 }
 
 tsts(`ctSelect(a,b) with diff lengths throws`, () => {
 	const a = new Uint8Array(0);
 	const b = Uint8Array.of(1, 2);
-	assert.throws(() => Uint8ArrayExt.ctSelect(a, b, true));
-	assert.throws(() => Uint8ArrayExt.ctSelect(b, a, true));
+	assert.throws(() => uint8ArrayExt.ctSelect(a, b, true));
+	assert.throws(() => uint8ArrayExt.ctSelect(b, a, true));
 });
 
 tsts(`pushInt`, () => {
 	const a = new Uint8Array(2);
 	let bitPos = 0;
-	bitPos = Uint8ArrayExt.pushInt(1, 1, a, bitPos);
+	bitPos = uint8ArrayExt.pushInt(1, 1, a, bitPos);
 	assert.equal(bitPos, 1);
 	assert.equal(a[0], 0b10000000, 'push 1');
-	bitPos = Uint8ArrayExt.pushInt(1, 2, a, bitPos);
+	bitPos = uint8ArrayExt.pushInt(1, 2, a, bitPos);
 	assert.equal(bitPos, 3);
 	assert.equal(a[0], 0b10100000, 'push 2');
-	bitPos = Uint8ArrayExt.pushInt(1, 3, a, bitPos);
+	bitPos = uint8ArrayExt.pushInt(1, 3, a, bitPos);
 	assert.equal(bitPos, 6);
 	assert.equal(a[0], 0b10100100, 'push 3');
-	bitPos = Uint8ArrayExt.pushInt(1, 4, a, bitPos);
+	bitPos = uint8ArrayExt.pushInt(1, 4, a, bitPos);
 	assert.equal(bitPos, 10);
 	assert.equal(a[0], 0b10100100, 'push 4a');
 	assert.equal(a[1], 0b01000000, 'push 4b');
 
     //nop
-    bitPos = Uint8ArrayExt.pushInt(1, 0, a, bitPos);
+    bitPos = uint8ArrayExt.pushInt(1, 0, a, bitPos);
     assert.equal(bitPos, 10);
-    
+
 	//Trying to push too much data will throw
-	assert.throws(() => Uint8ArrayExt.pushInt(1, 16, a, bitPos));
+	assert.throws(() => uint8ArrayExt.pushInt(1, 16, a, bitPos));
 });
 
 tsts.run();

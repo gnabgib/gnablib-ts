@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as utf8 from '../../src/encoding/Utf8';
-import { Hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
 import { Shake128 } from '../../src/hash/Shake';
 
 const tsts = suite('Shake (128)');
@@ -55,7 +55,7 @@ for (const [source,size,expect] of ascii128Tests) {
 		const hash=new Shake128(size as number);
 		hash.write(b);
 		const md=hash.sum();
-		assert.is(Hex.fromBytes(md), expect);
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 

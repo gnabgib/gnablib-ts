@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { ContentError, Grievous } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/ErrorExt.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -20,8 +20,7 @@ import { ContentError, Grievous } from '../primitive/ErrorExt.js';
  * Characters considered whitespace (ignore) in base64 encoding
  */
 export const whitespace = '\t\n\f\r ';
-export const tbl =
-	'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const tbl = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const defC63 = '+';
 const defC64 = '/';
 const defCPad = '=';
@@ -152,163 +151,162 @@ function mapBase64CharToInt(char: string, c63: string, c64: string): number {
 	return -1;
 }
 
-/**
- * Convert an array of bytes into base64 text
- * @param bytes
- * @param opts
- * @throws InvalidItem - Bad options
- * @returns
- */
-export function fromBytes(bytes: Uint8Array, opts?: EncodeOpts): string {
-	let c63 = defC63;
-	let c64 = defC64;
-	let cPad: string | undefined = undefined;
-	if (opts?.c63) {
-		validAsciiNotDupe('c63', opts.c63);
-		c63 = opts.c63;
-	}
-	if (opts?.c64) {
-		validAsciiNotDupe('c64', opts.c64, c63);
-		c64 = opts.c64;
-	}
-	if (opts?.cPad === true) {
-		cPad = defCPad;
-	} else if (opts?.cPad) {
-		validAsciiNotDupe('cPad', opts.cPad, c63, c64);
-		cPad = opts.cPad;
-	}
-
-	function bitMonster() {
-		//Turns as many bits in the carry into base64-characters as possible
-		while (carrySize >= 6) {
-			carrySize -= 6;
-			const b64 = (carry >>> carrySize) & last6Bits;
-			ret += mapIntToBase64Char(b64, c63, c64);
+export const base64 = {
+	/**
+	 * Convert an array of bytes into base64 text
+	 * @param bytes
+	 * @param opts
+	 * @throws InvalidItem - Bad options
+	 * @returns
+	 */
+	fromBytes: function (bytes: Uint8Array, opts?: EncodeOpts): string {
+		let c63 = defC63;
+		let c64 = defC64;
+		let cPad: string | undefined = undefined;
+		if (opts?.c63) {
+			validAsciiNotDupe('c63', opts.c63);
+			c63 = opts.c63;
 		}
-	}
+		if (opts?.c64) {
+			validAsciiNotDupe('c64', opts.c64, c63);
+			c64 = opts.c64;
+		}
+		if (opts?.cPad === true) {
+			cPad = defCPad;
+		} else if (opts?.cPad) {
+			validAsciiNotDupe('cPad', opts.cPad, c63, c64);
+			cPad = opts.cPad;
+		}
 
-	let ret = '';
-	let carry = 0;
-	let carrySize = 0;
-	for (const byte of bytes) {
-		carry = (carry << 8) | byte;
-		carrySize += 8;
-		bitMonster();
-	}
-	bitMonster();
-	//Padding time, we have 3 outcomes (3 bytes->4 b64s):
-	//  1 byte,  rem=2 (8%6), pad=2
-	//  2 bytes, rem=4 (16%6), pad=1
-	//  3 bytes, rem=0 (24%6), pad=0
-	switch (carrySize) {
-		case 2:
-			ret += mapIntToBase64Char((carry << 4) & last6Bits, c63, c64);
-			//Pad if defined
-			if (cPad) ret += cPad + cPad;
-			break;
-
-		case 4:
-			ret += mapIntToBase64Char((carry << 2) & last6Bits, c63, c64);
-			//Pad if defined
-			ret += cPad;
-			break;
-
-		case 0:
-			//Nothing to do, but don't want exception
-			break;
-
-		default:
-			throw new Grievous(`${carrySize} bits left = ${carry}`);
-	}
-
-	return ret;
-}
-
-/**
- * Convert base64 text into an array of bytes
- * @param base64
- * @param opts
- * @throw ContentError - Bad options, Bad content, bad padding
- * @returns
- */
-export function toBytes(base64: string, opts?: DecodeOpts): Uint8Array {
-	opts = opts || {};
-	if (opts.c63) validAsciiNotDupe('c63', opts.c63);
-	else opts.c63 = defC63;
-	if (opts.c64) validAsciiNotDupe('c64', opts.c64, opts.c63);
-	else opts.c64 = defC64;
-	if (opts.cPad) validAsciiNotDupe('cPad', opts.cPad, opts.c63, opts.c64);
-	else opts.cPad = defCPad;
-	//Ignore whitespace by default
-	opts.ignore = opts.ignore ?? whitespace;
-
-	const arr = new Uint8Array(Math.ceil((base64.length * 3) / 4)); //Note it may be shorter if no pad, or ignored chars
-	let arrPtr = 0;
-	let carry = 0;
-	let carrySize = 0;
-	let padCount = 0;
-	let charCount = 0;
-	for (const char of base64) {
-		if (opts.ignore.indexOf(char) >= 0) continue;
-		const idx = mapBase64CharToInt(char, opts.c63, opts.c64);
-		if (idx < 0) {
-			if (char == opts.cPad) {
-				padCount++;
-				continue;
+		function bitMonster() {
+			//Turns as many bits in the carry into base64-characters as possible
+			while (carrySize >= 6) {
+				carrySize -= 6;
+				const b64 = (carry >>> carrySize) & last6Bits;
+				ret += mapIntToBase64Char(b64, c63, c64);
 			}
-			throw new ContentError('Base64', 'Unknown char', char);
 		}
-		charCount++;
-		if (padCount > 0)
-			throw new ContentError('Base64', 'Char found after padding', char);
-		carry = (carry << 6) | idx; //Overflow ok
-		carrySize += 6;
-		if (carrySize >= 8) {
-			carrySize -= 8;
-			arr[arrPtr++] = (carry >>> carrySize) & 0xff;
+
+		let ret = '';
+		let carry = 0;
+		let carrySize = 0;
+		for (const byte of bytes) {
+			carry = (carry << 8) | byte;
+			carrySize += 8;
+			bitMonster();
 		}
-	}
-	switch (carrySize) {
-		case 8:
-			arr[arrPtr++] = carry & 0xff;
+		bitMonster();
+		//Padding time, we have 3 outcomes (3 bytes->4 b64s):
+		//  1 byte,  rem=2 (8%6), pad=2
+		//  2 bytes, rem=4 (16%6), pad=1
+		//  3 bytes, rem=0 (24%6), pad=0
+		switch (carrySize) {
+			case 2:
+				ret += mapIntToBase64Char((carry << 4) & last6Bits, c63, c64);
+				//Pad if defined
+				if (cPad) ret += cPad + cPad;
+				break;
+
+			case 4:
+				ret += mapIntToBase64Char((carry << 2) & last6Bits, c63, c64);
+				//Pad if defined
+				ret += cPad;
+				break;
+
+			default:
+			//case 0:
+				break;
+		}
+
+		return ret;
+	},
+	
+	/**
+	 * Convert base64 text into an array of bytes
+	 * @param base64
+	 * @param opts
+	 * @throw ContentError - Bad options, Bad content, bad padding
+	 * @returns
+	 */
+	toBytes: function (base64: string, opts?: DecodeOpts): Uint8Array {
+		opts = opts || {};
+		if (opts.c63) validAsciiNotDupe('c63', opts.c63);
+		else opts.c63 = defC63;
+		if (opts.c64) validAsciiNotDupe('c64', opts.c64, opts.c63);
+		else opts.c64 = defC64;
+		if (opts.cPad) validAsciiNotDupe('cPad', opts.cPad, opts.c63, opts.c64);
+		else opts.cPad = defCPad;
+		//Ignore whitespace by default
+		opts.ignore = opts.ignore ?? whitespace;
+
+		const arr = new Uint8Array(Math.ceil((base64.length * 3) / 4)); //Note it may be shorter if no pad, or ignored chars
+		let arrPtr = 0;
+		let carry = 0;
+		let carrySize = 0;
+		let padCount = 0;
+		let charCount = 0;
+		for (const char of base64) {
+			if (opts.ignore.indexOf(char) >= 0) continue;
+			const idx = mapBase64CharToInt(char, opts.c63, opts.c64);
+			if (idx < 0) {
+				if (char == opts.cPad) {
+					padCount++;
+					continue;
+				}
+				throw new ContentError('Base64', 'Unknown char', char);
+			}
+			charCount++;
 			if (padCount > 0)
-				throw new ContentError(
-					'Base4',
-					'Bad padding, expecting 0 got',
-					padCount
-				);
-			break;
+				throw new ContentError('Base64', 'Char found after padding', char);
+			carry = (carry << 6) | idx; //Overflow ok
+			carrySize += 6;
+			if (carrySize >= 8) {
+				carrySize -= 8;
+				arr[arrPtr++] = (carry >>> carrySize) & 0xff;
+			}
+		}
+		switch (carrySize) {
+			case 8:
+				arr[arrPtr++] = carry & 0xff;
+				if (padCount > 0)
+					throw new ContentError(
+						'Base4',
+						'Bad padding, expecting 0 got',
+						padCount
+					);
+				break;
 
-		case 6:
-			// single base64 char isn't decodeable (minimum 2)
-			throw new ContentError('Base64', 'Not enough characters', undefined);
+			case 6:
+				// single base64 char isn't decodeable (minimum 2)
+				throw new ContentError('Base64', 'Not enough characters', undefined);
 
-		case 4:
-			// Expect 2 padding chars, or 0 (if opt padding)
-			if (padCount == 0 && !opts.padRequired) break;
-			if (padCount != 2)
-				throw new ContentError(
-					'Base64',
-					'Bad padding, expecting 2 got',
-					padCount
-				);
-			break;
+			case 4:
+				// Expect 2 padding chars, or 0 (if opt padding)
+				if (padCount == 0 && !opts.padRequired) break;
+				if (padCount != 2)
+					throw new ContentError(
+						'Base64',
+						'Bad padding, expecting 2 got',
+						padCount
+					);
+				break;
 
-		case 2:
-			// Expect 1 padding char, or 0 (if opt padding)
-			if (padCount == 0 && !opts.padRequired) break;
-			if (padCount != 1)
-				throw new ContentError(
-					'Base64',
-					'Bad padding, expecting 1 got',
-					padCount
-				);
-			break;
-	}
-	// if (carrySize==8) {
-	//     arr[arrPtr++]=carry&0xff;
-	// }
-	if (opts.padRequired && (charCount + padCount) % 4 != 0)
-		throw new ContentError('Base64', 'Incomplete padding');
-	return arr.slice(0, arrPtr);
-}
+			case 2:
+				// Expect 1 padding char, or 0 (if opt padding)
+				if (padCount == 0 && !opts.padRequired) break;
+				if (padCount != 1)
+					throw new ContentError(
+						'Base64',
+						'Bad padding, expecting 1 got',
+						padCount
+					);
+				break;
+		}
+		// if (carrySize==8) {
+		//     arr[arrPtr++]=carry&0xff;
+		// }
+		if (opts.padRequired && (charCount + padCount) % 4 != 0)
+			throw new ContentError('Base64', 'Incomplete padding');
+		return arr.slice(0, arrPtr);
+	},
+};

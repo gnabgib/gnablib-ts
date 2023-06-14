@@ -1,8 +1,9 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as proquint from '../../src/encoding/Proquint';
-import * as ip from '../../src/net/Ip';
-import * as intExt from '../../src/primitive/IntExt';
+import { proquint } from '../../src/encoding/Proquint';
+import { IpV4 } from '../../src/net/Ip';
+import { U32 } from '../../src/primitive/U32';
+import { U16 } from '../../src/primitive/U16';
 
 const tsts = suite('Proquint');
 
@@ -23,17 +24,17 @@ const ipSet = [
 //https://arxiv.org/html/0901.4016
 
 for (const pair of ipSet) {
-	const i = ip.V4.fromString(pair[0]);
+	const i = IpV4.fromString(pair[0]);
 	tsts('Encode quad:' + pair[0], () => {
 		assert.is(proquint.fromBytes(i.bytes), pair[1]);
 	});
 
 	tsts('Decode quad:' + pair[0], () => {
-		assert.is(new ip.V4(proquint.toBytes(pair[1])).toString(), pair[0]);
+		assert.is(new IpV4(proquint.toBytes(pair[1])).toString(), pair[0]);
 	});
 }
 
-const bit16Set = [
+const bit16Set:[number,string][] = [
 	[0, 'babab'],
 	[1, 'babad'],
 	[2, 'babaf'],
@@ -59,29 +60,29 @@ const bit16Set = [
 	[0xffff, 'zuzuz'],
 ];
 for (const pair of bit16Set) {
-	const ua = intExt.int16AsBytes(+pair[0]);
+	const ua = U16.toBytesBE(pair[0]);
 	tsts('Encode int16:' + pair[0], () => {
 		assert.is(proquint.fromBytes(ua), pair[1]);
 	});
 	tsts('Decode int16:' + pair[0], () => {
-		assert.is(intExt.int16fromBytes(proquint.toBytes(pair[1])), pair[0]);
+		assert.is(U16.iFromBytesBE(proquint.toBytes(pair[1])), pair[0]);
 	});
 	//Decode
 }
 
-const numSet = [
+const numSet:[number,string][] = [
 	//'bdfghjklmnprstvz'
 	[0xffffffff, 'zuzuz-zuzuz'], //From docs
 	[12345678, 'bafus-kajav'], //From docs
 ];
 
 for (const pair of numSet) {
-	const ua = intExt.int32AsBytes(+pair[0]);
+	const ua = U32.toBytesBE(pair[0]);
 	tsts('Encode int32:' + pair[0], () => {
 		assert.is(proquint.fromBytes(ua), pair[1]);
 	});
 	tsts('Decode int32:' + pair[0], () => {
-		assert.is(intExt.uint32fromBytes(proquint.toBytes(pair[1])), pair[0]);
+		assert.is(U32.iFromBytesBE(proquint.toBytes(pair[1]))>>>0, pair[0]);
 	});
 }
 

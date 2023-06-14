@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
+import { safety } from '../primitive/Safety.js';
 
 //https://en.wikipedia.org/wiki/Densely_packed_decimal
 
@@ -104,8 +104,8 @@ export function toDense2Unsafe(d0: number, d1: number): number {
  * @returns Packed form, 7 bits long (0x7F mask)
  */
 export function toDense2(d0: number, d1: number): number {
-	intExt.inRangeInclusive(d0, 0, 9);
-	intExt.inRangeInclusive(d1, 0, 9);
+	safety.intInRangeInc(d0,0,9,'d0');
+	safety.intInRangeInc(d1,0,9,'d1');
 	return toDense2Unsafe(d0, d1);
 }
 
@@ -187,7 +187,7 @@ export function fromDense3Unsafe(value: number): bcd {
  * @returns Binary coded decimal MSD:d0,d1,d2 (3 nibbles=12 bits long)
  */
 export function fromDense3(value: number): bcd {
-	intExt.inRangeInclusive(value, 0, 0x3ff);
+	safety.intInRangeInc(value,0,0x3ff,'value');
 	return fromDense3Unsafe(value);
 }
 
@@ -341,9 +341,9 @@ export function toDense3Unsafe(d0: number, d1: number, d2: number): number {
  * @returns Packed form, 10 bits long (0x3FF mask)
  */
 export function toDense3(d0: number, d1: number, d2: number): number {
-	intExt.inRangeInclusive(d0, 0, 9);
-	intExt.inRangeInclusive(d1, 0, 9);
-	intExt.inRangeInclusive(d2, 0, 9);
+	safety.intInRangeInc(d0,0,9,'d0');
+	safety.intInRangeInc(d1,0,9,'d1');
+	safety.intInRangeInc(d2,0,9,'d2');
 	return toDense3Unsafe(d0, d1, d2);
 }
 
@@ -359,7 +359,7 @@ export function push2DigitsToBytes(
 	bytes: Uint8Array,
 	bitPos: number
 ): number {
-	intExt.inRangeInclusive(value, 0, 99);
+	safety.intInRangeInc(value,0,99,'value');
 	const packBits = 7;
 	const startBitPos = bitPos & 0x7;
 	const bytePos = bitPos >> 3;
@@ -393,7 +393,7 @@ export function push3DigitsToBytes(
 	bytes: Uint8Array,
 	bitPos: number
 ): number {
-	intExt.inRangeInclusive(value, 0, 999);
+	safety.intInRangeInc(value,0,999,'value');
 	const packBits = 10;
 	const startBitPos = bitPos & 0x7;
 	const bytePos = bitPos >> 3;

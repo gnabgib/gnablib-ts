@@ -3,6 +3,7 @@
         "circulant",
         "gnabgib",
         "gnablib",
-        "keccak"
+        "keccak",
+        "proquint"
     ]
 }

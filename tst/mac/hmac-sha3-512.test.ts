@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
-import * as utf8 from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
 import { Hmac } from '../../src/mac/Hmac';
 import { Sha3_512 } from '../../src/hash/Sha3';
 
@@ -52,13 +52,13 @@ for (const test of sha3_512) {
     //Note we reuse the hash object
     const hash=new Sha3_512();
     tsts('hmac-sha3-512: '+test.data,()=>{
-        const bKey=test.key instanceof Uint8Array ? test.key : Hex.toBytes(test.key);
+        const bKey=test.key instanceof Uint8Array ? test.key : hex.toBytes(test.key);
         const bMsg=test.data instanceof Uint8Array ? test.data : utf8.toBytes(test.data);
         //console.log(`${hex.fromBytes(bMsg)}`);
         const mac=new Hmac(hash,bKey);
         mac.write(bMsg);
         const found=mac.sum(test.size);
-        assert.is(Hex.fromBytes(found),test.expect);
+        assert.is(hex.fromBytes(found),test.expect);
     });
 }
 

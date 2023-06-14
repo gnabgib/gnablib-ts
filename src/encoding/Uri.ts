@@ -1,8 +1,8 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { ContentError } from '../primitive/ErrorExt.js';
-import { Hex } from './Hex.js';
-import * as utf8 from './Utf8.js';
+import { hex } from './Hex.js';
+import { utf8 } from './Utf8.js';
 //https://datatracker.ietf.org/doc/html/rfc3986#page-11
 const ord_dash = 45; //ASCII -
 const ord_tilde = 126; //ASCII ~
@@ -20,25 +20,6 @@ const tbl=[
 		's','t','u','v','w','x','y','z','','',
 		'','~'];
 
-/**
- * Convert an array of bytes to URLEncoded text
- * @param bytes
- */
-export function fromBytes(bytes: Uint8Array): string {
-	let ret = '';
-	for (const byte of bytes) {
-		if (byte >= ord_dash && byte <= ord_tilde) {
-			const c = tbl[byte - 45];
-			if (c !== '') {
-				ret += c;
-				continue;
-			}
-		}
-		ret += '%' + Hex.fromByte(byte);
-	}
-	return ret;
-}
-
 interface DecodeOpts {
 	/**
 	 * What to do with invalid characters in the encoded stream
@@ -55,51 +36,76 @@ interface DecodeOpts {
 	overProvisionOutput?: number;
 }
 
-/**
- * Convert URI encoded data into (utf8) bytes
- * @param uriEncoded
- */
-export function toBytes(uriEncoded: string, opts?: DecodeOpts): Uint8Array {
-	opts = opts || { invalid: 'throw', overProvisionOutput: 8 };
-	opts.overProvisionOutput = opts.overProvisionOutput ?? 8;
-	const ret = new Uint8Array(uriEncoded.length + opts.overProvisionOutput); //May be shorter
-	let inPtr = 0;
-	let outPtr = 0;
-
-	function throwInvalid(ord: number) {
-		throw new ContentError('URI encoding', 'invalid character', String.fromCodePoint(ord));
-	}
-
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	function ignoreInvalid() {}
-
-	function copyInvalid(ord: number) {
-		const bytes = utf8.bytesFromCodePoint(ord);
-		for (const b of bytes) ret[outPtr++] = b;
-	}
-	const invalidChar =
-		opts.invalid === 'throw'
-			? throwInvalid
-			: opts.invalid === 'ignore'
-			? ignoreInvalid
-			: copyInvalid;
-
-	while (inPtr < uriEncoded.length) {
-		const char = uriEncoded[inPtr++];
-		if (char === '%') {
-			const pair = uriEncoded.substring(inPtr, inPtr + 2);
-			try {
-				ret[outPtr++] = Hex.toByte(pair);
-			} catch (e) {
-				//Not a pair, invalid hex chars
-				throw new ContentError('URI encoding', 'invalid escape', '%' + pair);
+export const uri = {
+	/**
+	 * Convert an array of bytes to URLEncoded text
+	 * @param bytes
+	 */
+	fromBytes: function (bytes: Uint8Array): string {
+		let ret = '';
+		for (const byte of bytes) {
+			if (byte >= ord_dash && byte <= ord_tilde) {
+				const c = tbl[byte - 45];
+				if (c !== '') {
+					ret += c;
+					continue;
+				}
 			}
-			inPtr += 2;
-		} else {
-			const ord = char.charCodeAt(0);
-			if (ord <= 0xff) ret[outPtr++] = ord;
-			else invalidChar(ord);
+			ret += '%' + hex.fromByte(byte);
 		}
-	}
-	return ret.slice(0, outPtr);
-}
+		return ret;
+	},
+
+	/**
+	 * Convert URI encoded data into (utf8) bytes
+	 * @param uriEncoded
+	 */
+	toBytes: function (uriEncoded: string, opts?: DecodeOpts): Uint8Array {
+		opts = opts || { invalid: 'throw', overProvisionOutput: 8 };
+		opts.overProvisionOutput = opts.overProvisionOutput ?? 8;
+		const ret = new Uint8Array(uriEncoded.length + opts.overProvisionOutput); //May be shorter
+		let inPtr = 0;
+		let outPtr = 0;
+
+		function throwInvalid(ord: number) {
+			throw new ContentError(
+				'URI encoding',
+				'invalid character',
+				String.fromCodePoint(ord)
+			);
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		function ignoreInvalid() {}
+
+		function copyInvalid(ord: number) {
+			const bytes = utf8.bytesFromCodePoint(ord);
+			for (const b of bytes) ret[outPtr++] = b;
+		}
+		const invalidChar =
+			opts.invalid === 'throw'
+				? throwInvalid
+				: opts.invalid === 'ignore'
+				? ignoreInvalid
+				: copyInvalid;
+
+		while (inPtr < uriEncoded.length) {
+			const char = uriEncoded[inPtr++];
+			if (char === '%') {
+				const pair = uriEncoded.substring(inPtr, inPtr + 2);
+				try {
+					ret[outPtr++] = hex.toByte(pair);
+				} catch (e) {
+					//Not a pair, invalid hex chars
+					throw new ContentError('URI encoding', 'invalid escape', '%' + pair);
+				}
+				inPtr += 2;
+			} else {
+				const ord = char.charCodeAt(0);
+				if (ord <= 0xff) ret[outPtr++] = ord;
+				else invalidChar(ord);
+			}
+		}
+		return ret.slice(0, outPtr);
+	},
+};

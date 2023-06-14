@@ -5,12 +5,12 @@ import {
 	EnforceTypeError,
 	NullError,
 	OutOfRangeError,
-	SizeError,
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { Valid } from './Valid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
+import { safety } from '../../primitive/Safety.js';
 
 //sql engines keep everything signed
 
@@ -60,8 +60,7 @@ abstract class AInt extends ACudColType implements Valid<number | Int64> {
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		if (n.length > this._maxByteLen)
-			throw new SizeError('Integer bytes', n.length, 0, this._maxByteLen);
+		safety.lenInRangeInc(n,0,this._maxByteLen,'i64-bytes');
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;

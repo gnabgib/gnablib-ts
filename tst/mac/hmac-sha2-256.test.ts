@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
-import * as utf8 from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
+import { utf8 } from '../../src/encoding/Utf8';
 import { Hmac } from '../../src/mac/Hmac';
 import { Sha256 } from '../../src/hash/Sha2';
 
@@ -35,7 +35,7 @@ for (const test of sha256Hex) {
         const mac=new Hmac(hash,bKey);
         mac.write(bMsg);
         const found=mac.sum();
-        assert.is(Hex.fromBytes(found),test.expect);
+        assert.is(hex.fromBytes(found),test.expect);
     });
 }
 

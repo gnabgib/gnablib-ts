@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { U64 } from '../../src/primitive/U64';
 
 const tsts = suite('U64');
@@ -36,12 +36,12 @@ const xorTest=[
 ];
 for (const [a,b,expect] of xorTest) {
 	tsts(`${a} ^ ${b}`, () => {
-		const aBytes = Hex.toBytes(a);
+		const aBytes = hex.toBytes(a);
 		const aUint = U64.fromBytesBE(aBytes);
-		const bBytes = Hex.toBytes(b);
+		const bBytes = hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		const res = aUint.xor(bUint);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -76,12 +76,12 @@ const orTest=[
 ];
 for (const [a,b,expect] of orTest) {
 	tsts(`${a} | ${b}`, () => {
-		const aBytes = Hex.toBytes(a);
+		const aBytes = hex.toBytes(a);
 		const aUint = U64.fromBytesBE(aBytes);
-		const bBytes = Hex.toBytes(b);
+		const bBytes = hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		const res = aUint.or(bUint);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -116,12 +116,12 @@ const andTest=[
 ];
 for (const [a,b,expect] of andTest) {
 	tsts(`${a} & ${b}`, () => {
-		const aBytes = Hex.toBytes(a);
+		const aBytes = hex.toBytes(a);
 		const aUint = U64.fromBytesBE(aBytes);
-		const bBytes = Hex.toBytes(b);
+		const bBytes = hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		const res = aUint.and(bUint);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -137,10 +137,10 @@ const notTest = [
 ];
 for (const [start,expect] of notTest) {
 	tsts(`~${start}`, () => {
-		const aBytes = Hex.toBytes(start);
+		const aBytes = hex.toBytes(start);
 		const aUint = U64.fromBytesBE(aBytes);
 		const res = aUint.not();
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -190,11 +190,11 @@ const lShiftTest:[string,number,string][] = [
 ];
 for (const [start,by,expect] of lShiftTest) {
 	tsts(`${start} << ${by}`, () => {
-		const aBytes = Hex.toBytes(start);
+		const aBytes = hex.toBytes(start);
 		const a = U64.fromBytesBE(aBytes);
 		const res = a.lShift(by);
 		//console.log('start',start,'res',res);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -251,10 +251,10 @@ const lRotTest:[string,number,string][] = [
 ];
 for (const [start,by,expect] of lRotTest) {
 	tsts(`${start} ROL ${by}`, () => {
-		const aBytes = Hex.toBytes(start);
+		const aBytes = hex.toBytes(start);
 		const a = U64.fromBytesBE(aBytes);
 		const res = a.lRot(by);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -304,11 +304,11 @@ for (const [start,by,expect] of rShiftTest) {
 	//Note JS has >> (sign aware) and >>> (zero fill) right shift,
 	// but since this is an unsigned int, they have the same meaning
 	tsts(`${start} >>> ${by}`, () => {
-		const aBytes = Hex.toBytes(start);
+		const aBytes = hex.toBytes(start);
 		const a = U64.fromBytesBE(aBytes);
 		const res = a.rShift(by);
 		//console.log('start',start,'res',res);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -365,10 +365,10 @@ const rRotTest:[string,number,string][] = [
 ];
 for (const [start,by,expect] of rRotTest) {
 	tsts(`${start} ROR ${by}`, () => {
-		const aBytes = Hex.toBytes(start);
+		const aBytes = hex.toBytes(start);
 		const a = U64.fromBytesBE(aBytes);
 		const res = a.rRot(by);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -381,7 +381,7 @@ const toStrTest=[
 ];
 for(const expect of toStrTest) {
 	tsts(`${expect}.toString`,()=>{
-		const aBytes=Hex.toBytes(expect);
+		const aBytes=hex.toBytes(expect);
 		const a64=U64.fromBytesBE(aBytes);
 		assert.is(a64.toString(),`u64{${expect}}`);
 	});
@@ -419,12 +419,12 @@ const addTest=[
 ];
 for (const [a,b,expect] of addTest) {
 	tsts(`${a} + ${b}`, () => {
-		const aBytes = Hex.toBytes(a);
+		const aBytes = hex.toBytes(a);
 		const aUint = U64.fromBytesBE(aBytes);
-		const bBytes = Hex.toBytes(b);
+		const bBytes = hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		const res = aUint.add(bUint);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -439,7 +439,7 @@ for (const [a,b,expect] of subTest) {
 		const aUint = U64.fromInt(a);
 		const bUint = U64.fromInt(b);
 		const res = aUint.sub(bUint);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -495,12 +495,12 @@ const mulTest=[
 ];
 for (const [a,b,expect] of mulTest) {
 	tsts(`${a} * ${b}`, () => {
-		const aBytes = Hex.toBytes(a);
+		const aBytes = hex.toBytes(a);
 		const aUint = U64.fromBytesBE(aBytes);
-		const bBytes = Hex.toBytes(b);
+		const bBytes = hex.toBytes(b);
 		const bUint = U64.fromBytesBE(bBytes);
 		const res = aUint.mul(bUint);
-		assert.is(Hex.fromBytes(res.toBytesBE()), expect);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -557,7 +557,7 @@ const lsbTest:[string,number,number][]=[
 ]
 for(const [a,lsb,expect] of lsbTest){
 	tsts(`lsb(${a},$lsb)`,()=>{
-		const aBytes = Hex.toBytes(a);
+		const aBytes = hex.toBytes(a);
 		const aUint = U64.fromBytesBE(aBytes);
 		assert.is(aUint.lsb(lsb),expect);
 	})
@@ -570,8 +570,8 @@ const lt64Test:[string,string][]=[
 	['FFFFFFFFFFFFFFF0','FFFFFFFFFFFFFFFF'],
 ];
 for (const [aHex,bHex] of lt64Test) {
-	const aBytes=Hex.toBytes(aHex);
-	const bBytes=Hex.toBytes(bHex);
+	const aBytes=hex.toBytes(aHex);
+	const bBytes=hex.toBytes(bHex);
 	const a=U64.fromBytesBE(aBytes);
 	const b=U64.fromBytesBE(bBytes);
 
@@ -652,7 +652,7 @@ const eq64Test:string[]=[
 	'FFFFFFFFFFFFFFFF'
 ];
 for (const aHex of eq64Test) {
-	const aBytes=Hex.toBytes(aHex);
+	const aBytes=hex.toBytes(aHex);
 	const a=U64.fromBytesBE(aBytes);
 	const b=U64.fromBytesBE(aBytes);
 
@@ -702,8 +702,8 @@ for (const aHex of eq64Test) {
 tsts(`ctSelect`,()=>{
 	const aHex='0102030405060708';
 	const bHex='F0E0D0C0B0A09080';
-	const aBytes=Hex.toBytes(aHex);
-	const bBytes=Hex.toBytes(bHex);
+	const aBytes=hex.toBytes(aHex);
+	const bBytes=hex.toBytes(bHex);
 	const a=U64.fromBytesBE(aBytes);
 	const b=U64.fromBytesBE(bBytes);
 
@@ -714,8 +714,8 @@ tsts(`ctSelect`,()=>{
 tsts(`ctSwitch`,()=>{
 	const aHex='0102030405060708';
 	const bHex='F0E0D0C0B0A09080';
-	const aBytes=Hex.toBytes(aHex);
-	const bBytes=Hex.toBytes(bHex);
+	const aBytes=hex.toBytes(aHex);
+	const bBytes=hex.toBytes(bHex);
 	const a=U64.fromBytesBE(aBytes);
 	const b=U64.fromBytesBE(bBytes);
 

@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { Int64 } from '../../src/primitive/Int64';
 
 const tsts = suite('Int64');
@@ -26,8 +26,8 @@ const ltSet = [
 ];
 
 for (const test of ltSet) {
-	const av = Int64.fromBytes(Hex.toBytes(test[0] as string));
-	const bv = Int64.fromBytes(Hex.toBytes(test[1] as string));
+	const av = Int64.fromBytes(hex.toBytes(test[0] as string));
+	const bv = Int64.fromBytes(hex.toBytes(test[1] as string));
 
 	tsts(av.toString() + '==' + bv.toString(), () => {
 		assert.equal(av.equals(bv), test[3] as boolean);
@@ -121,7 +121,7 @@ const safeNum = [
 for (const test of safeNum) {
 	const i64 = Int64.fromNumber(test[0] as number);
 	tsts(
-		'fromNumber ' + test[0] + ' (' + Hex.fromBytes(i64.toBytes()) + '):',
+		'fromNumber ' + test[0] + ' (' + hex.fromBytes(i64.toBytes()) + '):',
 		() => {
 			//es2020 only
 			//assert.equal(i64.toBigInt(), BigInt(test[0]), 'toBigInt');
@@ -299,15 +299,15 @@ const toMinBytes=[
 ];
 for (const test of toMinBytes) {
 	const bytesAsHex = test[1] as string;
-	const bytes = Hex.toBytes(bytesAsHex);
+	const bytes = hex.toBytes(bytesAsHex);
 	const i64 = Int64.fromNumber(test[0] as number);
 	tsts('toBytes ' + test[0] + ':', () => {
-		assert.equal(Hex.fromBytes(i64.toBytes()), test[2] as string);
+		assert.equal(hex.fromBytes(i64.toBytes()), test[2] as string);
 	});
 	tsts('toMinBytes ' + test[0] + '/' + i64.toString() + ':', () => {
 		const minBytes = i64.toMinBytes();
 		//Compare as hex (easier to debug)
-		assert.equal(Hex.fromBytes(minBytes), bytesAsHex, 'hex');
+		assert.equal(hex.fromBytes(minBytes), bytesAsHex, 'hex');
 		assert.equal(minBytes.length, bytesAsHex.length / 2, 'len');
 	});
 	tsts('fromMinBytes 0x' + test[1] + ':', () => {

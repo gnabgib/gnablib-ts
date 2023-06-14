@@ -1,12 +1,11 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { Hex } from '../encoding/Hex.js';
-import * as intExt from '../primitive/IntExt.js';
+import { hex } from '../encoding/Hex.js';
 import {
 	ContentError,
-	OutOfRangeError,
 	ZeroError,
 } from '../primitive/ErrorExt.js';
+import { safety } from '../primitive/Safety.js';
 
 //https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 //Some source from: https://github.com/zxing/zxing
@@ -137,7 +136,7 @@ class Gf8 implements Gf<Uint8Array> {
 	private readonly _logTable: Uint8Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		intExt.inRangeInclusive(pow2Size, 1, 8);
+		safety.intInRangeInc(pow2Size,1,8,'pow2Size');
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -174,9 +173,7 @@ class Gf8 implements Gf<Uint8Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		if (degree < 0) {
-			throw new OutOfRangeError('Degree', degree, 0);
-		}
+		safety.intGte(degree,0,'degree');
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -211,7 +208,7 @@ class Gf8 implements Gf<Uint8Array> {
 	}
 
 	toString(): string {
-		return `GF(0x${Hex.fromI32Compress(this.primitive)}, ${
+		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${
 			this._lastSpot + 1
 		}, ${this.base})`;
 	}
@@ -330,7 +327,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		if (degree < 0) throw new OutOfRangeError('Degree', degree, 0);
+		safety.intGte(degree,0,'degree');
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -392,7 +389,7 @@ class Gf16 implements Gf<Uint16Array> {
 	private readonly _logTable: Uint16Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		intExt.inRangeInclusive(pow2Size, 1, 16);
+		safety.intInRangeInc(pow2Size,1,16,'pow2Size');
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -429,9 +426,7 @@ class Gf16 implements Gf<Uint16Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		if (degree < 0) {
-			throw new OutOfRangeError('Degree', degree, 0);
-		}
+		safety.intGte(degree,0,'degree');
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -484,7 +479,7 @@ class Gf16 implements Gf<Uint16Array> {
 	}
 
 	toString(): string {
-		return `GF(0x${Hex.fromI32Compress(this.primitive)}, ${
+		return `GF(0x${hex.fromI32Compress(this.primitive)}, ${
 			this._lastSpot + 1
 		}, ${this.base})`;
 	}
@@ -603,7 +598,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		if (degree < 0) throw new OutOfRangeError('Degree', degree, 0);
+		safety.intGte(degree,0,'degree');
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;

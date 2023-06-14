@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { ContentError } from '../primitive/ErrorExt.js';
-import * as bconv from './_bitConverter.js';
+import { bitConverter } from './_bitConverter.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -18,7 +18,7 @@ import * as bconv from './_bitConverter.js';
  */
 
 export const whitespace = '\t\n\f\r ';
-export const tbl = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+const tbl = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 const ord_A = 65;
 const ord_Z = 90;
 const ord_2 = 50;
@@ -77,53 +77,55 @@ function base32CharToInt(char: string): number {
 	return -1;
 }
 
-/**
- * Convert an array of bytes into base32 text
- * @param bytes
- * @param opts
- * @returns
- */
-export function fromBytes(bytes: Uint8Array, opts?: EncodeOpts): string {
-	const ret = bconv.fromBytes(bytes, 5, intToBase32Char);
-	let pad = false;
-	if (opts?.pad !== false) {
-		//For undefined, null, or true set pad to true
-		pad = true;
-	}
+export const base32 = {
+	/**
+	 * Convert an array of bytes into base32 text
+	 * @param bytes
+	 * @param opts
+	 * @returns
+	 */
+	fromBytes: function (bytes: Uint8Array, opts?: EncodeOpts): string {
+		const ret = bitConverter.fromBytes(bytes, 5, intToBase32Char);
+		let pad = false;
+		if (opts?.pad !== false) {
+			//For undefined, null, or true set pad to true
+			pad = true;
+		}
 
-	if (pad && ret.length > 0) {
-		return ret + '='.repeat(8 - (((ret.length - 1) % 8) + 1));
-	}
-	return ret;
-}
+		if (pad && ret.length > 0) {
+			return ret + '='.repeat(8 - (((ret.length - 1) % 8) + 1));
+		}
+		return ret;
+	},
 
-/**
- * Convert base32 text into an array of bytes
- * @param base32
- * @param opts
- * @throws InvalidItem - Character after padding, incomplete padding
- * @returns
- */
-export function toBytes(base32: string, opts?: DecodeOpts): Uint8Array {
-	//Ignore whitespace by default
-	let ignore = whitespace;
-	if (opts?.ignore) {
-		ignore = opts.ignore;
-	}
+	/**
+	 * Convert base32 text into an array of bytes
+	 * @param base32
+	 * @param opts
+	 * @throws InvalidItem - Character after padding, incomplete padding
+	 * @returns
+	 */
+	toBytes: function (base32: string, opts?: DecodeOpts): Uint8Array {
+		//Ignore whitespace by default
+		let ignore = whitespace;
+		if (opts?.ignore) {
+			ignore = opts.ignore;
+		}
 
-	const isWhitespace = (c: string) => ignore.indexOf(c) >= 0;
-	const isPadding = (c: string) => c == padding;
+		const isWhitespace = (c: string) => ignore.indexOf(c) >= 0;
+		const isPadding = (c: string) => c == padding;
 
-	const arr = new Uint8Array(Math.ceil((base32.length * 5) / 8)); //Note it may be shorter if no pad, or ignored chars
-	const arrPtr = bconv.toBytes(
-		base32,
-		5,
-		isWhitespace,
-		isPadding,
-		base32CharToInt,
-		arr
-	);
-	if (opts?.padRequired && arrPtr % 8 != 0)
-		throw new ContentError('base32', 'Incomplete padding');
-	return arr.slice(0, arrPtr);
-}
+		const arr = new Uint8Array(Math.ceil((base32.length * 5) / 8)); //Note it may be shorter if no pad, or ignored chars
+		const arrPtr = bitConverter.toBytes(
+			base32,
+			5,
+			isWhitespace,
+			isPadding,
+			base32CharToInt,
+			arr
+		);
+		if (opts?.padRequired && arrPtr % 8 != 0)
+			throw new ContentError('base32', 'Incomplete padding');
+		return arr.slice(0, arrPtr);
+	},
+};

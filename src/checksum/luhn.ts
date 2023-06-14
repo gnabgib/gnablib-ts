@@ -1,17 +1,18 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
-import * as utf8 from '../encoding/Utf8.js';
+import { utf8 } from '../encoding/Utf8.js';
+import { safety } from '../primitive/Safety.js';
+
 const ord_0 = 48; //char '0'
 
-export function sumStr(str: string): number {
+export function luhnStr(str: string): number {
 	const bytes = utf8.toBytes(str);
 	let ptr = bytes.length - 1;
 	let sum = 0;
 	let mul = 2;
 	while (ptr >= 0) {
 		let val = bytes[ptr--] - ord_0;
-		intExt.inRangeInclusive(val, 0, 10);
+		safety.intInRangeInc(val, 0, 10, `str-bytes[${ptr + 1}]`);
 		val *= mul;
 		sum += ((val % 10) + val / 10) | 0;
 		mul = 1 + (mul % 2);
@@ -19,7 +20,7 @@ export function sumStr(str: string): number {
 	return (10 - (sum % 10)) % 10;
 }
 
-export function sumInt(int: number): number {
+export function luhnInt(int: number): number {
 	let sum = 0;
 	let mul = 2;
 	while (int > 0) {

@@ -3,14 +3,13 @@
 import {
 	EnforceTypeError,
 	NullError,
-	OutOfRangeError,
-	SizeError,
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { Valid } from './Valid.js';
-import * as Utf8 from '../../encoding/Utf8.js';
+import { utf8 } from '../../encoding/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
+import { safety } from '../../primitive/Safety.js';
 
 abstract class AUtf8 extends ACudColType implements Valid<string> {
 	protected abstract get _lenBytes(): number;
@@ -34,13 +33,7 @@ abstract class AUtf8 extends ACudColType implements Valid<string> {
 		} else if (!(typeof input === 'string')) {
 			return new EnforceTypeError('string', input);
 		}
-		if (input.length > this._maxStrLen)
-			return new OutOfRangeError(
-				'String length',
-				input.length,
-				0,
-				this._maxStrLen
-			);
+		safety.lenInRangeInc(input, 0, this._maxStrLen, 'input');
 	}
 
 	unknownBin(value: string | undefined): Uint8Array {
@@ -50,9 +43,8 @@ abstract class AUtf8 extends ACudColType implements Valid<string> {
 		} else if (!(typeof value === 'string')) {
 			throw new TypeError('String required');
 		}
-		const b = Utf8.toBytes(value);
-		if (b.length > this._maxStrLen)
-			throw new SizeError('String byte size', b.length, 0, this._maxStrLen);
+		const b = utf8.toBytes(value);
+		safety.lenInRangeInc(b, 0, this._maxStrLen, 'value-bytes');
 
 		const ret = new Uint8Array(this._lenBytes + b.length);
 		let lenPtr = this._lenBytes - 1;
@@ -91,7 +83,7 @@ abstract class AUtf8 extends ACudColType implements Valid<string> {
 		if (l === 0 && this.nullable)
 			return new FromBinResult(this._lenBytes, undefined);
 
-		const s = Utf8.fromBytes(bin.slice(pos, end));
+		const s = utf8.fromBytes(bin.slice(pos, end));
 		return new FromBinResult(l + this._lenBytes, s);
 	}
 }

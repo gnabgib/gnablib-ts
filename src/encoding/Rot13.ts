@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import * as intExt from '../primitive/IntExt.js';
+import { safety } from '../primitive/Safety.js';
 
 const ord_a = 97;
 const ord_z = 122;
@@ -13,7 +13,7 @@ const ord_z = 122;
  * @returns
  */
 export function shift(bytes: Uint8Array, dist = 13): Uint8Array {
-	intExt.inRangeInclusive(dist, -25, 25);
+	safety.intInRangeInc(dist,-25,25,'dist');
 	const ret = new Uint8Array(bytes.length);
 	//1000001 = x41 = 65 = A
 	//1100001 = x61 = 97 = a

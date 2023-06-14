@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
+import { hex } from '../../src/encoding/Hex';
 import { SpookyShort,SpookyLong,Spooky } from '../../src/hash/Spooky';
-import * as utf8 from '../../src/encoding/Utf8';
+import { utf8 } from '../../src/encoding/Utf8';
 import { U64 } from '../../src/primitive/U64';
 
 const tsts = suite('Spooky');
@@ -53,7 +53,7 @@ for (const [data,seed,expect] of testShort) {
 		const hash=new SpookyShort(seed[0],seed[1]);
 		hash.write(data);
         const md=hash.sum();
-        assert.is(Hex.fromBytes(md),expect);
+        assert.is(hex.fromBytes(md),expect);
 	});
 }
 
@@ -80,7 +80,7 @@ for (const [data,seed,expect] of testLong) {
 		const hash=new SpookyLong(seed[0],seed[1]);
 		hash.write(data);
         const md=hash.sum();
-        assert.is(Hex.fromBytes(md),expect);
+        assert.is(hex.fromBytes(md),expect);
 	});
 }
 
@@ -96,7 +96,7 @@ for (const [data,seed,expect] of test) {
 		const hash=new Spooky(seed[0],seed[1]);
 		hash.write(data);
         const md=hash.sum();
-        assert.is(Hex.fromBytes(md),expect);
+        assert.is(hex.fromBytes(md),expect);
 	});
 }
 

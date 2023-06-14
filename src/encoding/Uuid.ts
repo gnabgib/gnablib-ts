@@ -1,7 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { VariedRangeError } from '../primitive/ErrorExt.js';
-import { Hex } from './Hex.js';
+import { safety } from '../primitive/Safety.js';
+import { hex } from './Hex.js';
 
 /**
  * Support: (Uint8Array)
@@ -32,7 +32,7 @@ const ind_var1_prefix = 0x80; //10xx xxxx
  */
 export function v4FromBytes(bytes: Uint8Array): string {
 	let ret = '';
-	if (bytes.length < 16) throw new VariedRangeError('UUID bytes', bytes.length, { '>=': 16 });
+	safety.lenGte(bytes,16,'UUID bytes');
 	let idx = 0;
 	eachByte2: for (const byte of bytes) {
 		switch (idx++) {
@@ -41,15 +41,15 @@ export function v4FromBytes(bytes: Uint8Array): string {
 				ret += '-';
 				break;
 			case 6:
-				ret += '-' + ind_v4 + Hex.fromByte(byte);
+				ret += '-' + ind_v4 + hex.fromByte(byte);
 				continue;
 			case 8:
-				ret += '-' + Hex.fromByte((byte & ind_var1_mask) | ind_var1_prefix);
+				ret += '-' + hex.fromByte((byte & ind_var1_mask) | ind_var1_prefix);
 				continue;
 			case 16:
 				break eachByte2;
 		}
-		ret += Hex.fromByte(byte);
+		ret += hex.fromByte(byte);
 	}
 	return ret;
 }

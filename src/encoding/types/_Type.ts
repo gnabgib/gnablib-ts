@@ -34,19 +34,18 @@
  */
 import { Int64 } from '../../primitive/Int64.js';
 import { Uint64 } from '../../primitive/Uint64.js';
-import { fp64FromBytes, fp64ToBytes } from '../ieee754-fp64.js';
-import * as Utf8 from '../Utf8.js';
+import { fp16 } from '../ieee754-fp16.js';
+import { fp32 } from '../ieee754-fp32.js';
+import { fp64 } from '../ieee754-fp64.js';
+import { utf8 } from '../Utf8.js';
 import { DateTime } from '../../primitive/DateTime.js';
 import { BinResult, FromBinResult } from '../../primitive/FromBinResult.js';
-import { fp32FromBytes } from '../ieee754-fp32.js';
-import { fp16FromBytes } from '../ieee754-fp16.js';
-import { inRangeInclusive } from '../../primitive/IntExt.js';
-//import { NotEnoughDataError, NotEnoughSpaceError, SizeError } from '../../primitive/ErrorExt.js';
 import type {
 	/*ReadonlyBigInt64Array,*/ ReadonlyInt16Array,
 	ReadonlyInt32Array,
 	ReadonlyInt8Array,
 } from '../../primitive/ReadonlyTypedArray.js';
+import { safety } from '../../primitive/Safety.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -153,7 +152,7 @@ function encodeInt(value: Int64): Uint8Array {
 
 function encodeFp(value: number): Uint8Array {
 	//Todo: FP2, FP4, FP16, FP32.. but how to detect?
-	const fp = fp64ToBytes(value);
+	const fp = fp64.toBytes(value);
 	const ret = new Uint8Array(9);
 	ret[0] = Type.Float_8;
 	ret.set(fp, 1);
@@ -161,7 +160,7 @@ function encodeFp(value: number): Uint8Array {
 }
 
 function encodeStr(value: string): Uint8Array {
-	const b = Utf8.toBytes(value);
+	const b = utf8.toBytes(value);
 	if (b.length === 0) {
 		return new Uint8Array([Type.Utf8_0]);
 	}
@@ -420,12 +419,12 @@ class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		inRangeInclusive(start, 0, buffer.byteLength - 1, 'start');
+		safety.intInRangeInc(start, 0, buffer.byteLength - 1, 'start');
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {
 			//Note when end===start (allowed) the window has 0 length
-			inRangeInclusive(end, start, buffer.byteLength, 'end');
+			safety.intInRangeInc(end, start, buffer.byteLength, 'end');
 		}
 		if (buffer instanceof ArrayBufferWindow) {
 			this._buffer = buffer._buffer;
@@ -757,7 +756,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			if (pos + len > bin.length) return 'decode missing data';
 			return new BinResult(
 				1 + 1 + len,
-				Utf8.fromBytes(bin.slice(pos, pos + len))
+				utf8.fromBytes(bin.slice(pos, pos + len))
 			);
 		case Type.Utf8_2:
 			len = eat2LenByte(bin, pos);
@@ -766,7 +765,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			if (pos + len > bin.length) return 'decode missing data';
 			return new BinResult(
 				1 + 2 + len,
-				Utf8.fromBytes(bin.slice(pos, pos + len))
+				utf8.fromBytes(bin.slice(pos, pos + len))
 			);
 		case Type.Utf8_3:
 			len = eat3LenByte(bin, pos);
@@ -775,7 +774,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			if (pos + len > bin.length) return 'decode missing data';
 			return new BinResult(
 				1 + 3 + len,
-				Utf8.fromBytes(bin.slice(pos, pos + len))
+				utf8.fromBytes(bin.slice(pos, pos + len))
 			);
 		case Type.Utf8_4:
 			len = eat4LenByte(bin, pos);
@@ -784,17 +783,17 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			if (pos + len > bin.length) return 'decode missing data';
 			return new BinResult(
 				1 + 4 + len,
-				Utf8.fromBytes(bin.slice(pos, pos + len))
+				utf8.fromBytes(bin.slice(pos, pos + len))
 			);
 		case Type.Float_2:
 			if (pos + 2 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 2, fp16FromBytes(bin, pos));
+			return new BinResult(1 + 2, fp16.fromBytes(bin, pos));
 		case Type.Float_4:
 			if (pos + 4 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 4, fp32FromBytes(bin, pos));
+			return new BinResult(1 + 4, fp32.fromBytes(bin, pos));
 		case Type.Float_8:
 			if (pos + 8 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 8, fp64FromBytes(bin, pos));
+			return new BinResult(1 + 8, fp64.fromBytes(bin, pos));
 		//case Type.Float_16:
 		//case Type.Float_32:
 		case Type.Bin_0:

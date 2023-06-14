@@ -2,7 +2,7 @@
 
 import { nextPow2 } from '../algo/nextPow2.js';
 import { NotEnoughSpaceError, NotSupportedError } from './ErrorExt.js';
-import { strictParseDecUint } from './IntExt.js';
+import { intExt } from './IntExt.js';
 import type { IReadArray, IReadWriteArray } from './IRWArray.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -606,7 +606,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 				return target.at(prop);
 			},
 			set(target, prop, value): boolean {
-				const u = strictParseDecUint((prop as string) ?? '');
+				const u = intExt.strictParseDecUint((prop as string) ?? '');
 				if (u !== undefined) {
 					target.setEl(u, value);
 					return true;
@@ -766,7 +766,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 					target[prop as any] = value;
 					return true;
 				}
-				const u = strictParseDecUint((prop as string) ?? '');
+				const u = intExt.strictParseDecUint((prop as string) ?? '');
 				if (u !== undefined) {
 					target.setEl(u, value);
 					return true;
