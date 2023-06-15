@@ -11,12 +11,7 @@ export interface MatchDetail {
 }
 
 export class MatchSuccess {
-    readonly remain:WindowStr;
-    readonly result:MatchDetail;
-
-    constructor(remain:WindowStr,result:MatchDetail) {
-        this.remain=remain;
-        this.result=result;
+    constructor(readonly remain:WindowStr,readonly result:MatchDetail) {
     }
 
     readonly fail=false;
@@ -48,6 +43,7 @@ export class MatchSuccess {
         return ret.toString();
 	}
 
+    /* c8 ignore next 3 */
     [consoleDebugSymbol](/*depth, options, inspect*/) {
 		return this[Symbol.toPrimitive]();
 	}

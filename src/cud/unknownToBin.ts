@@ -3,7 +3,7 @@
 import { DateTime } from '../primitive/DateTime.js';
 import { intExt } from '../primitive/IntExt.js';
 import { utf8 } from '../encoding/Utf8.js';
-import { fp64 } from '../encoding/ieee754-fp64.js';
+import { fpb64 } from '../encoding/ieee754-fpb64.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import { intToMinBytes, uintToMinBytes } from '../endian/big.js';
 import { Int64 } from '../primitive/Int64.js';
@@ -28,7 +28,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 			ret[0] = n.length;
 			ret.set(n, 1);
 		} else {
-			const f = fp64.toBytes(value);
+			const f = fpb64.toBytes(value);
 			ret = new Uint8Array(1 + f.length);
 			ret[0] = f.length;
 			ret.set(f, 1);

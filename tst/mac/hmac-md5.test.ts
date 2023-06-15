@@ -47,4 +47,18 @@ for (const test of md5Hex) {
     });
 }
 
+tsts('newEmpty',()=>{
+    const hash=new Md5();
+    const bKey=hex.toBytes('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b');
+    const mac=new Hmac(hash,bKey);
+    mac.write(utf8.toBytes('Hi There'));
+    assert.is(hex.fromBytes(mac.sum()),'9294727A3638BB1C13F48EF8158BFC9D','original sum');
+    assert.is(mac.size,hash.size);
+    assert.is(mac.blockSize,hash.blockSize);
+
+    const other=mac.newEmpty();
+    //Note it doesn't have any written data
+    assert.is(hex.fromBytes(other.sum()),'C9E99A43CD8FA24A840AA85C7CCA0061','clone sum');
+});
+
 tsts.run();

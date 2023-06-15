@@ -36,8 +36,8 @@ export const safety = {
 	 * @throws {NotInRangeError} $noun/value should be [$lowInc-$highInc], got: $value
 	 */
 	intInRangeInc: function(test:number,lowInc:number,highInc:number,noun?:string):void {
-		this.isInt(test,noun);
 		if (noun===undefined) noun='value';
+		this.isInt(test,noun);
 		if (test<lowInc || test>highInc)
 			throw new NotInRangeError(noun,test,'<=',lowInc,'<=',highInc);
 	},

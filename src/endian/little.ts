@@ -1,9 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { Uint64 } from '../primitive/Uint64.js';
-import { fp64 } from '../encoding/ieee754-fp64.js';
-import { fp32 } from '../encoding/ieee754-fp32.js';
-import { fp16 } from '../encoding/ieee754-fp16.js';
+import { fpb16, fpb32, fpb64 } from '../encoding/ieee754-fpb.js';
 import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
 import { safety } from '../primitive/Safety.js';
 
@@ -16,7 +14,12 @@ import { safety } from '../primitive/Safety.js';
  * @returns
  */
 export function u64FromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
-	safety.numInRangeInc(sourcePos,0,sourceBytes.length-size64Bytes,'sourcePos');
+	safety.numInRangeInc(
+		sourcePos,
+		0,
+		sourceBytes.length - size64Bytes,
+		'sourcePos'
+	);
 	//We can use unsafe because we've already tested length
 	return new Uint64(
 		u32FromBytesUnsafe(sourceBytes, sourcePos),
@@ -44,8 +47,13 @@ export function u64IntoArrFromBytes(
 ): void {
 	const byteCount = targetSize * size64Bytes;
 	const n = sourcePos + byteCount;
-	safety.numInRangeInc(sourcePos,0,sourceBytes.length-byteCount,'sourcePos');
-	safety.numInRangeInc(targetPos,0,target.length-targetSize,'targetPos');
+	safety.numInRangeInc(
+		sourcePos,
+		0,
+		sourceBytes.length - byteCount,
+		'sourcePos'
+	);
+	safety.numInRangeInc(targetPos, 0, target.length - targetSize, 'targetPos');
 
 	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
 		target[targetPos++] = new Uint64(
@@ -70,7 +78,6 @@ export function u64IntoBytesUnsafe(
 	targetBytes.set(u64.toBytes().reverse(), targetPos);
 }
 
-
 /**
  * Copy the content of an Array<Uint64> into @param targetBytes
  * @param sourceU64s Array to copy from (all will be copied)
@@ -84,7 +91,12 @@ export function u64ArrIntoBytes(
 	targetPos = 0
 ): void {
 	const byteCount = sourceU64s.length * size64Bytes;
-	safety.numInRangeInc(targetPos,0,targetBytes.length-byteCount,'targetPos');
+	safety.numInRangeInc(
+		targetPos,
+		0,
+		targetBytes.length - byteCount,
+		'targetPos'
+	);
 	for (let i = 0; i < sourceU64s.length; i++) {
 		const u64 = sourceU64s[i];
 		const rPos = targetPos + i * size64Bytes;
@@ -105,20 +117,22 @@ export function u64ArrIntoBytesSafe(
 	targetBytes: Uint8Array,
 	targetPos = 0
 ): void {
-	let targetByteCount=targetBytes.length-targetPos;
-	let i=0;
-	while (targetByteCount>8) {
-		if (sourceU64s.length<=i) return;
-		targetBytes.set(sourceU64s[i].toBytes().reverse(),targetPos);
+	let targetByteCount = targetBytes.length - targetPos;
+	let i = 0;
+	while (targetByteCount > 8) {
+		if (sourceU64s.length <= i) return;
+		targetBytes.set(sourceU64s[i].toBytes().reverse(), targetPos);
 		i++;
-		targetPos+=size64Bytes;
-		targetByteCount-=size64Bytes;
+		targetPos += size64Bytes;
+		targetByteCount -= size64Bytes;
 	}
-	if (targetByteCount>0) {
-		targetBytes.set(sourceU64s[i].toBytes().reverse().slice(0,targetByteCount),targetPos);
+	if (targetByteCount > 0) {
+		targetBytes.set(
+			sourceU64s[i].toBytes().reverse().slice(0, targetByteCount),
+			targetPos
+		);
 	}
 }
-
 
 /**
  * Output a 32bit unsigned number from @param sourceBytes at position @param sourcePos
@@ -149,7 +163,6 @@ export function u32ToBytes(u32: number): Uint8Array {
 	return new Uint8Array([u32, u32 >> 8, u32 >> 16, u32 >> 24]);
 }
 
-
 /**
  * Copy the content of an Uint32Array into @param targetBytes
  * - Only as much space as is available in Target will be copied
@@ -163,17 +176,20 @@ export function u32ArrIntoBytesSafe(
 	targetBytes: Uint8Array,
 	targetPos = 0
 ): void {
-	let targetByteCount=targetBytes.length-targetPos;
-	let i=0;
-	while (targetByteCount>size32Bytes) {
-		if (sourceU32s.length<=i) return;
-		targetBytes.set(u32ToBytes(sourceU32s[i]),targetPos);
+	let targetByteCount = targetBytes.length - targetPos;
+	let i = 0;
+	while (targetByteCount > size32Bytes) {
+		if (sourceU32s.length <= i) return;
+		targetBytes.set(u32ToBytes(sourceU32s[i]), targetPos);
 		i++;
-		targetPos+=size32Bytes;
-		targetByteCount-=size32Bytes;
+		targetPos += size32Bytes;
+		targetByteCount -= size32Bytes;
 	}
-	if (targetByteCount>0) {
-		targetBytes.set(u32ToBytes(sourceU32s[i]).slice(0,targetByteCount),targetPos);
+	if (targetByteCount > 0) {
+		targetBytes.set(
+			u32ToBytes(sourceU32s[i]).slice(0, targetByteCount),
+			targetPos
+		);
 	}
 }
 
@@ -183,7 +199,7 @@ export function u32ArrIntoBytesSafe(
  * @returns
  */
 export function fp64ToBytes(float64: number): Uint8Array {
-	return fp64.toBytes(float64).reverse();
+	return fpb64.toBytes(float64).reverse();
 }
 
 /**
@@ -193,8 +209,8 @@ export function fp64ToBytes(float64: number): Uint8Array {
  * @returns
  */
 export function fp64FromBytes(bytes: Uint8Array, pos = 0): number {
-	safety.numInRangeInc(pos,0,bytes.length-8,'pos');
-	return fp64.fromBytesUnsafe(bytes.slice(pos, 8).reverse(), 0);
+	safety.numInRangeInc(pos, 0, bytes.length - 8, 'pos');
+	return fpb64.fromBytesUnsafe(bytes.slice(pos, 8).reverse(), 0);
 }
 
 /**
@@ -203,7 +219,7 @@ export function fp64FromBytes(bytes: Uint8Array, pos = 0): number {
  * @returns
  */
 export function fp32ToBytes(float32: number): Uint8Array {
-	return fp32.toBytes(float32).reverse();
+	return fpb32.toBytes(float32).reverse();
 }
 
 /**
@@ -213,8 +229,8 @@ export function fp32ToBytes(float32: number): Uint8Array {
  * @returns
  */
 export function fp32FromBytes(bytes: Uint8Array, pos = 0): number {
-	safety.numInRangeInc(pos,0,bytes.length-4,'pos');
-	return fp32.fromBytesUnsafe(bytes.slice(pos, 4).reverse(), 0);
+	safety.numInRangeInc(pos, 0, bytes.length - 4, 'pos');
+	return fpb32.fromBytesUnsafe(bytes.slice(pos, 4).reverse(), 0);
 }
 
 /**
@@ -223,7 +239,7 @@ export function fp32FromBytes(bytes: Uint8Array, pos = 0): number {
  * @returns
  */
 export function fp16ToBytes(float16: number): Uint8Array {
-	return fp16.toBytes(float16).reverse();
+	return fpb16.toBytes(float16).reverse();
 }
 
 /**
@@ -234,6 +250,6 @@ export function fp16ToBytes(float16: number): Uint8Array {
  * @returns
  */
 export function fp16FromBytes(bytes: Uint8Array, pos = 0): number {
-	safety.numInRangeInc(pos,0,bytes.length-2,'pos');
-	return fp16.fromBytesUnsafe(bytes.slice(pos, 2).reverse(), 0);
+	safety.numInRangeInc(pos, 0, bytes.length - 2, 'pos');
+	return fpb16.fromBytesUnsafe(bytes.slice(pos, 2).reverse(), 0);
 }

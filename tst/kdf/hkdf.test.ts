@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/encoding/Hex';
-import { hkdf } from '../../src/kdf/Hkdf';
+import { expand, extract, hkdf } from '../../src/kdf/Hkdf';
 import { Sha1 } from '../../src/hash/Sha1';
 import { Sha256 } from '../../src/hash/Sha2';
 
@@ -41,8 +41,8 @@ for (const test of sha256Hex) {
     const hash=new Sha256();
     tsts('hkdf-sha256: '+test.ikm+'->'+test.len,()=>{
         const ikm=hex.toBytes(test.ikm);
-        const salt=test.salt?hex.toBytes(test.salt):new Uint8Array();
-        const info=test.info?hex.toBytes(test.info):new Uint8Array();
+        const salt=test.salt?hex.toBytes(test.salt):undefined;
+        const info=test.info?hex.toBytes(test.info):undefined;
         const found=hkdf(hash,ikm,test.len,salt,info);
         assert.is(hex.fromBytes(found),test.expect);
     });
@@ -87,6 +87,16 @@ for (const test of sha1Hex) {
     });
 }
 
+tsts(`extract`,()=>{
+    const hash=new Sha1();
+    assert.is(hex.fromBytes(extract(hash,hex.toBytes('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'),undefined)),
+        'DA8C8A73C7FA77288EC6F5E7C297786AA0D32D01');
+});
 
+tsts(`expand`,()=>{
+    const hash=new Sha1();
+    assert.is(hex.fromBytes(expand(hash,hex.toBytes('DA8C8A73C7FA77288EC6F5E7C297786AA0D32D01'),42,undefined)),
+        '0AC1AF7002B3D761D1E55298DA9D0506B9AE52057220A306E07B6B87E8DF21D0EA00033DE03984D34918');
+});
 
 tsts.run();

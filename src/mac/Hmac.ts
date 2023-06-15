@@ -1,6 +1,5 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { hex } from '../encoding/Hex.js';
 import type { IHash } from '../hash/IHash.js';
 
 //[Wikipedia: HMAC](https://en.wikipedia.org/wiki/HMAC)

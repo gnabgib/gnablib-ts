@@ -34,9 +34,9 @@
  */
 import { Int64 } from '../../primitive/Int64.js';
 import { Uint64 } from '../../primitive/Uint64.js';
-import { fp16 } from '../ieee754-fp16.js';
-import { fp32 } from '../ieee754-fp32.js';
-import { fp64 } from '../ieee754-fp64.js';
+import { fpb16 } from '../ieee754-fpb.js';
+import { fpb32 } from '../ieee754-fpb32.js';
+import { fpb64 } from '../ieee754-fpb64.js';
 import { utf8 } from '../Utf8.js';
 import { DateTime } from '../../primitive/DateTime.js';
 import { BinResult, FromBinResult } from '../../primitive/FromBinResult.js';
@@ -152,7 +152,7 @@ function encodeInt(value: Int64): Uint8Array {
 
 function encodeFp(value: number): Uint8Array {
 	//Todo: FP2, FP4, FP16, FP32.. but how to detect?
-	const fp = fp64.toBytes(value);
+	const fp = fpb64.toBytes(value);
 	const ret = new Uint8Array(9);
 	ret[0] = Type.Float_8;
 	ret.set(fp, 1);
@@ -787,13 +787,13 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			);
 		case Type.Float_2:
 			if (pos + 2 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 2, fp16.fromBytes(bin, pos));
+			return new BinResult(1 + 2, fpb16.fromBytes(bin, pos));
 		case Type.Float_4:
 			if (pos + 4 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 4, fp32.fromBytes(bin, pos));
+			return new BinResult(1 + 4, fpb32.fromBytes(bin, pos));
 		case Type.Float_8:
 			if (pos + 8 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 8, fp64.fromBytes(bin, pos));
+			return new BinResult(1 + 8, fpb64.fromBytes(bin, pos));
 		//case Type.Float_16:
 		//case Type.Float_32:
 		case Type.Bin_0:

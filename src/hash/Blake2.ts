@@ -4,6 +4,7 @@ import * as littleEndian from '../endian/little.js';
 import { Uint64, Uint64ish } from '../primitive/Uint64.js';
 import type { IHash } from './IHash.js';
 import { U32 } from '../primitive/U32.js';
+import { U64 } from '../primitive/U64.js';
 import { safety } from '../primitive/Safety.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)
@@ -103,10 +104,10 @@ class Blake2_32bit implements IHash {
 		return U32.iFromBytesLE(this.#params, 4);
 	}
 
-	get nodeOffset(): Uint64 {
+	get nodeOffset(): U64 {
 		const bytes = new Uint8Array(8);
 		bytes.set(this.#params.subarray(8, 14));
-		return littleEndian.u64FromBytes(bytes);
+		return U64.fromBytesLE(bytes);
 	}
 
 	get nodeDepth(): number {

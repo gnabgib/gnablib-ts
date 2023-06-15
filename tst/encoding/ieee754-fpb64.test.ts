@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/encoding/Hex';
-import { fp64 } from '../../src/encoding/ieee754-fp64';
+import { fpb64 } from '../../src/encoding/ieee754-fpb';
 
 const tsts = suite('IEEE754/Float64');
 
@@ -26,12 +26,12 @@ const encode64Pairs = [
 	//Largest <1
 	[0.9999999999999999, '3FEFFFFFFFFFFFFF'],
 	//Largest representable int (2^53)
-	[fp64.MAX_INT, '4340000000000000'],
-	[-fp64.MAX_INT, 'C340000000000000'],
-	[fp64.MAX_INT - 1, '433FFFFFFFFFFFFF'],
-	[1 - fp64.MAX_INT, 'C33FFFFFFFFFFFFF'],
-	[fp64.MAX_INT - 2, '433FFFFFFFFFFFFE'],
-	[2 - fp64.MAX_INT, 'C33FFFFFFFFFFFFE'],
+	[fpb64.MAX_INT, '4340000000000000'],
+	[-fpb64.MAX_INT, 'C340000000000000'],
+	[fpb64.MAX_INT - 1, '433FFFFFFFFFFFFF'],
+	[1 - fpb64.MAX_INT, 'C33FFFFFFFFFFFFF'],
+	[fpb64.MAX_INT - 2, '433FFFFFFFFFFFFE'],
+	[2 - fpb64.MAX_INT, 'C33FFFFFFFFFFFFE'],
 
 	[1, '3FF0000000000000'],
 	[-1, 'BFF0000000000000'],
@@ -58,10 +58,10 @@ const encode64Pairs = [
 for (const test of encode64Pairs) {
 	tsts('decode: ' + test[1].toString(16), () => {
 		const b = hex.toBytes(test[1] as string);
-		assert.is(fp64.fromBytes(b), test[0]);
+		assert.is(fpb64.fromBytes(b), test[0]);
 	});
 	tsts('encode: ' + test[0], () => {
-		const b = fp64.toBytes(test[0] as number);
+		const b = fpb64.toBytes(test[0] as number);
 		assert.is(hex.fromBytes(b), test[1] as string);
 	});
 }
@@ -71,34 +71,34 @@ const nanBytes = hex.toBytes(nanHex);
 
 tsts(`decode: 0x${nanHex} (NaN)`, () => {
 	//NaN!==NaN, so we need to use a specialized test
-	assert.is(isNaN(fp64.fromBytes(nanBytes)), true);
+	assert.is(isNaN(fpb64.fromBytes(nanBytes)), true);
 });
 
 tsts('encode: NaN', () => {
-	const ie = fp64.toBytes(NaN);
+	const ie = fpb64.toBytes(NaN);
 	assert.is(hex.fromBytes(ie), nanHex);
 });
 
 tsts(`decode other NaNs:`, () => {
 	//As long as mantissa>0 then it's NaN so there are quite a few variants
 	assert.is(
-		isNaN(fp64.fromBytes(hex.toBytes('7FF0000000000001'))),
+		isNaN(fpb64.fromBytes(hex.toBytes('7FF0000000000001'))),
 		true
 	);
 	assert.is(
-		isNaN(fp64.fromBytes(hex.toBytes('7FF8000000000000'))),
+		isNaN(fpb64.fromBytes(hex.toBytes('7FF8000000000000'))),
 		true
 	); //JS uses this
 	assert.is(
-		isNaN(fp64.fromBytes(hex.toBytes('7FF0000001000000'))),
+		isNaN(fpb64.fromBytes(hex.toBytes('7FF0000001000000'))),
 		true
 	);
 });
 
 tsts('encode oversized', () => {
 	// eslint-disable-next-line @typescript-eslint/no-loss-of-precision
-	const enc = fp64.toBytes(1e340);
-	const dec = fp64.fromBytes(enc);
+	const enc = fpb64.toBytes(1e340);
+	const dec = fpb64.fromBytes(enc);
 	assert.is(isFinite(dec), false);
 });
 

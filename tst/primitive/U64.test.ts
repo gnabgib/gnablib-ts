@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/encoding/Hex';
-import { U64 } from '../../src/primitive/U64';
+import { U64, U64Mut } from '../../src/primitive/U64';
 
 const tsts = suite('U64');
 
@@ -433,6 +433,7 @@ const subTest:[number,number,string][]=[
 	[2,1,'0000000000000001'],
 	[0,2,'FFFFFFFFFFFFFFFE'],
 	[0xffffffff,1,'00000000FFFFFFFE'],
+	[1,0,'0000000000000001'],
 ];
 for (const [a,b,expect] of subTest) {
 	tsts(`${a} - ${b}`, () => {
@@ -643,6 +644,7 @@ for (const [aHex,bHex] of lt64Test) {
 
 }
 
+
 const eq64Test:string[]=[
 	'0000000000000000',
 	'0000000000000001',
@@ -723,5 +725,69 @@ tsts(`ctSwitch`,()=>{
 	assert.equal(a.ctSwitch(b,false).toBytesBE(),aBytes);
 })
 
+const toMinBytesTest:[string,Uint8Array,Uint8Array][]=[
+	['0000000000000000',Uint8Array.of(0),Uint8Array.of(0)],
+	['0000000000000001',Uint8Array.of(1),Uint8Array.of(1)],
+	['0000000000000010',Uint8Array.of(16),Uint8Array.of(16)],
+	['0000000000000100',Uint8Array.of(1,0),Uint8Array.of(0,1)],
+	['0000000000001000',Uint8Array.of(16,0),Uint8Array.of(0,16)],
+	['0000000000010000',Uint8Array.of(1,0,0),Uint8Array.of(0,0,1)],
+	['0000000000100000',Uint8Array.of(16,0,0),Uint8Array.of(0,0,16)],
+	['0000000001000000',Uint8Array.of(1,0,0,0),Uint8Array.of(0,0,0,1)],
+	['0000000010000000',Uint8Array.of(16,0,0,0),Uint8Array.of(0,0,0,16)],
+	['0000000100000000',Uint8Array.of(1,0,0,0,0),Uint8Array.of(0,0,0,0,1)],
+	['0000001000000000',Uint8Array.of(16,0,0,0,0),Uint8Array.of(0,0,0,0,16)],
+	['0000010000000000',Uint8Array.of(1,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,1)],
+	['0000100000000000',Uint8Array.of(16,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,16)],
+	['0001000000000000',Uint8Array.of(1,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,1)],
+	['0010000000000000',Uint8Array.of(16,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,16)],
+	['0100000000000000',Uint8Array.of(1,0,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,0,1)],
+	['1000000000000000',Uint8Array.of(16,0,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,0,16)],
+	['0102030405060708',Uint8Array.of(1,2,3,4,5,6,7,8),Uint8Array.of(8,7,6,5,4,3,2,1)],
+];
+for(const [aHex,expectBE,expectLE] of toMinBytesTest) {
+	const aBytes=hex.toBytes(aHex);
+	const a=U64.fromBytesBE(aBytes);
+	tsts(`U64(${aHex}).toMinBytesBE`,()=>{
+		assert.equal(a.toMinBytesBE(),expectBE);
+	});
+	tsts(`U64(${aHex}).toMinBytesLE`,()=>{
+		assert.equal(a.toMinBytesLE(),expectLE);
+	});
+}
+tsts('fromBytesLE',()=>{
+	const aBytes=hex.toBytes('0100000000000000');
+	const a=U64.fromBytesLE(aBytes);
+	assert.equal(a.toMinBytesLE(),Uint8Array.of(1));
+});
+
+tsts(`clone`,()=>{
+	//Really just for coverage (since you cannot mutate, what's the value of a clone?)
+	const a=U64.fromInt(1).clone();
+	assert.equal(a.eq(U64.fromInt(1)),true);
+});
+
+tsts(`fromArray`,()=>{
+	const a=U64.fromArray(Uint32Array.of(1,0));
+	assert.equal(a.eq(U64.fromInt(1)),true);
+});
+
+tsts(`fromBuffer`,()=>{
+	const a=U64.fromBuffer(Uint32Array.of(1,0).buffer);
+	assert.equal(a.eq(U64.fromInt(1)),true);
+});
+
+tsts(`constants`,()=>{
+	assert.equal(U64.max.toBytesBE(),Uint8Array.of(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff));
+	assert.equal(U64.min.toBytesBE(),Uint8Array.of(0,0,0,0,0,0,0,0));
+	assert.equal(U64.zero.toBytesBE(),Uint8Array.of(0,0,0,0,0,0,0,0));
+})
+
+tsts(`coerce`,()=>{
+	const a=U64.coerce(1);
+	assert.equal(a.eq(U64.fromInt(1)),true);
+	const b=U64.coerce(a);
+	assert.equal(b.eq(U64.fromInt(1)),true);
+});
 
 tsts.run();

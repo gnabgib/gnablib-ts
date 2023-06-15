@@ -29,6 +29,15 @@ function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {
 	return c32;
 }
 
+function fromBytesLE(source: Uint8Array, pos = 0): Uint32Array {
+	const cpy = source.slice(pos, pos + sizeBytes);
+	asLE.i32(cpy, 0);
+	asLE.i32(cpy, 4);
+	const c32 = new Uint32Array(cpy.buffer);
+	//No need to swap bytes
+	return c32;
+}
+
 export class U64 {
 	protected arr: Uint32Array;
 	protected pos: number;
@@ -395,22 +404,23 @@ export class U64 {
 	 * @returns
 	 */
 	ctLte(u64: U64): boolean {
-		const ll = (
-			(this.arr[this.pos] & maxU16) - 
-			(u64.arr[u64.pos] & maxU16) - 
-			1) >>> 31;
-		const lh = (
-			((this.arr[this.pos] >>> 16) & maxU16) -
-			((u64.arr[u64.pos] >>> 16) & maxU16) -
-			1) >>> 31;
-		const hl = (
-			(this.arr[this.pos + 1] & maxU16) -
-			(u64.arr[u64.pos + 1] & maxU16) -
-			1) >>> 31;
-		const hh = (
-			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
-			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
-			1) >>> 31;
+		const ll =
+			((this.arr[this.pos] & maxU16) - (u64.arr[u64.pos] & maxU16) - 1) >>> 31;
+		const lh =
+			(((this.arr[this.pos] >>> 16) & maxU16) -
+				((u64.arr[u64.pos] >>> 16) & maxU16) -
+				1) >>>
+			31;
+		const hl =
+			((this.arr[this.pos + 1] & maxU16) -
+				(u64.arr[u64.pos + 1] & maxU16) -
+				1) >>>
+			31;
+		const hh =
+			(((this.arr[this.pos + 1] >>> 16) & maxU16) -
+				((u64.arr[u64.pos + 1] >>> 16) & maxU16) -
+				1) >>>
+			31;
 		return (ll & lh & hl & hh) === 1;
 	}
 
@@ -421,22 +431,23 @@ export class U64 {
 	 * @returns
 	 */
 	ctGte(u64: U64): boolean {
-		const ll = (
-			(u64.arr[u64.pos] & maxU16) - 
-			(this.arr[this.pos] & maxU16) - 
-			1) >>> 31;
-		const lh = (
-			((u64.arr[u64.pos] >>> 16) & maxU16) -
-			((this.arr[this.pos] >>> 16) & maxU16) -
-			1) >>> 31;
-		const hl = (
-			(u64.arr[u64.pos + 1] & maxU16) -
-			(this.arr[this.pos + 1] & maxU16) -
-			1) >>> 31;
-		const hh = (
-			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
-			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
-			1) >>> 31;
+		const ll =
+			((u64.arr[u64.pos] & maxU16) - (this.arr[this.pos] & maxU16) - 1) >>> 31;
+		const lh =
+			(((u64.arr[u64.pos] >>> 16) & maxU16) -
+				((this.arr[this.pos] >>> 16) & maxU16) -
+				1) >>>
+			31;
+		const hl =
+			((u64.arr[u64.pos + 1] & maxU16) -
+				(this.arr[this.pos + 1] & maxU16) -
+				1) >>>
+			31;
+		const hh =
+			(((u64.arr[u64.pos + 1] >>> 16) & maxU16) -
+				((this.arr[this.pos + 1] >>> 16) & maxU16) -
+				1) >>>
+			31;
 		return (ll & lh & hl & hh) === 1;
 	}
 
@@ -447,22 +458,23 @@ export class U64 {
 	 * @returns
 	 */
 	ctGt(u64: U64): boolean {
-		const ll = (
-			(this.arr[this.pos] & maxU16) - 
-			(u64.arr[u64.pos] & maxU16) - 
-			1) >>> 31;
-		const lh = (
-			((this.arr[this.pos] >>> 16) & maxU16) -
-			((u64.arr[u64.pos] >>> 16) & maxU16) -
-			1) >>> 31;
-		const hl = (
-			(this.arr[this.pos + 1] & maxU16) -
-			(u64.arr[u64.pos + 1] & maxU16) -
-			1) >>> 31;
-		const hh = (
-			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
-			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
-			1) >>> 31;
+		const ll =
+			((this.arr[this.pos] & maxU16) - (u64.arr[u64.pos] & maxU16) - 1) >>> 31;
+		const lh =
+			(((this.arr[this.pos] >>> 16) & maxU16) -
+				((u64.arr[u64.pos] >>> 16) & maxU16) -
+				1) >>>
+			31;
+		const hl =
+			((this.arr[this.pos + 1] & maxU16) -
+				(u64.arr[u64.pos + 1] & maxU16) -
+				1) >>>
+			31;
+		const hh =
+			(((this.arr[this.pos + 1] >>> 16) & maxU16) -
+				((u64.arr[u64.pos + 1] >>> 16) & maxU16) -
+				1) >>>
+			31;
 		return (ll & lh & hl & hh) === 0;
 	}
 
@@ -473,22 +485,23 @@ export class U64 {
 	 * @returns
 	 */
 	ctLt(u64: U64): boolean {
-		const ll = (
-			(u64.arr[u64.pos] & maxU16) - 
-			(this.arr[this.pos] & maxU16) - 
-			1) >>> 31;
-		const lh = (
-			((u64.arr[u64.pos] >>> 16) & maxU16) -
-			((this.arr[this.pos] >>> 16) & maxU16) -
-			1) >>> 31;
-		const hl = (
-			(u64.arr[u64.pos + 1] & maxU16) -
-			(this.arr[this.pos + 1] & maxU16) -
-			1) >>> 31;
-		const hh = (
-			((u64.arr[u64.pos + 1] >>> 16) & maxU16) - 
-			((this.arr[this.pos + 1] >>> 16) & maxU16) - 
-			1) >>> 31;
+		const ll =
+			((u64.arr[u64.pos] & maxU16) - (this.arr[this.pos] & maxU16) - 1) >>> 31;
+		const lh =
+			(((u64.arr[u64.pos] >>> 16) & maxU16) -
+				((this.arr[this.pos] >>> 16) & maxU16) -
+				1) >>>
+			31;
+		const hl =
+			((u64.arr[u64.pos + 1] & maxU16) -
+				(this.arr[this.pos + 1] & maxU16) -
+				1) >>>
+			31;
+		const hh =
+			(((u64.arr[u64.pos + 1] >>> 16) & maxU16) -
+				((this.arr[this.pos + 1] >>> 16) & maxU16) -
+				1) >>>
+			31;
 		return (ll & lh & hl & hh) === 0;
 	}
 
@@ -557,6 +570,21 @@ export class U64 {
 	}
 
 	/**
+	 * Value as a minimum stream of bytes (big-endian order)
+	 * Drops leading zero-bytes (a minimum of 1 byte will always be returned)
+	 * **NOTE** while the content is a copy of internal state, the return is shared memory (with all 8 bytes)
+	 * @returns 1-8 bytes
+	 */
+	toMinBytesBE():Uint8Array {
+		const ret=this.toBytesBE();
+		let i=0;
+		while(i<8) {
+			if (ret[i++]!==0) break;
+		}
+		return ret.subarray(i-1);
+	}
+
+	/**
 	 * Value as a stream of bytes (little-endian order) COPY
 	 * @returns Uint8Array[8]
 	 */
@@ -565,6 +593,21 @@ export class U64 {
 		asLE.i32(r8, 0);
 		asLE.i32(r8, 4);
 		return r8;
+	}
+
+	/**
+	 * Value as a minimum stream of bytes (little-endian order)
+	 * Drops trailing zero-bytes (a minimum of 1 byte will always be returned)
+	 * **NOTE** while the content is a copy of internal state, the return is shared memory (with all 8 bytes)
+	 * @returns 1-8 bytes
+	 */
+	toMinBytesLE():Uint8Array {
+		const ret=this.toBytesLE();
+		let i=8;
+		while(i>0) {
+			if (ret[--i]!==0) break;	
+		}
+		return ret.subarray(0,i+1);
 	}
 
 	/**
@@ -598,7 +641,7 @@ export class U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64 {
-		safety.intGte(uint51,0,'uint51');
+		safety.intGte(uint51, 0, 'uint51');
 		return new U64(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -624,13 +667,23 @@ export class U64 {
 	}
 
 	/**
-	 * Create from a copy of `src`
+	 * Create from a copy of `src` assuming the bytes are in big endian order
 	 * @param src
 	 * @param pos
 	 * @returns
 	 */
 	static fromBytesBE(src: Uint8Array, pos = 0): U64 {
 		return new U64(fromBytesBE(src, pos));
+	}
+
+	/**
+	 * Create from a copy of `src` assuming the bytes are in little endian order
+	 * @param src 
+	 * @param pos 
+	 * @returns 
+	 */
+	static fromBytesLE(src: Uint8Array, pos = 0): U64 {
+		return new U64(fromBytesLE(src, pos));
 	}
 
 	/**
@@ -680,7 +733,7 @@ export class U64 {
 		if (uint64 instanceof U64) {
 			return uint64;
 		} else {
-			safety.intGte(uint64,0,'uint64');
+			safety.intGte(uint64, 0, 'uint64');
 			return new U64(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}
@@ -852,7 +905,7 @@ export class U64Mut extends U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64Mut {
-		safety.intGte(uint51,0,'uint51');
+		safety.intGte(uint51, 0, 'uint51');
 		return new U64Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -902,7 +955,7 @@ export class U64Mut extends U64 {
 		if (uint64 instanceof U64) {
 			return uint64.mut();
 		} else {
-			safety.intGte(uint64,0,'uint64');
+			safety.intGte(uint64, 0, 'uint64');
 			return new U64Mut(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}

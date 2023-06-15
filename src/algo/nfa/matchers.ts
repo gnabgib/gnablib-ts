@@ -36,6 +36,7 @@ export class CharMatch implements IMatcher {
         return printable(this._code)?"'"+String.fromCharCode(this._code)+"'" : '\\d'+this._code;
     }
 
+    /* c8 ignore next 3 */
     [consoleDebugSymbol](/*depth, options, inspect*/) {
         return this.toString();
 	}    
@@ -67,6 +68,7 @@ export class InsensitiveMatch implements IMatcher {
         return this._code+'/i';    
     }
 
+    /* c8 ignore next 3 */
     [consoleDebugSymbol](/*depth, options, inspect*/) {
         return this.toString();
 	}    

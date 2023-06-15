@@ -473,4 +473,21 @@ for (const [a,b,expect] of mulTest) {
 	});
 }
 
+tsts(`clone`,()=>{
+	const a=U64Mut.fromInt(1);
+	const b=a.clone();
+	assert.equal(a.eq(U64.fromInt(1)),true);
+	
+	b.set(U64.fromInt(2));
+	assert.equal(a.eq(U64.fromInt(1)),true);
+	assert.equal(b.eq(U64.fromInt(2)),true);
+});
+
+tsts(`coerce`,()=>{
+	const a=U64Mut.coerce(1);
+	assert.equal(a.eq(U64.fromInt(1)),true);
+	const b=U64Mut.coerce(a);
+	assert.equal(b.eq(U64.fromInt(1)),true);
+});
+
 tsts.run();
