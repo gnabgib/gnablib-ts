@@ -138,6 +138,7 @@ class TreeNode<T> implements ITreeNode<T> {
 	}
 }
 
+// eslint-disable-next-line  @typescript-eslint/no-unused-vars
 function pickFirst<T>(value1: T, value2: T): T {
 	return value1;
 }

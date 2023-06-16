@@ -15,7 +15,7 @@ const bits_2 = 0x3;
 const ord_A = 65;
 const ord_I = 73;
 const ord_O = 79;
-const ord_U = 85;
+//const ord_U = 85;
 const ord_Z = 90;
 
 /**

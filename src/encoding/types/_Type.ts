@@ -34,9 +34,7 @@
  */
 import { Int64 } from '../../primitive/Int64.js';
 import { Uint64 } from '../../primitive/Uint64.js';
-import { fpb16 } from '../ieee754-fpb.js';
-import { fpb32 } from '../ieee754-fpb32.js';
-import { fpb64 } from '../ieee754-fpb64.js';
+import { fpb16, fpb32, fpb64 } from '../ieee754-fpb.js';
 import { utf8 } from '../Utf8.js';
 import { DateTime } from '../../primitive/DateTime.js';
 import { BinResult, FromBinResult } from '../../primitive/FromBinResult.js';

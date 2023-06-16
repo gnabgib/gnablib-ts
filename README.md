@@ -55,7 +55,7 @@ npm install gnablib --ignore-scripts
 
 - [ASCII85](https://en.wikipedia.org/wiki/Ascii85)
 - [Base32](https://www.gnabgib.com/tools/base32/)
-- [Base64](https://www.gnabgib.com/tools/base64/)
+- [Base64, Base64url, B64](https://www.gnabgib.com/tools/base64/)
 - [Crockford32](https://www.crockford.com/base32.html)
 - [Densely Packed Decimal](https://en.wikipedia.org/wiki/Densely_packed_decimal)
 - [Hex](https://en.wikipedia.org/wiki/Hexadecimal)
@@ -150,10 +150,8 @@ Name|Digest sizes|Optional parameters
 - Scaling TypedArray
 - StringBuilder
 - U16
-- U32
-- U64
-- U64Mut
-- U64MutArray
+- U32, U32Mut, U32MutArray
+- U64, U64Mut, U64MutArray
 - Uint64
 - WindowStr
 
@@ -161,9 +159,9 @@ Name|Digest sizes|Optional parameters
 
 - Bit
 - Error
-- Integer
-- Object
+- Int
 - String
+- Uint8Array
 
 ### Misc
 

@@ -1,7 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { fpb32 } from '../../encoding/ieee754-fpb32.js';
-import { fpb64 } from '../../encoding/ieee754-fpb64.js';
+import { fpb32,fpb64 } from '../../encoding/ieee754-fpb.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';

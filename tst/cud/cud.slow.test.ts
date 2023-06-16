@@ -1,8 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Hex } from '../../src/encoding/Hex';
-//import * as utf8 from '../../src/encoding/Utf8';
-import * as bigEndian from '../../src/endian/big';
+import { hex } from '../../src/encoding/Hex';
 import { Int2 } from '../../src/cud/types/Int';
 import { Utf81 } from '../../src/cud/types/Utf8';
 import {
@@ -24,10 +22,10 @@ import { Uint64 } from '../../src/primitive/Uint64';
 
 const tsts = suite('Cud');
 
-const when = DateTime.fromBin(Hex.toBytes('04B3B5AEEAA7987D')).value;
+const when = DateTime.fromBin(hex.toBytes('04B3B5AEEAA7987D')).value;
 
 const r=new Ref2(TableName.fromStr('people'),ColName.fromStr('ssn'));
-console.log(Hex.fromBytes(r.toBin()));
+console.log(hex.fromBytes(r.toBin()));
 
 const create = new CmdCtrlCreate(
 	0,
@@ -96,13 +94,13 @@ const delBin=del.toBin();
 const icBin=insCols.toBin();
 const rcBin=remCols.toBin();
 const dBin=drop.toBin();
-console.log(Hex.fromBytes(cBin));
-console.log(Hex.fromBytes(insertBin));
-console.log(Hex.fromBytes(patchBin));
-console.log(Hex.fromBytes(delBin));
-console.log(Hex.fromBytes(icBin));
-console.log(Hex.fromBytes(rcBin));
-console.log(Hex.fromBytes(dBin));
+console.log(hex.fromBytes(cBin));
+console.log(hex.fromBytes(insertBin));
+console.log(hex.fromBytes(patchBin));
+console.log(hex.fromBytes(delBin));
+console.log(hex.fromBytes(icBin));
+console.log(hex.fromBytes(rcBin));
+console.log(hex.fromBytes(dBin));
 
 // From bin
 console.log('---');

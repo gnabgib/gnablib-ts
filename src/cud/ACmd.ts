@@ -1,8 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import type { DateTime } from '../primitive/DateTime.js';
-//import { FromBinResult } from '../primitive/FromBinResult.js';
-import { uintToScaleBytes } from '../primitive/IntExt.js';
+import { intExt } from '../primitive/IntExt.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
 import type { Plane } from './types/Plane.js';
@@ -53,9 +52,9 @@ export abstract class ACmd {
 		const s = this.started.serialize().toBytesBE();
 		const p = this.plane.toBin();
 		const c = this.cmd.toBin();
-		const u = uintToScaleBytes(this.userId);
+		const u = intExt.uintToScaleBytes(this.userId);
 		const t = this.table.toBin();
-		const e = uintToScaleBytes(extraSpace);
+		const e = intExt.uintToScaleBytes(extraSpace);
 
 		const ret = new Uint8Array(
 			s.length +

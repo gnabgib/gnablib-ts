@@ -2,7 +2,6 @@
 
 //https://kangax.github.io/compat-table/es2016plus/
 
-import { Uint64Array } from './UInt64Array.js';
 
 //es2017
 
@@ -10,5 +9,3 @@ import { Uint64Array } from './UInt64Array.js';
 
 export type SharedArrayBuffer = unknown;
 //export interface SharedArrayBuffer extends SharedArrayBuffer{}
-
-Uint64Array;

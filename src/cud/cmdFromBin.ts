@@ -2,7 +2,7 @@
 
 import { DateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
-import { uintFromScaleBytes } from '../primitive/IntExt.js';
+import { intExt } from '../primitive/IntExt.js';
 import { TableName } from './TableName.js';
 import { Plane } from './types/Plane.js';
 import { ACmdData } from './CommandData.js';
@@ -40,7 +40,7 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	const cByte = bin[ptr];
 	ptr += 1;
 
-	const uFrom = uintFromScaleBytes(bin, ptr);
+	const uFrom = intExt.uintFromScaleBytes(bin, ptr);
 	if (!uFrom.success)
 		return new FromBinResult<ACmd>(
 			0,
@@ -58,7 +58,7 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 		);
 	ptr += tFrom.byteLen;
 
-	const eFrom = uintFromScaleBytes(bin, ptr);
+	const eFrom = intExt.uintFromScaleBytes(bin, ptr);
 	if (!eFrom.success)
 		return new FromBinResult<ACmd>(
 			0,

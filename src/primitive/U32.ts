@@ -1,6 +1,5 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { intExt } from './IntExt.js';
 import { hex } from '../encoding/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
 import { safety } from './Safety.js';

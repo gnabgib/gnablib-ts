@@ -41,6 +41,8 @@
 		"ASCII85",
 		"Base32",
 		"Base64",
+		"Base64Url",
+		"B64",
 		"Crockford32",
 		"DenselyPackedDecimal",
 		"Hex",
