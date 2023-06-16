@@ -199,6 +199,29 @@ pnpm install
 ```
 
 Format in VSCode: CTRL+SHIFT+P: Format  
+
+Docker: 
+# Build
+podman build . -t tmp
+# List - images
+podman images
+# List - containers (-a all shows stopped)
+podman ps -a 
+# Remove
+podman rmi <id>
+# Run
+podman run -it localhost/tmp bash
+# If you need to edit inside
+apt update
+apt install vim
+# Run in background
+podman create localhost/tmp
+# Copy file out
+podman cp localhost/tmp:/app/package-lock.json .
+podman run -d localhost/tmp bash
+# Cleanup old containers
+podman container prune
+
 -->
 
 ## License
