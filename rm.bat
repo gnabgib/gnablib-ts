@@ -1,2 +1,3 @@
 ::We assume `rm -rf TARG` is provided
-@rmdir /s /q %2
+@echo off
+IF EXIST "%2\NUL" rmdir /s /q %2

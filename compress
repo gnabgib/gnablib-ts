@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Detect if clean flag pushed
+clean=false
+if [ "$#" -eq "1" ] && [ "$1" = "-clean" ]; then
+        clean=true
+fi
+
+start=$(date +%s%N)
+
+txtCyan='\e[0;36m'
+txtGreen='\033[1;32m'
+txtGrey='\033[1;30m'
+txtReset='\033[0m'
+InitIndicator() {
+        echo $1
+        echo -n "["
+        for (( i=0; i<$1; i++)); do
+                echo -n ' '
+        done
+        echo -n -e "]\r["
+}
+UpdateIndicator() {
+        echo -n "."
+}
+CloseIndicator() {
+        echo "] "
+}
+WriteSection() {
+        now=$(date +%s%N)
+        dt=$(( (now-start)/1000000 ))
+        dts=$(printf %10d $dti)
+        color=${2:-$txtCyan}
+        echo -n -e "${txtGrey}${dts}ms${txtReset} "
+        echo -e "${color}${1}${txtReset}"
+}
+
+
+# Create min directories
+readarray dirs <<< $(find dist -type d)
+WriteSection "Build/clear folders"
+InitIndicator ${#dirs[@]}
+for d in ${dirs[@]}; do
+        MK=$(echo $d | sed -e 's/^dist/release/')
+        if [ ! -d "$MK" ]; then
+                mkdir $MK
+        elif $clean; then
+                rm $MK/*.*
+        fi
+        #sleep .1
+        UpdateIndicator
+done
+CloseIndicator
+
+# Compress the js files
+readarray jsFiles <<< $(find dist -type f -name "*.js")
+WriteSection "Minify JS"
+InitIndicator ${#jsFiles[@]}
+for j in ${jsFiles[@]}; do
+        MK=$(echo $j | sed -e 's/^dist/release/')
+        if [ ! -f "$MK" ]; then
+                npx terser $j --compress --mangle --ecma 2016 --module -o $MK
+        fi
+        UpdateIndicator
+done
+CloseIndicator
+
+readarray typeFiles <<< $(find dist -type f -name "*.d.ts")
+WriteSection "Copy types"
+InitIndicator ${#typeFiles[@]}
+for t in ${typeFiles[@]}; do
+        MK=$(echo $t | sed -e 's/^dist/release/')
+        if [ ! -f "$MK" ]; then
+                cp $t $MK
+        fi
+        UpdateIndicator
+done
+CloseIndicator
+
+WriteSection "Done" $txtGreen

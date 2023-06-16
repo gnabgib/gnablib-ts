@@ -12,15 +12,17 @@
 		"lint": "eslint \"src/**/*.{js,ts}\"",
 		"test": "uvu -r tsm -i \"(.slow.test.ts|.log)$\" tst",
 		"test:coverage": "c8 --include=src npm test",
+		"test:report": "c8 report --reporter=html",
 		"deeptest": "uvu -r tsm -i .log$ tst",
-		"prebuild": "rm -rf dist && rm -rf min",
-		"build": "tsc --sourceMap false"
+		"prebuild": "rm -rf dist && rm -rf release",
+		"build": "tsc --sourceMap false",
+		"compress": "compress"
 	},
 	"exports": {
-		"./*": "./dist/*"
+		"./*": "./release/*"
 	},
 	"files": [
-		"dist"
+		"release"
 	],
 	"repository": {
 		"type": "git",
