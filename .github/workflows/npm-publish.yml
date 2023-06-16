@@ -32,6 +32,7 @@ jobs:
       - run: npm install -g npm
       - run: npm ci
       - run: npm run build
+      - run: compress.sh
       - run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}

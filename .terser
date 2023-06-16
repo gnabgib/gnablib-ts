@@ -1,0 +1,6 @@
+{
+	"compress": {},
+    "ecma":2016,
+	"mangle": true,
+    "module ":true
+}
