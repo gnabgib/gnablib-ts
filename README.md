@@ -4,6 +4,7 @@ A library for building web/node/deno applications.
 
 [![CI](https://github.com/gnabgib/gnablib-ts/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gnabgib/gnablib-ts/actions)
 [![NPM Version](https://img.shields.io/npm/v/gnablib?color=33cd56&logo=npm)](https://www.npmjs.com/package/gnablib)
+[![install size](https://packagephobia.com/badge?p=gnablib)](https://packagephobia.com/result?p=gnablib)
 ![Depfu](https://img.shields.io/depfu/dependencies/github/gnabgib/gnablib-ts)
 
 ## Installation
@@ -220,6 +221,12 @@ podman cp localhost/tmp:/app/package-lock.json .
 podman run -d localhost/tmp bash
 # Cleanup old containers
 podman container prune
+
+DEPS:
+- Show outdated packages
+npm outdated
+- Update package.json/package-lock.json
+npm update --save
 
 -->
 
