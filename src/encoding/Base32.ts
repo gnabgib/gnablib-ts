@@ -1,7 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { ContentError } from '../primitive/ErrorExt.js';
-import { bitConverter } from './_bitConverter.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -17,115 +16,270 @@ import { bitConverter } from './_bitConverter.js';
  * Deno: >=0.10
  */
 
-export const whitespace = '\t\n\f\r ';
-const tbl = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-const ord_A = 65;
-const ord_Z = 90;
-const ord_2 = 50;
-const ord_7 = 55;
-const padding = '=';
+// [Wiki: Base32](https://en.wikipedia.org/wiki/Base32)
+// [RFC-4648: The Base16, Base32, and Base64 Data Encodings](https://datatracker.ietf.org/doc/html/rfc4648)
 
-interface EncodeOpts {
+const pad = '=';
+const msk = 0x1f; //00011111
+const byteEat = 5;
+interface options {
 	/**
-	 * Whether padding should be Added (default=true)
+	 * Whether padding is required on encode/decode if not directly specified (second optional arg of each method)
 	 */
-	pad?: boolean;
+	requirePad: boolean;
+	/**
+	 * The table for zbase32 is lower case, but we expect upper case input (for case-folding) so
+	 * we'll correct it after build
+	 */
+	makeTblLower?: boolean;
+	/**
+	 * Additional decodes beyond case-insensitive(tbl), record set of character:int value pairs
+	 * NOTE case folding is not automatically done (provide decodes for both character-cases if required)
+	 * Example: extraDecodes:{'o':0,'O':0}
+	 */
+	extraDecodes?: Record<string, number>;
 }
 
-interface DecodeOpts {
+class Base32 {
+	readonly #decode: Uint8Array;
 	/**
-	 * Whether padding must be present
+	 * Whether padding is required (when not specified on @see fromBytes @see toBytes)
 	 */
-	padRequired?: boolean;
-	/**
-	 * Characters to ignore (default=\t\n\f\r )
-	 */
-	ignore?: string;
-}
+	readonly reqPad: boolean;
 
-/**
- * Convert an integer [0-31] into a base 32 character
- * @param int
- * @returns
- */
-function intToBase32Char(int: number): string {
-	return tbl.substring(int, int + 1);
-	// //A-Z
-	// if (int < 26) return String.fromCharCode(ord_A + int);
-	// //2-7
-	// return String.fromCharCode(ord_7 - 31 + int);
-}
+	constructor(
+		/**
+		 * Encoding table
+		 */
+		readonly tbl: string,
+		/**
+		 * Configuration options
+		 */
+		options: options
+	) {
+		this.#decode = this.buildDecode(options);
+		this.reqPad = options.requirePad;
+		if (options.makeTblLower) this.tbl = tbl.toLowerCase();
+	}
 
-/**
- * Convert a base 32 char into an integer [0-31]
- * @param char
- * @returns 0-31 or -1 if invalid char
- */
-function base32CharToInt(char: string): number {
-	let ord = char.charCodeAt(0);
-	//Notice the screwy order (thanks base32 inventors)
-	// 0-9 = 48-57
-	if (ord < ord_2) return -1;
-	if (ord <= ord_7) return ord - ord_2 + 26;
-
-	//Fold lower over upper
-	ord &= 0x5f; //1011111 = ord('_');
-
-	// A-Z = 65-90
-	if (ord < ord_A) return -1;
-	if (ord <= ord_Z) return ord - ord_A;
-	return -1;
-}
-
-export const base32 = {
-	/**
-	 * Convert an array of bytes into base32 text
-	 * @param bytes
-	 * @param opts
-	 * @returns
-	 */
-	fromBytes: function (bytes: Uint8Array, opts?: EncodeOpts): string {
-		const ret = bitConverter.fromBytes(bytes, 5, intToBase32Char);
-		let pad = false;
-		if (opts?.pad !== false) {
-			//For undefined, null, or true set pad to true
-			pad = true;
+	private buildDecode(options: options): Uint8Array {
+		//We only need to set the first 127 places, since they're ASCII
+		// The first 32 aren't printable, but we'd have to branch to compensate, so let's waste a little memory
+		// to avoid
+		const code = new Uint8Array(127);
+		//Set equals sign pos to 33 (padding indicator)
+		code[pad.charCodeAt(0)] = 33;
+		for (let i = 0; i < 32; ) {
+			//Generally codePointAt is better, but we know this ASCII (no UTF16 vs UTF32 troubles)
+			// and charCodeAt will always return a number, while codePointAt may return undefined (if you're mid-rune)
+			//OFFSET by 1 (since 0 is used as bad indicator)
+			const idx = i++;
+			code[this.tbl.charCodeAt(idx)] = i;
+			//To lower case = char|space (where space=0x20)
+			//NOTE, this ill corrupt chars < 0x20 but they're non-printable (so out of scope)
+			code[this.tbl.charCodeAt(idx) | 0x20] = i;
+		}
+		if (options.extraDecodes) {
+			for (const d in options.extraDecodes) {
+				//Note the decode value is +1 (because 0=undefined)
+				code[d.charCodeAt(0)] = options.extraDecodes[d] + 1;
+			}
 		}
 
-		if (pad && ret.length > 0) {
-			return ret + '='.repeat(8 - (((ret.length - 1) % 8) + 1));
+		//For every byte value, the return is either 1-32 (valid char), 33 (padding), or 0 (invalid)
+		// note this also exploits the rule that out of range access will also return 0 (eg code[4000]==0)
+		return code;
+	}
+
+	/**
+	 * Convert an array of bytes into encoded text
+	 * @remarks 40=5bits*8=8bits*5
+	 * @param b Bytes to encode
+	 * @param addPad Whether to includ padding (default @see reqPad)
+	 * @returns encoded string
+	 */
+	fromBytes(b: Uint8Array, addPad?: boolean): string {
+		if (addPad === undefined) addPad = this.reqPad;
+		let ret = '';
+		let pos = byteEat - 1;
+
+		//We can eat 5 bytes at a time (=8 base32 chars) = 40bits
+		//We'll have to to as two bit shifts because JS/32bit only
+		for (; pos < b.length; pos += byteEat) {
+			// [aaaaabbb][bbcccccd][ddddeeee][efffffgg][ggghhhhh]
+			ret +=
+				this.tbl.charAt(b[pos - 4] >>> 3) + //a
+				this.tbl.charAt(((b[pos - 4] << 2) | (b[pos - 3] >>> 6)) & msk) + //b
+				this.tbl.charAt((b[pos - 3] >>> 1) & msk) + //c
+				this.tbl.charAt(((b[pos - 3] << 4) | (b[pos - 2] >>> 4)) & msk) + //d
+				this.tbl.charAt(((b[pos - 2] << 1) | (b[pos - 1] >>> 7)) & msk) + //e
+				this.tbl.charAt((b[pos - 1] >>> 2) & msk) + //f
+				this.tbl.charAt(((b[pos - 1] << 3) | (b[pos] >>> 5)) & msk) + //g
+				this.tbl.charAt(b[pos] & msk); //h
+		}
+		//We have 1,2,3,4 bytes not encoded at this point
+		switch (b.length - pos + byteEat - 1) {
+			case 1:
+				//[aaaaabbb]
+				ret +=
+					this.tbl.charAt(b[pos - 4] >>> 3) +
+					this.tbl.charAt((b[pos - 4] << 2) & msk);
+				if (addPad) ret += pad + pad + pad + pad + pad + pad;
+				break;
+			case 2:
+				// [aaaaabbb][bbcccccd]
+				ret +=
+					this.tbl.charAt(b[pos - 4] >>> 3) + //a
+					this.tbl.charAt(((b[pos - 4] << 2) | (b[pos - 3] >>> 6)) & msk) + //b
+					this.tbl.charAt((b[pos - 3] >>> 1) & msk) + //c
+					this.tbl.charAt((b[pos - 3] << 4) & msk); //d
+				if (addPad) ret += pad + pad + pad + pad;
+				break;
+			case 3:
+				// [aaaaabbb][bbcccccd][ddddeeee]
+				ret +=
+					this.tbl.charAt(b[pos - 4] >>> 3) + //a
+					this.tbl.charAt(((b[pos - 4] << 2) | (b[pos - 3] >>> 6)) & msk) + //b
+					this.tbl.charAt((b[pos - 3] >>> 1) & msk) + //c
+					this.tbl.charAt(((b[pos - 3] << 4) | (b[pos - 2] >>> 4)) & msk) + //d
+					this.tbl.charAt((b[pos - 2] << 1) & msk); //e
+				if (addPad) ret += pad + pad + pad;
+				break;
+			case 4:
+				// [aaaaabbb][bbcccccd][ddddeeee][efffffgg]
+				ret +=
+					this.tbl.charAt(b[pos - 4] >>> 3) + //a
+					this.tbl.charAt(((b[pos - 4] << 2) | (b[pos - 3] >>> 6)) & msk) + //b
+					this.tbl.charAt((b[pos - 3] >>> 1) & msk) + //c
+					this.tbl.charAt(((b[pos - 3] << 4) | (b[pos - 2] >>> 4)) & msk) + //d
+					this.tbl.charAt(((b[pos - 2] << 1) | (b[pos - 1] >>> 7)) & msk) + //e
+					this.tbl.charAt((b[pos - 1] >>> 2) & msk) + //f
+					this.tbl.charAt((b[pos - 1] << 3) & msk); //g
+				if (addPad) ret += pad;
+				break;
 		}
 		return ret;
-	},
+	}
 
 	/**
-	 * Convert base32 text into an array of bytes
-	 * @param base32
-	 * @param opts
-	 * @throws InvalidItem - Character after padding, incomplete padding
-	 * @returns
+	 * Convert encoded text into an array of bytes
+	 * @param base32 encoded data
+	 * @param requirePad Whether padding is required (default @see reqPad) - if required and missing, may throw
+	 * @throws {ContentError} Bad character|Content after padding|padding missing
 	 */
-	toBytes: function (base32: string, opts?: DecodeOpts): Uint8Array {
-		//Ignore whitespace by default
-		let ignore = whitespace;
-		if (opts?.ignore) {
-			ignore = opts.ignore;
+	toBytes(base32: string, requirePad?: boolean): Uint8Array {
+		const name = 'toBytes';
+		const ret = new Uint8Array(Math.ceil((base32.length * 5) / 8)); //Note it may be shorter if no pad, or ignored chars
+
+		let padCount = 0;
+		let retPtr = 0;
+		let carry = 0;
+		let carrySize = 0;
+		let ptr = 0;
+		for (; ptr < base32.length; ptr++) {
+			const dec = this.#decode[base32.charCodeAt(ptr)];
+			//If 0, invalid
+			if (dec === 0)
+				throw new ContentError(name, 'Unknown char', base32.charAt(ptr));
+			if (dec === 33) {
+				padCount++;
+				continue;
+			}
+			if (padCount > 0)
+				throw new ContentError(name, 'Found after padding', base32.charAt(ptr));
+			//Otherwise decoded char is off by 1
+			carry = (carry << 5) | (dec - 1);
+			carrySize += 5;
+			if (carrySize >= 8) {
+				carrySize -= 8;
+				ret[retPtr++] = carry >> carrySize;
+			}
 		}
 
-		const isWhitespace = (c: string) => ignore.indexOf(c) >= 0;
-		const isPadding = (c: string) => c == padding;
+		switch (carrySize) {
+			// [aaaaabbb][bbcccccd][ddddeeee][efffffgg][ggghhhhh]
+			//Can be any number 0-7 (because +5 -8): 0,1,2,3,4,5,6,7 (8 is consumed)
+			case 4: //+4 char -2 byte
+				if (padCount === 0 && !requirePad) break;
+				if (padCount != 4)
+					throw new ContentError(
+						name,
+						'Bad padding, expecting 4 got',
+						padCount
+					);
+				break;
+			case 3: //+7 char -4 byte
+				if (padCount === 0 && !requirePad) break;
+				if (padCount != 1)
+					throw new ContentError(
+						name,
+						'Bad padding, expecting 1 got',
+						padCount
+					);
+				break;
+			case 2: //+2 char -1 byte
+				if (padCount === 0 && !requirePad) break;
+				if (padCount != 6)
+					throw new ContentError(
+						name,
+						'Bad padding, expecting 6 got',
+						padCount
+					);
+				break;
+			case 1: //+5 char -3 byte
+				if (padCount === 0 && !requirePad) break;
+				if (padCount != 3)
+					throw new ContentError(
+						name,
+						'Bad padding, expecting 3 got',
+						padCount
+					);
+				break;
 
-		const arr = new Uint8Array(Math.ceil((base32.length * 5) / 8)); //Note it may be shorter if no pad, or ignored chars
-		const arrPtr = bitConverter.toBytes(
-			base32,
-			5,
-			isWhitespace,
-			isPadding,
-			base32CharToInt,
-			arr
-		);
-		if (opts?.padRequired && arrPtr % 8 != 0)
-			throw new ContentError('base32', 'Incomplete padding');
-		return arr.slice(0, arrPtr);
-	},
-};
+			case 0:
+				//Don't allow spurious padding
+				if (padCount > 0)
+					throw new ContentError(
+						name,
+						'Bad padding, expecting 0 got',
+						padCount
+					);
+				break;
+
+			//case 7: //+3 char -1 byte, but this is invalid (should only be +2 char)
+			//case 6: //+6 char -3 byte, but this is invalid (should only be +5)
+			//case 5: //+1 char -0, but this is invalid (should be +2 -1)
+			default:
+				throw new ContentError(name, 'Incorrect character count', ptr);
+		}
+
+		return ret.subarray(0, retPtr);
+	}
+}
+
+/**
+ * RFC 4648 base 32 (padding default on)
+ */
+export const base32 = new Base32('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', {
+	requirePad: true,
+});
+/**
+ * z-base-32 (padding default off)
+ */
+export const zbase32 = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
+	requirePad: false,
+	makeTblLower: true,
+});
+/**
+ * RFC 4648 base 32 hex, sortable, (padding default on)
+ */
+export const base32hex = new Base32('0123456789ABCDEFGHIJKLMNOPQRSTUV', {
+	requirePad: true,
+});
+/**
+ * Crockford's Base32
+ */
+export const crockford32 = new Base32('0123456789ABCDEFGHJKMNPQRSTVWXYZ', {
+	requirePad: false,
+	extraDecodes: { o: 0, O: 0, i: 1, I: 1, l: 1, L: 1 },
+});

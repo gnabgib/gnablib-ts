@@ -3,12 +3,10 @@ import * as assert from 'uvu/assert';
 import { base32 } from '../../src/encoding/Base32';
 import { utf8 } from '../../src/encoding/Utf8';
 import { hex } from '../../src/encoding/Hex';
-import { stringExt } from '../../src/primitive/StringExt';
 
 const tsts = suite('Base32/RFC 4648');
 
-const asciiSet = [
-	//ASCII,    Enc
+const asciiTests:[string,string][]= [
 	['', ''],
 	['f', 'MY======'],
 	['fo', 'MZXQ===='],
@@ -21,20 +19,20 @@ const asciiSet = [
 ];
 //https://datatracker.ietf.org/doc/html/rfc4648#page-8
 
-for (const pair of asciiSet) {
-	tsts('Encode:' + pair[0], () => {
-		const u = utf8.toBytes(pair[0]);
-		assert.is(base32.fromBytes(u), pair[1]);
+for (const [str,enc] of asciiTests) {
+	tsts(`Encode(${str})`, () => {
+		const u = utf8.toBytes(str);
+		assert.is(base32.fromBytes(u), enc);
 	});
 
-	tsts('Decode:' + pair[1], () => {
-		const u = base32.toBytes(pair[1]);
-		assert.is(utf8.fromBytes(u), pair[0]);
+	tsts(`Decode(${enc})`, () => {
+		const u = base32.toBytes(enc);
+		assert.is(utf8.fromBytes(u), str);
 	});
 }
 
 //Test the complete mapping (every char)
-const hexSet = [
+const hexTests:[string,string][] = [
 	//Hex,                                              enc
 	[
 		'00443214C74254B635CF84653A56D7C675BE77DF',
@@ -42,29 +40,60 @@ const hexSet = [
 	],
 	[
 		'FFBBCDEB38BDAB49CA307B9AC5A928398A418820',
-		stringExt.reverse('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
-	], //'765432ZYXWVUTSRQPONMLKJIHGFEDCBA'],
+		'765432ZYXWVUTSRQPONMLKJIHGFEDCBA',
+	],
 ];
 
-for (const pair of hexSet) {
-	tsts('Encode:' + pair[0], () => {
-		const u = hex.toBytes(pair[0]);
-		assert.is(base32.fromBytes(u), pair[1]);
+for (const [strHex,enc] of hexTests) {
+	tsts(`Encode(x${strHex})`, () => {
+		const u = hex.toBytes(strHex);
+		assert.is(base32.fromBytes(u), enc);
 	});
 
-	tsts('Decode:' + pair[1], () => {
-		const u = base32.toBytes(pair[1]);
-		assert.is(hex.fromBytes(u), pair[0]);
+	tsts(`Decode(${enc})`, () => {
+		const u = base32.toBytes(enc);
+		assert.is(hex.fromBytes(u), strHex);
 	});
 }
 
-tsts('toBytes:', () => {
-	assert.throws(() => base32.toBytes('['));
-	assert.equal(
-		base32.toBytes(' MY======', { ignore: ' ' }),
-		Uint8Array.of(102)
-	);
+const asciiDecodeQuirkTests:[string,string][]=[
+	//Lower case is ok
+	['mzxw6ytboi','666F6F626172'],//foobar in ASCII
+];
+for(const [enc,strHex] of asciiDecodeQuirkTests) {
+	tsts(`Decode(${enc})`, () => {
+		const u = base32.toBytes(enc);
+		assert.is(hex.fromBytes(u), strHex);
+	});
+}
+
+tsts('bad cases',()=>{
+    //Bad character:
+    assert.throws(()=>base32.toBytes('?'));
+    //Data after padding:
+    assert.throws(()=>base32.toBytes('MY======M',true));
+    //Not enough characters
+    assert.throws(()=>base32.toBytes('a',true));
+    assert.throws(()=>base32.toBytes('aa',true));
+    assert.throws(()=>base32.toBytes('aaa',true));
+	assert.throws(()=>base32.toBytes('aaaa',true));
+	assert.throws(()=>base32.toBytes('aaaaa',true));
+	assert.throws(()=>base32.toBytes('aaaaaa',true));
+	assert.throws(()=>base32.toBytes('aaaaaaa',true));
+    //Not enough chars+pad
+    assert.throws(()=>base32.toBytes('a======',true));
+    assert.throws(()=>base32.toBytes('aa=====',true));
+    assert.throws(()=>base32.toBytes('aaa====',true));
+	assert.throws(()=>base32.toBytes('aaaa===',true));
+	assert.throws(()=>base32.toBytes('aaaaa==',true));
+	assert.throws(()=>base32.toBytes('aaaaaa=',true));
+    //Too much padding
+    assert.throws(()=>base32.toBytes('MY=======',true));
+    assert.throws(()=>base32.toBytes('MZXQ=====',true));
+    assert.throws(()=>base32.toBytes('MZXW6====',true));
+    assert.throws(()=>base32.toBytes('MZXW6YQ==',true));
+	assert.throws(()=>base32.toBytes('MZXW6YTB=',true));
 });
 
-//todo:undo
+
 tsts.run();

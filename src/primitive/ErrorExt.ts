@@ -128,7 +128,7 @@ export class ContentError extends SyntaxError {
 	 * @param value 
 	 */
 	constructor(readonly noun: string, readonly reason: string, readonly value?: unknown) {
-		super(`Invalid ${noun}; ${reason} (${value})`);
+		super(`Invalid ${noun}; ${reason} (${value??''})`);
 	}
 }
 

@@ -54,9 +54,8 @@ npm install gnablib --ignore-scripts
 ### Encoding
 
 - [ASCII85](https://en.wikipedia.org/wiki/Ascii85)
-- [Base32](https://www.gnabgib.com/tools/base32/)
+- [Base32, zBase32, Base32Hex](https://www.gnabgib.com/tools/base32/), [Crockford32](https://www.crockford.com/base32.html)
 - [Base64, Base64url, B64](https://www.gnabgib.com/tools/base64/)
-- [Crockford32](https://www.crockford.com/base32.html)
 - [Densely Packed Decimal](https://en.wikipedia.org/wiki/Densely_packed_decimal)
 - [Hex](https://en.wikipedia.org/wiki/Hexadecimal)
 - [IEEE754](https://en.wikipedia.org/wiki/IEEE_754)

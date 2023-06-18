@@ -6,7 +6,7 @@ import { hex } from '../../src/encoding/Hex';
 
 const tsts = suite('Base64url/RFC 4648');
 
-const stringTest:[string,string][] = [
+const asciiTests:[string,string][] = [
 	['', ''],
 	['f', 'Zg'],
 	['fo', 'Zm8'],
@@ -24,7 +24,7 @@ const stringTest:[string,string][] = [
 ];
 //https://datatracker.ietf.org/doc/html/rfc4648#section-10
 
-for (const [str,b64] of stringTest) {
+for (const [str,b64] of asciiTests) {
 	tsts(`Encode(${str})`, () => {
 		const u = utf8.toBytes(str);
 		assert.is(base64url.fromBytes(u), b64);
@@ -50,7 +50,7 @@ for (const [str,b64] of stringWithPadTest) {
 		assert.is(utf8.fromBytes(u), str);
 	});
 }
-const hexTest = [
+const hexTests = [
     //Test the complete mapping (every char)
 	[
 		'00108310518720928B30D38F41149351559761969B71D79F8218A39259A7A29AABB2DBAFC31CB3D35DB7E39EBBF3DFBF',
@@ -65,7 +65,7 @@ const hexTest = [
     ]
 ];
 
-for (const [strHex,b64] of hexTest) {
+for (const [strHex,b64] of hexTests) {
 	tsts(`Encode(x${strHex})`, () => {
 		const u = hex.toBytes(strHex);
 		assert.is(base64url.fromBytes(u), b64);

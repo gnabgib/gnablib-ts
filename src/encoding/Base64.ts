@@ -18,11 +18,12 @@ import { ContentError } from '../primitive/ErrorExt.js';
 
 //[Wiki: Base64](https://en.wikipedia.org/wiki/Base64)
 //[RFC-4648: The Base16, Base32, and Base64 Data Encodings](https://datatracker.ietf.org/doc/html/rfc4648)
-const defPad = '=';
+const pad = '=';
 /**
  * Mask for last 6 bits (when used with &)
  */
 const last6Bits = 0x3f; // 00111111
+const byteEat=3;
 
 class Base64 {
 	readonly #decode: Uint8Array;
@@ -45,7 +46,7 @@ class Base64 {
 		// to avoid
 		const code = new Uint8Array(127);
 		//Set equals sign pos to 65 (padding indicator)
-		code[defPad.charCodeAt(0)] = 65;
+		code[pad.charCodeAt(0)] = 65;
 		for (let i = 0; i < 64;) {
 			//Generally codePointAt is better, but we know this ASCII (no UTF16 vs UTF32 troubles)
 			// and charCodeAt will always return a number, while codePointAt may return undefined (if you're mid-rune)
@@ -59,17 +60,18 @@ class Base64 {
 
 	/**
 	 * Convert an array of bytes into encoded text
+	 * @remarks 24=6bits*4 = 8bits*3
 	 * @param bytes Bytes to encode
-	 * @param pad Whether to include padding (default @see reqPad)
+	 * @param addPad Whether to include padding (default @see reqPad)
 	 * @returns encoded string
 	 */
-	fromBytes(bytes: Uint8Array, pad?: boolean): string {
-		if (pad === undefined) pad = this.reqPad;
+	fromBytes(bytes: Uint8Array, addPad?: boolean): string {
+		if (addPad === undefined) addPad = this.reqPad;
 		let ret = '';
-		let pos = 2;
+		let pos = byteEat-1;
 
-		//We can eat 3 bytes at a time (=4* base64 chars)
-		for (; pos < bytes.length; pos += 3) {
+		//We can eat 3 bytes at a time (=4 base64 chars) = 24 bits
+		for (; pos < bytes.length; pos += byteEat) {
 			const u24 = (bytes[pos - 2] << 16) | (bytes[pos - 1] << 8) | bytes[pos];
 			ret +=
 				this.tbl.charAt(u24 >>> 18) +
@@ -79,7 +81,7 @@ class Base64 {
 		}
 
 		//We can have 1 or 2 bytes not encoded at this point
-		switch (bytes.length - pos + 2) {
+		switch (bytes.length - pos + byteEat -1) {
 			case 1:
 				//NOTE `pos` is 2 after `bytes.length`, so `pos-1` `pos` are invalid
 				//8 bits = [aaaaaa][aa0000]==
@@ -87,7 +89,7 @@ class Base64 {
 					this.tbl.charAt(bytes[pos - 2] >>> 2) +
 					this.tbl.charAt((bytes[pos - 2] << 4) & last6Bits);
 				//Pad if requested
-				if (pad) ret += defPad + defPad;
+				if (addPad) ret += pad + pad;
 				break;
 
 			case 2:
@@ -100,7 +102,7 @@ class Base64 {
 					) +
 					this.tbl.charAt((bytes[pos - 1] << 2) & last6Bits);
 				//Pad if requested
-				if (pad) ret += defPad;
+				if (addPad) ret += pad;
 				break;
 		}
 		return ret;
@@ -141,11 +143,14 @@ class Base64 {
 		}
 
 		switch (carrySize) {
+			//Can only be even because +6 -8, so 0,2,4,6 (8 is consumed)
 			case 6:
+				//+1 char
 				// single base64 char isn't decode-able (minimum 2)
 				throw new ContentError(name, 'Not enough characters');
 
 			case 4:
+				//+2 char -1 byte
 				// Expect 2 padding chars, or 0 (if opt padding)
 				if (padCount == 0 && !requirePad) break;
 				if (padCount != 2)

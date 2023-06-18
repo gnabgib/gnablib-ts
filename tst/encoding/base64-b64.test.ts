@@ -6,7 +6,7 @@ import { hex } from '../../src/encoding/Hex';
 
 const tsts = suite('B64 (sortable)');
 
-const asciiSet:[string,string][] = [
+const asciiTests:[string,string][] = [
 	['', ''],
 	['f', 'NU'],
 	['fo', 'Naw'],
@@ -25,7 +25,7 @@ const asciiSet:[string,string][] = [
 ];
 //https://datatracker.ietf.org/doc/html/rfc4648#section-10
 
-for (const [str,enc] of asciiSet) {
+for (const [str,enc] of asciiTests) {
 	tsts(`Encode(${str})`, () => {
 		const u = utf8.toBytes(str);
 		assert.is(b64.fromBytes(u), enc);

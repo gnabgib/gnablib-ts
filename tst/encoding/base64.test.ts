@@ -6,7 +6,7 @@ import { hex } from '../../src/encoding/Hex';
 
 const tsts = suite('Base64/RFC 4648');
 
-const asciiSet = [
+const asciiTests = [
 	['', ''],
 	['f', 'Zg=='],
 	['fo', 'Zm8='],
@@ -24,19 +24,19 @@ const asciiSet = [
 ];
 //https://datatracker.ietf.org/doc/html/rfc4648#section-10
 
-for (const [str, b64] of asciiSet) {
+for (const [str, enc] of asciiTests) {
 	tsts(`Encode(${str})`, () => {
 		const u = utf8.toBytes(str);
-		assert.is(base64.fromBytes(u), b64);
+		assert.is(base64.fromBytes(u), enc);
 	});
 
-	tsts(`Decode(${b64})`, () => {
-		const u = base64.toBytes(b64);
+	tsts(`Decode(${enc})`, () => {
+		const u = base64.toBytes(enc);
 		assert.is(utf8.fromBytes(u), str);
 	});
 }
 
-const hexSet = [
+const hexTests = [
 	//Test the complete mapping (every char)
 	[
 		'00108310518720928B30D38F41149351559761969B71D79F8218A39259A7A29AABB2DBAFC31CB3D35DB7E39EBBF3DFBF',
@@ -49,14 +49,14 @@ const hexSet = [
 	['14FB9C03D97E', 'FPucA9l+'],
 ];
 
-for (const [strHex, b64] of hexSet) {
+for (const [strHex, enc] of hexTests) {
 	tsts(`Encode(x${strHex})`, () => {
 		const u = hex.toBytes(strHex);
-		assert.is(base64.fromBytes(u), b64);
+		assert.is(base64.fromBytes(u), enc);
 	});
 
-	tsts(`Decode(${b64})`, () => {
-		const u = base64.toBytes(b64);
+	tsts(`Decode(${enc})`, () => {
+		const u = base64.toBytes(enc);
 		assert.is(hex.fromBytes(u), strHex);
 	});
 }
