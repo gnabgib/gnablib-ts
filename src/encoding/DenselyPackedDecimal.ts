@@ -10,7 +10,7 @@ const bit2and3 = 6;
 /**
  * Binary coded decimal, can hold two base10 digits per byte (4bits per digit)
  */
-type bcd = number;
+export type bcd = number;
 
 /**
  * Decode dense2 encoded data (7bits, mask 0x7F) into two decimal digits, returned

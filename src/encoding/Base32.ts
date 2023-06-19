@@ -1,6 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { ContentError } from '../primitive/ErrorExt.js';
+import { IEncoder } from './IEncoder.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -22,6 +23,7 @@ import { ContentError } from '../primitive/ErrorExt.js';
 const pad = '=';
 const msk = 0x1f; //00011111
 const byteEat = 5;
+
 interface options {
 	/**
 	 * Whether padding is required on encode/decode if not directly specified (second optional arg of each method)
@@ -38,6 +40,27 @@ interface options {
 	 * Example: extraDecodes:{'o':0,'O':0}
 	 */
 	extraDecodes?: Record<string, number>;
+}
+
+/**
+ * Base 32 encoder/decoder
+ */
+export interface IBase32 extends IEncoder{
+	/**
+	 * Convert an array of bytes into encoded text
+	 * @remarks 40=5bits*8=8bits*5
+	 * @param b Bytes to encode
+	 * @param addPad Whether to includ padding (default @see reqPad)
+	 * @returns encoded string
+	 */
+	fromBytes(b: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Convert encoded text into an array of bytes
+	 * @param base32 encoded data
+	 * @param requirePad Whether padding is required (default @see reqPad) - if required and missing, may throw
+	 * @throws {ContentError} Bad character|Content after padding|padding missing
+	 */
+	toBytes(base32: string, requirePad?: boolean): Uint8Array;
 }
 
 class Base32 {
@@ -91,13 +114,6 @@ class Base32 {
 		return code;
 	}
 
-	/**
-	 * Convert an array of bytes into encoded text
-	 * @remarks 40=5bits*8=8bits*5
-	 * @param b Bytes to encode
-	 * @param addPad Whether to includ padding (default @see reqPad)
-	 * @returns encoded string
-	 */
 	fromBytes(b: Uint8Array, addPad?: boolean): string {
 		if (addPad === undefined) addPad = this.reqPad;
 		let ret = '';
@@ -161,12 +177,6 @@ class Base32 {
 		return ret;
 	}
 
-	/**
-	 * Convert encoded text into an array of bytes
-	 * @param base32 encoded data
-	 * @param requirePad Whether padding is required (default @see reqPad) - if required and missing, may throw
-	 * @throws {ContentError} Bad character|Content after padding|padding missing
-	 */
 	toBytes(base32: string, requirePad?: boolean): Uint8Array {
 		const name = 'toBytes';
 		const ret = new Uint8Array(Math.ceil((base32.length * 5) / 8)); //Note it may be shorter if no pad, or ignored chars
@@ -257,29 +267,32 @@ class Base32 {
 	}
 }
 
-/**
+/** 
  * RFC 4648 base 32 (padding default on)
  */
-export const base32 = new Base32('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', {
+export const base32:IBase32 = new Base32('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', {
 	requirePad: true,
 });
+
 /**
  * z-base-32 (padding default off)
  */
-export const zbase32 = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
+export const zbase32:IBase32 = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
 	requirePad: false,
 	makeTblLower: true,
 });
+
 /**
  * RFC 4648 base 32 hex, sortable, (padding default on)
  */
-export const base32hex = new Base32('0123456789ABCDEFGHIJKLMNOPQRSTUV', {
+export const base32hex:IBase32 = new Base32('0123456789ABCDEFGHIJKLMNOPQRSTUV', {
 	requirePad: true,
 });
+
 /**
  * Crockford's Base32
  */
-export const crockford32 = new Base32('0123456789ABCDEFGHJKMNPQRSTVWXYZ', {
+export const crockford32:IBase32 = new Base32('0123456789ABCDEFGHJKMNPQRSTVWXYZ', {
 	requirePad: false,
 	extraDecodes: { o: 0, O: 0, i: 1, I: 1, l: 1, L: 1 },
 });

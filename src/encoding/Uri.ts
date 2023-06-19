@@ -20,7 +20,7 @@ const tbl=[
 		's','t','u','v','w','x','y','z','','',
 		'','~'];
 
-interface DecodeOpts {
+export interface DecodeOpts {
 	/**
 	 * What to do with invalid characters in the encoded stream
 	 * - 'throw' (default) throw an exception

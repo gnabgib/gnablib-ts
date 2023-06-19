@@ -1,5 +1,5 @@
 import { suite } from 'uvu';
-import {bnf} from "../../src/abnf/bnf.js";
+import * as bnf from "../../src/abnf/bnf.js";
 import * as assert from 'uvu/assert';
 import { WindowStr } from '../../src/primitive/WindowStr.js';
 
@@ -7,33 +7,33 @@ const tsts = suite('ABNF alt');
 
 
 const testAltDescr:{
-    items:bnf.Char[],
+    items:bnf.BnfChar[],
     descr:string
 }[]=[
-    {items:[new bnf.Char('0'),new bnf.Char('1')],descr:'("0" / "1")'},
-    {items:[new bnf.Char('$')],descr:'"$"'},//Single alt isn't bracketed
+    {items:[new bnf.BnfChar('0'),new bnf.BnfChar('1')],descr:'("0" / "1")'},
+    {items:[new bnf.BnfChar('$')],descr:'"$"'},//Single alt isn't bracketed
 ];
 for (const {items,descr} of testAltDescr) {
     tsts(`Alt(${descr}).descr():`,()=>{
-        const a=new bnf.Alt(...items);
+        const a=new bnf.BnfAlt(...items);
         assert.is(a.descr(),descr);
     });
 }
 
 const testMatch:{
     haystack:string,
-    alts:Array<bnf.Char|bnf.Range|bnf.String>,
+    alts:Array<bnf.BnfChar|bnf.BnfRange|bnf.BnfString>,
     expectRem?:string,
     expectMatch?:string
 }[]=[
-    {haystack:"Hello",alts:[new bnf.String("Hey"),new bnf.String("Hi"),new bnf.String('yo')]},
-    {haystack:"Hello",alts:[new bnf.String("Hey"),new bnf.String("Hi"),new bnf.String("hello")],expectRem:'',expectMatch:'Hello'},
-    {haystack:'TRUE',alts:[new bnf.String('true'),new bnf.String('false')],expectRem:'',expectMatch:'TRUE'},
-    {haystack:'False',alts:[new bnf.String('true'),new bnf.String('false')],expectRem:'',expectMatch:'False'},
+    {haystack:"Hello",alts:[new bnf.BnfString("Hey"),new bnf.BnfString("Hi"),new bnf.BnfString('yo')]},
+    {haystack:"Hello",alts:[new bnf.BnfString("Hey"),new bnf.BnfString("Hi"),new bnf.BnfString("hello")],expectRem:'',expectMatch:'Hello'},
+    {haystack:'TRUE',alts:[new bnf.BnfString('true'),new bnf.BnfString('false')],expectRem:'',expectMatch:'TRUE'},
+    {haystack:'False',alts:[new bnf.BnfString('true'),new bnf.BnfString('false')],expectRem:'',expectMatch:'False'},
 ];
 for (const {haystack,alts: needles,expectRem,expectMatch} of testMatch) {
     tsts(`Alt().atStartOf(${haystack}):`,()=>{
-        const c=new bnf.Alt(...needles);
+        const c=new bnf.BnfAlt(...needles);
         const w=new WindowStr(haystack);
         const m=c.atStartOf(w);
         //console.log(m);
@@ -49,7 +49,7 @@ for (const {haystack,alts: needles,expectRem,expectMatch} of testMatch) {
 }
 
 tsts('Fragile[debug] tests:',()=>{
-    const alt=new bnf.Alt(new bnf.Char('0'),new bnf.Char('1',true));
+    const alt=new bnf.BnfAlt(new bnf.BnfChar('0'),new bnf.BnfChar('1',true));
     assert.is(alt.toString(),'("0" / "1")');
 });
 

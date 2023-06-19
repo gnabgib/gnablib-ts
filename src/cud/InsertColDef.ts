@@ -5,6 +5,9 @@ import { ColName } from './ColName.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { cudColTypeFromBin } from './types/cudColTypeFromBin.js';
 
+/**
+ * @alpha
+ */
 export class InsertColDef {
 	readonly name: ColName;
 	readonly type: ACudColType;

@@ -6,6 +6,9 @@ import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
 import type { Plane } from './types/Plane.js';
 
+/**
+ * @alpha
+ */
 export abstract class ACmd {
 	readonly started: DateTime;
 	readonly plane: Plane;

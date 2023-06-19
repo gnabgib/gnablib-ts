@@ -4,7 +4,7 @@ import { ContentError } from '../primitive/ErrorExt.js';
 import { safety } from '../primitive/Safety.js';
 import { hex } from './Hex.js';
 
-interface EncodeOpts {
+export interface EncodeOpts {
 	/**
 	 * 3-998 (Default=76)
 	 * Length of each encoded line, RFC2045 requires this be 76 or less,

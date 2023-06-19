@@ -7,6 +7,9 @@ import { safety } from '../primitive/Safety.js';
 const minLen = 1; //We don't support empty names
 const maxLen = 63;
 
+/**
+ * @alpha
+ */
 export class TableName {
 	readonly name: string;
 	private readonly _bytes: Uint8Array;

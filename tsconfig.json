@@ -101,5 +101,22 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts"],
-  "exclude": ["./dist/", "./node_modules"]
+  "exclude": ["./dist/", "./node_modules"],
+  "typedocOptions":{
+    "out":"docs",
+    "entryPoints":"./src",
+    "entryPointStrategy":"expand",
+    "titleLink":"https://www.gnabgib.com/lib-ts/",
+    "hideGenerator":true,
+    "excludeExternals":true,
+    // "excludeNotDocumented":true,
+    "excludePrivate":true,
+    "excludeProtected":true,
+    "githubPages":false,
+    "visibilityFilters":{
+      "private": false,
+      "protected": false,
+      "@alpha":false
+    }
+  }
 }

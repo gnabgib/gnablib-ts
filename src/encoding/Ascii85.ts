@@ -6,7 +6,7 @@ import { ScalingUint8Array } from '../primitive/TypedArrayExt.js';
 // const tbl = '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstu';
 const defLineLength = 79;
 
-interface EncodeOpts {
+export interface EncodeOpts {
 	/**
 	 * 1-MAXINT (Default=78)
 	 * Length of each encoded line

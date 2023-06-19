@@ -9,6 +9,9 @@ import type { TableName } from './TableName.js';
 import { CommandData } from './types/Command.js';
 import { Plane } from './types/Plane.js';
 
+/**
+ * @alpha
+ */
 export abstract class ACmdData extends ACmd {
 	readonly recId: number;
 
@@ -69,6 +72,7 @@ export abstract class ACmdData extends ACmd {
 		return CmdDataDelete.fromBinSub(s, cByte, u, t, e, bin, len, pos);
 	}
 }
+
 abstract class ADataCols extends ACmdData {
 	readonly cols: ColValue[];
 
@@ -110,6 +114,9 @@ abstract class ADataCols extends ACmdData {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdDataInsert extends ADataCols {
 	public constructor(
 		userId: number,
@@ -177,6 +184,9 @@ export class CmdDataInsert extends ADataCols {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdDataPut extends ADataCols {
 	public constructor(
 		userId: number,
@@ -243,6 +253,9 @@ export class CmdDataPut extends ADataCols {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdDataPatch extends ADataCols {
 	public constructor(
 		userId: number,
@@ -309,6 +322,9 @@ export class CmdDataPatch extends ADataCols {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdDataDelete extends ACmdData {
 	public constructor(
 		userId: number,

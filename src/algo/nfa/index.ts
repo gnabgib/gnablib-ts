@@ -9,12 +9,22 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 // [Programming Techniques: Regular expression search algorithm](https://dl.acm.org/doi/10.1145/363347.363387)
 // [Regular Expression Matching Can Be Simple And Fast](https://swtch.com/~rsc/regexp/regexp1.html)
 
-interface IMatcher {
+export interface IMatcher {
     match(charCode:number):boolean;
     toString():string;
 }
 
-class Node implements Iterable<Node>{
+export interface INode extends Iterable<INode> {
+    addTransition(by:IMatcher,to:INode):void;
+    addEpsilon(to:INode):void;
+    transition(charCode:number):INode|undefined;
+    get isEpsilon():boolean;
+    get isEnd():boolean;
+    debug(sb:StringBuilder):void;
+    toString():string;
+}
+
+class Node implements INode{
     //State in original article
     private _by:IMatcher|undefined;
     private _dests:Node[]=[];
@@ -84,15 +94,13 @@ class Node implements Iterable<Node>{
         sb.append('Node');
         this.debug(sb);
         return sb.toString();
-	}    
-
-
+	} 
 }
 
 export class Nfa {
     debug=false;
-    private _start:Node;
-    private _end:Node;
+    private _start:INode;
+    private _end:INode;
     
     constructor() {
         const start=new Node();
@@ -100,11 +108,11 @@ export class Nfa {
         this._end=start;
     }
 
-    get start():Node {
+    get start():INode {
         return this._start;
     }
 
-    get end():Node {
+    get end():INode {
         return this._end;
     }
 
@@ -181,8 +189,8 @@ export class Nfa {
         // ()->()-[X]->()->()
         //  \   ^\____/  /^
         //   \__________/
-        const newStart=new Node();
-        const newEnd=new Node();
+        const newStart:INode=new Node();
+        const newEnd:INode=new Node();
         //Add into (1+ times)
         newStart.addEpsilon(this._start);
         //Add bypass (zero times)
@@ -201,8 +209,8 @@ export class Nfa {
     zeroOrOne():Nfa {
         // ()->[x]->()
         //  \_____/^
-        const newStart=new Node();
-        const newEnd=new Node();
+        const newStart:INode=new Node();
+        const newEnd:INode=new Node();
         //One time
         newStart.addEpsilon(this._start);
         //Zero times
@@ -218,8 +226,8 @@ export class Nfa {
     oneOrMore():Nfa {
         // ()->[x]->()
         //  ^\_____/
-        const newStart=new Node();
-        const newEnd=new Node();
+        const newStart:INode=new Node();
+        const newEnd:INode=new Node();
         //Wrap the current network
         newStart.addEpsilon(this._start);
         this._end.addEpsilon(newEnd);
@@ -232,7 +240,7 @@ export class Nfa {
         return this;
     }
     
-    private addNextState(n:Node,nextStates:Node[],visited:Node[]) {
+    private addNextState(n:INode,nextStates:INode[],visited:INode[]) {
         if (n.isEpsilon) {
             for(const e of n) {
                 if (!visited.find(v=>v===e)) {

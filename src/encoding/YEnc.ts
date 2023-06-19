@@ -6,7 +6,7 @@ const defShiftOffset = 42; //v0-1.2, default
 const defEscapeChar = '='; //V0-1.2, default
 const newline = '\r\n';
 
-interface EncodeOpts {
+export interface EncodeOpts {
 	/**
 	 * (Default=128)
 	 * Length of each encoded line, the spec suggests 128 or 256 as defaults
@@ -25,7 +25,7 @@ interface EncodeOpts {
 	escapeChar?: string;
 }
 
-interface DecodeOpts {
+export interface DecodeOpts {
 	/**
 	 * (Default=42)
 	 * Byte-shift offset

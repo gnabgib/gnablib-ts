@@ -10,6 +10,9 @@ import type { TableName } from './TableName.js';
 import { CommandCtrl } from './types/Command.js';
 import { Plane } from './types/Plane.js';
 
+/**
+ * @alpha
+ */
 export abstract class ACmdCtrl extends ACmd {
 	constructor(
 		userId: number,
@@ -51,6 +54,9 @@ export abstract class ACmdCtrl extends ACmd {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdCtrlCreate extends ACmdCtrl {
 	readonly cols: CreateColDef[];
 
@@ -128,6 +134,9 @@ export class CmdCtrlCreate extends ACmdCtrl {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdCtrlInsCols extends ACmdCtrl {
 	readonly after: ColName | undefined;
 	readonly cols: InsertColDef[];
@@ -239,6 +248,9 @@ export class CmdCtrlInsCols extends ACmdCtrl {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdCtrlRemCols extends ACmdCtrl {
 	readonly cols: ColName[];
 
@@ -316,6 +328,9 @@ export class CmdCtrlRemCols extends ACmdCtrl {
 	}
 }
 
+/**
+ * @alpha
+ */
 export class CmdCtrlDrop extends ACmdCtrl {
 	public constructor(userId: number, started: DateTime, table: TableName) {
 		super(userId, started, table, CommandCtrl.Drop);

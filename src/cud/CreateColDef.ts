@@ -15,6 +15,9 @@ import { cudColTypeFromBin } from './types/cudColTypeFromBin.js';
 //  Max table name: 64 bytes (~=chars in ascii)
 //  Max column name: 64 bytes (~=chars in ascii)
 
+/**
+ * @alpha
+ */
 export class CreateColDef {
 	readonly name: ColName;
 	readonly type: ACudColType;

@@ -43,14 +43,14 @@ export class U64 {
 	protected pos: number;
 
 	/**
-	 * Bottom 32 bits (1-32)
+	 * Bottom 32 bits (1-32) of 64 bit int
 	 */
 	get low(): number {
 		return this.arr[this.pos];
 	}
 
 	/**
-	 * Top 32 bits (33-64)
+	 * Top 32 bits (33-64)  of 64 bit int
 	 */
 	get high(): number {
 		return this.arr[this.pos + 1];
@@ -141,9 +141,9 @@ export class U64 {
 	}
 
 	/**
-	 * @see value ⊕ @param u64
+	 * `this` ⊕ `u64`
 	 * @param u64
-	 * @returns @see value ⊕ @param u64
+	 * @returns
 	 */
 	xor(u64: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
@@ -152,9 +152,9 @@ export class U64 {
 	}
 
 	/**
-	 * @see value ∨ @param u64
+	 * `this` ∨ `u64`
 	 * @param u64
-	 * @returns @see value ∨ @param u64
+	 * @returns
 	 */
 	or(u64: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
@@ -163,19 +163,19 @@ export class U64 {
 	}
 
 	/**
-	 * @see value ∧ @param b
-	 * @param b
-	 * @returns @see value ∧ @param b
+	 * `this` ∧ `u64`
+	 * @param u64
+	 * @returns
 	 */
-	and(b: U64): U64 {
+	and(u64: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
-		this._andEq(arr, 0, b);
+		this._andEq(arr, 0, u64);
 		return new U64(arr);
 	}
 
 	/**
-	 * ¬ @see value
-	 * @returns ¬ @see value
+	 * ¬ `this`
+	 * @returns
 	 */
 	not(): U64 {
 		return new U64(
@@ -243,7 +243,7 @@ export class U64 {
 	}
 
 	/**
-	 * Shift bits left by @see by places zeros are brought in
+	 * Shift bits left by `by` places zeros are brought in
 	 * (Same as <<)
 	 * @param by integer 0-63
 	 * @returns shifted value
@@ -255,7 +255,7 @@ export class U64 {
 	}
 
 	/**
-	 * Rotate bits left by @see by, bringing the outgoing bits in on the right
+	 * Rotate bits left by `by`, bringing the outgoing bits in on the right
 	 * @param by integer 0-63
 	 * @returns shifted value
 	 */
@@ -267,7 +267,7 @@ export class U64 {
 	}
 
 	/**
-	 * Shift bits right by @see by places, zeros are brought in (sign unaware)
+	 * Shift bits right by `by` places, zeros are brought in (sign unaware)
 	 * (same as >>>)
 	 * @param by number 0-63
 	 * @returns shifted value
@@ -279,7 +279,7 @@ export class U64 {
 	}
 
 	/**
-	 * Rotate bits right be @see by places, bringing the outgoing bits in on the left
+	 * Rotate bits right by `by` places, bringing the outgoing bits in on the left
 	 * @param by number 0-64
 	 * @returns rotated value
 	 */
@@ -289,9 +289,9 @@ export class U64 {
 	}
 
 	/**
-	 * @see value + @param u64
+	 * `this` + `u64`
 	 * @param u64
-	 * @returns @see value + @param u64
+	 * @returns
 	 */
 	add(u64: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
@@ -300,9 +300,9 @@ export class U64 {
 	}
 
 	/**
-	 * @see value - @param u64
+	 * `this` - `u64`
 	 * @param u64
-	 * @returns @see value - @param u64
+	 * @returns
 	 */
 	sub(u64: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
@@ -311,9 +311,9 @@ export class U64 {
 	}
 
 	/**
-	 * @see value * @param u64
+	 * `this` * `u64`
 	 * @param u64
-	 * @returns @see value * @param u64
+	 * @returns
 	 */
 	mul(u64: U64): U64 {
 		const arr = this.arr.slice(this.pos, this.pos + 2);
@@ -322,7 +322,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether @see other has the same value as this
+	 * Whether `this`==`u64`
 	 * @param u64
 	 * @returns
 	 */
@@ -335,7 +335,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this is > @param u64
+	 * Whether `this` is > `u64`
 	 * @param u64
 	 * @returns
 	 */
@@ -348,7 +348,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this < @param u64
+	 * Whether `this` < `u64`
 	 * @param u64
 	 * @returns
 	 */
@@ -361,7 +361,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this >= @param u64
+	 * Whether `this` >= `u64`
 	 * @param u64
 	 * @returns
 	 */
@@ -373,7 +373,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this <= @param u64
+	 * Whether `this` <= `u64`
 	 * @param u64
 	 * @returns
 	 */
@@ -385,7 +385,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether @param u64 has the same value as this
+	 * Whether `this` == `u64`
 	 * CONSTANT TIME
 	 * @param u64
 	 * @returns
@@ -398,7 +398,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this is <= @param u64
+	 * Whether `this` <= `u64`
 	 * CONSTANT TIME
 	 * @param u64
 	 * @returns
@@ -425,7 +425,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this is >= @param u64
+	 * Whether `this` is >= `u64`
 	 * CONSTANT TIME
 	 * @param u64
 	 * @returns
@@ -452,7 +452,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this is > @param u64
+	 * Whether `this` > `u64`
 	 * CONSTANT TIME
 	 * @param u64
 	 * @returns
@@ -479,7 +479,7 @@ export class U64 {
 	}
 
 	/**
-	 * Whether this is < @param u64
+	 * Whether `this` < `u64`
 	 * CONSTANT TIME
 	 * @param u64
 	 * @returns
@@ -506,7 +506,7 @@ export class U64 {
 	}
 
 	/**
-	 * Constatnt time switch to u64 if yes==true or stay the the same (yes==false)
+	 * Constant time switch to `u64` if `yes` (`true`) or stay the the same (`false`)
 	 * @param u64
 	 * @param yes Whether to switch
 	 * @returns this or u64
@@ -519,11 +519,11 @@ export class U64 {
 	}
 
 	/**
-	 * Constant time select returns a64 if first==true, or b64 if first==false
+	 * Constant time select returns `a64` if `first` (`true`), or `b64` (`false`)
 	 * @param a64
 	 * @param b64
 	 * @param first
-	 * @returns a64 or b64
+	 * @returns `a64` or `b64`
 	 */
 	static ctSelect(a64: U64, b64: U64, first: boolean): U64 {
 		// @ts-expect-error: We're casting bool->number on purpose
@@ -533,7 +533,7 @@ export class U64 {
 	}
 
 	/**
-	 * Create a copy of this U64
+	 * Create a memory copy
 	 * @returns
 	 */
 	clone(): U64 {
@@ -541,7 +541,7 @@ export class U64 {
 	}
 
 	/**
-	 * Mutate - create a new U64Mut with a copy of this value
+	 * Mutate - create a new @see {@link U64Mut} with a copy of this value
 	 */
 	mut(): U64Mut {
 		return U64Mut.fromArray(this.arr.slice(this.pos, this.pos + 2));
@@ -703,21 +703,21 @@ export class U64 {
 	}
 
 	/**
-	 * A new Uint64 with value 18446744073709551616 (the maximum Uint64)
+	 * A U64 with value 18446744073709551616 (the maximum Uint64)
 	 */
 	static get max(): U64 {
 		return max;
 	}
 
 	/**
-	 * A new Uint64 with value 0 (the minimum Uint64)
+	 * A U64 with value 0 (the minimum Uint64)
 	 */
 	static get min(): U64 {
 		return zero;
 	}
 
 	/**
-	 * A new Uint64 with value 0
+	 * A U64 with value 0
 	 */
 	static get zero(): U64 {
 		return zero;

@@ -56,7 +56,7 @@ class NoneNode<T> implements ITreeNode<T> {
 	}
 }
 
-type valueMerge<T> = (value1: T, value2: T) => T;
+export type valueMerge<T> = (value1: T, value2: T) => T;
 
 /**
  * A node (or fork) that represents two paths

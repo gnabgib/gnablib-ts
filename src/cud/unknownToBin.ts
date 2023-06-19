@@ -9,6 +9,9 @@ import { intToMinBytes, uintToMinBytes } from '../endian/big.js';
 import { Int64 } from '../primitive/Int64.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 
+/**
+ * @alpha
+ */
 export function unknownToBin(value: unknown): Uint8Array {
 	let ret: Uint8Array;
 	if (typeof value === 'string') {
@@ -57,6 +60,9 @@ export function unknownToBin(value: unknown): Uint8Array {
 	return ret;
 }
 
+/**
+ * @alpha
+ */
 export function unknownFromBin(
 	bin: Uint8Array,
 	pos: 0

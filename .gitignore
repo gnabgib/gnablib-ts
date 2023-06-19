@@ -70,8 +70,13 @@ typings/
 
 # Nuxt.js build / generate output
 .nuxt
+
+# Stop the dist js/d.ts compilation
 dist
+# Stop the release (terse compressed compilation)
 release
+# Stop docs
+docs
 
 # VS Code profiles
 *.cpuprofile

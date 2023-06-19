@@ -22,7 +22,7 @@ const emptyBuffer = new ArrayBuffer(0);
  * At build time we expect input: ArrayBuffer/offset/length, and to know how many bytes is required for storage
  * You can fool this by adhering to this interface
  */
-interface IBuildable<T> {
+export interface IBuildable<T> {
 	new (buffer: ArrayBuffer, offset: number, length: number): T;
 	get BYTES_PER_ELEMENT(): number;
 }
@@ -32,14 +32,14 @@ interface IBuildable<T> {
  * You can fool this by adhering to this interface (providing a .buffer getter)
  * NAME: Uses go paradigm of feature +er
  */
-interface IBufferer {
+export interface IBufferer {
 	get buffer(): ArrayBuffer;
 }
 
 /**
  * The least we need out of a TypedArray for reading (mostly taken from MDN)
  */
-interface IReadTyped<T> extends IBufferer {
+export interface IReadTyped<T> extends IBufferer {
 	[index: number]: number;
 	get BYTES_PER_ELEMENT(): number;
 	get byteLength(): number;
@@ -87,7 +87,7 @@ interface IReadTyped<T> extends IBufferer {
 /**
  * The least we need out of a TypedArray for reading+writing (mostly taken from MDN)
  */
-interface IWriteTyped<T> extends IReadTyped<T> {
+export interface IWriteTyped<T> extends IReadTyped<T> {
 	fill(value: number, start?: number | undefined, end?: number | undefined): T;
 	reverse(): T;
 	set(array: ArrayLike<number>, offset?: number | undefined): void;

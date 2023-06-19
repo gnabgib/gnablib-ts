@@ -1,12 +1,12 @@
 import { suite } from 'uvu';
-import {bnf} from "../../src/abnf/bnf.js";
+import * as bnf from "../../src/abnf/bnf.js";
 import * as assert from 'uvu/assert';
 import { WindowStr } from '../../src/primitive/WindowStr.js';
 
 const tsts = suite('ABNF string');
 
 const testString:{
-    str:string|bnf.Char[],
+    str:string|bnf.BnfChar[],
     caseInsensitive:boolean|undefined,
     expectedStr:string,
     expectedCI:boolean|undefined|"mix"
@@ -27,14 +27,14 @@ const testString:{
     {str:"a\tb",caseInsensitive:true,expectedStr:'%x61.09.62/i',expectedCI:true},
     {str:"a\tb",caseInsensitive:false,expectedStr:'%x61.09.62',expectedCI:false},
     //Mixed s/i
-    {str:[new bnf.Char('A',false),new bnf.Char('b',true)],caseInsensitive:true,expectedStr:'("A" "b"/i)',expectedCI:"mix"},
-    {str:[new bnf.Char('A',false),new bnf.Char('b',true)],caseInsensitive:false,expectedStr:'("A" "b"/i)',expectedCI:"mix"},
+    {str:[new bnf.BnfChar('A',false),new bnf.BnfChar('b',true)],caseInsensitive:true,expectedStr:'("A" "b"/i)',expectedCI:"mix"},
+    {str:[new bnf.BnfChar('A',false),new bnf.BnfChar('b',true)],caseInsensitive:false,expectedStr:'("A" "b"/i)',expectedCI:"mix"},
     //Mixed s/i/ctrl
-    {str:[new bnf.Char('A',false),new bnf.Char('\t'),new bnf.Char('b',true)],caseInsensitive:true,expectedStr:'("A" %x09 "b"/i)',expectedCI:"mix"},
+    {str:[new bnf.BnfChar('A',false),new bnf.BnfChar('\t'),new bnf.BnfChar('b',true)],caseInsensitive:true,expectedStr:'("A" %x09 "b"/i)',expectedCI:"mix"},
 ]
 for(const {str,caseInsensitive,expectedStr,expectedCI} of testString) {
     tsts(`String(${str},${caseInsensitive}) - sens+str:`,()=>{
-        const s=new bnf.String(str,caseInsensitive);
+        const s=new bnf.BnfString(str,caseInsensitive);
         assert.is(s.caseInsensitive,expectedCI);
         assert.is(''+s,expectedStr);
     });
@@ -49,7 +49,7 @@ const testStringDescr:{
 ];
 for(const {str,descr} of testStringDescr) {
     tsts(`String(${str}).descr():`,()=>{
-        const s=new bnf.String(str);
+        const s=new bnf.BnfString(str);
         assert.is(s.descr(),descr);
     });
 }
@@ -71,7 +71,7 @@ const testMatch:{
 ];
 for (const {haystack,needle,CI,expectRem,expectMatch} of testMatch) {
     tsts(`String(${needle}).atStartOf(${haystack}):`,()=>{
-        const c=new bnf.String(needle,CI);
+        const c=new bnf.BnfString(needle,CI);
         const w=new WindowStr(haystack);
         const m=c.atStartOf(w);
         if (expectRem!==undefined) {
@@ -85,7 +85,7 @@ for (const {haystack,needle,CI,expectRem,expectMatch} of testMatch) {
 }
 
 tsts('Fragile[debug] tests:',()=>{
-    const str=new bnf.String("gnabgib");
+    const str=new bnf.BnfString("gnabgib");
     // Using /i from regex to indicate case insensitivity (the alternatives would be regex
     // sets [Gg] or some other notation?)
     assert.is(String(str),'"gnabgib"/i','Coerce to string via concat');

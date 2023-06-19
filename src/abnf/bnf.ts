@@ -20,6 +20,9 @@ const CONCAT_SEP = ' ';
 const CONCAT_SEP_HEX = '.';
 const ALT_SEP = ' / ';
 
+/**
+ * BNF interface
+ */
 export interface IBnf {
 	/**
 	 * Name of the component (default undefined)
@@ -65,7 +68,10 @@ function bnfCharArrToStr(asHex: boolean, set: BnfChar[]): string {
 
 // -- -- -- -- -- -- -- BNF Types -- -- -- -- -- -- --
 
-class BnfChar implements IBnf {
+/**
+ * Single character, can be non-printable
+ */
+export class BnfChar implements IBnf {
 	name: string | undefined = undefined;
 	readonly ord: number;
 	readonly caseInsensitive: boolean | undefined;
@@ -176,7 +182,10 @@ class BnfChar implements IBnf {
 	}
 }
 
-class BnfRange implements IBnf, Iterable<BnfChar> {
+/**
+ * An inclusive range of alternative values
+ */
+export class BnfRange implements IBnf, Iterable<BnfChar> {
 	name: string | undefined = undefined;
 	readonly start: BnfChar;
 	readonly end: BnfChar;
@@ -192,7 +201,7 @@ class BnfRange implements IBnf, Iterable<BnfChar> {
 		if (this.start.caseInsensitive || this.end.caseInsensitive)
 			throw new RangeError('You can only specify case sensitive characters.');
 		this.nonPrintable = this.start.nonPrintable || this.end.nonPrintable;
-		safety.intGt(this.end.ord,this.start.ord,'this.end.ord');
+		safety.intGt(this.end.ord, this.start.ord, 'this.end.ord');
 		this.name = name;
 	}
 
@@ -257,10 +266,13 @@ class BnfRange implements IBnf, Iterable<BnfChar> {
 	}
 }
 
-class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
+/**
+ * Literal string text, case insensitive, can contain non-printable chars
+ */
+export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 	name: string | undefined = undefined;
 	private readonly _chars: BnfChar[];
-	readonly nonPrintable: boolean;
+	readonly nonPrintable=false;
 	/**
 	 * True: all chars are insensitive/doesn't matter (SPEC)
 	 * False: all chars are sensitive/doesn't matter
@@ -275,13 +287,13 @@ class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 	 * @param value
 	 * @param caseInsensitive
 	 */
-	constructor(
-		value: string | BnfChar[],
-		caseInsensitive = true,
-		name?: string
-	) {
+	constructor(value: string | BnfChar[], caseInsensitive = true, name?: string) {
 		let ci: boolean | undefined | 'mix' = caseInsensitive;
-		if (value instanceof Array<BnfChar>) {
+		if (Array.isArray(value)) {
+			if (!value.every(v=>v instanceof BnfChar)) {
+				this._chars=new Array<BnfChar>();
+				return;
+			}
 			this._chars = value;
 			let nonPrint = false;
 			let ci_all_undef = true;
@@ -386,7 +398,11 @@ class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 	}
 }
 
-class BnfConcat implements IBnf, Iterable<IBnf> {
+/**
+ * A concatenation of contiguous rules
+ */
+
+export class BnfConcat implements IBnf, Iterable<IBnf> {
 	name: string | undefined = undefined;
 	suppressComponents = false;
 	readonly items: IBnf[];
@@ -489,7 +505,10 @@ class BnfConcat implements IBnf, Iterable<IBnf> {
 	}
 }
 
-class BnfAlt implements IBnf, Iterable<IBnf> {
+/**
+ * Alternative rules
+ */
+export class BnfAlt implements IBnf, Iterable<IBnf> {
 	name: string | undefined = undefined;
 	suppressComponents = false;
 	readonly items: IBnf[] = [];
@@ -586,7 +605,10 @@ class BnfAlt implements IBnf, Iterable<IBnf> {
 	}
 }
 
-class BnfRepeat implements IBnfRepeat {
+/**
+ * Variable/Specific repetition
+ */
+export class BnfRepeat implements IBnfRepeat {
 	name: string | undefined = undefined;
 	suppressComponents = false;
 	readonly min: number;
@@ -714,12 +736,7 @@ class BnfRepeat implements IBnfRepeat {
 	 * @param name
 	 * @returns
 	 */
-	static Between(
-		min: number,
-		max: number,
-		rule: IBnf,
-		name?: string
-	): BnfRepeat {
+	static Between(min: number, max: number, rule: IBnf, name?: string): BnfRepeat {
 		return new BnfRepeat(rule, min, max, name);
 	}
 
@@ -734,30 +751,3 @@ class BnfRepeat implements IBnfRepeat {
 		return new BnfRepeat(rule, count, count);
 	}
 }
-
-export const bnf = {
-	/**
-	 * Alternative rules
-	 */
-	Alt: BnfAlt,
-	/**
-	 * A concatenation of contiguous rules
-	 */
-	Concat: BnfConcat,
-	/**
-	 * Single character, can be non-printable
-	 */
-	Char: BnfChar,
-	/**
-	 * An inclusive range of alternative values
-	 */
-	Range: BnfRange,
-	/**
-	 * Variable/Specific repetition
-	 */
-	Repeat: BnfRepeat,
-	/**
-	 * Literal string text, case insensitive, can contain non-printable chars
-	 */
-	String: BnfString,
-};
