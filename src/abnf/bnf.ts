@@ -2,9 +2,9 @@
 
 import { nextPow2 } from '../algo/nextPow2.js';
 import {
-	MatchDetail,
+	IMatchDetail,
 	MatchFail,
-	MatchResult,
+	IMatchResult,
 	MatchSuccess,
 } from '../primitive/MatchResult.js';
 import { safety } from '../primitive/Safety.js';
@@ -45,7 +45,7 @@ export interface IBnf {
 	 * Test whether `s` contains this at the beginning
 	 * @param s
 	 */
-	atStartOf(s: WindowStr): MatchResult;
+	atStartOf(s: WindowStr): IMatchResult;
 	/**
 	 * Casting to primitive type, debug
 	 */
@@ -153,7 +153,7 @@ export class BnfChar implements IBnf {
 		return this.nonPrintable ? '%x' + this.chrHex : `"${this.chr}"`;
 	}
 
-	atStartOf(s: WindowStr): MatchResult {
+	atStartOf(s: WindowStr): IMatchResult {
 		if (s.length === 0) return new MatchFail(0);
 		let match = false;
 		if (this.caseInsensitive) {
@@ -242,7 +242,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 			: `${this.start.descr()}-${this.end.descr()}`;
 	}
 
-	atStartOf(s: WindowStr): MatchResult {
+	atStartOf(s: WindowStr): IMatchResult {
 		if (s.length === 0) return new MatchFail(0);
 		const c = s.charCodeAt(0);
 		if (c < this.start.ord || c > this.end.ord) {
@@ -291,7 +291,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 		let ci: boolean | undefined | 'mix' = caseInsensitive;
 		if (Array.isArray(value)) {
 			if (!value.every(v=>v instanceof BnfChar)) {
-				this._chars=new Array<BnfChar>();
+				this._chars=[];
 				return;
 			}
 			this._chars = value;
@@ -353,13 +353,13 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 		}
 	}
 
-	atStartOf(s: WindowStr): MatchResult {
+	atStartOf(s: WindowStr): IMatchResult {
 		//Make a copy of the original
 		let ptr = s.sub(0);
 		let i = 0;
 		for (; i < this._chars.length; i++) {
 			const match = this._chars[i].atStartOf(ptr);
-			if (match.fail) {
+			if (match.fail || match.remain===undefined) {
 				return new MatchFail(s.length - ptr.length);
 			}
 			//We could capture the component parts, but a string is a basic primitive
@@ -461,16 +461,17 @@ export class BnfConcat implements IBnf, Iterable<IBnf> {
 			: `(${ret.slice(0, idx).join(CONCAT_SEP)})`;
 	}
 
-	atStartOf(s: WindowStr): MatchResult {
-		const components: MatchDetail[] = [];
+	atStartOf(s: WindowStr): IMatchResult {
+		const components: IMatchDetail[] = [];
 		let ptr = s.sub(0);
 		for (const item of this.items) {
 			const match = item.atStartOf(ptr);
-			if (match.fail) {
+			if (match.fail || match.remain===undefined) {
 				return new MatchFail(s.length - ptr.length);
 			}
 			ptr = match.remain;
-			components.push(match.result);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			components.push(match.result!);
 			// if (match.components.length>0) {
 			//     if (match.result.name!==undefined) components.push(match.result);
 			//     components.push(...match.components);
@@ -553,16 +554,19 @@ export class BnfAlt implements IBnf, Iterable<IBnf> {
 		return idx <= 1 ? ret.join(ALT_SEP) : `(${ret.join(ALT_SEP)})`;
 	}
 
-	atStartOf(s: WindowStr): MatchResult {
+	atStartOf(s: WindowStr): IMatchResult {
 		for (const item of this.items) {
 			const match = item.atStartOf(s);
-			if (!match.fail) {
+			if (!match.fail && match.remain!==undefined) {
 				//We have to recreate the result to capture our name
-				return new MatchSuccess(match.remain, {
+				const detail:IMatchDetail={
 					name: this.name,
-					value: match.result.value,
-					components: this.suppressComponents ? [] : [match.result],
-				});
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					value: match.result!.value,
+				}
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				if (!this.suppressComponents) detail.components=[match.result!];
+				return new MatchSuccess(match.remain, detail);
 				// if (match.result.name!==undefined) {
 				//     //Keep an old name if it's found
 				//     return new MatchSuccess(match.remain,{name:this.name,value:match.result.value,components:[match.result]});
@@ -653,24 +657,28 @@ export class BnfRepeat implements IBnfRepeat {
 		return prefix + this.rule.descr(asHex);
 	}
 
-	atStartOf(s: WindowStr): MatchResult {
-		const components: MatchDetail[] = [];
+	atStartOf(s: WindowStr): IMatchResult {
+		const components: IMatchDetail[] = [];
 		let ptr = s.sub(0);
 		//Must have at least min matches
 		for (let i = 0; i < this.min; i++) {
 			const match = this.rule.atStartOf(ptr);
-			if (match.fail) {
+			if (match.fail || match.remain===undefined) {
 				return new MatchFail(s.length - ptr.length);
 			}
 			ptr = match.remain;
-			components.push(match.result);
+			//There must be a result if it didn't fail
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			components.push(match.result!);
 		}
 		//May have up to max matches
 		for (let i = this.min; i < this.max; i++) {
 			const match = this.rule.atStartOf(ptr);
-			if (match.fail) break;
+			if (match.fail || match.remain===undefined) break;
 			ptr = match.remain;
-			components.push(match.result);
+			//There must be a result if it didn't fail
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			components.push(match.result!);
 			// if (match.components.length>0) {
 			//     components.push(...match.components);
 			// } else {

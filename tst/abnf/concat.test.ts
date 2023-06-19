@@ -45,10 +45,14 @@ for (const {haystack,needles,expectRem,expectPos,expectMatches} of testMatch) {
         //console.log(m);
         if (expectRem!==undefined) {
             assert.is(m.fail,false);
-            assert.is(m.remain.toString(),expectRem);
-            assert.is(m.result.components.length,expectMatches?.length)
-            for(let i=0;i<expectMatches.length;i++) {
-                assert.equal(m.result.components[i].value.toString(),expectMatches[i]);
+            assert.is(m.remain?.toString(),expectRem);
+            assert.is(m.result?.components?.length,expectMatches?.length)
+            if (m.result?.components === undefined) {
+                assert.is(true,false,'Expecting components')
+            } else {
+                for(let i=0;i<expectMatches.length;i++) {
+                    assert.equal(m.result.components[i].value.toString(),expectMatches[i]);
+                }
             }
         } else {
             assert.is(m.fail,true);

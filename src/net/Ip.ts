@@ -110,7 +110,7 @@ export class IpV4 {
 				parts[3]
 			);
 
-		return this.fromParts(p0, p1, p2, p3);
+		return IpV4.fromParts(p0, p1, p2, p3);
 	}
 
 	static fromInt(value: number): IpV4 {

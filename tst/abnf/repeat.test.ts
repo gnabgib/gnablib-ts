@@ -47,8 +47,8 @@ for (const {haystack,needle,min,max,expectRem,expectMatch,expectPos} of testMatc
         //console.log(m);
         if (expectRem!==undefined) {
             assert.is(m.fail,false);
-            assert.is(m.remain.toString(),expectRem);
-            assert.is(m.result.value.toString(),expectMatch);
+            assert.is(m.remain?.toString(),expectRem);
+            assert.is(m.result?.value.toString(),expectMatch);
         } else {
             assert.is(m.fail,true);
             assert.is(m.pos,expectPos);

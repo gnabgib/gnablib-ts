@@ -51,13 +51,13 @@ export class CommandCtrl extends Command {
 	static fromByte(byte: number): CommandCtrl | undefined {
 		switch (byte) {
 			case 99: //c
-				return this.Create;
+				return CommandCtrl.Create;
 			case 105: //i
-				return this.InsCols;
+				return CommandCtrl.InsCols;
 			case 114: //r
-				return this.RemCols;
+				return CommandCtrl.RemCols;
 			case 100: //d
-				return this.Drop;
+				return CommandCtrl.Drop;
 		}
 	}
 }
@@ -97,13 +97,13 @@ export class CommandData extends Command {
 	static fromByte(byte: number): CommandData | undefined {
 		switch (byte) {
 			case 105: //i
-				return this.Insert;
+				return CommandData.Insert;
 			case 117: //u
-				return this.Put;
+				return CommandData.Put;
 			case 97: //a
-				return this.Patch;
+				return CommandData.Patch;
 			case 100: //d
-				return this.Delete;
+				return CommandData.Delete;
 		}
 	}
 }

@@ -39,8 +39,8 @@ for (const {haystack,alts: needles,expectRem,expectMatch} of testMatch) {
         //console.log(m);
         if (expectRem!==undefined) {
             assert.is(m.fail,false);
-            assert.is(m.remain.toString(),expectRem);
-            assert.equal(m.result.value.toString(),expectMatch);
+            assert.is(m.remain?.toString(),expectRem);
+            assert.equal(m.result?.value.toString(),expectMatch);
         } else {
             assert.is(m.fail,true);
             //pos is always 0

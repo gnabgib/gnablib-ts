@@ -28,24 +28,6 @@ const byteEat=3;
 /**
  * Base 64 encoder/decoder
  */
-export interface IBase64 {
-	/**
-	 * Convert an array of bytes into encoded text
-	 * @remarks 24=6bits*4 = 8bits*3
-	 * @param bytes Bytes to encode
-	 * @param addPad Whether to include padding (default @see reqPad)
-	 * @returns encoded string
-	 */
-	fromBytes(bytes: Uint8Array, addPad?: boolean): string;
-	/**
-	 * Convert encoded text into an array of bytes
-	 * @param base64 encoded data
-	 * @param requirePad Whether padding is required (default @see reqPad) - if required and missing, may throw
-	 * @throws {ContentError} Bad character|Content after padding|padding missing
-	 */
-	toBytes(base64: string, requirePad?: boolean): Uint8Array;
-}
-
 class Base64 {
 	readonly #decode: Uint8Array;
 	constructor(
@@ -210,7 +192,7 @@ class Base64 {
 /**
  * RFC 4648 base 64 (padding default on)
  */
-export const base64:IBase64 = new Base64(
+export const base64 = new Base64(
 	'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
 	true
 );
@@ -218,7 +200,7 @@ export const base64:IBase64 = new Base64(
 /**
  * RFC 4648 URL/file safe base 64 (padding default off)
  */
-export const base64url:IBase64 = new Base64(
+export const base64url = new Base64(
 	'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
 	false
 );
@@ -226,7 +208,7 @@ export const base64url:IBase64 = new Base64(
 /**
  * Sortable base 64, (Unix-Crypt/GEDCOM) (padding default off)
  */
-export const b64:IBase64 = new Base64(
+export const b64 = new Base64(
 	'./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
 	false
 );

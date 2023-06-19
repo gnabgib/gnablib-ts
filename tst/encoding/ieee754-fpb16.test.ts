@@ -59,7 +59,7 @@ const nanBytes = hex.toBytes(nanHex);
 
 tsts(`decode: ${nanHex} (NaN)`, () => {
 	//NaN!==NaN, so we need to use a specialized test
-	assert.is(isNaN(fpb16.fromBytes(nanBytes)), true);
+	assert.is(Number.isNaN(fpb16.fromBytes(nanBytes)), true);
 });
 
 tsts('encode: NaN', () => {
@@ -69,9 +69,9 @@ tsts('encode: NaN', () => {
 
 tsts(`decode other NaNs:`, () => {
 	//As long as mantissa>0 then it's NaN so there are quite a few variants
-	assert.is(isNaN(fpb16.fromBytes(hex.toBytes('7C01'))), true);
-	assert.is(isNaN(fpb16.fromBytes(hex.toBytes('7E00'))), true);
-	assert.is(isNaN(fpb16.fromBytes(hex.toBytes('7C10'))), true);
+	assert.is(Number.isNaN(fpb16.fromBytes(hex.toBytes('7C01'))), true);
+	assert.is(Number.isNaN(fpb16.fromBytes(hex.toBytes('7E00'))), true);
+	assert.is(Number.isNaN(fpb16.fromBytes(hex.toBytes('7C10'))), true);
 });
 
 tsts('encode oversized', () => {

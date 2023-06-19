@@ -8,6 +8,9 @@ import type { IHash } from './IHash.js';
 //[Wikipedia: SHA-1](https://en.wikipedia.org/wiki/SHA-1)
 // You can generate test values with: `echo -n '<test>' | sha1sum `
 
+// file deepcode ignore InsecureHash: This is an implementation of Sha1 not usage
+
+
 const digestSize = 20; //160 bits
 const digestSizeU32 = 5;
 const blockSize = 64; //512 bits
@@ -184,7 +187,7 @@ export class Sha1 implements IHash {
      * Create an empty IHash using the same algorithm
      */
 	newEmpty(): IHash {
-		return new Sha1();
+  		return new Sha1();
 	}
 
 	/**

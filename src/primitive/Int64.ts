@@ -424,13 +424,13 @@ export class Int64 {
 		padded.set(sourceBytes.slice(sourcePos, end), minInsertPoint);
 		//If there was no source, or it's positive.. zero pad (already done)
 		if (len === 0 || (sourceBytes[sourcePos] & 0x80) === 0) {
-			return this.fromBytes(padded);
+			return Int64.fromBytes(padded);
 		}
 		//Pad for negative (with 0xFF)
 		for (let i = 0; i < minInsertPoint; i++) {
 			padded[i] = 0xff;
 		}
-		return this.fromBytes(padded);
+		return Int64.fromBytes(padded);
 	}
 
 	static get max(): Int64 {

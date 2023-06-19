@@ -396,7 +396,7 @@ export class Uint64 {
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;
 		padded.set(sourceBytes.slice(sourcePos, end), minInsertPoint);
-		return this.fromBytes(padded);
+		return Uint64.fromBytes(padded);
 	}
 
 	static get max(): Uint64 {
@@ -430,7 +430,7 @@ export class Uint64 {
 		if (value instanceof Uint64) {
 			return value;
 		} else {
-			return this.fromNumber(value);
+			return Uint64.fromNumber(value);
 		}
 	}
 

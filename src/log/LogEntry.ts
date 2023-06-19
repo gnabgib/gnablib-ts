@@ -15,7 +15,7 @@ export class LogEntry {
 	constructor(level: LogLevel, message: string, fieldSet?: Record<string, unknown>) {
 		this.level = level;
 		this.message = message;
-		this.fields = new Array<LogField>();
+		this.fields = [];
 		if (fieldSet) {
 			for (const key in fieldSet) {
 				this.fields.push(new LogField(key, fieldSet[key]));

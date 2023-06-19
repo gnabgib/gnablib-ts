@@ -132,7 +132,7 @@ for (const test of decodeFloat4NaN) {
 		assert.is(writer.space, 0);
 
 		const val = reader.readFloat4();
-		assert.equal(isNaN(val), true);
+		assert.equal(Number.isNaN(val), true);
 	});
 	tsts(`float4 decode LE ${le}`, () => {
 		const writer = buff.getWriter(LE);
@@ -141,7 +141,7 @@ for (const test of decodeFloat4NaN) {
 		assert.is(writer.space, 0);
 
 		const val = reader.readFloat4();
-		assert.equal(isNaN(val), true);
+		assert.equal(Number.isNaN(val), true);
 	});
 }
 
@@ -167,7 +167,7 @@ for (const test of decodeFloat8NaN) {
 		assert.is(writer.space, 0);
 
 		const val = reader.readFloat8();
-		assert.equal(isNaN(val), true);
+		assert.equal(Number.isNaN(val), true);
 	});
 	tsts(`float8 decode LE ${le}`, () => {
 		const writer = buff.getWriter(LE);
@@ -176,7 +176,7 @@ for (const test of decodeFloat8NaN) {
 		assert.is(writer.space, 0);
 
 		const val = reader.readFloat8();
-		assert.equal(isNaN(val), true);
+		assert.equal(Number.isNaN(val), true);
 	});
 }
 

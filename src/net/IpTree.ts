@@ -28,7 +28,8 @@ class AllTreeNode<T> implements ITreeNode<T> {
 		return this._value;
 	}
 
-	contains(): boolean {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	contains(val: number, bit: number): boolean {
 		return true;
 	}
 
@@ -48,10 +49,19 @@ class NoneNode<T> implements ITreeNode<T> {
 	get value() {
 		return undefined;
 	}
-	contains(): boolean {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	contains(val: number, bit: number): boolean {
 		return false;
 	}
-	output(): void {
+	
+	output(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		position: number,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		bit: number,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		output: (position: number, bit: number, value: T) => void
+	): void {
 		//nop
 	}
 }

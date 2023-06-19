@@ -727,7 +727,7 @@ export function maxicodeField(): Gf<Uint8Array> {
  */
 export class ReedSolomon<T extends UIntArray> {
 	private readonly _field: Gf<T>;
-	private readonly _cache = new Array<GfPoly<T>>();
+	private readonly _cache:Array<GfPoly<T>> = [];
 
 	constructor(field: Gf<T>) {
 		this._field = field;

@@ -87,13 +87,13 @@ export function printable(ord: number | string): boolean {
 		// Unicode separators
 		case 0x2028: //  line separator
 		case 0x2029: // paragraph separator
-			return false;
 		// Interlinear annotation
+		// eslint-disable-next-line no-fallthrough
 		case 0xfff9: // interlinear annotation anchor
 		case 0xfffa: // interlinear annotation separator
 		case 0xfffb: // interlinear annotation terminator
-			return false;
 		// Bidirectional text control
+		// eslint-disable-next-line no-fallthrough
 		case 0x061c: // Arabic letter mark
 		case 0x200e: // left-to-right mark
 		case 0x200f: // right-to-left mark

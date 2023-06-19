@@ -177,7 +177,7 @@ export class DateTime {
 		const u=U64.fromBytesBE(bin,pos);
 		//const u = Uint64.fromBytes(bin, pos);
 		try {
-			const dt = this.deserialize(u);
+			const dt = DateTime.deserialize(u);
 			return new FromBinResult(8, dt);
 		} catch (e) {
 			const reason = (e as Error)?.message ?? 'unknown';
@@ -234,7 +234,7 @@ export class DateTime {
 		const milliOnly = Math.floor(epochMillis);
 		const dt = new Date(milliOnly);
 		const us = Math.round((epochMillis - milliOnly) * 1000);
-		return this.fromDate(dt, us);
+		return DateTime.fromDate(dt, us);
 	}
 
 	public static now(): DateTime {
@@ -242,7 +242,7 @@ export class DateTime {
 		const nowMs = Math.floor(now);
 		const dt = new Date(nowMs);
 		const us = Math.round((now - nowMs) * 1000);
-		return this.fromDate(dt, us);
+		return DateTime.fromDate(dt, us);
 	}
 	//@todo: add support for Temporal once it's valid
 }

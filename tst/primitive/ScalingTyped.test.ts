@@ -166,7 +166,8 @@ tsts('filter (value>2):', () => {
 });
 
 tsts("filter (doesn't mutate):", () => {
-	f8.filter(mutateCallback);
+	// deepcode ignore PureMethodReturnValueIgnored/test: whole point of the test
+ f8.filter(mutateCallback);
 	// @ts-expect-error: ts2345 is expected, we're making sure we cannot get around by ignoring
 	assert.throws(() => f8.filter(badMutateCallback));
 	assert.is(f8[2], 3);
@@ -304,7 +305,7 @@ tsts('some:', () => {
 });
 
 tsts('readonlySpan:', () => {
-	var r8b = f8.readonlySpan();
+	const r8b = f8.readonlySpan();
 	assert.is.not(f8, r8b, 'Different memory structures (the readonly part)');
 	assert.instance(r8b, ReadonlyTyped<Uint8Array>);
 	assert.equal(f8.values(), r8b.values(), 'Same content');

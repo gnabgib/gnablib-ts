@@ -66,7 +66,7 @@ export const fpb16 = {
 		let exponent = 0;
 		//Make the value positive now
 		float16 *= 1 - sign * 2;
-		if (isNaN(float16)) {
+		if (Number.isNaN(float16)) {
 			//NaN cases
 			//There are actually many NaN, the mantissa MSB indicates "quietness" the rest may
 			// share clues, which are OOS here
@@ -180,7 +180,7 @@ export const fpb32 = {
 		let exponent = 0;
 		//Make the value positive now
 		float32 *= 1 - sign * 2;
-		if (isNaN(float32)) {
+		if (Number.isNaN(float32)) {
 			//NaN cases
 			//There are actually many NaN, the mantissa MSB indicates "quietness" the rest may
 			// share clues, which are OOS here
@@ -297,7 +297,7 @@ export const fpb64 = {
 		let exponent = 0;
 		//Make the value positive now
 		float64 *= 1 - sign * 2;
-		if (isNaN(float64)) {
+		if (Number.isNaN(float64)) {
 			//NaN cases
 			//There are actually many NaN, the mantissa MSB indicates "quietness" the rest may
 			// share clues, which are OOS here

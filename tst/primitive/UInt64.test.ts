@@ -494,9 +494,6 @@ for (const test of mulSet) {
 	});
 }
 
-const max = Uint64.max;
-console.log(max.toString());
-//console.log(Uint64.minSigned.toString());
 
 // const lShiftOut = [
 // 	['0000000000000000', 0, '00000000000000000000000000000000'],

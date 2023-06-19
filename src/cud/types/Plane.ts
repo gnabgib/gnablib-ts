@@ -34,9 +34,9 @@ export class Plane {
 	static fromBin(bin: Uint8Array, pos = 0): FromBinResult<Plane> {
 		switch (bin[pos]) {
 			case 99: //c
-				return new FromBinResult(1, this.Control);
+				return new FromBinResult(1, Plane.Control);
 			case 100: //d
-				return new FromBinResult(1, this.Data);
+				return new FromBinResult(1, Plane.Data);
 		}
 		return new FromBinResult<Plane>(
 			0,

@@ -123,7 +123,8 @@ function bufferize(
 	if (b instanceof SharedArrayBuffer) {
 		// @ts-expect-error: es2016 doesn't support SharedArrayBuffer, es2017 does
 		return b;
-	} else if (b instanceof ArrayBuffer) {
+ } else if (b instanceof ArrayBuffer) {
+		// deepcode ignore DuplicateIfBody: On purpose
 		return b;
 	}
 
@@ -152,6 +153,7 @@ function startFix(start: number | undefined, arrLen: number): number {
 
 /**
  * Fill `view` with `value` from `start` for `length` elements
+ * NOTE: If you name this fill, snyk (BUG) incorrectly thinks the class-fill calls below refer to themselves
  * @param view
  * @param value Value to put in at each place
  * @param start index to start filling the array at. If start is negative, it is treated as length+start where length is the length of the array.
@@ -159,11 +161,11 @@ function startFix(start: number | undefined, arrLen: number): number {
  * @param length Number of elements to insert
  * @returns
  */
-function fill<T extends IWriteTyped<T>>(
+function viewFill<T extends IWriteTyped<T>>(
 	view: T,
 	value: number,
-	start?: number | undefined,
-	length?: number | undefined
+	start?: number,
+	length?: number
 ) {
 	start = startFix(start, view.length);
 	length = length ?? view.length;
@@ -639,7 +641,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 		start?: number | undefined,
 		length?: number | undefined
 	): IReadWriteArray<T> {
-		fill(this._view, value, start, length);
+		viewFill(this._view, value, start, length);
 		return this;
 	}
 
@@ -858,7 +860,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 		const end = start + length;
 		//Make sure we have capacity (end could be beyond current view/data size)
 		this.assertSpace(end);
-		fill(this._view, value, start, length);
+		viewFill(this._view, value, start, length);
 		return this;
 	}
 
