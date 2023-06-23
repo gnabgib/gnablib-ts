@@ -735,7 +735,20 @@ tsts(`ctSelect`,()=>{
 
 	assert.equal(U32.ctSelect(a,b,true)>>>0,a);
 	assert.equal(U32.ctSelect(a,b,false)>>>0,b);
-})
+});
+
+const sameSignTests:[number,number,boolean][]=[
+    [0,2147483647,true],//highest i32
+    [0,2147483648,false],//While these are the same sign, we've exceeded U32
+    [0,-1,false],
+    [-1,-1000000,true],
+    [-1,-2147483648,true]//lowest i32
+];
+for (const [a,b,match] of sameSignTests) {
+    tsts(`${a} same sign as ${b}`,()=>{
+        assert.is(U32.sameSign(a,b),match);
+    })
+}
 
 
 tsts.run();

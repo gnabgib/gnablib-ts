@@ -155,6 +155,12 @@ Name|Digest sizes|Optional parameters
 - Uint64
 - WindowStr
 
+### TTY
+
+- Foreground, background color (8 color, 213 color, 16M colors)
+- Underline, bold, faint, italic, blink, invert, hide, strike-through, overline text styles
+- Terminal controls (cursor move, screen/line clear)
+
 #### Extensions:
 
 - Bit

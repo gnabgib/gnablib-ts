@@ -448,6 +448,29 @@ export class U32 {
 	}
 
 	/**
+	 * Whether two int32 values have the same sign (both negative, both positive)
+	 * @param i64a int32, if larger than 32 bits it'll be truncated 0-2147483647
+	 * @param i64b int32, if larger than 32 bits it'll be truncated 0-2147483647
+	 */
+	static sameSign(i64a:number,i64b:number):boolean {
+		//The MSBit is 1 if it's negative, 0 if not.. so if both or neither are ^=0
+		// If only one is, then ^=1.  Since MSbit=1 is <0 we can xor the two, and 
+		// see if it's positive to confirm they're the same sign
+		return (i64a^i64b)>=0;
+	}
+
+	/**
+	 * Get the average of two 32 bit numbers
+	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
+	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
+	 */
+	static average(a32:number,b32:number):number {
+		//Either works
+		return (a32|b32) - ((a32^b32)>>>1);
+		//return ((a32^b32)>>1) + (a32&b32)
+	}
+
+	/**
 	 * Convert 0-4 bytes from @param src starting at @param pos into a u32/i32 in little endian order (smallest byte first)
 	 * Zeros will be appended if src is short (ie 0xff will be considered 256)
 	 * Result may be negative (`>>>0` to fix)

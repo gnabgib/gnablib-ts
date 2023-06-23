@@ -20,7 +20,7 @@
 		"doc": "typedoc"
 	},
 	"engines": {
-		"node": ">=8"
+		"node": ">=15.3.0"
 	},
 	"exports": {
 		"./*": "./release/*"
@@ -133,10 +133,15 @@
 		"Lookup2",
 		"Lookup3",
 		"SpookyHash",
-		"xxHash"
+		"xxHash",
+		"ansi",
+		"cli",
+		"color",
+		"terminal",
+		"console"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
-	"license": "MPL-2.0",
+	"license": "MPL-1.1",
 	"bugs": {
 		"url": "https://github.com/gnabgib/gnablib-ts/issues"
 	},
