@@ -1,10 +1,10 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import type { IHash } from "./IHash.js";
+import type { IHash } from './IHash.js';
 import * as littleEndian from '../endian/little.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import { utf8 } from '../encoding/Utf8.js';
-import { safety } from "../primitive/Safety.js";
+import { safety } from '../primitive/Safety.js';
 
 //[Wikipedia: SHA-3](https://en.wikipedia.org/wiki/SHA-3)
 //[Keccak](https://keccak.team/keccak.html)
@@ -13,12 +13,14 @@ import { safety } from "../primitive/Safety.js";
 //[KangarooTwelve and TurboSHAKE (v10)](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/) (Mar 2023)
 
 const roundConst = [
-	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a, 0x80000000, 0x80008000,
-	0x00000000, 0x0000808b, 0x00000000, 0x80000001, 0x80000000, 0x80008081, 0x80000000, 0x00008009,
-	0x00000000, 0x0000008a, 0x00000000, 0x00000088, 0x00000000, 0x80008009, 0x00000000, 0x8000000a,
-	0x00000000, 0x8000808b, 0x80000000, 0x0000008b, 0x80000000, 0x00008089, 0x80000000, 0x00008003,
-	0x80000000, 0x00008002, 0x80000000, 0x00000080, 0x00000000, 0x0000800a, 0x80000000, 0x8000000a,
-	0x80000000, 0x80008081, 0x80000000, 0x00008080, 0x00000000, 0x80000001, 0x80000000, 0x80008008
+	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a,
+	0x80000000, 0x80008000, 0x00000000, 0x0000808b, 0x00000000, 0x80000001,
+	0x80000000, 0x80008081, 0x80000000, 0x00008009, 0x00000000, 0x0000008a,
+	0x00000000, 0x00000088, 0x00000000, 0x80008009, 0x00000000, 0x8000000a,
+	0x00000000, 0x8000808b, 0x80000000, 0x0000008b, 0x80000000, 0x00008089,
+	0x80000000, 0x00008003, 0x80000000, 0x00008002, 0x80000000, 0x00000080,
+	0x00000000, 0x0000800a, 0x80000000, 0x8000000a, 0x80000000, 0x80008081,
+	0x80000000, 0x00008080, 0x00000000, 0x80000001, 0x80000000, 0x80008008,
 ];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function rhoGen() {
@@ -29,7 +31,8 @@ function rhoGen() {
 	console.log(`const rhoShift=[${ret.join(', ')}];`);
 }
 const rhoShift = [
-	1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44
+	1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39,
+	61, 20, 44,
 ];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function piGen() {
@@ -53,10 +56,11 @@ function piGen() {
 	console.log(`const piShift=[${ret.join(', ')}];`);
 }
 const piShift = [
-	10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1
+	10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22,
+	9, 6, 1,
 ];
 
-const k12RoundStart=12;
+const k12RoundStart = 12;
 const maxBlockSizeU64 = 5 * 5;
 const maxBlockSizeBytes = 200; //1600 bits,8*5*5=200
 const keccak_suffix = 1;
@@ -64,23 +68,23 @@ const sha3_suffix = 6;
 const shake_suffix = 0x1f;
 const cShake_suffix = 4;
 //cShake, kMac
-const cap128=16;/*128/8*/
-const cap256=32;/*256/8*/
-const pad128=168;
-const pad256=136;
-const kMacFn='KMAC';
-const tupleHashFn='TupleHash';
-const parallelHashFn='ParallelHash';
+const cap128 = 16; /*128/8*/
+const cap256 = 32; /*256/8*/
+const pad128 = 168;
+const pad256 = 136;
+const kMacFn = 'KMAC';
+const tupleHashFn = 'TupleHash';
+const parallelHashFn = 'ParallelHash';
 
 class KeccakCore implements IHash {
 	/**
 	 * Digest size in bytes
 	 */
-	readonly size:number;
+	readonly size: number;
 	/**
 	 * Block size in bytes
 	 */
-	readonly blockSize:number;
+	readonly blockSize: number;
 	/**
 	 * Runtime state of the hash
 	 */
@@ -88,9 +92,9 @@ class KeccakCore implements IHash {
 	/**
 	 * Temp processing block
 	 */
-	readonly #block:Uint8Array;
-    readonly #suffix:number;
-	readonly #roundStart:number;
+	readonly #block: Uint8Array;
+	readonly #suffix: number;
+	readonly #roundStart: number;
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -98,40 +102,50 @@ class KeccakCore implements IHash {
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;	
+	#bPos = 0;
 
 	/**
 	 * @param suffix 1 for Keccak, 6 for SHA3, 0x1f/31 for Shake
 	 * @param digestSizeBytes Output digest size (bytes)
 	 * @param capacityBytes (default digestSize)
 	 */
-	constructor(suffix: number, digestSizeBytes: number, capacityBytes = 0,roundStart=0) {
-		safety.intInRangeInc(capacityBytes,0,maxBlockSizeBytes/2,'capacityBytes');
-        if (capacityBytes<=0) capacityBytes=digestSizeBytes;
-        capacityBytes*=2;
-		
+	constructor(
+		suffix: number,
+		digestSizeBytes: number,
+		capacityBytes = 0,
+		roundStart = 0
+	) {
+		safety.intInRangeInc(
+			capacityBytes,
+			0,
+			maxBlockSizeBytes / 2,
+			'capacityBytes'
+		);
+		if (capacityBytes <= 0) capacityBytes = digestSizeBytes;
+		capacityBytes *= 2;
+
 		this.#suffix = suffix;
-		this.#roundStart=roundStart;
-        this.size=digestSizeBytes;
-        this.blockSize= maxBlockSizeBytes - capacityBytes;
-		this.#block=new Uint8Array(maxBlockSizeBytes);
+		this.#roundStart = roundStart;
+		this.size = digestSizeBytes;
+		this.blockSize = maxBlockSizeBytes - capacityBytes;
+		this.#block = new Uint8Array(maxBlockSizeBytes);
 
 		//We don't need to reset keccak because there's no IV to load, and while it
 		// would be consistent with other hashes, it causes problems with cShake which
 		// needs to override reset.
-        //this.reset();
+		//this.reset();
 	}
 
-    /**
-     * aka absorb
-     */
-    private hash():void {
-        //Copy state-bytes into u64
+	/**
+	 * aka absorb
+	 */
+	private hash(): void {
+		//Copy state-bytes into u64
 		const st = new Array<Uint64>(maxBlockSizeU64);
 		littleEndian.u64IntoArrFromBytes(st, 0, maxBlockSizeU64, this.#block);
 		//console.log(`hash : ${hex.fromBytes(this.#block)}`);
 		//console.log(`hash : ${hex.fromU64s(st,' ')}`);
-		
+
 		const bc = new Array<Uint64>(5);
 		let t: Uint64;
 		for (let r = this.#roundStart; r < 24; r++) {
@@ -185,15 +199,15 @@ class KeccakCore implements IHash {
 		//Reset block pointer
 		this.#bPos = 0;
 		//console.log(`post hash : ${hex.fromBytes(this.#block)}`);
-    }
+	}
 
 	/**
-     * Write data to the hash (can be called multiple times)
-     * @param data 
-     */
-    write(data: Uint8Array): void {
+	 * Write data to the hash (can be called multiple times)
+	 * @param data
+	 */
+	write(data: Uint8Array): void {
 		//console.log(`write: ${hex.fromBytes(data)} (:${this.#bPos}+${data.length} /${this.blockSize})`);
-        for (let i = 0; i < data.length; i++) {
+		for (let i = 0; i < data.length; i++) {
 			this.#block[this.#bPos++] ^= data[i];
 			if (this.#bPos === this.blockSize) {
 				this.hash();
@@ -203,57 +217,67 @@ class KeccakCore implements IHash {
 		//console.log(`post-write: ${hex.fromBytes(this.#block)}`);
 	}
 
-    /**
+	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
-	 */    
-    sum(): Uint8Array {
-        const alt = this.clone();
-        //End with a 0b1 in MSB
+	 */
+	sum(): Uint8Array {
+		const alt = this.clone();
+		//End with a 0b1 in MSB
 		alt.#block[alt.#bPos] ^= alt.#suffix;
-        alt.#block[alt.blockSize - 1] ^= 0x80;
+		alt.#block[alt.blockSize - 1] ^= 0x80;
 		alt.hash();
-        //Squeeze
-		const ret=new Uint8Array(alt.size);
+		//Squeeze
+		const ret = new Uint8Array(alt.size);
 		//If alt.size (requested bytes) is larger than our sponge, we take out the first sponge.length
 		// bits, hash, and take out the next, until we obtain enough bits (note there are security implications
 		// of squeezing a lot of data out with weak sources)
-		let retSize=alt.size;
-		let ptr=0;
-		while (retSize>this.blockSize) {
-			ret.set(alt.#block.slice(0,this.blockSize),ptr);
-			ptr+=this.blockSize;
-			retSize-=this.blockSize;
+		let retSize = alt.size;
+		let ptr = 0;
+		while (retSize > this.blockSize) {
+			ret.set(alt.#block.slice(0, this.blockSize), ptr);
+			ptr += this.blockSize;
+			retSize -= this.blockSize;
 			alt.hash();
 		}
-		ret.set(alt.#block.slice(0,retSize),ptr);
+		ret.set(alt.#block.slice(0, retSize), ptr);
 		return ret;
-    }
+	}
 
 	/**
 	 * Set hash state. Any past writes will be forgotten
 	 */
-    reset(): void {
-        this.#state.fill(0);
-        this.#block.fill(0);
+	reset(): void {
+		this.#state.fill(0);
+		this.#block.fill(0);
 		//Reset ingest count
 		this.#ingestBytes = Uint64.zero;
 		//Reset block (which is just pointing to the start)
 		this.#bPos = 0;
-    }
+	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
-    newEmpty(): IHash {
-        return new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2,this.#roundStart);
-    }
+	newEmpty(): IHash {
+		return new KeccakCore(
+			this.#suffix,
+			this.size,
+			(maxBlockSizeBytes - this.blockSize) / 2,
+			this.#roundStart
+		);
+	}
 
-    /**
+	/**
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
 	private clone(): KeccakCore {
-		const ret = new KeccakCore(this.#suffix,this.size,(maxBlockSizeBytes-this.blockSize)/2,this.#roundStart);
+		const ret = new KeccakCore(
+			this.#suffix,
+			this.size,
+			(maxBlockSizeBytes - this.blockSize) / 2,
+			this.#roundStart
+		);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
 		ret.#ingestBytes = this.#ingestBytes;
@@ -263,186 +287,202 @@ class KeccakCore implements IHash {
 }
 
 export class Keccak extends KeccakCore {
-    /**
-     * Build a new Keccak hash generator
-     * @param digestSize Output digest size (bytes)
-     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's @param digestSize
-     */
-    constructor(digestSize:number,capacityBytes = 0) {
-        super(keccak_suffix,digestSize,capacityBytes);
-    }
+	/**
+	 * Build a new Keccak hash generator
+	 * @param digestSize Output digest size (bytes)
+	 * @param capacityBytes Capacity (Keccak specific param) if <=0 it's @param digestSize
+	 */
+	constructor(digestSize: number, capacityBytes = 0) {
+		super(keccak_suffix, digestSize, capacityBytes);
+	}
 }
 export class Keccak224 extends KeccakCore {
-    /**
-     * Build a new Keccak 224bit hash generator
-     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 224
-     */
-    constructor(capacityBytes = 0) {
-        super(keccak_suffix,28/*224/8*/,capacityBytes);
-    }
+	/**
+	 * Build a new Keccak 224bit hash generator
+	 * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 224
+	 */
+	constructor(capacityBytes = 0) {
+		super(keccak_suffix, 28 /*224/8*/, capacityBytes);
+	}
 }
 export class Keccak256 extends KeccakCore {
-    /**
-     * Build a new Keccak 256bit hash generator
-     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 256
-     */
-    constructor(capacityBytes = 0) {
-        super(keccak_suffix,32/*256/8*/,capacityBytes);
-    }
+	/**
+	 * Build a new Keccak 256bit hash generator
+	 * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 256
+	 */
+	constructor(capacityBytes = 0) {
+		super(keccak_suffix, 32 /*256/8*/, capacityBytes);
+	}
 }
 export class Keccak384 extends KeccakCore {
-    /**
-     * Build a new Keccak 384bit hash generator
-     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 384
-     */
-    constructor(capacityBytes = 0) {
-        super(keccak_suffix,48/*384/8*/,capacityBytes);
-    }
+	/**
+	 * Build a new Keccak 384bit hash generator
+	 * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 384
+	 */
+	constructor(capacityBytes = 0) {
+		super(keccak_suffix, 48 /*384/8*/, capacityBytes);
+	}
 }
 export class Keccak512 extends KeccakCore {
-    /**
-     * Build a new Keccak 512bit hash generator
-     * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 512
-     */
-    constructor(capacityBytes = 0) {
-        super(keccak_suffix,64/*512/8*/,capacityBytes);
-    }
+	/**
+	 * Build a new Keccak 512bit hash generator
+	 * @param capacityBytes Capacity (Keccak specific param) if <=0 it's 512
+	 */
+	constructor(capacityBytes = 0) {
+		super(keccak_suffix, 64 /*512/8*/, capacityBytes);
+	}
 }
 
 export class Sha3_224 extends KeccakCore {
-    /**
-     * Build a new Sha3 224bit hash generator
-     */
-    constructor() {
-        super(sha3_suffix,28/*224/8*/);
-    }
+	/**
+	 * Build a new Sha3 224bit hash generator
+	 */
+	constructor() {
+		super(sha3_suffix, 28 /*224/8*/);
+	}
 }
 export class Sha3_256 extends KeccakCore {
-    /**
-     * Build a new Sha3 256bit hash generator
-     */
-    constructor() {
-        super(sha3_suffix,32/*256/8*/);
-    }
+	/**
+	 * Build a new Sha3 256bit hash generator
+	 */
+	constructor() {
+		super(sha3_suffix, 32 /*256/8*/);
+	}
 }
 export class Sha3_384 extends KeccakCore {
-    /**
-     * Build a new Sha3 384bit hash generator
-     */
-    constructor() {
-        super(sha3_suffix,48/*384/8*/);
-    }
+	/**
+	 * Build a new Sha3 384bit hash generator
+	 */
+	constructor() {
+		super(sha3_suffix, 48 /*384/8*/);
+	}
 }
 export class Sha3_512 extends KeccakCore {
-    /**
-     * Build a new Sha3 512bit hash generator
-     */
-    constructor() {
-        super(sha3_suffix,64/*512/8*/);
-    }
+	/**
+	 * Build a new Sha3 512bit hash generator
+	 */
+	constructor() {
+		super(sha3_suffix, 64 /*512/8*/);
+	}
 }
 
 export class Shake128 extends KeccakCore {
-    /**
-     * Build a new Shake 128bit XOF generator
-     * @param digestSize Output digest size (bytes)
-     */
-    constructor(digestSize: number) {
-        super(shake_suffix,digestSize,16/*128/8*/);
-    }
+	/**
+	 * Build a new Shake 128bit XOF generator
+	 * @param digestSize Output digest size (bytes)
+	 */
+	constructor(digestSize: number) {
+		super(shake_suffix, digestSize, 16 /*128/8*/);
+	}
 }
 export class Shake256 extends KeccakCore {
-    /**
-     * Build a new Shake 256bit XOF generator
-     * @param digestSize Output digest size (bytes)
-     */
-    constructor(digestSize: number) {
-        super(shake_suffix,digestSize,32/*256/8*/);
-    }
+	/**
+	 * Build a new Shake 256bit XOF generator
+	 * @param digestSize Output digest size (bytes)
+	 */
+	constructor(digestSize: number) {
+		super(shake_suffix, digestSize, 32 /*256/8*/);
+	}
 }
 
 // SP800-185 SHA3 Derived functions
 
-function leftEncode(w:number):Uint8Array {
+function leftEncode(w: number): Uint8Array {
 	//This is very complicatedly written in the spec
 	//The max number we can hold is 2^51 because of JS
 	//So we only require 7 bytes to represent that (size+6)
-	const ret=new Uint8Array(7);
-	let ptr=6;
+	const ret = new Uint8Array(7);
+	let ptr = 6;
 	do {
-		ret[ptr--]=w;//bitExt.reverse(w);/*implied: &0xff*/
+		ret[ptr--] = w; //bitExt.reverse(w);/*implied: &0xff*/
 		//Can't use bit shift because it's limited to 32 bit ints
 		//w>>>=8;
-		w=Math.floor(w/256);
-	} while (w>0);
-	ret[ptr]=6-ptr;//bitExt.reverse(ptr-1);
+		w = Math.floor(w / 256);
+	} while (w > 0);
+	ret[ptr] = 6 - ptr; //bitExt.reverse(ptr-1);
 	return ret.subarray(ptr);
 }
-function rightEncode(w:number):Uint8Array {
+function rightEncode(w: number): Uint8Array {
 	//The max number we can hold is 2^51 because of JS
 	//So we only require 7 bytes to represent that (size+6)
-	const ret=new Uint8Array(7);
-	let ptr=5;
+	const ret = new Uint8Array(7);
+	let ptr = 5;
 	do {
-		ret[ptr--]=w;//bitExt.reverse(w);/*implied: &0xff*/
+		ret[ptr--] = w; //bitExt.reverse(w);/*implied: &0xff*/
 		//Can't use bit shift because it's limited to 32 bit ints
 		//w>>>=8;
-		w=Math.floor(w/256);
-	} while (w>0);
-	ret[6]=5-ptr;//bitExt.reverse(ptr-1);
-	return ret.subarray(ptr+1);
+		w = Math.floor(w / 256);
+	} while (w > 0);
+	ret[6] = 5 - ptr; //bitExt.reverse(ptr-1);
+	return ret.subarray(ptr + 1);
 }
-function encodeString(x:string|Uint8Array|undefined):Uint8Array {
-	const s=x===undefined ? new Uint8Array(0) : x instanceof Uint8Array ? x : utf8.toBytes(x);
-	const l=leftEncode(s.length<<3);
-	const ret=new Uint8Array(l.length+s.length);
+function encodeString(x: string | Uint8Array | undefined): Uint8Array {
+	const s =
+		x === undefined
+			? new Uint8Array(0)
+			: x instanceof Uint8Array
+			? x
+			: utf8.toBytes(x);
+	const l = leftEncode(s.length << 3);
+	const ret = new Uint8Array(l.length + s.length);
 	ret.set(l);
-	ret.set(s,l.length);
+	ret.set(s, l.length);
 	return ret;
 }
-function bytePad(w:number,... x:Uint8Array[]):Uint8Array {
-	safety.intGte(w,1,'w');
+function bytePad(w: number, ...x: Uint8Array[]): Uint8Array {
+	safety.intGte(w, 1, 'w');
 	//w;
-	const l=leftEncode(w);
+	const l = leftEncode(w);
 	//Sum all the inputs (x)
-	let reqSpace=0;
-	for(let i=0;i<x.length;i++) reqSpace+=x[i].length;
+	let reqSpace = 0;
+	for (let i = 0; i < x.length; i++) reqSpace += x[i].length;
 	//Figure out allocation size
-	let alloc=w;
-	while(alloc<reqSpace) alloc+=w;
-	const ret=new Uint8Array(w);
+	let alloc = w;
+	while (alloc < reqSpace) alloc += w;
+	const ret = new Uint8Array(w);
 	ret.set(l);
-	let ptr=l.length;
-	for(let i=0;i<x.length;i++) {
-		ret.set(x[i],ptr);
-		ptr+=x[i].length;
+	let ptr = l.length;
+	for (let i = 0; i < x.length; i++) {
+		ret.set(x[i], ptr);
+		ptr += x[i].length;
 	}
 	return ret;
 }
 
 class CShake extends KeccakCore {
 	//cSHAKE128(X, L, N, S)  X=inputString, L=outputLengthBits, N=functionName, S=customization
-	readonly #prefix:Uint8Array;
+	readonly #prefix: Uint8Array;
 
-	constructor(cap:number,pad:number,digestSize: number,functionName='',customization?:Uint8Array|string) {
-		const isShake=functionName.length==0 && (!customization || customization.length==0);
-		const suffix=isShake?shake_suffix:cShake_suffix;
-		super(suffix,digestSize,cap);
+	constructor(
+		cap: number,
+		pad: number,
+		digestSize: number,
+		functionName = '',
+		customization?: Uint8Array | string
+	) {
+		const isShake =
+			functionName.length == 0 && (!customization || customization.length == 0);
+		const suffix = isShake ? shake_suffix : cShake_suffix;
+		super(suffix, digestSize, cap);
 		if (isShake) {
-			this.#prefix=new Uint8Array(0)
+			this.#prefix = new Uint8Array(0);
 		} else {
-			this.#prefix=bytePad(pad,encodeString(functionName),encodeString(customization));
+			this.#prefix = bytePad(
+				pad,
+				encodeString(functionName),
+				encodeString(customization)
+			);
 			super.write(this.#prefix);
 		}
-    }
+	}
 
 	/**
 	 * Set hash state. Any past writes will be forgotten
 	 */
-    reset(): void {
+	reset(): void {
 		super.reset();
 		super.write(this.#prefix);
-    }
+	}
 }
 export class CShake128 extends CShake {
 	/**
@@ -451,9 +491,13 @@ export class CShake128 extends CShake {
 	 * @param functionName Function-name string (aka N)
 	 * @param customization Customization string (aka S)
 	 */
-    constructor(digestSize: number,functionName='',customization?:Uint8Array|string) {
-		super(cap128,pad128,digestSize,functionName,customization);
-    }
+	constructor(
+		digestSize: number,
+		functionName = '',
+		customization?: Uint8Array | string
+	) {
+		super(cap128, pad128, digestSize, functionName, customization);
+	}
 }
 export class CShake256 extends CShake {
 	/**
@@ -462,29 +506,35 @@ export class CShake256 extends CShake {
 	 * @param functionName Function-name string (aka N)
 	 * @param customization Customization string (aka S)
 	 */
-    constructor(digestSize: number,functionName='',customization='') {
-		super(cap256,pad256,digestSize,functionName,customization);
+	constructor(digestSize: number, functionName = '', customization = '') {
+		super(cap256, pad256, digestSize, functionName, customization);
 	}
 }
 
 abstract class AKmac extends CShake {
 	// KMAC(K,X,L,S) K=key, X=inputString,L=digestSize (bits),S=customization
-	abstract get appendSize():number;
-	constructor(cap:number,pad:number,digestSize: number,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cap,pad,digestSize,kMacFn,customization);
-		this.write(bytePad(pad,encodeString(key)));
+	abstract get appendSize(): number;
+	constructor(
+		cap: number,
+		pad: number,
+		digestSize: number,
+		key?: Uint8Array | string,
+		customization?: Uint8Array | string
+	) {
+		super(cap, pad, digestSize, kMacFn, customization);
+		this.write(bytePad(pad, encodeString(key)));
 	}
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
-	 */    
-	sum():Uint8Array {
+	 */
+	sum(): Uint8Array {
 		super.write(rightEncode(this.appendSize));
 		return super.sum();
 	}
 }
 class KMac extends AKmac {
 	get appendSize(): number {
-		return this.size<<3;
+		return this.size << 3;
 	}
 }
 class KMacXof extends AKmac {
@@ -500,8 +550,12 @@ export class Kmac128 extends KMac {
 	 * @param key Optional key a string (will be utf8 encoded) or in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize=32,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cap128,pad128,digestSize,key,customization);
+	constructor(
+		digestSize = 32,
+		key?: Uint8Array | string,
+		customization?: Uint8Array | string
+	) {
+		super(cap128, pad128, digestSize, key, customization);
 	}
 }
 export class Kmac256 extends KMac {
@@ -512,8 +566,12 @@ export class Kmac256 extends KMac {
 	 * @param key Optional key a string (will be utf8 encoded) or in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize=64,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cap256,pad256,digestSize,key,customization);
+	constructor(
+		digestSize = 64,
+		key?: Uint8Array | string,
+		customization?: Uint8Array | string
+	) {
+		super(cap256, pad256, digestSize, key, customization);
 	}
 }
 export class KmacXof128 extends KMacXof {
@@ -523,8 +581,12 @@ export class KmacXof128 extends KMacXof {
 	 * @param key Optional key a string (will be utf8 encoded) or in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize:number,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cap128,pad128,digestSize,key,customization);
+	constructor(
+		digestSize: number,
+		key?: Uint8Array | string,
+		customization?: Uint8Array | string
+	) {
+		super(cap128, pad128, digestSize, key, customization);
 	}
 }
 export class KmacXof256 extends KMacXof {
@@ -534,36 +596,45 @@ export class KmacXof256 extends KMacXof {
 	 * @param key Optional key a string (will be utf8 encoded) or in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize:number,key?:Uint8Array|string,customization?:Uint8Array|string) {
-		super(cap256,pad256,digestSize,key,customization);
+	constructor(
+		digestSize: number,
+		key?: Uint8Array | string,
+		customization?: Uint8Array | string
+	) {
+		super(cap256, pad256, digestSize, key, customization);
 	}
 }
 
 abstract class ATupleHash extends CShake {
 	// TupleHash(K,L,S) X=input sets, L=digestSize(bits), S=customization
-	abstract get appendSize():number;
-	constructor(cap:number,pad:number,digestSize: number,customization?:Uint8Array|string) {
-		super(cap,pad,digestSize,tupleHashFn,customization);
+	abstract get appendSize(): number;
+	constructor(
+		cap: number,
+		pad: number,
+		digestSize: number,
+		customization?: Uint8Array | string
+	) {
+		super(cap, pad, digestSize, tupleHashFn, customization);
 	}
 	/**
-     * Write data to the hash (can be called multiple times)
+	 * Write data to the hash (can be called multiple times)
 	 * ! Careful write(a), write(b) is not the same as write(ab)
-     * @param data 
-     */
+	 * @param data
+	 */
 	write(data: Uint8Array): void {
 		super.write(encodeString(data));
 	}
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
-	 */    
-	sum():Uint8Array {
+	 */
+	sum(): Uint8Array {
 		super.write(rightEncode(this.appendSize));
 		return super.sum();
 	}
 }
 class TupleHash extends ATupleHash {
 	get appendSize(): number {
-		return this.size<<3;
+		return this.size << 3;
 	}
 }
 class TupleHashXof extends ATupleHash {
@@ -577,8 +648,8 @@ export class TupleHash128 extends TupleHash {
 	 * @param digestSize Digest size in bytes, 32 by default (128bit)
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize=32,customization?:Uint8Array|string) {
-		super(cap128,pad128,digestSize,customization);
+	constructor(digestSize = 32, customization?: Uint8Array | string) {
+		super(cap128, pad128, digestSize, customization);
 	}
 }
 export class TupleHash256 extends TupleHash {
@@ -587,8 +658,8 @@ export class TupleHash256 extends TupleHash {
 	 * @param digestSize Digest size in bytes, 64 by default (256bit)
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize=64,customization?:Uint8Array|string) {
-		super(cap256,pad256,digestSize,customization);
+	constructor(digestSize = 64, customization?: Uint8Array | string) {
+		super(cap256, pad256, digestSize, customization);
 	}
 }
 export class TupleHashXof128 extends TupleHashXof {
@@ -597,8 +668,8 @@ export class TupleHashXof128 extends TupleHashXof {
 	 * @param digestSize Digest size in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize:number,customization?:Uint8Array|string) {
-		super(cap128,pad128,digestSize,customization);
+	constructor(digestSize: number, customization?: Uint8Array | string) {
+		super(cap128, pad128, digestSize, customization);
 	}
 }
 export class TupleHashXof256 extends TupleHashXof {
@@ -607,31 +678,37 @@ export class TupleHashXof256 extends TupleHashXof {
 	 * @param digestSize Digest size in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(digestSize:number,customization?:Uint8Array|string) {
-		super(cap256,pad256,digestSize,customization);
+	constructor(digestSize: number, customization?: Uint8Array | string) {
+		super(cap256, pad256, digestSize, customization);
 	}
 }
 
 abstract class AParallelHash extends CShake {
 	//ParallelHash(X, B, L, S) X=input, B=blockSize(Bytes), L=digestSize(bits), S=customization
-	abstract get appendSize():number;
-	readonly #outBlock:Uint8Array;
-	readonly #subHash:CShake;
-	#obPos=0;
-	#obCount=0;
+	abstract get appendSize(): number;
+	readonly #outBlock: Uint8Array;
+	readonly #subHash: CShake;
+	#obPos = 0;
+	#obCount = 0;
 
-	constructor(cap:number,pad:number,blockSize:number,digestSize: number,customization?:Uint8Array|string) {
-		super(cap,pad,digestSize,parallelHashFn,customization);
-		this.#outBlock=new Uint8Array(blockSize);
-		this.#subHash=new CShake(cap,pad,digestSize,"","");
+	constructor(
+		cap: number,
+		pad: number,
+		blockSize: number,
+		digestSize: number,
+		customization?: Uint8Array | string
+	) {
+		super(cap, pad, digestSize, parallelHashFn, customization);
+		this.#outBlock = new Uint8Array(blockSize);
+		this.#subHash = new CShake(cap, pad, digestSize, '', '');
 		super.write(leftEncode(blockSize));
 	}
 
 	/**
-     * Write data to the hash (can be called multiple times)
-     * @param data 
-     */
-    write(data: Uint8Array): void {
+	 * Write data to the hash (can be called multiple times)
+	 * @param data
+	 */
+	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
 		let space = this.#outBlock.length - this.#obPos;
@@ -645,15 +722,18 @@ abstract class AParallelHash extends CShake {
 				this.#obPos += nToWrite;
 				return;
 			}
-			this.#outBlock.set(data.subarray(dPos, dPos + this.#outBlock.length), this.#obPos);
+			this.#outBlock.set(
+				data.subarray(dPos, dPos + this.#outBlock.length),
+				this.#obPos
+			);
 			this.#obPos += space;
-		
+
 			//Instead of hash, we subhash, write that result, and rely on the original write (cShake)
 			// to merge things together
 			this.#subHash.reset();
 			this.#subHash.write(this.#outBlock);
 			super.write(this.#subHash.sum());
-			this.#obPos=0;
+			this.#obPos = 0;
 			this.#obCount++;
 
 			dPos += space;
@@ -664,12 +744,12 @@ abstract class AParallelHash extends CShake {
 
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
-	 */    
-	sum():Uint8Array {
+	 */
+	sum(): Uint8Array {
 		//todo: switch this from using.. this (inject alt into sum? sum accepts func?)
-		if (this.#obPos>0) {
+		if (this.#obPos > 0) {
 			this.#subHash.reset();
-			this.#subHash.write(this.#outBlock.subarray(0,this.#obPos));
+			this.#subHash.write(this.#outBlock.subarray(0, this.#obPos));
 			super.write(this.#subHash.sum());
 		}
 		super.write(rightEncode(this.#obCount));
@@ -680,17 +760,17 @@ abstract class AParallelHash extends CShake {
 	/**
 	 * Set hash state. Any past writes will be forgotten
 	 */
-    reset(): void {
+	reset(): void {
 		super.reset();
 		super.write(leftEncode(this.#outBlock.length));
 		this.#outBlock.fill(0);
-		this.#obPos=0;
-		this.#obCount=0;
-    }
+		this.#obPos = 0;
+		this.#obCount = 0;
+	}
 }
 class ParallelHash extends AParallelHash {
 	get appendSize(): number {
-		return this.size<<3;
+		return this.size << 3;
 	}
 }
 class ParallelHashXof extends AParallelHash {
@@ -698,76 +778,108 @@ class ParallelHashXof extends AParallelHash {
 		return 0;
 	}
 }
-export class ParallelHash128 extends ParallelHash {	
+export class ParallelHash128 extends ParallelHash {
 	/**
 	 * Build a new ParallelHash 128bit generator
 	 * @param blockSize Block size in bytes
 	 * @param digestSize Digest size in bytes, 32 by default (128bit)
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(blockSize:number,digestSize=32,customization?:Uint8Array|string) {
-		super(cap128,pad128,blockSize,digestSize,customization);
+	constructor(
+		blockSize: number,
+		digestSize = 32,
+		customization?: Uint8Array | string
+	) {
+		super(cap128, pad128, blockSize, digestSize, customization);
 	}
 }
-export class ParallelHash256 extends ParallelHash {	
+export class ParallelHash256 extends ParallelHash {
 	/**
 	 * Build a new ParallelHash 256bit generator
 	 * @param blockSize Block size in bytes
 	 * @param digestSize Digest size in bytes, 64 by default (256bit)
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(blockSize:number,digestSize=64,customization?:Uint8Array|string) {
-		super(cap256,pad256,blockSize,digestSize,customization);
+	constructor(
+		blockSize: number,
+		digestSize = 64,
+		customization?: Uint8Array | string
+	) {
+		super(cap256, pad256, blockSize, digestSize, customization);
 	}
 }
-export class ParallelHashXof128 extends ParallelHashXof {	
+export class ParallelHashXof128 extends ParallelHashXof {
 	/**
 	 * Build a new ParallelHashXof 128bit generator
 	 * @param blockSize Block size in bytes
 	 * @param digestSize Digest size in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(blockSize:number,digestSize:number,customization?:Uint8Array|string) {
-		super(cap128,pad128,blockSize,digestSize,customization);
+	constructor(
+		blockSize: number,
+		digestSize: number,
+		customization?: Uint8Array | string
+	) {
+		super(cap128, pad128, blockSize, digestSize, customization);
 	}
 }
-export class ParallelHashXof256 extends ParallelHashXof {	
+export class ParallelHashXof256 extends ParallelHashXof {
 	/**
 	 * Build a new ParallelHashXof 256bit generator
 	 * @param blockSize Block size in bytes
 	 * @param digestSize Digest size in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
-	constructor(blockSize:number,digestSize:number,customization?:Uint8Array|string) {
-		super(cap256,pad256,blockSize,digestSize,customization);
+	constructor(
+		blockSize: number,
+		digestSize: number,
+		customization?: Uint8Array | string
+	) {
+		super(cap256, pad256, blockSize, digestSize, customization);
 	}
 }
 
 export class TurboShake128 extends KeccakCore {
 	//https://eprint.iacr.org/2023/342.pdf
 	/**
-     * Build a new TurboShake 128bit XOF generator
-     * @param digestSize Output digest size (bytes)
+	 * Build a new TurboShake 128bit XOF generator
+	 * @param digestSize Output digest size (bytes)
 	 * @param domainSep Domain separation byte 01-7F
-     */
-    constructor(digestSize: number,domainSep=0x1F) {
-        super(domainSep,digestSize,16/*128/8*/,k12RoundStart);
+	 */
+	constructor(digestSize: number, domainSep = 0x1f) {
+		super(domainSep, digestSize, 16 /*128/8*/, k12RoundStart);
 		//console.log(`${this.blockSize}`);
-    }
+	}
 }
 export class TurboShake256 extends KeccakCore {
 	//https://eprint.iacr.org/2023/342.pdf
 	/**
-     * Build a new TurboShake 256bit XOF generator
-     * @param digestSize Output digest size (bytes)
+	 * Build a new TurboShake 256bit XOF generator
+	 * @param digestSize Output digest size (bytes)
 	 * @param domainSep Domain separation byte 01-7F
-     */
-    constructor(digestSize: number,domainSep=0x1F) {
-        super(domainSep,digestSize,32/*128/8*/,k12RoundStart);
+	 */
+	constructor(digestSize: number, domainSep = 0x1f) {
+		super(domainSep, digestSize, 32 /*128/8*/, k12RoundStart);
 		//console.log(`${this.blockSize}`);
-    }
+	}
 }
-//export class KangarooTwelve ext
-//TurboShake128
-//TurboShake256
-//KangarooTwelve
+
+export class KangarooTwelve extends KeccakCore {
+	readonly chunkSize = 8192;
+	readonly #customization: Uint8Array;
+
+	/**
+	 * @alpha
+	 * @param digestSize 
+	 * @param customization 
+	 */
+	constructor(digestSize: number, customization?: Uint8Array | string) {
+		super(0x07, digestSize, 16, k12RoundStart);
+		this.#customization = customization === undefined
+				? new Uint8Array(0)
+				: customization instanceof Uint8Array
+					? customization
+					: utf8.toBytes(customization);
+		//;_e = rightEncode
+	}
+}
