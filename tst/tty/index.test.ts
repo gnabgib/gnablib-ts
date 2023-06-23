@@ -88,15 +88,15 @@ const styleTests:[string,string][]=[
         tty`I'm ${Color.rgb(0xff,0,0)} red text`,
         'I\'m \\e[38;2;255;0;0m red text\\e[39m'],
     // Background Color -- --
-    //Set bgcolor to a grey
+    //Set background to a grey
     [
         tty`I have a ${BgColor.grey24(12)} grey background`,
         'I have a \\e[48;5;244m grey background\\e[49m'],
-    //Set bgcolor to a rgb6
+    //Set background to a rgb6
     [
         tty`I had a ${BgColor.rgb6(5,0,0)}red background${BgColor.default}, briefly`,
         'I had a \\e[48;5;196mred background\\e[49m, briefly'],
-    //Set bgcolor to a rgb
+    //Set background to a rgb
     [
         tty`I have a ${BgColor.rgb(123,0,0)} red background`,
         'I have a \\e[48;2;123;0;0m red background\\e[49m'],

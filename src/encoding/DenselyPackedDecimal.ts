@@ -378,15 +378,15 @@ export function push2DigitsToBytes(
 	bytes[bytePos + 1] = value << (9 - startBitPos);
 	return bitPos + packBits;
 }
-export function push2DigitsToBytesN(
-	d0: number,
-	d1: number,
-	bytes: Uint8Array,
-	bitPos: number
-): number {
-	//TODO
-	return 0;
-}
+// export function push2DigitsToBytesN(
+// 	d0: number,
+// 	d1: number,
+// 	bytes: Uint8Array,
+// 	bitPos: number
+// ): number {
+// 	//TODO
+// 	return 0;
+// }
 
 export function push3DigitsToBytes(
 	value: number,

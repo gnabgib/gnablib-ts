@@ -13,7 +13,7 @@ export class Uint64 extends Uint64_es2016 {
 	}
 
 	static fromBigInt(num: bigint): Uint64 {
-		// @ts-expect-error: es2016 doesn't support BigInt
+		// @ ts-expect-error: es2016 doesn't support BigInt
 		const lowMask = BigInt(0xffffffff);
 		const low = num & lowMask;
 		// @ts-expect-error: es2016 doesn't support bigint literals (32n)

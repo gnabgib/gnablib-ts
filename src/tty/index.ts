@@ -9,6 +9,15 @@ import { stringExt } from '../primitive/StringExt.js';
 //[Terminals that support colours](https://github.com/termstandard/colors)
 // -xterm, alacritty, mosh, putty, mobaxterm, cmd, powershell, xterm.js, iTerm2
 
+let NODE_DISABLE_COLORS, NO_COLOR, TERM;
+if (typeof process !== 'undefined') {
+	({ NODE_DISABLE_COLORS, NO_COLOR, TERM } = process.env || {});
+}
+//NO_COLOR: https://no-color.org/ (either not present, or empty string)
+const enabled=!NODE_DISABLE_COLORS && NO_COLOR == undefined && TERM !== 'dumb';
+//?Support FORCE_COLOR (https://nodejs.org/api/cli.html#force_color1-2-3)
+// - It has some implied colorspace abilities (empty/1-16color, 2-256, 3-16M, undefined=ignore)
+
 // COMPAT
 // 1. powershell 6 (windows)
 // 2. powershell 7 (current)
@@ -71,7 +80,7 @@ const color_index = 5;
 /** Issue a Control Sequence Introducer (CSI) command  */
 function csi(end: string, ns: Array<number>): string {
 	//\033 (octal) \x1b (hex) or \e (bash only?) is the escape sequence for.. the escape char
-	return `\x1b[${ns.join(';')}${end}`;
+	return enabled?`\x1b[${ns.join(';')}${end}`:'';
 }
 
 /** Issue a Select Graphic Rendition (SGR) command */
@@ -187,7 +196,7 @@ export class Underline extends StyleSet {
 		return new Underline(21);
 	}
 }
-/** Control whether text is bold, faint or regular (use with @see tty) */
+/** Control whether text is bold, faint or regular (use with {@link tty}) */
 export class Weight extends StyleSet {
 	protected constructor(on?: number) {
 		super(22, on ? [on] : undefined);
@@ -464,7 +473,15 @@ export function reset(): string {
 	return sgr(0);
 }
 
-/** Render TeleTYpewriter text /w CSI/SGR control codes - use as a template literal*/
+/**
+ * Render TeleTYpewriter text /w CSI/SGR control codes - use as a template literal
+ * @example tty`{Color.red}Red{Color.default} means stop`
+ * @example tty`{Underline.single}Underline automatically removed at end of line`
+ * 
+ * @param strings 
+ * @param expressions 
+ * @returns 
+ */
 export function tty(
 	strings: TemplateStringsArray,
 	...expressions: unknown[]
@@ -494,8 +511,8 @@ export function tty(
 export function demo(): string {
 	const largeFg = '◀▶';
 	const largeBg = '◁▷';
-	const smallFg = '◆';
-	const smallBg = '◇';
+	// const smallFg = '◆';
+	// const smallBg = '◇';
 	const w = 16;
 
 	function effects(): string {
@@ -541,14 +558,13 @@ export function demo(): string {
 			'white',
 		];
 		for (let i = 0; i < named.length; i++) {
-			// explicity any!  All to make composition slightly easier
+            //TypeScript doesn't consider keyof an object to be a string to force us to consider
+            // super-sets (where other keys may be present) implicit explicit any
 			fg +=
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-				tty` [${(Color as any)[named[i]]}${stringExt.padStart(named[i], w)}` +
+				tty` [${Color[named[i] as (keyof typeof Color)]}${stringExt.padStart(named[i], w)}` +
 				']';
 			bg +=
-			    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                tty` [${(BgColor as any)[named[i]]}${stringExt.padStart(named[i], w)}` +
+                tty` [${BgColor[named[i] as (keyof typeof BgColor)]}${stringExt.padStart(named[i], w)}` +
 				']';
 			if ((i & 3) === 3) {
 				fg += '\n';
@@ -591,10 +607,22 @@ export function demo(): string {
 		fg = tty`${Underline.single}Foreground colors (rgb +=32)` + '\n';
 		bg = tty`${Underline.single}Background colors (rgb +=32)` + '\n';
 		for (let r = 0; r < 256; r += 32) {
-			for (let g = 0; g < 256; g += 32) {
+			for (let g = 0; g < 128; g += 32) {
 				for (let b = 0; b < 256; b += 32) {
-					fg += tty`${Color.rgb(r, g, b)}${smallFg}`;
-					bg += tty`${BgColor.rgb(r, g, b)}${smallBg}`;
+					fg += tty`${Color.rgb(r, g, b)}${largeFg}`;
+					bg += tty`${BgColor.rgb(r, g, b)}${largeBg}`;
+				}
+				fg += ' ';
+				bg += ' ';
+			}
+			fg += '\n';
+			bg += '\n';
+		}
+        for (let r = 0; r < 256; r += 32) {
+			for (let g = 128; g < 256; g += 32) {
+				for (let b = 0; b < 256; b += 32) {
+					fg += tty`${Color.rgb(r, g, b)}${largeFg}`;
+					bg += tty`${BgColor.rgb(r, g, b)}${largeBg}`;
 				}
 				fg += ' ';
 				bg += ' ';
@@ -614,6 +642,7 @@ export function demo(): string {
 //Powershell (+vscode win)
 // width: $Host.UI.RawUI.WindowSize.Width
 // height: $Host.UI.RawUI.WindowSize.Height
+// In power shell there's a different way to write escapes: Write-Output "`u{1b}[38;2;255;82;197mhi`u{1b}[0m"
 //linux:
 // width: tput cols = number
 // height: tput lines = number
@@ -621,3 +650,4 @@ export function demo(): string {
 //cmd.exe
 // @for /f tokens^=2 %L in ('mode con^|find "Lin"')do echo %~L
 // @for /f tokens^=2 %L in ('mode con^|find "Col"')do echo %~L
+

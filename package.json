@@ -2,7 +2,7 @@
 	"name": "gnablib",
 	"version": "0.2.1",
 	"description": "A library for building web/node/deno applications",
-	"types": "index.d.ts",
+	"types": "/release/index.d.ts",
 	"scripts": {
 		"preversion": "npm run deeptest",
 		"version": "npm run build && git add -A",
@@ -23,7 +23,11 @@
 		"node": ">=15.3.0"
 	},
 	"exports": {
-		"./*": "./release/*"
+		".": {
+			"types": "./release/*.d.ts",
+			"default": "./release/*.js"
+		},
+		"./package.json": "./package.json"
 	},
 	"files": [
 		"release"
@@ -147,17 +151,18 @@
 	},
 	"homepage": "https://github.com/gnabgib/gnablib-ts#readme",
 	"devDependencies": {
-		"@typescript-eslint/eslint-plugin": "^5.59.11",
-		"@typescript-eslint/parser": "^5.59.11",
-		"c8": "^7.14.0",
+		"@types/node": "^20.3.1",
+		"@typescript-eslint/eslint-plugin": "^5.60.0",
+		"@typescript-eslint/parser": "^5.60.0",
+		"c8": "^8.0.0",
 		"eslint": "^8.43.0",
 		"eslint-config-prettier": "^8.8.0",
 		"eslint-plugin-import": "^2.27.5",
 		"prettier": "^2.8.8",
-		"terser": "^5.18.0",
+		"terser": "^5.18.1",
 		"tsm": "^2.3.0",
 		"typedoc": "^0.24.8",
-		"typescript": "^4.9.5",
+		"typescript": "^5.1.3",
 		"uvu": "^0.5.6"
 	},
 	"type": "module"

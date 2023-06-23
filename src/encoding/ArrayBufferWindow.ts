@@ -611,7 +611,7 @@ class ArrayBufferWindowWriter_es2021 extends ArrayBufferWindowWriter {
 			);
 		let pos = this._pos;
 		for (let i = 0; i < value.length; i++) {
-			// @ts-expect-error: es2016 DataView doesn't support setBigUint64
+			// @ ts-expect-error: es2016 DataView doesn't support setBigUint64
 			this._view.setBigUint64(pos, value[i], this._isLittleEndian);
 			pos += 8;
 		}

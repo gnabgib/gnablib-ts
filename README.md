@@ -231,8 +231,11 @@ podman container prune
 DEPS:
 - Show outdated packages
 npm outdated
-- Update package.json/package-lock.json
+- Update /w package.json/lock (only minor/patch)
 npm update --save
+- Update /w package.json/lock for major
+npm install <package>@<major#>
+eg: npm install c8@8
 
 -->
 

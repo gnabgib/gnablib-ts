@@ -94,7 +94,6 @@ export interface IWriteTyped<T> extends IReadTyped<T> {
 	sort(compareFn?: ((a: number, b: number) => number) | undefined): T;
 }
 
-
 /**
  * When <1MB use powers of 2 to allocate memory, after that use nearest 1MB alignment (that's larger)
  * @param v
@@ -104,7 +103,7 @@ function goodSize(v: number): number {
 	//After 1M (1<<21) let's linear increase size (vs exponent)
 	if (v <= defaultCap) return defaultCap;
 	if (v < linearSwitch) {
-		return v===0?defaultCap:nextPow2(v);
+		return v === 0 ? defaultCap : nextPow2(v);
 	} else {
 		//Round up to next multiple of linearSwitch to accommodate v
 		return (v + linearSwitch) / linearSwitch;
@@ -119,11 +118,11 @@ function goodSize(v: number): number {
 function bufferize(
 	b: ArrayBufferLike | IBufferer
 ): ArrayBufferLike | undefined {
-	// @ts-expect-error: es2016 doesn't support SharedArrayBuffer, es2017 does
+	// @ ts-expect-error: es2016 doesn't support SharedArrayBuffer, es2017 does
 	if (b instanceof SharedArrayBuffer) {
-		// @ts-expect-error: es2016 doesn't support SharedArrayBuffer, es2017 does
+		// @ ts-expect-error: es2016 doesn't support SharedArrayBuffer, es2017 does
 		return b;
- } else if (b instanceof ArrayBuffer) {
+	} else if (b instanceof ArrayBuffer) {
 		// deepcode ignore DuplicateIfBody: On purpose
 		return b;
 	}
@@ -280,7 +279,10 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 * @param thisArg An object to which the this keyword can refer in the predicate function. If thisArg is omitted, undefined is used as the this value.
 	 * @returns
 	 */
-	filter(predicate: (value: number, index: number) => unknown, thisArg?: unknown): T {
+	filter(
+		predicate: (value: number, index: number) => unknown,
+		thisArg?: unknown
+	): T {
 		const p = predicate.bind(thisArg);
 		function wrapped(v: number, i: number): unknown {
 			return p(v, i);
@@ -331,7 +333,10 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 * @param action A function that accepts up to two arguments. forEach calls the callbackfn function one time for each element in the array.
 	 * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
 	 */
-	forEach(action: (value: number, index: number) => void, thisArg?: unknown): void {
+	forEach(
+		action: (value: number, index: number) => void,
+		thisArg?: unknown
+	): void {
 		const a = action.bind(thisArg);
 		function wrapped(v: number, i: number) {
 			a(v, i);
@@ -412,7 +417,10 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 * @param thisArg An object to which the this keyword can refer in the callbackfn function. If thisArg is omitted, undefined is used as the this value.
 	 * @returns
 	 */
-	map(callBack: (value: number, index: number) => number, thisArg?: unknown): T {
+	map(
+		callBack: (value: number, index: number) => number,
+		thisArg?: unknown
+	): T {
 		//Should a Readonly<T> yield a T (existing) or another Readonly<T>? - :deep_thought:
 		const c = callBack.bind(thisArg);
 		function wrapped(v: number, i: number): number {
@@ -788,8 +796,8 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 		//No need to check dataSizeBytes<= viewSizeEls * bytes per (this is an internal call)
 		if (dataSizeBytes < this._data.byteLength) {
 			//Downsize
-			this._data = this._data.slice(0, dataSizeBytes);//Slice has the benefit of copying the data
-			this._view = new this.base(this._data, 0, viewSizeEls);//Update the view for the new size
+			this._data = this._data.slice(0, dataSizeBytes); //Slice has the benefit of copying the data
+			this._view = new this.base(this._data, 0, viewSizeEls); //Update the view for the new size
 		} else {
 			//Upsize
 			const b = new ArrayBuffer(dataSizeBytes);
@@ -808,10 +816,10 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 		//If the view has space.. we're good
 		if (this._view.length > requiredLen) return;
 		const requiredBytes = requiredLen * this._view.BYTES_PER_ELEMENT;
-		
+
 		if (this._data.byteLength <= requiredBytes) {
 			//If there's not enough capacity, expand
-			this._resize(requiredBytes,requiredLen);
+			this._resize(requiredBytes, requiredLen);
 		} else {
 			//Otherwise, just update the view (which might be undersized, mkay)
 			this._view = new this.base(this._data, 0, requiredLen);
@@ -835,7 +843,10 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 		//If we have a capacity match, nothing to do
 		if (capBytes === this._data.byteLength) return;
 		//Otherwise.. resize
-		this._resize(capBytes,this._view.length<elCount?this._view.length:elCount);
+		this._resize(
+			capBytes,
+			this._view.length < elCount ? this._view.length : elCount
+		);
 	}
 
 	/**
