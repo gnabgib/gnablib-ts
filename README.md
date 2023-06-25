@@ -5,7 +5,18 @@ A zero dependency library, with provenance, TypeScript/JavaScript applications f
 [![CI](https://github.com/gnabgib/gnablib-ts/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gnabgib/gnablib-ts/actions)
 [![NPM Version](https://img.shields.io/npm/v/gnablib?color=33cd56&logo=npm)](https://www.npmjs.com/package/gnablib)
 [![install size](https://packagephobia.com/badge?p=gnablib)](https://packagephobia.com/result?p=gnablib)
+![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/gnablib)
+![Lines of code](https://img.shields.io/tokei/lines/github/gnabgib/gnablib-ts)
+
+<!-- 
+Too new:
+![npms.io (maintenance)](https://img.shields.io/npms-io/final-score/gnablib) 
+Says zero.. probably always will?
+![Snyk Vulnerabilities for GitHub Repo](https://img.shields.io/snyk/vulnerabilities/github/gnabgib/gnablib-ts)
+Renders 0 deps as red/not found (portrays alarm)
 ![Depfu](https://img.shields.io/depfu/dependencies/github/gnabgib/gnablib-ts)
+-->
+
 
 ## Installation
 
@@ -105,10 +116,12 @@ Name|Digest sizes|Optional parameters
 Name|Capacities|Optional parameters
 -------|-----------|-------------------
 [cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, function name, customization
+[KangarooTwelve](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|128|digest size, customization
 [KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, key, customization
 [ParallelHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|block size, digest size, customization
 [Shake](https://en.wikipedia.org/wiki/SHAKE128)|128, 256|digest size
 [TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, customization
+[TurboSHAKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|128, 256|digest size, customization
 
 #### Hash (Non-Crypto)
 

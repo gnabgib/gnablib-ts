@@ -10,7 +10,7 @@ import { safety } from '../primitive/Safety.js';
 //[Keccak](https://keccak.team/keccak.html)
 //[FIPS PUB 202: SHA3-Standard](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf) (2015)
 //[SP 800-185: SHA-3 Derived Functinos](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (2016)
-//[KangarooTwelve and TurboSHAKE (v10)](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/) (Mar 2023)
+//[KangarooTwelve and TurboSHAKE (v10)](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/) (June 2023)
 
 const roundConst = [
 	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a,
@@ -88,21 +88,17 @@ class KeccakCore implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	readonly #state = new Uint8Array(maxBlockSizeBytes);
+	protected readonly state = new Uint8Array(maxBlockSizeBytes);
 	/**
 	 * Temp processing block
 	 */
-	readonly #block: Uint8Array;
+	protected readonly block: Uint8Array;
 	readonly #suffix: number;
 	readonly #roundStart: number;
 	/**
-	 * Number of bytes added to the hash
-	 */
-	#ingestBytes = Uint64.zero;
-	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	protected bPos = 0;
 
 	/**
 	 * @param suffix 1 for Keccak, 6 for SHA3, 0x1f/31 for Shake
@@ -128,7 +124,7 @@ class KeccakCore implements IHash {
 		this.#roundStart = roundStart;
 		this.size = digestSizeBytes;
 		this.blockSize = maxBlockSizeBytes - capacityBytes;
-		this.#block = new Uint8Array(maxBlockSizeBytes);
+		this.block = new Uint8Array(maxBlockSizeBytes);
 
 		//We don't need to reset keccak because there's no IV to load, and while it
 		// would be consistent with other hashes, it causes problems with cShake which
@@ -142,7 +138,7 @@ class KeccakCore implements IHash {
 	private hash(): void {
 		//Copy state-bytes into u64
 		const st = new Array<Uint64>(maxBlockSizeU64);
-		littleEndian.u64IntoArrFromBytes(st, 0, maxBlockSizeU64, this.#block);
+		littleEndian.u64IntoArrFromBytes(st, 0, maxBlockSizeU64, this.block);
 		//console.log(`hash : ${hex.fromBytes(this.#block)}`);
 		//console.log(`hash : ${hex.fromU64s(st,' ')}`);
 
@@ -195,9 +191,9 @@ class KeccakCore implements IHash {
 			//console.log(`r[${r}] : ${hex.fromU64s(st,' ')}`);
 		}
 		//Copy the data back to state
-		littleEndian.u64ArrIntoBytes(st, this.#block);
+		littleEndian.u64ArrIntoBytes(st, this.block);
 		//Reset block pointer
-		this.#bPos = 0;
+		this.bPos = 0;
 		//console.log(`post hash : ${hex.fromBytes(this.#block)}`);
 	}
 
@@ -208,10 +204,10 @@ class KeccakCore implements IHash {
 	write(data: Uint8Array): void {
 		//console.log(`write: ${hex.fromBytes(data)} (:${this.#bPos}+${data.length} /${this.blockSize})`);
 		for (let i = 0; i < data.length; i++) {
-			this.#block[this.#bPos++] ^= data[i];
-			if (this.#bPos === this.blockSize) {
+			this.block[this.bPos++] ^= data[i];
+			if (this.bPos === this.blockSize) {
 				this.hash();
-				this.#bPos = 0;
+				this.bPos = 0;
 			}
 		}
 		//console.log(`post-write: ${hex.fromBytes(this.#block)}`);
@@ -223,8 +219,8 @@ class KeccakCore implements IHash {
 	sum(): Uint8Array {
 		const alt = this.clone();
 		//End with a 0b1 in MSB
-		alt.#block[alt.#bPos] ^= alt.#suffix;
-		alt.#block[alt.blockSize - 1] ^= 0x80;
+		alt.suffix();
+		alt.block[alt.blockSize - 1] ^= 0x80;
 		alt.hash();
 		//Squeeze
 		const ret = new Uint8Array(alt.size);
@@ -234,25 +230,27 @@ class KeccakCore implements IHash {
 		let retSize = alt.size;
 		let ptr = 0;
 		while (retSize > this.blockSize) {
-			ret.set(alt.#block.slice(0, this.blockSize), ptr);
+			ret.set(alt.block.slice(0, this.blockSize), ptr);
 			ptr += this.blockSize;
 			retSize -= this.blockSize;
 			alt.hash();
 		}
-		ret.set(alt.#block.slice(0, retSize), ptr);
+		ret.set(alt.block.slice(0, retSize), ptr);
 		return ret;
+	}
+
+	protected suffix():void {
+		this.block[this.bPos] ^= this.#suffix;
 	}
 
 	/**
 	 * Set hash state. Any past writes will be forgotten
 	 */
 	reset(): void {
-		this.#state.fill(0);
-		this.#block.fill(0);
-		//Reset ingest count
-		this.#ingestBytes = Uint64.zero;
+		this.state.fill(0);
+		this.block.fill(0);
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this.bPos = 0;
 	}
 
 	/**
@@ -271,17 +269,16 @@ class KeccakCore implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): KeccakCore {
+	protected clone(): KeccakCore {
 		const ret = new KeccakCore(
 			this.#suffix,
 			this.size,
 			(maxBlockSizeBytes - this.blockSize) / 2,
 			this.#roundStart
 		);
-		ret.#state.set(this.#state);
-		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret.state.set(this.state);
+		ret.block.set(this.block);
+		ret.bPos = this.bPos;
 		return ret;
 	}
 }
@@ -864,14 +861,30 @@ export class TurboShake256 extends KeccakCore {
 	}
 }
 
+/**Almost the same as Keccak rightEncode except 0=[0] (vs 0=[0,0]) */
+function k12LengthEncode(w:number):Uint8Array {
+	//The max number we can hold is 2^51 because of JS
+	//So we only require 7 bytes to represent that (size+6)
+	const ret = new Uint8Array(7);
+	let ptr = 5;
+	while (w>0) {
+		ret[ptr--] = w;
+		w = Math.floor(w / 256);
+	}
+	ret[6] = 5 - ptr;
+	return ret.subarray(ptr + 1);
+}
+
 export class KangarooTwelve extends KeccakCore {
-	readonly chunkSize = 8192;
+	readonly maxChunkSize = 8192;
 	readonly #customization: Uint8Array;
+	#chunks:TurboShake128[]=[];
+	#ingestBlockBytes=0;
 
 	/**
-	 * @alpha
-	 * @param digestSize 
-	 * @param customization 
+	 * Build a new KangarooTwelve XOF generator
+	 * @param digestSize Output digest size (bytes)
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
 	constructor(digestSize: number, customization?: Uint8Array | string) {
 		super(0x07, digestSize, 16, k12RoundStart);
@@ -880,6 +893,72 @@ export class KangarooTwelve extends KeccakCore {
 				: customization instanceof Uint8Array
 					? customization
 					: utf8.toBytes(customization);
-		//;_e = rightEncode
+	}
+	
+	/**
+	 * Write data to the hash (can be called multiple times)
+	 * @param data
+	 */	
+	write(data: Uint8Array): void {
+		//We have to override this because we redirect writing when the (cumulative) data size
+		// exceeds maxChunkSize
+		if (this.#ingestBlockBytes+data.length>this.maxChunkSize) {
+			const eat=this.maxChunkSize-this.#ingestBlockBytes;
+			if (this.#chunks.length===0) {
+				super.write(data.subarray(0,eat));
+			} else {
+				this.#chunks[this.#chunks.length-1].write(data.subarray(0,eat));
+			}
+			//Build the next chunk
+			this.#chunks[this.#chunks.length]=new TurboShake128(32,0x0B);
+			this.#ingestBlockBytes=0;
+			//Recurse
+			this.write(data.subarray(eat));
+		} else if (this.#chunks.length===0) {
+			this.#ingestBlockBytes+=data.length;
+			super.write(data);
+		} else {
+			this.#ingestBlockBytes+=data.length;
+			this.#chunks[this.#chunks.length-1].write(data);
+		}
+	}
+
+	protected suffix(): void {
+		//We have to override suffix to allow appending of customization (unlike cShake where
+		// it's written at the start)
+		// Further we may need to do final block preparation if input exceeded maxChunkSize
+		this.write(this.#customization);
+		this.write(k12LengthEncode(this.#customization.length));
+
+		if (this.#chunks.length>0) {
+			//All these features go into the "main" chunk (so cannot use this.write)
+			super.write(Uint8Array.of(3,0,0,0,0,0,0,0));
+			for(let i=0;i<this.#chunks.length;i++) {
+				//Append CV_(i+1)
+				super.write(this.#chunks[i].sum());
+			}
+			super.write(k12LengthEncode(this.#chunks.length))
+			super.write(Uint8Array.of(0xff,0xff));
+			this.block[this.bPos] ^= 6;
+		} else {
+			this.block[this.bPos] ^= 7;	
+		}
+	}
+
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
+	 */
+	protected clone(): KangarooTwelve {
+		const ret=new KangarooTwelve(
+			this.size,
+			this.#customization);
+		
+		ret.state.set(this.state);
+		ret.block.set(this.block);
+		ret.bPos = this.bPos;
+		ret.#chunks=this.#chunks;//It's ok that these are sharing memory
+		ret.#ingestBlockBytes=this.#ingestBlockBytes;
+		return ret;
 	}
 }

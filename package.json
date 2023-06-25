@@ -142,7 +142,8 @@
 		"cli",
 		"color",
 		"terminal",
-		"console"
+		"console",
+		"KangarooTwelve"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",
