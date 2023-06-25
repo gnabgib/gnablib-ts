@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "A library for building web/node/deno applications",
 	"types": "/release/index.d.ts",
 	"scripts": {
