@@ -22,39 +22,39 @@ const roundConst = [
 	0x00000000, 0x0000800a, 0x80000000, 0x8000000a, 0x80000000, 0x80008081,
 	0x80000000, 0x00008080, 0x00000000, 0x80000001, 0x80000000, 0x80008008,
 ];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function rhoGen() {
-	// Rho shift: (t+1)(t+2)/2=t^2+3t+2 mod 64
-	// https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#3.2.2
-	const ret = [];
-	for (let i = 0; i < 24; i++) ret.push(((i * i + 3 * i + 2) / 2) % 64);
-	console.log(`const rhoShift=[${ret.join(', ')}];`);
-}
+// /** rhoShift Generator */
+// function rhoGen() {
+// 	// Rho shift: (t+1)(t+2)/2=t^2+3t+2 mod 64
+// 	// https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#3.2.2
+// 	const ret = [];
+// 	for (let i = 0; i < 24; i++) ret.push(((i * i + 3 * i + 2) / 2) % 64);
+// 	console.log(`const rhoShift=[${ret.join(', ')}];`);
+// }
 const rhoShift = [
 	1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39,
 	61, 20, 44,
 ];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function piGen() {
-	//Pi shift: [(x+3y)%5,x]->[x,y]
-	//https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#3.2.3
-	const pullFrom = [];
-	for (let i = 0; i < 25; i++) {
-		const x = i % 5;
-		const y = (i / 5) | 0;
-		const p = ((x + 3 * y) % 5) + x * 5;
-		//Inverse of formula:
-		pullFrom[p] = i;
-	}
-	const ret = [];
-	let st = pullFrom[1];
-	//Now follow the money
-	for (let i = 0; i < 24; i++) {
-		ret.push(st);
-		st = pullFrom[st];
-	}
-	console.log(`const piShift=[${ret.join(', ')}];`);
-}
+// /** piShift Generator */
+// function piGen() {
+// 	//Pi shift: [(x+3y)%5,x]->[x,y]
+// 	//https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#3.2.3
+// 	const pullFrom = [];
+// 	for (let i = 0; i < 25; i++) {
+// 		const x = i % 5;
+// 		const y = (i / 5) | 0;
+// 		const p = ((x + 3 * y) % 5) + x * 5;
+// 		//Inverse of formula:
+// 		pullFrom[p] = i;
+// 	}
+// 	const ret = [];
+// 	let st = pullFrom[1];
+// 	//Now follow the money
+// 	for (let i = 0; i < 24; i++) {
+// 		ret.push(st);
+// 		st = pullFrom[st];
+// 	}
+// 	console.log(`const piShift=[${ret.join(', ')}];`);
+// }
 const piShift = [
 	10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22,
 	9, 6, 1,
@@ -428,7 +428,6 @@ function encodeString(x: string | Uint8Array | undefined): Uint8Array {
 }
 function bytePad(w: number, ...x: Uint8Array[]): Uint8Array {
 	safety.intGte(w, 1, 'w');
-	//w;
 	const l = leftEncode(w);
 	//Sum all the inputs (x)
 	let reqSpace = 0;
@@ -436,7 +435,7 @@ function bytePad(w: number, ...x: Uint8Array[]): Uint8Array {
 	//Figure out allocation size
 	let alloc = w;
 	while (alloc < reqSpace) alloc += w;
-	const ret = new Uint8Array(w);
+	const ret = new Uint8Array(alloc);
 	ret.set(l);
 	let ptr = l.length;
 	for (let i = 0; i < x.length; i++) {
@@ -876,6 +875,7 @@ function k12LengthEncode(w:number):Uint8Array {
 }
 
 export class KangarooTwelve extends KeccakCore {
+	// KangarooTwelve( M, C, L ) m=message (bytes), c=customization (bytes) l=digestSize
 	readonly maxChunkSize = 8192;
 	readonly #customization: Uint8Array;
 	#chunks:TurboShake128[]=[];
@@ -960,5 +960,45 @@ export class KangarooTwelve extends KeccakCore {
 		ret.#chunks=this.#chunks;//It's ok that these are sharing memory
 		ret.#ingestBlockBytes=this.#ingestBlockBytes;
 		return ret;
+	}
+}
+
+// MarsupilamiFourteen seems to have been deprecated
+// 		https://keccak.team
+//		https://github.com/XKCP/XKCP, 
+// 		https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/
+// There's vague references (=K12 /w 14 rounds, and twice the capacity bites) 
+// but no official test vectors.
+
+export class HopMac extends KangarooTwelve {
+	//HopMAC(Key, M, C, L) key=secret, m=message, c=customization, l=digestSize
+	//This is the "inner" hash
+	readonly size:number;
+	readonly #key:Uint8Array;
+
+	/**
+	 * Build a new HopMAC generator
+	 * @param digestSize Digest size in bytes
+	 * @param key String (will be utf8 encoded) or bytes
+	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
+	 */
+	constructor(digestSize:number,key: Uint8Array | string,customization?:Uint8Array|string) {
+		super(32,customization);
+		this.size=digestSize;
+		this.#key=key instanceof Uint8Array ? key : utf8.toBytes(key);
+	}
+
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */
+	sum():Uint8Array {
+		//Sum inner as normal =K12(M,C,32)
+		const inner=super.sum();
+		//Build an outer K12 using inner as the customization
+		const outer=new KangarooTwelve(this.size,inner);
+		//Add key as the message
+		outer.write(this.#key);
+		//And return the sum
+		return outer.sum();
 	}
 }

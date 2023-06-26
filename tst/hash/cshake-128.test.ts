@@ -51,8 +51,14 @@ tsts('cShake reset',()=>{
     hash.reset();
     hash.write(hex.toBytes('00010203'));
     const md3=hash.sum();
-	assert.is(hex.fromBytes(md3), 'C1C36925B6409A04F1B504FCBCA9D82B4017277CB5ED2B2065FC1D3814D5AAF5','Reset was successful');
-    
+	assert.is(hex.fromBytes(md3), 'C1C36925B6409A04F1B504FCBCA9D82B4017277CB5ED2B2065FC1D3814D5AAF5','Reset was successful'); 
 });
+
+tsts(`cShake with giant customization`,()=>{
+    const hash=new CShake128(32,'I am a giant function name for the purposes of testing','AES-CMAC uses the Advanced Encryption Standard [NIST-AES] as a building block.  To generate a MAC, AES-CMAC takes a secret key, a message of variable length, and the length of the message in octets as inputs and returns a fixed-bit string called a MAC');
+    hash.write(Uint8Array.of(0,1,2,3));
+    const md=hash.sum();
+    assert.is(hex.fromBytes(md),'1C33613631E058E96D6A5693B74986A4CB1C6CA72A06CD1238262E7F2E62FA35');
+})
 
 tsts.run();

@@ -32,6 +32,11 @@ const tests:hashHex[]=[
         customize:'Parallel Data',
         expect:'F7FD5312896C6685C828AF7E2ADB97E393E7F8D54E3C2EA4B95E5ACA3796E8FC'
     },
+    {
+        data:Uint8Array.of(0,1,2,3,4),
+        blockSize:8,
+        expect:'EB39EAE60632D4DC4627AD5529AA971728E96ADAB5E8AA173D303E7460DC5C8D'
+    }
 ];
 
 let count=0;
@@ -44,5 +49,16 @@ for (const test of tests) {
     });
     count++;
 }
+tsts(`Small write`,()=>{
+    const hash=new ParallelHash128(8,32);
+    hash.write(Uint8Array.of(0,1));
+    const md1=hash.sum();
+    hash.reset();
+    hash.write(Uint8Array.of(0));
+    hash.write(Uint8Array.of(1));
+    const md2=hash.sum();
+    assert.is(hex.fromBytes(md1),'3C5E89D90DB8833918E5C1617A9915CA4A5AB5EE67A22FAB0B8159B02BD7AF26');
+    assert.is(hex.fromBytes(md2),'3C5E89D90DB8833918E5C1617A9915CA4A5AB5EE67A22FAB0B8159B02BD7AF26');
+});
 
 tsts.run();

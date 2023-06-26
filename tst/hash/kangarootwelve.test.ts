@@ -47,23 +47,16 @@ const tests:{
         expect:'6BF75FA2239198DB4772E36478F8E19B0F371205F6A9A93A273F51DF37122888'
     },
     {
-        data:ptn(17*17),//289
+        data:ptn(17**2),//289
         size:32,
         expect:'0C315EBCDEDBF61426DE7DCF8FB725D1E74675D7F5327A5067F367B108ECB67C'
     },
     {
-        data:ptn(17*17*17),//4913
+        data:ptn(17**3),//4913
         size:32,
         expect:'CB552E2EC77D9910701D578B457DDF772C12E322E4EE7FE417F92C758F0D59D0'
     },
-    {
-        //Exceeds blocks: Sakura tree hash
-        data:ptn(17*17*17*17),//83521
-        size:32,
-        expect:'8701045E22205345FF4DDA05555CBB5C3AF1A771C2B89BAEF37DB43D9998B9FE'
-    },
-    //KangarooTwelve(M=ptn(17**5 bytes), D=`07`, 32):
-    //KangarooTwelve(M=ptn(17**6 bytes), D=`07`, 32):
+    //17**4, 5, 6 - see slow.test.ts
     {
         data:new Uint8Array(0),
         size:32,
@@ -79,16 +72,10 @@ const tests:{
     {
         data:Uint8Array.of(0xff,0xff,0xff),
         size:32,
-        customize:ptn(41*41),
+        customize:ptn(41**2),
         expect:'C389E5009AE57120854C2E8C64670AC01358CF4C1BAF89447A724234DC7CED74'
     },
-    {
-        //Exceeds block: Sakura tree hash
-        data:Uint8Array.of(0xff,0xff,0xff,0xff,0xff,0xff,0xff),
-        size:32,
-        customize:ptn(41*41*41),
-        expect:'75D2F86A2E644566726B4FBCFC5657B9DBCF070C7B0DCA06450AB291D7443BCF'
-    },
+    // customize=41**3 - see slow.test.ts
     {
         data:ptn(8191),
         size:32,
@@ -133,6 +120,13 @@ tsts(`KangarooTwelve(size=10032):last32`,()=>{
     hash.write(new Uint8Array(0));
     const md=hash.sum();
     assert.is(hex.fromBytes(md.subarray(md.length-32)), 'E8DC563642F7228C84684C898405D3A834799158C079B12880277A1D28E2FF6D');
+})
+
+tsts(`KangarooTwelve /w string customize`,()=>{
+    const hash=new KangarooTwelve(32,'gnabgib');
+    hash.write(ptn(17));
+    const md=hash.sum();
+    assert.is(hex.fromBytes(md),'49381BCC78A81664802E6D226B91B5E934579E9C3DCBC27052CC535919AEB485')
 })
 
 tsts.run();

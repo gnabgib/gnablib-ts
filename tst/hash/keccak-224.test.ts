@@ -4,7 +4,7 @@ import { utf8 } from '../../src/encoding/Utf8';
 import { hex } from '../../src/encoding/Hex';
 import { Keccak224 } from '../../src/hash/Keccak';
 
-const tsts = suite('Keccak');
+const tsts = suite('Keccak (224)');
 const ascii224Pairs = [
 	['', 'F71837502BA8E10837BDD8D365ADB85591895602FC552B48B7390ABD'],
 	//https://emn178.github.io/online-tools/keccak_224.html

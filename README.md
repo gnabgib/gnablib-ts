@@ -144,6 +144,7 @@ Name|Digest sizes|Optional parameters
 ### MAC
 
 - [HMAC](https://en.wikipedia.org/wiki/HMAC) (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
+- [HopMAC](https://www.ietf.org/archive/id/draft-irtf-cfrg-kangarootwelve-10.html#name-security-considerations) (128)
 - [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128, 256)
 
 ### Net
@@ -216,6 +217,11 @@ Resume after checkout
 ```bash
 pnpm install
 ```
+
+Close a issue in commit:
+(close(s|d)|fix(es|ed)|resolve(s|d)) #<id>
+eg closes #2
+
 
 Format in VSCode: CTRL+SHIFT+P: Format  
 
