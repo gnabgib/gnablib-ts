@@ -1,13 +1,10 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import * as bigEndian from '../endian/big.js';
-import { hex } from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
 import { Uint64 } from '../primitive/Uint64.js';
-import { utf8 } from '../encoding/Utf8.js';
 import { U32 } from '../primitive/U32.js';
 import { asBE } from '../endian/platform.js';
-import { safety } from '../primitive/Safety.js';
 
 //[US Secure Hash Algorithms](https://datatracker.ietf.org/doc/html/rfc6234) (2011)
 //[US Secure Hash Algorithms (SHA and HMAC-SHA)](https://datatracker.ietf.org/doc/html/rfc4634) (2006) - obsolete by above
@@ -206,33 +203,40 @@ class Sha2_32bit implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block[alt.#bPos] = 0x80;
-		alt.#bPos++;
+		return this.clone().sumIn();
+	}
+
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+	sumIn():Uint8Array {
+		this.#block[this.#bPos] = 0x80;
+		this.#bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen32;
 
 		//If there's not enough space, end this block
-		if (alt.#bPos > sizeSpace) {
+		if (this.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.#block.fill(0, alt.#bPos);
-			alt.hash();
+			this.#block.fill(0, this.#bPos);
+			this.hash();
 		}
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
+		this.#block.fill(0, this.#bPos);
 
 		//Write out the data size in big-endian
 		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		alt.#block32[ss32]=alt.#ingestBytes / 0x20000000;
-		alt.#block32[ss32+1]=alt.#ingestBytes << 3;
-		asBE.i32(alt.#block,sizeSpace);
-		asBE.i32(alt.#block,sizeSpace+4);
-		alt.hash();
+		this.#block32[ss32]=this.#ingestBytes / 0x20000000;
+		this.#block32[ss32+1]=this.#ingestBytes << 3;
+		asBE.i32(this.#block,sizeSpace);
+		asBE.i32(this.#block,sizeSpace+4);
+		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		const s8=new Uint8Array(this.#state.buffer,this.#state.byteOffset);
 		//Make sure the bytes are BE - this might mangle alt.#state (but we're moments from disposing)
 		for(let i=0;i<this.size;i++) asBE.i32(s8,i*4);
 		return s8.slice(0,this.size);
@@ -260,7 +264,7 @@ class Sha2_32bit implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Sha2_32bit {
+	clone(): Sha2_32bit {
 		const ret = new Sha2_32bit(this.size, this.#iv);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
@@ -391,21 +395,28 @@ class Sha2_64bit implements IHash {
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
-	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block[alt.#bPos] = 0x80;
-		alt.#bPos++;
+	sum():Uint8Array {
+		return this.clone().sumIn();
+	}
+
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+	sumIn(): Uint8Array {
+		this.#block[this.#bPos] = 0x80;
+		this.#bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen64;
 
 		//If there's not enough space, end this block
-		if (alt.#bPos > sizeSpace) {
+		if (this.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.#block.fill(0, alt.#bPos);
-			alt.hash();
+			this.#block.fill(0, this.#bPos);
+			this.hash();
 		}
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
+		this.#block.fill(0, this.#bPos);
 
 		//Write out the data size in big-endian
         // There's space for 128 bits of size (spaceForLenBytes64=16) but we can only count
@@ -414,14 +425,14 @@ class Sha2_64bit implements IHash {
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
 		bigEndian.u32IntoBytes(
-			alt.#ingestBytes / 0x20000000,
-			alt.#block,
+			this.#ingestBytes / 0x20000000,
+			this.#block,
 			sizeSpace+8
 		);
-		bigEndian.u32IntoBytes(alt.#ingestBytes << 3, alt.#block, sizeSpace + 12);
-		alt.hash();
+		bigEndian.u32IntoBytes(this.#ingestBytes << 3, this.#block, sizeSpace + 12);
+		this.hash();
 		const ret = new Uint8Array(this.size);
-		bigEndian.u64ArrIntoBytesSafe(alt.#state, ret);
+		bigEndian.u64ArrIntoBytesSafe(this.#state, ret);
 		return ret;
 	}
 
@@ -447,7 +458,7 @@ class Sha2_64bit implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Sha2_64bit {
+	clone(): Sha2_64bit {
 		const ret = new Sha2_64bit(this.size, this.#iv);
         for(let i=0;i<stateSize;i++) ret.#state[i]=this.#state[i];
 		ret.#block.set(this.#block);
@@ -457,42 +468,41 @@ class Sha2_64bit implements IHash {
 	}
 }
 
-/**
- * The "SHA-512/t IV generation function"
- * - This is expensive (you have to SHA512 with a modified INIT in order to generate the new
- *  initial values, so for the common forms (224,256), the init is hard-coded.
- * @see Sha512_224, @see Sha512_256
- * @param t - Must be a multiple of 8, greater than zero, less than 512, and NOT 384
- *  (use @see Sha384 instead)
- * @throws {EnforceTypeError} - t isn't a number
- * @throws {RangeError}- t doesn't satisfy above rules
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-/*export*/ function generateIV(t: number): void {
-	safety.intSatisfies(t,(t) => t >= 8 && t <= 504 && t % 8 == 0 && t != 384);
-	//First we xor 0xa5a5a5a5a5a5a5a5 with the initial IV
-	// In two parts: 0xa5a5a5a5 0xa5a5a5a5
-	const init = new Array<number>(iv512.length);
-	for (let i = 0; i < init.length; i++) init[i] = (iv512[i] ^ 0xa5a5a5a5)>>>0;
+// /**
+//  * The "SHA-512/t IV generation function"
+//  * - This is expensive (you have to SHA512 with a modified INIT in order to generate the new
+//  *  initial values, so for the common forms (224,256), the init is hard-coded.
+//  * @see Sha512_224, @see Sha512_256
+//  * @param t - Must be a multiple of 8, greater than zero, less than 512, and NOT 384
+//  *  (use @see Sha384 instead)
+//  * @throws {EnforceTypeError} - t isn't a number
+//  * @throws {RangeError}- t doesn't satisfy above rules
+//  */
+// function generateIV(t: number): void {
+// 	safety.intSatisfies(t,(t) => t >= 8 && t <= 504 && t % 8 == 0 && t != 384);
+// 	//First we xor 0xa5a5a5a5a5a5a5a5 with the initial IV
+// 	// In two parts: 0xa5a5a5a5 0xa5a5a5a5
+// 	const init = new Array<number>(iv512.length);
+// 	for (let i = 0; i < init.length; i++) init[i] = (iv512[i] ^ 0xa5a5a5a5)>>>0;
 
-    const iv=(state: Array<Uint64>) => {
-		//Setup state
-        state[0]=new Uint64(init[1],init[0]);
-        state[1]=new Uint64(init[3],init[2]);
-        state[2]=new Uint64(init[5],init[4]);
-        state[3]=new Uint64(init[7],init[6]);
-        state[4]=new Uint64(init[9],init[8]);
-        state[5]=new Uint64(init[11],init[10]);
-        state[6]=new Uint64(init[13],init[12]);
-        state[7]=new Uint64(init[15],init[14]);
-	}
-	//Now we SHA2-512 the description string
-    const gen=new Sha2_64bit(64,iv);
-    gen.write(utf8.toBytes('SHA-512/' + t.toString()));
-    const hash=gen.sum();
-    for(let i=0;i<hash.length;i+=8)
-        console.log(`0x${hex.fromBytes(hash.subarray(i,i+4))}, 0x${hex.fromBytes(hash.subarray(i+4,i+8))},`);
-}
+//     const iv=(state: Array<Uint64>) => {
+// 		//Setup state
+//         state[0]=new Uint64(init[1],init[0]);
+//         state[1]=new Uint64(init[3],init[2]);
+//         state[2]=new Uint64(init[5],init[4]);
+//         state[3]=new Uint64(init[7],init[6]);
+//         state[4]=new Uint64(init[9],init[8]);
+//         state[5]=new Uint64(init[11],init[10]);
+//         state[6]=new Uint64(init[13],init[12]);
+//         state[7]=new Uint64(init[15],init[14]);
+// 	}
+// 	//Now we SHA2-512 the description string
+//     const gen=new Sha2_64bit(64,iv);
+//     gen.write(utf8.toBytes('SHA-512/' + t.toString()));
+//     const hash=gen.sum();
+//     for(let i=0;i<hash.length;i+=8)
+//         console.log(`0x${hex.fromBytes(hash.subarray(i,i+4))}, 0x${hex.fromBytes(hash.subarray(i+4,i+8))},`);
+// }
 
 export class Sha224 extends Sha2_32bit {
 	/**

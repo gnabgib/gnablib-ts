@@ -69,4 +69,10 @@ for (const test of tests) {
     });
 }
 
+tsts(`no key`,()=>{
+    const mac=new Kmac128(32);
+    mac.write(Uint8Array.of(1,2,3));
+    assert.is(hex.fromBytes(mac.sum()),'50D93FDA26232A20D3A278A7B0C83A6D52BFE07F556DB8C849F01A8971EDDCDD');
+})
+
 tsts.run();

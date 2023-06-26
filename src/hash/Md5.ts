@@ -721,34 +721,40 @@ export class Md5 implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block[alt.#bPos] = 0x80;
-		alt.#bPos++;
+		return this.clone().sumIn();
+	}
+
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     */
+	sumIn(): Uint8Array {
+		this.#block[this.#bPos] = 0x80;
+		this.#bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (alt.#bPos > sizeSpace) {
+		if (this.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.#block.fill(0, alt.#bPos);
-			alt.hash();
+			this.#block.fill(0, this.#bPos);
+			this.hash();
 		}
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
+		this.#block.fill(0, this.#bPos);
 
 		//Write out the data size in little-endian
 		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
-		alt.#block32[ss32]=alt.#ingestBytes << 3;
+		this.#block32[ss32]=this.#ingestBytes << 3;
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		alt.#block32[ss32+1]=alt.#ingestBytes / 0x20000000;
+		this.#block32[ss32+1]=this.#ingestBytes / 0x20000000;
 		//This might mangle #block, but we're about to hash anyway
-		asLE.i32(alt.#block,sizeSpace);
-		asLE.i32(alt.#block,sizeSpace+4);
-		alt.hash();
+		asLE.i32(this.#block,sizeSpace);
+		asLE.i32(this.#block,sizeSpace+4);
+		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		const s8=new Uint8Array(this.#state.buffer,this.#state.byteOffset);
 		//Make sure the bytes are LE - this might mangle alt.#state (but we're moments from disposing)
 		for(let i=0;i<digestSize;i++) asLE.i32(s8,i*4);
 		//Finally slice (duplicate) the data so caller can't discover hidden state
@@ -781,7 +787,7 @@ export class Md5 implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Md5 {
+	clone(): Md5 {
 		const ret = new Md5();
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);

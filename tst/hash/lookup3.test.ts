@@ -2,6 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Lookup3 } from '../../src/hash/Lookup3';
 import { utf8 } from '../../src/encoding/Utf8';
+import { hex } from '../../src/encoding/Hex';
 
 const tsts = suite('Lookup3');
 
@@ -28,5 +29,36 @@ for (const [data,seed,expect] of tests) {
         assert.is(md[1],expect[1],'md-1');
 	});
 }
+
+tsts(`sum()`,()=>{
+    const hash=new Lookup3(0);
+    hash.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sum()),'C4B659554B41A98B');
+    assert.is(hex.fromBytes(hash.sum()),'C4B659554B41A98B','Sum doesn\'t mutate state');
+});
+
+tsts(`reset`,()=>{
+    const hash=new Lookup3(1);
+    hash.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sum()),'E9F0FC11B361CD62')
+    hash.reset();
+    hash.write(Uint8Array.of(0,0));
+    assert.is(hex.fromBytes(hash.sum()),'CBA68C440F06D06B');
+})
+
+tsts(`newEmpty`,()=>{
+    const hash=new Lookup3(1);
+    hash.write(Uint8Array.of(0,0));
+    const hash2=hash.newEmpty();
+    hash2.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sum()),'CBA68C440F06D06B','first is seed=1, w=0,0');
+    assert.is(hex.fromBytes(hash2.sum()),'E9F0FC11B361CD62','second is seed=1, w=0');
+})
+
+tsts(`write twice throws`,()=>{
+    const hash=new Lookup3(1);
+    hash.write(Uint8Array.of(1,2,3));
+    assert.throws(()=>hash.write(Uint8Array.of(4)));
+})
 
 tsts.run();

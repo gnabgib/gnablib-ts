@@ -51,4 +51,14 @@ for (const [source,expect] of ascii128HexPairs) {
 	});
 }
 
+tsts('newEmpty()',()=>{
+	const hash=new RipeMd128();
+	hash.write(utf8.toBytes('a'));
+	assert.is(hex.fromBytes(hash.sum()),'86BE7AFA339D0FC7CFC785E72F578D33')
+	
+	const h2=hash.newEmpty();
+	h2.write(utf8.toBytes('f'));
+	assert.is(hex.fromBytes(h2.sum()),'708A7E020859DDDBFD1A0541B35F0446')
+})
+
 tsts.run();

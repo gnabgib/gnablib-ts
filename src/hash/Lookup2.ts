@@ -2,7 +2,7 @@
 
 //import { Hex } from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
-import { asLE } from '../endian/platform.js';
+import { asBE, asLE } from '../endian/platform.js';
 
 //[Wikipedia: Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function)
 //["My Hash"](http://burtleburtle.net/bob/hash/doobs.html)
@@ -127,22 +127,26 @@ export class Lookup2 implements IHash {
 		}
 	}
 
-	_sum(): Lookup2 {
-		const alt = this.clone();
+	private static _sum(alt:Lookup2):void {
 		alt.#state[2] += alt.#ingestBytes;
 		alt.#block.fill(0, alt.#bPos);
 		alt.hash();
-		return alt;
 	}
 
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const sum = this._sum();
-		const ret = new Uint8Array(sum.#state.slice(2));
-		//Hard to know which endian would be preferred here (out of spec)
-		// so leave it in platform-endian
+		return this.clone().sumIn();
+	}
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     */
+	sumIn():Uint8Array {
+		Lookup2._sum(this);
+		const ret = new Uint8Array(this.#state.slice(2).buffer);
+		//Wiki implies big-endian (since that's how we right numbers)
+		asBE.i32(ret);
 		return ret;
 	}
 
@@ -150,7 +154,8 @@ export class Lookup2 implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum32(): number {
-		return this._sum().#state[2];
+		Lookup2._sum(this);
+		return this.#state[2];
 	}
 
 	/**
@@ -175,12 +180,12 @@ export class Lookup2 implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Lookup2 {
+	clone(): Lookup2 {
 		const ret = new Lookup2(this.#seed);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
 		ret.#ingestBytes = this.#ingestBytes;
 		ret.#bPos = this.#bPos;
-		return this;
+		return ret;
 	}
 }

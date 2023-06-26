@@ -90,4 +90,13 @@ for (const [source,expect] of asciiPairs) {
 	});
 }
 
+tsts(`newEmpty`,()=>{
+    const hash=new Whirlpool();
+    hash.write(Uint8Array.of(0,0));
+    const hash2=hash.newEmpty();
+    hash2.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sum()),'8BDC9D4471D0DABD8812098B8CBDF5090BEDDB3D582917A61E176E3D22529D753FED9A37990CA18583855EFBC4F26E88F62002F67722EB05F74C7EA5E07013F5','first is seed=1, w=0,0');
+    assert.is(hex.fromBytes(hash2.sum()),'4D9444C212955963D425A410176FCCFB74161E6839692B4C11FDE2ED6EB559EFE0560C39A7B61D5A8BCABD6817A3135AF80F342A4942CCAAE745ABDDFB6AFED0','second is seed=1, w=0');
+})
+
 tsts.run();

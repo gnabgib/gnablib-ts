@@ -18,7 +18,13 @@ const md5Hex:hashHex[]=[
     {
         key:hex.toBytes('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'),
         data:'Hi There',
-        expect:'9294727A3638BB1C13F48EF8158BFC9D'},
+        expect:'9294727A3638BB1C13F48EF8158BFC9D'
+    },
+    {
+        key:hex.toBytes('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'),
+        data:'',
+        expect:'C9E99A43CD8FA24A840AA85C7CCA0061'
+    },
     {
         key:'Jefe',
         data:'what do ya want for nothing?',

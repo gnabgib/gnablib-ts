@@ -38,9 +38,16 @@ abstract class ASpooky implements IHash {
 		return this._ingestBytes;
 	}
 	abstract write(data: Uint8Array): void;
-	abstract sum(): Uint8Array;
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */
+	sum(): Uint8Array {
+		return this.clone().sumIn();
+	}
+	abstract sumIn(): Uint8Array;
 	abstract reset(): void;
 	abstract newEmpty(): IHash;
+	abstract clone(): ASpooky;
 	abstract get blockSize(): number;
 }
 
@@ -218,31 +225,32 @@ export class SpookyShort extends ASpooky {
 	}
 
 	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
 	 */
-	sum(): Uint8Array {
-		const alt = this.clone();
+	sumIn(): Uint8Array {
 		//In the bPos 1-15 range (remember it starts at 16 = 17-31 ingest%32) we need to zero
 		// up to 16, move AB->CD, and zero AB
-		if (alt.#bPos >= 1 && alt.#bPos < 16) {
-			alt.#block.fill(0, alt.#bPos, 16);
-			alt.#block64.at(2).set(alt.#block64.at(0));
-			alt.#block64.at(3).set(alt.#block64.at(1));
-			alt.#block64.at(0).set(U64Mut.fromInt(0));
-			alt.#block64.at(1).set(U64Mut.fromInt(0));
+		if (this.#bPos >= 1 && this.#bPos < 16) {
+			this.#block.fill(0, this.#bPos, 16);
+			this.#block64.at(2).set(this.#block64.at(0));
+			this.#block64.at(3).set(this.#block64.at(1));
+			this.#block64.at(0).set(U64Mut.fromInt(0));
+			this.#block64.at(1).set(U64Mut.fromInt(0));
 		} else {
 			//Zero the rest
-			alt.#block.fill(0, alt.#bPos);
+			this.#block.fill(0, this.#bPos);
 		}
 		//Add the length
-		alt.#block64.at(3).addEq(U64Mut.fromUint32Pair(0, alt._ingestBytes << 24));
+		this.#block64
+			.at(3)
+			.addEq(U64Mut.fromUint32Pair(0, this._ingestBytes << 24));
 		//If a multiple of 16, add SC to C/D (bPos =0 or 16)
-		if ((alt.#bPos & 15) === 0) {
-			alt.#block64.at(2).addEq(sc);
-			alt.#block64.at(3).addEq(sc);
+		if ((this.#bPos & 15) === 0) {
+			this.#block64.at(2).addEq(sc);
+			this.#block64.at(3).addEq(sc);
 		}
-		alt.final();
-		const ret = alt.#state.toBytesBE().slice(0, 16);
+		this.final();
+		const ret = this.#state.toBytesBE().slice(0, 16);
 		return ret;
 	}
 
@@ -271,13 +279,13 @@ export class SpookyShort extends ASpooky {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): SpookyShort {
+	clone(): SpookyShort {
 		const ret = new SpookyShort(this._seed, this._seed2);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
 		ret._ingestBytes = this._ingestBytes;
 		ret.#bPos = this.#bPos;
-		return this;
+		return ret;
 	}
 }
 
@@ -499,14 +507,13 @@ export class SpookyLong extends ASpooky {
 	}
 
 	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
 	 */
-	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block.fill(0, alt.#bPos);
-		alt.#block[lBlockSizeBytes - 1] = this._ingestBytes % lBlockSizeBytes;
-		alt.final();
-		const ret = alt.#state.toBytesBE().slice(0, 16);
+	sumIn(): Uint8Array {
+		this.#block.fill(0, this.#bPos);
+		this.#block[lBlockSizeBytes - 1] = this._ingestBytes % lBlockSizeBytes;
+		this.final();
+		const ret = this.#state.toBytesBE().slice(0, 16);
 		return ret;
 	}
 
@@ -542,13 +549,13 @@ export class SpookyLong extends ASpooky {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): SpookyLong {
+	clone(): SpookyLong {
 		const ret = new SpookyLong(this._seed, this._seed2);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
 		ret._ingestBytes = this._ingestBytes;
 		ret.#bPos = this.#bPos;
-		return this;
+		return ret;
 	}
 }
 
@@ -556,13 +563,15 @@ export class SpookyLong extends ASpooky {
  * NOT Cryptographic - It's better to use SpookyShort (<192 bytes) or SpookyLong (>=192 bytes)
  * directly if you know final length before you build, and if the first write isn't large
  * - While < 192 bytes both long and short will be written to (necessary to support the transition)
- * - Once >=192 bytes only long will be written to (so if the first write is large there's no performance penalty, 
+ * - Once >=192 bytes only long will be written to (so if the first write is large there's no performance penalty,
  *   but you might as well just use SpookyLong?)
  */
 export class Spooky implements IHash {
-	private _s:SpookyShort;
-	private _l:SpookyLong;
-	private _useLong=false;
+	private _seed: U64;
+	private _seed2: U64;
+	private _s: SpookyShort;
+	private _l: SpookyLong;
+	private _useLong = false;
 	/**
 	 * Digest size in bytes
 	 */
@@ -572,18 +581,20 @@ export class Spooky implements IHash {
 	 * NOTE: This isn't consistent, better to use SpookyShort, SpookyLong
 	 */
 	get blockSize(): number {
-		return this._useLong?this._l.blockSize:this._s.blockSize;
+		return this._useLong ? this._l.blockSize : this._s.blockSize;
 	}
 
 	constructor(seed = U64.zero, seed2 = U64.zero) {
-		this._s=new SpookyShort(seed, seed2);
-		this._l=new SpookyLong(seed, seed2);
+		this._seed = seed;
+		this._seed2 = seed2;
+		this._s = new SpookyShort(seed, seed2);
+		this._l = new SpookyLong(seed, seed2);
 	}
 
 	write(data: Uint8Array): void {
 		if (this._useLong) return this._l.write(data);
-		if (data.length+this._s.ingestBytes>sToL) {
-			this._useLong=true;
+		if (data.length + this._s.ingestBytes > sToL) {
+			this._useLong = true;
 			return this._l.write(data);
 		}
 		//Unfortunately we have to double write data in case another write pushes length over sToL
@@ -595,15 +606,22 @@ export class Spooky implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		return this._useLong?this._l.sum():this._s.sum();
+		return this._useLong ? this._l.sum() : this._s.sum();
 	}
 
 	/**
-	 * Set hash state. Any past writes will be forgotten, both short and 
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 */
+	sumIn(): Uint8Array {
+		return this._useLong ? this._l.sumIn() : this._s.sumIn();
+	}
+
+	/**
+	 * Set hash state. Any past writes will be forgotten, both short and
 	 * long will be available until length exceeds 192
 	 */
 	reset(): void {
-		this._useLong=false;
+		this._useLong = false;
 		this._s.reset();
 		this._l.reset();
 	}
@@ -612,6 +630,17 @@ export class Spooky implements IHash {
 	 * Create an empty IHash using the same algorithm
 	 */
 	newEmpty(): IHash {
-		return this._useLong?this._l.newEmpty():this._s.newEmpty();
+		return new Spooky(this._seed, this._seed2);
+	}
+
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 */
+	clone(): Spooky {
+		const ret = new Spooky();
+		ret._s = this._s.clone();
+		ret._l = this._l.clone();
+		ret._useLong = this._useLong;
+		return ret;
 	}
 }

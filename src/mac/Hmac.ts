@@ -26,11 +26,11 @@ function fixKey(hash: IHash, key: Uint8Array): Uint8Array {
  * - Looks like a Hash, but built with the hash-type, and key
  */
 export class Hmac implements IHash {
-	readonly #oHash:IHash;
-	readonly #iHash:IHash;
-	readonly #oPadKey:Uint8Array;
-	readonly #iPadKey:Uint8Array;
-
+	/** Outside hash, initialized with oPad, never write directly (clone first) */
+	#oHash:IHash;
+	#startIHash:IHash;
+	#iHash:IHash;
+	
 	/**
 	 * New HMAC
 	 * @param hash Hash to use (output will be hash.blockSize in length)
@@ -38,20 +38,19 @@ export class Hmac implements IHash {
 	 */
 	constructor(hash:IHash,key:Uint8Array) {
 		const fk = fixKey(hash, key);
-		this.#oPadKey = new Uint8Array(hash.blockSize);
-		this.#iPadKey = new Uint8Array(hash.blockSize);
+		const opk=new Uint8Array(hash.blockSize);
+		const ipk=new Uint8Array(hash.blockSize);
 		for (let i = 0; i < hash.blockSize; i++) {
-			this.#oPadKey[i] = fk[i] ^ oPad;
-			this.#iPadKey[i] = fk[i] ^ iPad;
+			opk[i]=fk[i] ^ oPad;
+			ipk[i]=fk[i] ^ iPad;
 		}
-		//console.log(`ipad= ${hex.fromBytes(this.#iPadKey)}`);
-		//console.log(`opad= ${hex.fromBytes(this.#oPadKey)}`);
 	
 		this.#oHash=hash.newEmpty();
-		this.#oHash.write(this.#oPadKey);
+		this.#oHash.write(opk);
 
-		this.#iHash=hash.newEmpty();
-		this.#iHash.write(this.#iPadKey);
+		this.#startIHash=hash.newEmpty();
+		this.#startIHash.write(ipk);
+		this.#iHash=this.#startIHash.clone();
 	}
 
 	/**
@@ -64,14 +63,28 @@ export class Hmac implements IHash {
 
 	/**
 	 * Sum the hash (does not mutate )
-	 * @param size Tag length (truncates output to this many bites if >0), defaults to hash size
+	 * @param size Output length (truncates output to this many bytes if >0), defaults to hash size
 	 * @returns HMAC-digest
 	 */
 	sum(size:number|undefined=0): Uint8Array {
 		const iHash=this.#iHash.sum();
-		//console.log(`i= ${hex.fromBytes(iHash)}`);
-		this.#oHash.write(iHash);
-		const ret=this.#oHash.sum();
+		const oh=this.#oHash.clone();
+		oh.write(iHash)
+		const ret=oh.sumIn();
+		return size>0?ret.slice(0,size):ret;
+	}
+
+    /**
+     * Sum the hash with internal - mutates internal state, but avoids
+     * memory allocation. Use if you won't need the obj again (for performance)
+	 * @param size Output length (truncates output to this many bytes if >0), defaults to hash size
+	 * @returns HMAC-digest
+     */
+	sumIn(size:number|undefined=0): Uint8Array {
+		const iHash=this.#iHash.sumIn();
+		const oh=this.#oHash.clone();
+		oh.write(iHash);
+		const ret=oh.sumIn();
 		return size>0?ret.slice(0,size):ret;
 	}
 
@@ -79,19 +92,26 @@ export class Hmac implements IHash {
      * Set hash to initial state. Any past writes will be forgotten
      */
 	reset(): void {
-		this.#oHash.reset();
-		this.#oHash.write(this.#oPadKey);
-		this.#iHash.reset();
-		this.#iHash.write(this.#iPadKey);
+		this.#iHash=this.#startIHash.clone();
 	}
 
 	/**
      * Create an empty IHash using the same algorithm
      */
 	newEmpty(): IHash {
-		const key=new Uint8Array(this.#oPadKey);
-		for(let i=0;i<key.length;i++) key[i]^=oPad;
-		return new Hmac(this.#oHash,key);
+		const ret=new Hmac(this.#oHash,new Uint8Array(this.#oHash.blockSize));
+		ret.#oHash=this.#oHash;
+		ret.#startIHash=this.#startIHash;
+		ret.#iHash=this.#startIHash.clone();
+		return ret;
+	}
+
+	clone():Hmac {
+		const ret=new Hmac(this.#oHash,new Uint8Array(this.#oHash.blockSize));
+		ret.#oHash=this.#oHash;
+		ret.#startIHash=this.#startIHash;
+		ret.#iHash=this.#iHash.clone();
+		return ret;
 	}
 
 	/**

@@ -135,36 +135,43 @@ export class Sha1 implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block[alt.#bPos] = 0x80;
-		alt.#bPos++;
+		return this.clone().sumIn();
+	}
+
+    /**
+     * Sum the hash with internal - mutates internal state, but avoids
+     * memory allocation. Use if you won't need the obj again (for performance)
+     */
+	sumIn(): Uint8Array {
+		this.#block[this.#bPos] = 0x80;
+		this.#bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (alt.#bPos > sizeSpace) {
+		if (this.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.#block.fill(0, alt.#bPos);
-			alt.hash();
+			this.#block.fill(0, this.#bPos);
+			this.hash();
 		}
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
+		this.#block.fill(0, this.#bPos);
 
 		//Write out the data size in big-endian
 		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		alt.#block32[ss32]=alt.#ingestBytes / 0x20000000;
-		alt.#block32[ss32+1]=alt.#ingestBytes << 3;
-		asBE.i32(alt.#block,sizeSpace);
-		asBE.i32(alt.#block,sizeSpace+4);
-		alt.hash();
+		this.#block32[ss32]=this.#ingestBytes / 0x20000000;
+		this.#block32[ss32+1]=this.#ingestBytes << 3;
+		asBE.i32(this.#block,sizeSpace);
+		asBE.i32(this.#block,sizeSpace+4);
+		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		const s8=new Uint8Array(this.#state.buffer,this.#state.byteOffset);
 		//Make sure the bytes are BE - this might mangle alt.#state (but we're moments from disposing)
 		for(let i=0;i<digestSize;i++) asBE.i32(s8,i*4);
-		return s8.slice(0,digestSize);
+		return s8.slice(0,digestSize);		
 	}
 
 	/**
@@ -194,7 +201,7 @@ export class Sha1 implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Sha1 {
+	clone(): Sha1 {
 		const ret = new Sha1();
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);

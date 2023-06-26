@@ -117,7 +117,7 @@ export class XxHash32 implements IHash {
 		}
 	}
 
-	_sum(): Uint32Array {
+	_sum(): number {
 		let result = this.#ingestBytes;
 		if (this.#ingestBytes >= blockSize32Bytes) {
 			result +=
@@ -146,14 +146,20 @@ export class XxHash32 implements IHash {
 		result ^= result >>> 13;
 		result = U32.mul(result, p32_3);
 		result ^= result >>> 16;
-		return Uint32Array.of(result);
+		return result;
 	}
 
     /**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const r32 = this._sum();
+		return this.sumIn();
+	}
+	/**
+     * Sum the hash (doesn't mutate internal state, here for compat)
+     */
+	sumIn(): Uint8Array {
+		const r32=Uint32Array.of(this._sum());
 		//Copy the first element and convert to bytes
 		const r8 = new Uint8Array(r32.slice(0, 1).buffer);
 		asBE.i32(r8);
@@ -165,7 +171,7 @@ export class XxHash32 implements IHash {
      * @returns Unsigned 32bit integer (0-0xffffffff)
      */
 	sum32(): number {
-		return this._sum()[0];
+		return this._sum()>>>0;
 	}
 
 	/**
@@ -191,7 +197,7 @@ export class XxHash32 implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): XxHash32 {
+	clone(): XxHash32 {
 		const ret = new XxHash32(this.#seed);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
@@ -312,6 +318,13 @@ export class XxHash64 implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
+		return this.sumIn();
+	}
+
+	/**
+     * Sum the hash (doesn't mutate internal state, here for compat)
+     */
+	sumIn(): Uint8Array {
 		const result = U64Mut.fromIntUnsafe(0);
 		if (this.#ingestBytes.gte(U64.fromInt(blockSize64Bytes))) {
 			result
@@ -438,7 +451,7 @@ export class XxHash64 implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): XxHash64 {
+	clone(): XxHash64 {
 		const ret = new XxHash64(this.#seed);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);

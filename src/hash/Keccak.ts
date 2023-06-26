@@ -77,10 +77,11 @@ const tupleHashFn = 'TupleHash';
 const parallelHashFn = 'ParallelHash';
 
 class KeccakCore implements IHash {
+	private _size:number;
 	/**
 	 * Digest size in bytes
 	 */
-	readonly size: number;
+	get size():number { return this._size;}
 	/**
 	 * Block size in bytes
 	 */
@@ -93,7 +94,7 @@ class KeccakCore implements IHash {
 	 * Temp processing block
 	 */
 	protected readonly block: Uint8Array;
-	readonly #suffix: number;
+	readonly suffix: number;
 	readonly #roundStart: number;
 	/**
 	 * Position of data written to block
@@ -120,9 +121,9 @@ class KeccakCore implements IHash {
 		if (capacityBytes <= 0) capacityBytes = digestSizeBytes;
 		capacityBytes *= 2;
 
-		this.#suffix = suffix;
+		this.suffix = suffix;
 		this.#roundStart = roundStart;
-		this.size = digestSizeBytes;
+		this._size = digestSizeBytes;
 		this.blockSize = maxBlockSizeBytes - capacityBytes;
 		this.block = new Uint8Array(maxBlockSizeBytes);
 
@@ -217,30 +218,37 @@ class KeccakCore implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
+		return this.clone().sumIn();
+	}
+
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+	sumIn():Uint8Array {
 		//End with a 0b1 in MSB
-		alt.suffix();
-		alt.block[alt.blockSize - 1] ^= 0x80;
-		alt.hash();
+		this.xorSuffix();
+		this.block[this.blockSize - 1] ^= 0x80;
+		this.hash();
 		//Squeeze
-		const ret = new Uint8Array(alt.size);
+		const ret = new Uint8Array(this.size);
 		//If alt.size (requested bytes) is larger than our sponge, we take out the first sponge.length
 		// bits, hash, and take out the next, until we obtain enough bits (note there are security implications
 		// of squeezing a lot of data out with weak sources)
-		let retSize = alt.size;
+		let retSize = this.size;
 		let ptr = 0;
 		while (retSize > this.blockSize) {
-			ret.set(alt.block.slice(0, this.blockSize), ptr);
+			ret.set(this.block.slice(0, this.blockSize), ptr);
 			ptr += this.blockSize;
 			retSize -= this.blockSize;
-			alt.hash();
+			this.hash();
 		}
-		ret.set(alt.block.slice(0, retSize), ptr);
+		ret.set(this.block.slice(0, retSize), ptr);
 		return ret;
 	}
 
-	protected suffix():void {
-		this.block[this.bPos] ^= this.#suffix;
+	protected xorSuffix():void {
+		this.block[this.bPos] ^= this.suffix;
 	}
 
 	/**
@@ -258,7 +266,7 @@ class KeccakCore implements IHash {
 	 */
 	newEmpty(): IHash {
 		return new KeccakCore(
-			this.#suffix,
+			this.suffix,
 			this.size,
 			(maxBlockSizeBytes - this.blockSize) / 2,
 			this.#roundStart
@@ -269,9 +277,9 @@ class KeccakCore implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	protected clone(): KeccakCore {
+	clone(): KeccakCore {
 		const ret = new KeccakCore(
-			this.#suffix,
+			this.suffix,
 			this.size,
 			(maxBlockSizeBytes - this.blockSize) / 2,
 			this.#roundStart
@@ -280,6 +288,11 @@ class KeccakCore implements IHash {
 		ret.block.set(this.block);
 		ret.bPos = this.bPos;
 		return ret;
+	}
+	protected _cloneHelp(ret:KeccakCore):void {
+		ret.state.set(this.state);
+		ret.block.set(this.block);
+		ret.bPos = this.bPos;
 	}
 }
 
@@ -445,39 +458,101 @@ function bytePad(w: number, ...x: Uint8Array[]): Uint8Array {
 	return ret;
 }
 
-class CShake extends KeccakCore {
+class CShake implements IHash {
 	//cSHAKE128(X, L, N, S)  X=inputString, L=outputLengthBits, N=functionName, S=customization
-	readonly #prefix: Uint8Array;
+	#keccak:KeccakCore;
+	protected readonly customization:Uint8Array;
 
 	constructor(
-		cap: number,
-		pad: number,
+		/** capacity size*/
+		protected cap: number,
+		/** padding size*/
+		protected pad: number,
 		digestSize: number,
-		functionName = '',
+		/** function name */
+		protected functionName = '',
 		customization?: Uint8Array | string
 	) {
-		const isShake =
-			functionName.length == 0 && (!customization || customization.length == 0);
-		const suffix = isShake ? shake_suffix : cShake_suffix;
-		super(suffix, digestSize, cap);
-		if (isShake) {
-			this.#prefix = new Uint8Array(0);
+		if (functionName.length == 0 && (!customization || customization.length == 0)) {
+			//Shake
+			this.#keccak=new KeccakCore(shake_suffix,digestSize,cap);
+			this.customization=new Uint8Array(0);
 		} else {
-			this.#prefix = bytePad(
-				pad,
-				encodeString(functionName),
-				encodeString(customization)
-			);
-			super.write(this.#prefix);
+			//cShake
+			this.#keccak=new KeccakCore(cShake_suffix,digestSize,cap);
+			this.customization=customization===undefined
+				?new Uint8Array(0)
+				:customization instanceof Uint8Array
+					?customization
+					:utf8.toBytes(customization);
+			this.#keccak.write(bytePad(
+				this.pad,
+				encodeString(this.functionName),
+				encodeString(this.customization)
+			));
 		}
 	}
-
+	/**
+	 * Write data to the hash (can be called multiple times)
+	 * @param data
+	 */
+	write(data: Uint8Array): void {
+		this.#keccak.write(data);
+	}
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */	
+	sum(): Uint8Array {
+		return this.clone().sumIn();
+	}
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     */
+	sumIn(): Uint8Array {
+		return this.#keccak.sumIn();
+	}
 	/**
 	 * Set hash state. Any past writes will be forgotten
 	 */
 	reset(): void {
-		super.reset();
-		super.write(this.#prefix);
+		this.#keccak.reset();
+		if (this.#keccak.suffix===cShake_suffix) {
+			this.#keccak.write(bytePad(
+				this.pad,
+				encodeString(this.functionName),
+				encodeString(this.customization)
+			));
+		}
+	}
+	/**
+	 * Create an empty IHash using the same algorithm
+	 */
+	newEmpty(): IHash {
+		return new CShake(this.cap,this.pad,this.size,this.functionName,this.customization);
+	}
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
+	 */
+	clone(): CShake {
+		const ret=new CShake(this.cap,this.pad,this.size,this.functionName,this.customization);
+		this._cloneHelp(ret);
+		return ret;
+	}
+	protected _cloneHelp(ret:CShake):void {
+		ret.#keccak=this.#keccak.clone();
+	}
+	/**
+	 * Digest size in bytes
+	 */
+	get size(): number {
+		return this.#keccak.size;
+	}
+	/**
+	 * Block size in bytes
+	 */
+	get blockSize(): number {
+		return this.#keccak.blockSize;
 	}
 }
 export class CShake128 extends CShake {
@@ -507,10 +582,11 @@ export class CShake256 extends CShake {
 	}
 }
 
-abstract class AKmac extends CShake {
+class KmacCore extends CShake {
 	// KMAC(K,X,L,S) K=key, X=inputString,L=digestSize (bits),S=customization
-	abstract get appendSize(): number;
 	constructor(
+		/** Whether size should be appended on sum */
+		private appendSize:boolean,
 		cap: number,
 		pad: number,
 		digestSize: number,
@@ -521,24 +597,24 @@ abstract class AKmac extends CShake {
 		this.write(bytePad(pad, encodeString(key)));
 	}
 	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+	sumIn(): Uint8Array {
+		super.write(rightEncode(this.appendSize?this.size<<3:0));
+		return super.sumIn();
+	}
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
 	 */
-	sum(): Uint8Array {
-		super.write(rightEncode(this.appendSize));
-		return super.sum();
+	clone():KmacCore {
+		const ret=new KmacCore(this.appendSize,this.cap,this.pad,this.size,this.functionName,this.customization);
+		super._cloneHelp(ret);
+		return ret;
 	}
 }
-class KMac extends AKmac {
-	get appendSize(): number {
-		return this.size << 3;
-	}
-}
-class KMacXof extends AKmac {
-	get appendSize(): number {
-		return 0;
-	}
-}
-export class Kmac128 extends KMac {
+export class Kmac128 extends KmacCore {
 	/**
 	 * Build a new KMAC 128bit generator
 	 * - Key SHOULD NOT be less than digestSize (32 by default) per SP800-185
@@ -551,10 +627,10 @@ export class Kmac128 extends KMac {
 		key?: Uint8Array | string,
 		customization?: Uint8Array | string
 	) {
-		super(cap128, pad128, digestSize, key, customization);
+		super(true,cap128,pad128,digestSize,key,customization);
 	}
 }
-export class Kmac256 extends KMac {
+export class Kmac256 extends KmacCore {
 	/**
 	 * Build a new KMAC 256bit generator
 	 * - Key SHOULD NOT be less than digestSize (32 by default) per SP800-185
@@ -567,10 +643,10 @@ export class Kmac256 extends KMac {
 		key?: Uint8Array | string,
 		customization?: Uint8Array | string
 	) {
-		super(cap256, pad256, digestSize, key, customization);
+		super(true,cap256, pad256, digestSize, key, customization);
 	}
 }
-export class KmacXof128 extends KMacXof {
+export class KmacXof128 extends KmacCore {
 	/**
 	 * Build a new KMACXOF 128bit generator
 	 * @param digestSize Digest size in bytes
@@ -582,10 +658,10 @@ export class KmacXof128 extends KMacXof {
 		key?: Uint8Array | string,
 		customization?: Uint8Array | string
 	) {
-		super(cap128, pad128, digestSize, key, customization);
+		super(false,cap128, pad128, digestSize, key, customization);
 	}
 }
-export class KmacXof256 extends KMacXof {
+export class KmacXof256 extends KmacCore {
 	/**
 	 * Build a new KMACXOF 256bit generator
 	 * @param digestSize Digest size in bytes
@@ -597,14 +673,15 @@ export class KmacXof256 extends KMacXof {
 		key?: Uint8Array | string,
 		customization?: Uint8Array | string
 	) {
-		super(cap256, pad256, digestSize, key, customization);
+		super(false,cap256, pad256, digestSize, key, customization);
 	}
 }
 
-abstract class ATupleHash extends CShake {
+class TupleHashCore extends CShake {
 	// TupleHash(K,L,S) X=input sets, L=digestSize(bits), S=customization
-	abstract get appendSize(): number;
 	constructor(
+		/** Whether size should be appended on sum */
+		private appendSize:boolean,
 		cap: number,
 		pad: number,
 		digestSize: number,
@@ -621,73 +698,74 @@ abstract class ATupleHash extends CShake {
 		super.write(encodeString(data));
 	}
 	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+	sumIn(): Uint8Array {
+		super.write(rightEncode(this.appendSize?this.size<<3:0));
+		return super.sumIn();
+	}
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
 	 */
-	sum(): Uint8Array {
-		super.write(rightEncode(this.appendSize));
-		return super.sum();
+	clone():TupleHashCore {
+		const ret=new TupleHashCore(this.appendSize,this.cap,this.pad,this.size,this.customization);
+		super._cloneHelp(ret);
+		return ret;
 	}
 }
-class TupleHash extends ATupleHash {
-	get appendSize(): number {
-		return this.size << 3;
-	}
-}
-class TupleHashXof extends ATupleHash {
-	get appendSize(): number {
-		return 0;
-	}
-}
-export class TupleHash128 extends TupleHash {
+export class TupleHash128 extends TupleHashCore {
 	/**
 	 * Build a new TupleHash 128bit generator
 	 * @param digestSize Digest size in bytes, 32 by default (128bit)
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
 	constructor(digestSize = 32, customization?: Uint8Array | string) {
-		super(cap128, pad128, digestSize, customization);
+		super(true,cap128, pad128, digestSize, customization);
 	}
 }
-export class TupleHash256 extends TupleHash {
+export class TupleHash256 extends TupleHashCore {
 	/**
 	 * Build a new TupleHash 256bit generator
 	 * @param digestSize Digest size in bytes, 64 by default (256bit)
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
 	constructor(digestSize = 64, customization?: Uint8Array | string) {
-		super(cap256, pad256, digestSize, customization);
+		super(true,cap256, pad256, digestSize, customization);
 	}
 }
-export class TupleHashXof128 extends TupleHashXof {
+export class TupleHashXof128 extends TupleHashCore {
 	/**
 	 * Build a new TupleHashXof 128bit generator
 	 * @param digestSize Digest size in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
 	constructor(digestSize: number, customization?: Uint8Array | string) {
-		super(cap128, pad128, digestSize, customization);
+		super(false,cap128, pad128, digestSize, customization);
 	}
 }
-export class TupleHashXof256 extends TupleHashXof {
+export class TupleHashXof256 extends TupleHashCore {
 	/**
 	 * Build a new TupleHashXof 256bit generator
 	 * @param digestSize Digest size in bytes
 	 * @param customization Optional customization string (will be utf8 encoded) or in bytes
 	 */
 	constructor(digestSize: number, customization?: Uint8Array | string) {
-		super(cap256, pad256, digestSize, customization);
+		super(false,cap256, pad256, digestSize, customization);
 	}
 }
 
-abstract class AParallelHash extends CShake {
+class ParallelHashCore extends CShake {
 	//ParallelHash(X, B, L, S) X=input, B=blockSize(Bytes), L=digestSize(bits), S=customization
-	abstract get appendSize(): number;
 	readonly #outBlock: Uint8Array;
-	readonly #subHash: CShake;
+	#subHash: CShake;
 	#obPos = 0;
 	#obCount = 0;
 
 	constructor(
+		/** Whether size should be appended on sum */
+		private appendSize:boolean,
 		cap: number,
 		pad: number,
 		blockSize: number,
@@ -737,20 +815,19 @@ abstract class AParallelHash extends CShake {
 			space = this.#outBlock.length;
 		}
 	}
-
 	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum(): Uint8Array {
-		//todo: switch this from using.. this (inject alt into sum? sum accepts func?)
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+	sumIn(): Uint8Array {
 		if (this.#obPos > 0) {
 			this.#subHash.reset();
 			this.#subHash.write(this.#outBlock.subarray(0, this.#obPos));
 			super.write(this.#subHash.sum());
 		}
 		super.write(rightEncode(this.#obCount));
-		super.write(rightEncode(this.appendSize));
-		return super.sum();
+		super.write(rightEncode(this.appendSize?this.size<<3:0));
+		return super.sumIn();
 	}
 
 	/**
@@ -763,18 +840,24 @@ abstract class AParallelHash extends CShake {
 		this.#obPos = 0;
 		this.#obCount = 0;
 	}
-}
-class ParallelHash extends AParallelHash {
-	get appendSize(): number {
-		return this.size << 3;
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
+	 */
+	clone():ParallelHashCore {
+		const ret=new ParallelHashCore(this.appendSize,this.cap,this.pad,this.#outBlock.length,this.size,this.customization);
+		this._cloneHelp(ret);
+		return ret;
+	}
+	protected _cloneHelp(ret: ParallelHashCore): void {
+		super._cloneHelp(ret);
+		ret.#outBlock.set(this.#outBlock);
+		ret.#subHash=this.#subHash.clone();
+		ret.#obPos=this.#obPos;
+		ret.#obCount=this.#obCount;
 	}
 }
-class ParallelHashXof extends AParallelHash {
-	get appendSize(): number {
-		return 0;
-	}
-}
-export class ParallelHash128 extends ParallelHash {
+export class ParallelHash128 extends ParallelHashCore {
 	/**
 	 * Build a new ParallelHash 128bit generator
 	 * @param blockSize Block size in bytes
@@ -786,10 +869,10 @@ export class ParallelHash128 extends ParallelHash {
 		digestSize = 32,
 		customization?: Uint8Array | string
 	) {
-		super(cap128, pad128, blockSize, digestSize, customization);
+		super(true,cap128, pad128, blockSize, digestSize, customization);
 	}
 }
-export class ParallelHash256 extends ParallelHash {
+export class ParallelHash256 extends ParallelHashCore {
 	/**
 	 * Build a new ParallelHash 256bit generator
 	 * @param blockSize Block size in bytes
@@ -801,10 +884,10 @@ export class ParallelHash256 extends ParallelHash {
 		digestSize = 64,
 		customization?: Uint8Array | string
 	) {
-		super(cap256, pad256, blockSize, digestSize, customization);
+		super(true,cap256, pad256, blockSize, digestSize, customization);
 	}
 }
-export class ParallelHashXof128 extends ParallelHashXof {
+export class ParallelHashXof128 extends ParallelHashCore {
 	/**
 	 * Build a new ParallelHashXof 128bit generator
 	 * @param blockSize Block size in bytes
@@ -816,10 +899,10 @@ export class ParallelHashXof128 extends ParallelHashXof {
 		digestSize: number,
 		customization?: Uint8Array | string
 	) {
-		super(cap128, pad128, blockSize, digestSize, customization);
+		super(false,cap128, pad128, blockSize, digestSize, customization);
 	}
 }
-export class ParallelHashXof256 extends ParallelHashXof {
+export class ParallelHashXof256 extends ParallelHashCore {
 	/**
 	 * Build a new ParallelHashXof 256bit generator
 	 * @param blockSize Block size in bytes
@@ -831,7 +914,7 @@ export class ParallelHashXof256 extends ParallelHashXof {
 		digestSize: number,
 		customization?: Uint8Array | string
 	) {
-		super(cap256, pad256, blockSize, digestSize, customization);
+		super(false,cap256, pad256, blockSize, digestSize, customization);
 	}
 }
 
@@ -877,7 +960,7 @@ function k12LengthEncode(w:number):Uint8Array {
 export class KangarooTwelve extends KeccakCore {
 	// KangarooTwelve( M, C, L ) m=message (bytes), c=customization (bytes) l=digestSize
 	readonly maxChunkSize = 8192;
-	readonly #customization: Uint8Array;
+	protected readonly customization: Uint8Array;
 	#chunks:TurboShake128[]=[];
 	#ingestBlockBytes=0;
 
@@ -888,7 +971,7 @@ export class KangarooTwelve extends KeccakCore {
 	 */
 	constructor(digestSize: number, customization?: Uint8Array | string) {
 		super(0x07, digestSize, 16, k12RoundStart);
-		this.#customization = customization === undefined
+		this.customization = customization === undefined
 				? new Uint8Array(0)
 				: customization instanceof Uint8Array
 					? customization
@@ -923,12 +1006,12 @@ export class KangarooTwelve extends KeccakCore {
 		}
 	}
 
-	protected suffix(): void {
-		//We have to override suffix to allow appending of customization (unlike cShake where
+	protected xorSuffix(): void {
+		//We have to override to allow appending of customization (unlike cShake where
 		// it's written at the start)
 		// Further we may need to do final block preparation if input exceeded maxChunkSize
-		this.write(this.#customization);
-		this.write(k12LengthEncode(this.#customization.length));
+		this.write(this.customization);
+		this.write(k12LengthEncode(this.customization.length));
 
 		if (this.#chunks.length>0) {
 			//All these features go into the "main" chunk (so cannot use this.write)
@@ -949,17 +1032,17 @@ export class KangarooTwelve extends KeccakCore {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	protected clone(): KangarooTwelve {
+	clone(): KangarooTwelve {
 		const ret=new KangarooTwelve(
 			this.size,
-			this.#customization);
-		
-		ret.state.set(this.state);
-		ret.block.set(this.block);
-		ret.bPos = this.bPos;
+			this.customization);
+		this._cloneHelp(ret);
+		return ret;
+	}
+	protected _cloneHelp(ret:KangarooTwelve):void {
+		super._cloneHelp(ret);
 		ret.#chunks=this.#chunks;//It's ok that these are sharing memory
 		ret.#ingestBlockBytes=this.#ingestBlockBytes;
-		return ret;
 	}
 }
 
@@ -973,7 +1056,8 @@ export class KangarooTwelve extends KeccakCore {
 export class HopMac extends KangarooTwelve {
 	//HopMAC(Key, M, C, L) key=secret, m=message, c=customization, l=digestSize
 	//This is the "inner" hash
-	readonly size:number;
+	private _outerSize:number;
+	//get size():number {return this.size;}
 	readonly #key:Uint8Array;
 
 	/**
@@ -984,21 +1068,39 @@ export class HopMac extends KangarooTwelve {
 	 */
 	constructor(digestSize:number,key: Uint8Array | string,customization?:Uint8Array|string) {
 		super(32,customization);
-		this.size=digestSize;
+		this._outerSize=digestSize;
 		this.#key=key instanceof Uint8Array ? key : utf8.toBytes(key);
 	}
 
+	get size():number {
+		return this._outerSize;
+	}
+
 	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum():Uint8Array {
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */	
+	sumIn(): Uint8Array {
 		//Sum inner as normal =K12(M,C,32)
-		const inner=super.sum();
+		const inner=super.sumIn();
 		//Build an outer K12 using inner as the customization
-		const outer=new KangarooTwelve(this.size,inner);
+		const outer=new KangarooTwelve(this._outerSize,inner);
 		//Add key as the message
 		outer.write(this.#key);
 		//And return the sum
-		return outer.sum();
+		return outer.sumIn();
+	}
+	// clone - inheritance issues
+	/**
+	 * Create a copy of the current context (uses different memory)
+	 * @returns
+	 */
+	clone(): HopMac {
+		const ret=new HopMac(
+			this._outerSize,
+			this.#key,
+			this.customization);
+		this._cloneHelp(ret);
+		return ret;
 	}
 }

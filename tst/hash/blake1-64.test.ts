@@ -3,6 +3,7 @@ import * as assert from 'uvu/assert';
 import { utf8 } from '../../src/encoding/Utf8';
 import { hex } from '../../src/encoding/Hex';
 import { Blake64 } from '../../src/hash/Blake1';
+import { U64MutArray } from '../../src/primitive/U64';
 
 const tsts = suite('Blake1-64');
 
@@ -30,5 +31,21 @@ for (const [source,expect] of ascii64HexPairs) {
 		assert.is(hex.fromBytes(md), expect);
 	});
 }
+
+tsts(`newEmpty`,()=>{
+	const salt=U64MutArray.fromBytes(hex.toBytes('0000000000000001000000000000000200000000000000030000000000000004').buffer);
+	const sumEmpty='987590D0FF66B4D7FCE4386861CD0ABB745C8A0DC62A4C938DB9C273CA9A92D259D224E6778E067B871AE410C6AA4E60903EA867BFFB69A08FFB5BEB62DE04AD';
+	const sum0123='3AC9C95E85823762E644FAF3071400E5F867115C370790D76E52CF6C76C1A3C5439C7693ED8B9A8C43CCCEDB68A92D24FEBD9DF7E1DECE2BB1CA78EDF7C33FB5';
+
+	const hash=new Blake64(salt);
+	assert.is(hex.fromBytes(hash.sum()),sumEmpty);
+	hash.write(Uint8Array.of(0,1,2,3));
+	assert.is(hex.fromBytes(hash.sum()),sum0123);
+	const hash2=hash.newEmpty();
+	assert.is(hex.fromBytes(hash.sum()),sum0123);
+	assert.is(hex.fromBytes(hash2.sum()),sumEmpty);
+	hash2.write(Uint8Array.of(0,1,2,3));
+	assert.is(hex.fromBytes(hash2.sum()),sum0123);
+})
 
 tsts.run();

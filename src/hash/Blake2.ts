@@ -141,8 +141,6 @@ class Blake2_32bit implements IHash {
 			k = sigma[i2 + 1],
 			mj = U32.iFromBytesLE(this.#block, j * 4), //m[j]
 			mk = U32.iFromBytesLE(this.#block, k * 4); //m[k]
-		// console.log(`mj=${hex.fromBytes(mj.toBytes())}`);
-		// console.log(`mk=${hex.fromBytes(mk.toBytes())}`);
 
 		//Step 1
 		v[a] += v[b] + mj; //a ← a + b + m[j]
@@ -248,13 +246,23 @@ class Blake2_32bit implements IHash {
 		}
 	}
 
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
+		return this.clone().sumIn();
+	}
+
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+	sumIn():Uint8Array {
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
-		alt.hash(true);
+		this.#block.fill(0, this.#bPos);
+		this.hash(true);
 		const ret = new Uint8Array(this.size);
-		littleEndian.u32ArrIntoBytesSafe(alt.#state, ret);
+		littleEndian.u32ArrIntoBytesSafe(this.#state, ret);
 		return ret;
 	}
 
@@ -294,7 +302,7 @@ class Blake2_32bit implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Blake2_32bit {
+	clone(): Blake2_32bit {
 		const ret = new Blake2_32bit(this.#key, this.#params);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
@@ -359,8 +367,9 @@ class Blake2_64bit implements IHash {
 		return U32.iFromBytesLE(this.#params, 4);
 	}
 
-	get nodeOffset(): Uint64 {
-		return littleEndian.u64FromBytes(this.#params, 8);
+	get nodeOffset(): U64 {
+		const bytes=new Uint8Array(this.#params.subarray(8, 16));
+		return U64.fromBytesLE(bytes);
 	}
 
 	get nodeDepth(): number {
@@ -511,12 +520,18 @@ class Blake2_64bit implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
+		return this.clone().sumIn();
+	}
+
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     */
+	sumIn():Uint8Array {
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
-		alt.hash(true);
+		this.#block.fill(0, this.#bPos);
+		this.hash(true);
 		const ret = new Uint8Array(this.size);
-		littleEndian.u64ArrIntoBytesSafe(alt.#state, ret);
+		littleEndian.u64ArrIntoBytesSafe(this.#state, ret);
 		return ret;
 	}
 
@@ -580,7 +595,7 @@ class Blake2_64bit implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Blake2_64bit {
+	clone(): Blake2_64bit {
 		const ret = new Blake2_64bit(this.#key, this.#params);
 		for (let i = 0; i < this.#state.length; i++) ret.#state[i] = this.#state[i];
 		ret.#block.set(this.#block);
@@ -600,7 +615,9 @@ export class Blake2s extends Blake2_32bit {
 		nodeDepth: number,
 		innerHashLen: number,
 		key?: Uint8Array,
+		/** 8 bytes or empty, defaults to all zeros */
 		salt?: Uint8Array,
+		/** 8 bytes or empty, defaults to all zeros */
 		personalization?: Uint8Array
 	) {
 		key = key ?? new Uint8Array(0);
@@ -664,7 +681,9 @@ export class Blake2b extends Blake2_64bit {
 		nodeDepth: number,
 		innerHashLen: number,
 		key?: Uint8Array,
+		/** 16 bytes or empty, defaults to all zeros */
 		salt?: Uint8Array,
+		/** 16 bytes or empty, defaults to all zeros */
 		personalization?: Uint8Array
 	) {
 		key = key ?? new Uint8Array(0);

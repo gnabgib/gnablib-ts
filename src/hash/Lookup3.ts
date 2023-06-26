@@ -156,35 +156,41 @@ export class Lookup3 implements IHash {
 		}
 	}
 
-	_sum(): Lookup3 {
-		const alt = this.clone();
+	private static _sum(alt:Lookup3):void {
 		//We only finalize if there's >0 bits
-		if (alt.#bPos > 0 || this.#ingestBytes === 12) {
+		if (alt.#bPos > 0 || alt.#ingestBytes === 12) {
 			alt.#block.fill(0, alt.#bPos);
 			alt.final();
 		}
-		return alt;
 	}
 
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const sum = this._sum();
-		const ret = new Uint8Array(sum.#state.slice(1));
-		//Hard to know which endian would be preferred here (out of spec)
-		// so leave it in platform-endian
+		return this.clone().sumIn();
+	}
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     */
+	sumIn():Uint8Array {
+		Lookup3._sum(this);
+		const ret = new Uint8Array(this.#state.slice(1).buffer);
+		//Wiki implies big-endian (since that's how we right numbers)
+		//asBE.i32(ret);
 		return ret;
 	}
+	
 
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum32(): [number, number] {
-		const ret = this._sum();
-		const s8 = new Uint8Array(ret.#state.buffer);
+		Lookup3._sum(this);
+		const s8 = new Uint8Array(this.#state.buffer);
 		asLE.i32(s8, 0, 3);
-		return [ret.#state[1], ret.#state[2]];
+		const ret=new Uint32Array(s8.buffer);
+		return [ret[1],ret[2]];
 	}
 
 	/**
@@ -209,12 +215,12 @@ export class Lookup3 implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Lookup3 {
+	clone(): Lookup3 {
 		const ret = new Lookup3(this.#seed, this.#seed2);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
 		ret.#ingestBytes = this.#ingestBytes;
 		ret.#bPos = this.#bPos;
-		return this;
+		return ret;
 	}
 }

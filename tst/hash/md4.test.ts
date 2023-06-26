@@ -193,5 +193,15 @@ tsts('MD4 Collision example:',()=>{
 	assert.is(hex.fromBytes(digest1),hex.fromBytes(digest2));
 });
 
+tsts('newEmpty()',()=>{
+	const hash=new Md4();
+	hash.write(utf8.toBytes('a'));
+	Assert.bytesMatchHex(hash.sum(), 'BDE52CB31DE33E46245E05FBDBD6FB24');
+	
+	const h2=hash.newEmpty();
+	h2.write(utf8.toBytes('f'));
+	Assert.bytesMatchHex(h2.sum(), '1B08AF276DBC7593271F4EE616289324');
+})
+
 
 tsts.run();

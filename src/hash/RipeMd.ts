@@ -5,7 +5,6 @@ import { U32 } from '../primitive/U32.js';
 import type { IHash } from './IHash.js';
 
 //[Wikipedia: RipeMD](https://en.wikipedia.org/wiki/RIPEMD) (1992)
-
 //https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd128.txt
 //https://homes.esat.kuleuven.be/~bosselae/ripemd/rmd160.txt
 //https://homes.esat.kuleuven.be/~bosselae/ripemd160.html (1996)
@@ -69,8 +68,8 @@ const ss = [
 	5, 14, 6, 8, 13, 6, 5, 15, 13, 11,
 	11 /*s 64..79 -- -- -- -- -- -- -- -- -- */,
 ];
-type iv = (state: Uint32Array) => void;
-type hash = (state: Uint32Array, x: Uint32Array) => void;
+type ivFunc = (state: Uint32Array) => void;
+type hashFunc = (state: Uint32Array, x: Uint32Array) => void;
 
 class RipeMd implements IHash {
 	/**
@@ -89,7 +88,7 @@ class RipeMd implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize);
-	readonly #block32=new Uint32Array(this.#block.buffer);
+	readonly #block32 = new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -98,13 +97,13 @@ class RipeMd implements IHash {
 	 * Position of data written to block
 	 */
 	#bPos = 0;
-	readonly #iv: iv;
-	readonly #hash: hash;
+	readonly #iv: ivFunc;
+	readonly #hash: hashFunc;
 
 	/**
 	 * Build a new RipeMd-320 hash generator
 	 */
-	constructor(digestSize: number, iv: iv, hash: hash) {
+	constructor(digestSize: number, iv: ivFunc, hash: hashFunc) {
 		this.size = digestSize;
 		this.#state = new Uint32Array(digestSize >> 2);
 		this.#iv = iv;
@@ -114,10 +113,10 @@ class RipeMd implements IHash {
 
 	private hash(): void {
 		//Make sure block is LE (might mangle state, but it's reset after hash)
-		for(let i=0;i<16;i++) asLE.i32(this.#block,i*4);
+		for (let i = 0; i < 16; i++) asLE.i32(this.#block, i * 4);
 
 		// littleEndian.u32IntoArrFromBytes(x, 0, 16, this.#block);
-		this.#hash(this.#state,this.#block32);
+		this.#hash(this.#state, this.#block32);
 
 		//Reset block pointer
 		this.#bPos = 0;
@@ -158,37 +157,42 @@ class RipeMd implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block[alt.#bPos] = 0x80;
-		alt.#bPos++;
+		return this.clone().sumIn();
+	}
+	/**
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 */
+	sumIn(): Uint8Array {
+		this.#block[this.#bPos] = 0x80;
+		this.#bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (alt.#bPos > sizeSpace) {
+		if (this.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.#block.fill(0, alt.#bPos);
-			alt.hash();
+			this.#block.fill(0, this.#bPos);
+			this.hash();
 		}
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
+		this.#block.fill(0, this.#bPos);
 
-		const ss32=sizeSpace>>2;// div 4
+		const ss32 = sizeSpace >> 2; // div 4
 		//We tracked bytes, <<3 (*8) to count bits
-		alt.#block32[ss32]=alt.#ingestBytes << 3;
+		this.#block32[ss32] = this.#ingestBytes << 3;
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		alt.#block32[ss32+1]=alt.#ingestBytes / 0x20000000;
+		this.#block32[ss32 + 1] = this.#ingestBytes / 0x20000000;
 		//This might mangle #block, but we're about to hash anyway
-		asLE.i32(alt.#block,sizeSpace);
-		asLE.i32(alt.#block,sizeSpace+4);
-		alt.hash();
+		asLE.i32(this.#block, sizeSpace);
+		asLE.i32(this.#block, sizeSpace + 4);
+		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		const s8 = new Uint8Array(this.#state.buffer, this.#state.byteOffset);
 		//Make sure the bytes are LE - this might mangle alt.#state (but we're moments from disposing)
-		for(let i=0;i<this.size;i++) asLE.i32(s8,i*4);
+		for (let i = 0; i < this.size; i++) asLE.i32(s8, i * 4);
 		//Finally slice (duplicate) the data so caller can't discover hidden state
-		return s8.slice(0,this.size);
+		return s8.slice(0, this.size);
 	}
 
 	/**
@@ -213,7 +217,7 @@ class RipeMd implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): RipeMd {
+	clone(): RipeMd {
 		const ret = new RipeMd(this.size, this.#iv, this.#hash);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
@@ -239,10 +243,10 @@ export class RipeMd128 extends RipeMd {
 		state[3] = iv[3];
 	}
 
-	private static hash(v: Uint32Array,x:Uint32Array): void {
+	private static hash(v: Uint32Array, x: Uint32Array): void {
 		let t: number;
 
-        let a = v[0],
+		let a = v[0],
 			b = v[1],
 			c = v[2],
 			d = v[3];
@@ -252,16 +256,23 @@ export class RipeMd128 extends RipeMd {
 			dd = v[3];
 
 		for (let j = 0; j < 64; j++) {
-			const round = j>>4;
-			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
+			const round = j >> 4;
+			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
-			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(
+				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
+				ss[j]
+			);
 			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		//Using the rare , to show this is a big swap
-		(t = v[1] + c + dd), (v[1] = v[2] + d + aa), (v[2] = v[3] + a + bb), (v[3] = v[0] + b + cc), (v[0] = t);
+		(t = v[1] + c + dd),
+			(v[1] = v[2] + d + aa),
+			(v[2] = v[3] + a + bb),
+			(v[3] = v[0] + b + cc),
+			(v[0] = t);
 	}
 }
 
@@ -298,17 +309,23 @@ export class RipeMd160 extends RipeMd {
 
 		for (let j = 0; j < 80; j++) {
 			const round = Math.floor(j / 16);
-			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round],s[j]);
+			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
-			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			t =
+				ee +
+				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
 			//Using the rare , to show this is a big swap
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 
 		t = v[1] + c + dd;
 		//Using the rare , to show this is a big swap
-		(v[1] = v[2] + d + ee),(v[2] = v[3] + e + aa), (v[3] = v[4] + a + bb),(v[4] = v[0] + b + cc),(v[0] = t);
+		(v[1] = v[2] + d + ee),
+			(v[2] = v[3] + e + aa),
+			(v[3] = v[4] + a + bb),
+			(v[4] = v[0] + b + cc),
+			(v[0] = t);
 	}
 }
 
@@ -350,7 +367,10 @@ export class RipeMd256 extends RipeMd {
 			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
-			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(
+				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
+				ss[j]
+			);
 			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
@@ -360,7 +380,10 @@ export class RipeMd256 extends RipeMd {
 		for (; j < 32; j++) {
 			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(
+				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
+				ss[j]
+			);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = b), (b = bb), (bb = t);
@@ -369,7 +392,10 @@ export class RipeMd256 extends RipeMd {
 		for (; j < 48; j++) {
 			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(
+				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
+				ss[j]
+			);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = c), (c = cc), (cc = t);
@@ -378,7 +404,10 @@ export class RipeMd256 extends RipeMd {
 		for (; j < 64; j++) {
 			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = d), (d = c), (c = b), (b = t);
-			t = U32.rol(aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],ss[j]);
+			t = U32.rol(
+				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
+				ss[j]
+			);
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = d), (d = dd), (dd = t);
@@ -430,7 +459,9 @@ export class RipeMd320 extends RipeMd {
 			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			//Using the rare , to show this is a big swap
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
-			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			t =
+				ee +
+				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
 			//Using the rare , to show this is a big swap
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
@@ -440,7 +471,9 @@ export class RipeMd320 extends RipeMd {
 		for (; j < 32; j++) {
 			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
-			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round],ss[j]);
+			t =
+				ee +
+				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = d), (d = dd), (dd = t);
@@ -449,7 +482,9 @@ export class RipeMd320 extends RipeMd {
 		for (; j < 48; j++) {
 			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
-			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			t =
+				ee +
+				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = a), (a = aa), (aa = t);
@@ -458,7 +493,9 @@ export class RipeMd320 extends RipeMd {
 		for (; j < 64; j++) {
 			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
-			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			t =
+				ee +
+				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = c), (c = cc), (cc = t);
@@ -467,21 +504,15 @@ export class RipeMd320 extends RipeMd {
 		for (; j < 80; j++) {
 			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
-			t = ee + U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
+			t =
+				ee +
+				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = e), (e = ee), (ee = t);
 
 		//Using the rare , to show this is a big swap
-		(v[0] += a),
-			(v[1] += b),
-			(v[2] += c),
-			(v[3] += d),
-			(v[4] += e);
-		(v[5] += aa),
-			(v[6] += bb),
-			(v[7] += cc),
-			(v[8] += dd),
-			(v[9] += ee);
+		(v[0] += a), (v[1] += b), (v[2] += c), (v[3] += d), (v[4] += e);
+		(v[5] += aa), (v[6] += bb), (v[7] += cc), (v[8] += dd), (v[9] += ee);
 	}
 }

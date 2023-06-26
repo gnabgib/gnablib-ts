@@ -140,6 +140,7 @@ Name|Digest sizes|Optional parameters
 ### KDF
 
 - [HKDF](https://en.wikipedia.org/wiki/HKDF)
+- [PBKDF2](https://www.rfc-editor.org/rfc/rfc8018#section-5.2)
 
 ### MAC
 

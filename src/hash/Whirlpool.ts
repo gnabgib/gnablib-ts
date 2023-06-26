@@ -228,19 +228,25 @@ export class Whirlpool implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block[alt.#bPos] = 0x80;
-		alt.#bPos++;
+		return this.clone().sumIn();
+	}
+
+	/**
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 */
+	sumIn(): Uint8Array {
+		this.#block[this.#bPos] = 0x80;
+		this.#bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen;
 		//If there's not enough space, end this block
-		if (alt.#bPos > sizeSpace) {
+		if (this.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.#block.fill(0, alt.#bPos);
-			alt.hash();
+			this.#block.fill(0, this.#bPos);
+			this.hash();
 		}
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
+		this.#block.fill(0, this.#bPos);
 
 		const ss64 = sizeSpace >> 3; // div 3
 		//Technically we write 256bit length ([ms_u64,u64,u64,ls_u64]), but we only count 67 bits (for now)
@@ -249,12 +255,12 @@ export class Whirlpool implements IHash {
 		//alt.#block64.at(ss64 + 1).set(alt.#ingestBytesHigh.lShift(3));
 		//asBE.i64(alt.#block, sizeSpace);
 		//asBE.i64(alt.#block, sizeSpace + 8);
-		alt.#block64.at(ss64 + 2).set(alt.#ingestBytes.rShift(61));
-		alt.#block64.at(ss64 + 3).set(alt.#ingestBytes.lShift(3));
-		asBE.i64(alt.#block, sizeSpace + 16);
-		asBE.i64(alt.#block, sizeSpace + 24);
-		alt.hash();
-		return alt.#state.toBytesBE().subarray(0, alt.size);
+		this.#block64.at(ss64 + 2).set(this.#ingestBytes.rShift(61));
+		this.#block64.at(ss64 + 3).set(this.#ingestBytes.lShift(3));
+		asBE.i64(this.#block, sizeSpace + 16);
+		asBE.i64(this.#block, sizeSpace + 24);
+		this.hash();
+		return this.#state.toBytesBE().subarray(0, this.size);
 	}
 
 	/**
@@ -280,7 +286,7 @@ export class Whirlpool implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Whirlpool {
+	clone(): Whirlpool {
 		const ret = new Whirlpool();
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);

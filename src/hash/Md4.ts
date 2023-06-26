@@ -466,34 +466,40 @@ export class Md4 implements IHash {
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
-		const alt = this.clone();
-		alt.#block[alt.#bPos] = 0x80;
-		alt.#bPos++;
+		return this.clone().sumIn();
+	}
+	
+	/**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     */
+	sumIn(): Uint8Array {
+		this.#block[this.#bPos] = 0x80;
+		this.#bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (alt.#bPos > sizeSpace) {
+		if (this.#bPos > sizeSpace) {
 			//Zero the remainder of the block
-			alt.#block.fill(0, alt.#bPos);
-			alt.hash();
+			this.#block.fill(0, this.#bPos);
+			this.hash();
 		}
 		//Zero the rest of the block
-		alt.#block.fill(0, alt.#bPos);
+		this.#block.fill(0, this.#bPos);
 
 		//Write out the data size in little-endian
 		const ss32=sizeSpace>>2;// div 4
 		//We tracked bytes, <<3 (*8) to count bits
-		alt.#block32[ss32]=alt.#ingestBytes << 3;
+		this.#block32[ss32]=this.#ingestBytes << 3;
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		alt.#block32[ss32+1]=alt.#ingestBytes / 0x20000000;
+		this.#block32[ss32+1]=this.#ingestBytes / 0x20000000;
 		//This might mangle #block, but we're about to hash anyway
-		asLE.i32(alt.#block,sizeSpace);
-		asLE.i32(alt.#block,sizeSpace+4);
-		alt.hash();
+		asLE.i32(this.#block,sizeSpace);
+		asLE.i32(this.#block,sizeSpace+4);
+		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(alt.#state.buffer,alt.#state.byteOffset);
+		const s8=new Uint8Array(this.#state.buffer,this.#state.byteOffset);
 		//Make sure the bytes are LE - this might mangle alt.#state (but we're moments from disposing)
 		for(let i=0;i<digestSize;i++) asLE.i32(s8,i*4);
 		//Finally slice (duplicate) the data so caller can't discover hidden state
@@ -526,7 +532,7 @@ export class Md4 implements IHash {
 	 * Create a copy of the current context (uses different memory)
 	 * @returns
 	 */
-	private clone(): Md4 {
+	clone(): Md4 {
 		const ret = new Md4();
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
@@ -537,58 +543,57 @@ export class Md4 implements IHash {
 }
 
 //Encode RFC 1320 in JS
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-/*export*/ function generator() {
-	const shiftSets = [
-		[3, 7, 11, 19],
-		[3, 5, 9, 13],
-		[3, 9, 11, 15],
-	];
-	const rowSet = ['abcd', 'dabc', 'cdab', 'bcda'];
-	const addSets = ['', '5A827999', '6ED9EBA1'];
-	const posSets = [
-		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'a', 'b', 'c', 'd', 'e', 'f'],
-		[0, 4, 8, 'c', 1, 5, 9, 'd', 2, 6, 'a', 'e', 3, 7, 'b', 'f'],
-		[0, 8, 4, 'c', 2, 'a', 6, 'e', 1, 9, 5, 'd', 3, 'b', 7, 'f'],
-	];
-	const fns = [
-		(x: string, y: string, z: string) =>
-			'(' + z + ' ^ (' + x + ' & (' + y + ' ^ ' + z + ')))',
-		(x: string, y: string, z: string) =>
-			'(((' + x + ' | ' + y + ') & ' + z + ')|(' + x + ' & ' + y + '))',
-		//(x, y, z) => '((' + x + ' & ' + y + ')|(' + x + ' & ' + z + ')|(' + y + ' & ' + z + '))',
-		(x: string, y: string, z: string) => '(' + x + '^' + y + '^' + z + ')',
-	];
-	//3 blocks (rounds) in MD4
-	for (let block = 0; block < 3; block++) {
-		const s = shiftSets[block];
-		console.log('/* Round', block + 1, '*/');
-		console.log('const round' + block + 'col0 = ', s[0], ';');
-		console.log('const round' + block + 'col1 = ', s[1], ';');
-		console.log('const round' + block + 'col2 = ', s[2], ';');
-		console.log('const round' + block + 'col3 = ', s[3], ';');
-		const fn = fns[block];
-		const pos = posSets[block];
-		const add = addSets[block] === '' ? ',' : '+0x' + addSets[block] + ',';
-		for (let i = 0; i < 16; i++) {
-			const col = i % 4;
-			//const row=(i/4)|0;
-			const a = rowSet[col][0];
-			const b = rowSet[col][1];
-			const c = rowSet[col][2];
-			const d = rowSet[col][3];
-			console.log(
-				a,
-				'=rol32(',
-				a,
-				'+',
-				fn(b, c, d),
-				'+ x' + pos[i],
-				add,
-				'round' + block + 'col' + col,
-				');'
-			);
-		}
-		console.log('');
-	}
-}
+// function generator() {
+// 	const shiftSets = [
+// 		[3, 7, 11, 19],
+// 		[3, 5, 9, 13],
+// 		[3, 9, 11, 15],
+// 	];
+// 	const rowSet = ['abcd', 'dabc', 'cdab', 'bcda'];
+// 	const addSets = ['', '5A827999', '6ED9EBA1'];
+// 	const posSets = [
+// 		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'a', 'b', 'c', 'd', 'e', 'f'],
+// 		[0, 4, 8, 'c', 1, 5, 9, 'd', 2, 6, 'a', 'e', 3, 7, 'b', 'f'],
+// 		[0, 8, 4, 'c', 2, 'a', 6, 'e', 1, 9, 5, 'd', 3, 'b', 7, 'f'],
+// 	];
+// 	const fns = [
+// 		(x: string, y: string, z: string) =>
+// 			'(' + z + ' ^ (' + x + ' & (' + y + ' ^ ' + z + ')))',
+// 		(x: string, y: string, z: string) =>
+// 			'(((' + x + ' | ' + y + ') & ' + z + ')|(' + x + ' & ' + y + '))',
+// 		//(x, y, z) => '((' + x + ' & ' + y + ')|(' + x + ' & ' + z + ')|(' + y + ' & ' + z + '))',
+// 		(x: string, y: string, z: string) => '(' + x + '^' + y + '^' + z + ')',
+// 	];
+// 	//3 blocks (rounds) in MD4
+// 	for (let block = 0; block < 3; block++) {
+// 		const s = shiftSets[block];
+// 		console.log('/* Round', block + 1, '*/');
+// 		console.log('const round' + block + 'col0 = ', s[0], ';');
+// 		console.log('const round' + block + 'col1 = ', s[1], ';');
+// 		console.log('const round' + block + 'col2 = ', s[2], ';');
+// 		console.log('const round' + block + 'col3 = ', s[3], ';');
+// 		const fn = fns[block];
+// 		const pos = posSets[block];
+// 		const add = addSets[block] === '' ? ',' : '+0x' + addSets[block] + ',';
+// 		for (let i = 0; i < 16; i++) {
+// 			const col = i % 4;
+// 			//const row=(i/4)|0;
+// 			const a = rowSet[col][0];
+// 			const b = rowSet[col][1];
+// 			const c = rowSet[col][2];
+// 			const d = rowSet[col][3];
+// 			console.log(
+// 				a,
+// 				'=rol32(',
+// 				a,
+// 				'+',
+// 				fn(b, c, d),
+// 				'+ x' + pos[i],
+// 				add,
+// 				'round' + block + 'col' + col,
+// 				');'
+// 			);
+// 		}
+// 		console.log('');
+// 	}
+// }

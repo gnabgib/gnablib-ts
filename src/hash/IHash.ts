@@ -12,6 +12,11 @@ export interface IHash {
 	 */
     sum():Uint8Array;
     /**
+     * Sum the hash - mutates internal state, but avoids memory alloc.
+     * Use if you won't need the obj again (for performance)
+     */
+    sumIn():Uint8Array;
+    /**
      * Set hash to initial state. Any past writes will be forgotten
      */
     reset():void;
@@ -19,6 +24,10 @@ export interface IHash {
      * Create an empty IHash using the same algorithm
      */
     newEmpty():IHash;
+    /**
+     * Create a copy of the current context (uses different memory)
+     */
+    clone():IHash;
     /**
      * Digest size in bytes
      */

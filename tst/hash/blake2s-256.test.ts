@@ -2,7 +2,9 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { utf8 } from '../../src/encoding/Utf8';
 import { hex } from '../../src/encoding/Hex';
-import { Blake2s_256 } from '../../src/hash/Blake2';
+import { Blake2s_256,Blake2s } from '../../src/hash/Blake2';
+import { Uint64 } from '../../src/primitive/Uint64';
+import { U64 } from '../../src/primitive/U64';
 
 const tsts = suite('Blake2/RFC 7693 (s256)');
 
@@ -55,5 +57,49 @@ for (const [source,expect] of ascii2sHexPairs) {
 		assert.is(hex.fromBytes(md), expect);
 	});
 }
+
+tsts(`build`,()=>{
+	//Just settings to show the diff
+	const salt=Uint8Array.of(0,1,2,3,4,5,6,7);
+	const pers=Uint8Array.of(0xf,0xe,0xd,0xc,0xb,0xa,9,8);
+	const hash=new Blake2s(1,2,3,4,5,6,7,undefined,salt,pers);
+	assert.is(hash.size,1,'size');
+	assert.is(hash.fanOut,2,'fanOut');
+	assert.is(hash.maxDepth,3,'maxDepth');
+	assert.is(hash.leafLen,4,'leafLen');
+	assert.is(hash.nodeOffset.eq(U64.fromInt(5)),true,'nodeOffset');
+	assert.is(hash.nodeDepth,6,'nodeDepth');
+	assert.is(hash.innerLen,7,'innerLen');
+	assert.is(hash.keyLen,0,'keyLen');
+
+	assert.equal(hash.salt,salt,'salt');
+	assert.equal(hash.personalization,pers,'personalization');
+});
+
+tsts('newEmpty',()=>{
+	const hash=new Blake2s_256(Uint8Array.of(1));
+	const sumEmpty='F99B9D2F1C3DDF9CC09409B55DEC9E74B0412C76BAB44264FF9DC0315D30AF24';
+	const sum23='898ECB8907D62AE308376B00B5722F13F46BA7739835B9EA4683024AD6E411AF';
+
+	assert.is(hex.fromBytes(hash.sum()),sumEmpty);
+	hash.write(Uint8Array.of(2,3));
+	assert.is(hex.fromBytes(hash.sum()),sum23);
+	
+	const h2=hash.newEmpty();
+	assert.is(hex.fromBytes(h2.sum()),sumEmpty);
+});
+
+tsts(`bad salt size throws`,()=>{
+	assert.throws(()=>new Blake2s_256(undefined,Uint8Array.of(1)));
+});
+
+tsts(`bad pers size throws`,()=>{
+	assert.throws(()=>new Blake2s_256(undefined,undefined,Uint8Array.of(1)));
+});
+
+tsts(`sequential`,()=>{
+	const h=Blake2s.Sequential(11);
+	assert.is(h.size,11);
+})
 
 tsts.run();

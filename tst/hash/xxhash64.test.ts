@@ -25,6 +25,8 @@ const tests:[Uint8Array,U64,string][]=[
     //Seed!=0
     [utf8.toBytes('abc'),U64.fromInt(1),'BEA9CA8199328908'],
     [utf8.toBytes('abc'),U64.fromInt(0xCAFE),'55650D94381E717A'],
+    [Uint8Array.of(0),U64.fromInt(1),'771917C7F6EE2451'],
+    [Uint8Array.of(0,0),U64.fromInt(1),'899FB35F8D5447F1'],
 ];
 let count=0;
 for (const [data,seed,expect] of tests) {
@@ -35,5 +37,38 @@ for (const [data,seed,expect] of tests) {
         assert.is(hex.fromBytes(md),expect);
 	});
 }
+
+tsts(`sum`,()=>{
+    const hash=new XxHash64(U64.zero);
+    hash.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sum()),'E934A84ADB052768');
+});
+
+tsts(`sumIn`,()=>{
+    const hash=new XxHash64(U64.zero);
+    hash.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sumIn()),'E934A84ADB052768');
+});
+
+tsts(`newEmpty`,()=>{
+    const hash=new XxHash64(U64.fromInt(1));
+    hash.write(Uint8Array.of(0,0));
+    const hash2=hash.newEmpty();
+    hash2.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sum()),'899FB35F8D5447F1','first is seed=1, w=0,0');
+    assert.is(hex.fromBytes(hash2.sum()),'771917C7F6EE2451','second is seed=1, w=0');
+});
+
+tsts(`clone`,()=>{
+    const hash=new XxHash64(U64.fromInt(1));
+    hash.write(Uint8Array.of(0));
+    const hash2=hash.clone();
+    assert.is(hex.fromBytes(hash.sum()),'771917C7F6EE2451');
+    assert.is(hex.fromBytes(hash2.sum()),'771917C7F6EE2451');
+    
+    hash.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(hash.sum()),'899FB35F8D5447F1');
+    assert.is(hex.fromBytes(hash2.sum()),'771917C7F6EE2451');
+});
 
 tsts.run();

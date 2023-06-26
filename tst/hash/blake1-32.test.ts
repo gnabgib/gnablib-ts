@@ -28,4 +28,19 @@ for (const [source,expect] of ascii32HexPairs) {
 	});
 }
 
+tsts(`newEmpty`,()=>{
+	const hash=new Blake32(Uint32Array.of(5,6,7,8));
+	const sumEmpty='8ADE178EB05A97E397619C8AF465E37787A0C1AE5061A74539D1CC34C5288A09';
+	const sum0123='E3FA9270A34427889BE47B59185D098D4734EC676021856249012BBC1C388E21';
+
+	assert.is(hex.fromBytes(hash.sum()),sumEmpty);
+	hash.write(Uint8Array.of(0,1,2,3));
+	assert.is(hex.fromBytes(hash.sum()),sum0123);
+	const hash2=hash.newEmpty();
+	assert.is(hex.fromBytes(hash.sum()),sum0123);
+	assert.is(hex.fromBytes(hash2.sum()),sumEmpty);
+	hash2.write(Uint8Array.of(0,1,2,3));
+	assert.is(hex.fromBytes(hash2.sum()),sum0123);
+})
+
 tsts.run();
