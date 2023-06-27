@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/encoding/Hex';
 import { Sha1 } from '../../src/hash/Sha1';
-import {pbkdf2} from '../../src/kdf/Pbkdf2';
+import {pbkdf2, pbkdf2_hmac_sha1, pbkdf2_hmac_sha256, pbkdf2_hmac_sha512} from '../../src/kdf/Pbkdf2';
 
 const tsts = suite('PBKDF2/RFC 8018');
 
@@ -59,6 +59,21 @@ for(const [pass,salt,count,keySize,expect] of sha1) {
         assert.is(hex.fromBytes(found),expect);
     });
 }
+
+tsts(`pbkdf2_hmac_sha1`,()=>{
+    const found=pbkdf2_hmac_sha1(Uint8Array.of(0),Uint8Array.of(7,8,9),2,2);
+    assert.is(hex.fromBytes(found),'34EC');
+});
+
+tsts(`pbkdf2_hmac_sha256`,()=>{
+    const found=pbkdf2_hmac_sha256(Uint8Array.of(0),Uint8Array.of(7,8,9),2,2);
+    assert.is(hex.fromBytes(found),'C1A8');
+});
+
+tsts(`pbkdf2_hmac_sha512`,()=>{
+    const found=pbkdf2_hmac_sha512(Uint8Array.of(0),Uint8Array.of(7,8,9),2,2);
+    assert.is(hex.fromBytes(found),'635F');
+});
 
 // const exp=4000000
 // tsts(`PBFDK2(${exp})`,()=>{

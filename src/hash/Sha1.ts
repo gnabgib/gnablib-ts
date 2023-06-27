@@ -10,7 +10,6 @@ import type { IHash } from './IHash.js';
 
 // file deepcode ignore InsecureHash: This is an implementation of Sha1 not usage
 
-
 const digestSize = 20; //160 bits
 const digestSizeU32 = 5;
 const blockSize = 64; //512 bits
@@ -37,7 +36,7 @@ export class Sha1 implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize);
-	readonly #block32=new Uint32Array(this.#block.buffer);
+	readonly #block32 = new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -55,15 +54,19 @@ export class Sha1 implements IHash {
 	}
 
 	private hash() {
-		const w=new Uint32Array(80);
-		let a=this.#state[0],b=this.#state[1],c=this.#state[2],d=this.#state[3],e=this.#state[4];
+		const w = new Uint32Array(80);
+		let a = this.#state[0],
+			b = this.#state[1],
+			c = this.#state[2],
+			d = this.#state[3],
+			e = this.#state[4];
 
-		let t:number;
+		let t: number;
 		let j = 0;
 		for (; j < 16; j++) {
 			//Because the block isn't used after this, mutate (possibly) in place into Big Endian encoding
-			asBE.i32(this.#block,j*4);
-			w[j]=this.#block32[j];
+			asBE.i32(this.#block, j * 4);
+			w[j] = this.#block32[j];
 			// (b&c)|((~b)&d) - Same as MD4-r1
 			t = U32.rol(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
 			//Rare use of comma!  Make it clear there's a 5 stage swap going on
@@ -94,7 +97,11 @@ export class Sha1 implements IHash {
 			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
 		}
 
-		(this.#state[0] += a), (this.#state[1] += b), (this.#state[2] += c), (this.#state[3] += d), (this.#state[4] += e);
+		(this.#state[0] += a),
+			(this.#state[1] += b),
+			(this.#state[2] += c),
+			(this.#state[3] += d),
+			(this.#state[4] += e);
 
 		//Reset block pointer
 		this.#bPos = 0;
@@ -138,10 +145,10 @@ export class Sha1 implements IHash {
 		return this.clone().sumIn();
 	}
 
-    /**
-     * Sum the hash with internal - mutates internal state, but avoids
-     * memory allocation. Use if you won't need the obj again (for performance)
-     */
+	/**
+	 * Sum the hash with internal - mutates internal state, but avoids
+	 * memory allocation. Use if you won't need the obj again (for performance)
+	 */
 	sumIn(): Uint8Array {
 		this.#block[this.#bPos] = 0x80;
 		this.#bPos++;
@@ -158,20 +165,20 @@ export class Sha1 implements IHash {
 		this.#block.fill(0, this.#bPos);
 
 		//Write out the data size in big-endian
-		const ss32=sizeSpace>>2;// div 4
+		const ss32 = sizeSpace >> 2; // div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		this.#block32[ss32]=this.#ingestBytes / 0x20000000;
-		this.#block32[ss32+1]=this.#ingestBytes << 3;
-		asBE.i32(this.#block,sizeSpace);
-		asBE.i32(this.#block,sizeSpace+4);
+		this.#block32[ss32] = this.#ingestBytes / 0x20000000;
+		this.#block32[ss32 + 1] = this.#ingestBytes << 3;
+		asBE.i32(this.#block, sizeSpace);
+		asBE.i32(this.#block, sizeSpace + 4);
 		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(this.#state.buffer,this.#state.byteOffset);
+		const s8 = new Uint8Array(this.#state.buffer, this.#state.byteOffset);
 		//Make sure the bytes are BE - this might mangle alt.#state (but we're moments from disposing)
-		for(let i=0;i<digestSize;i++) asBE.i32(s8,i*4);
-		return s8.slice(0,digestSize);		
+		for (let i = 0; i < digestSize; i++) asBE.i32(s8, i * 4);
+		return s8.slice(0, digestSize);
 	}
 
 	/**
@@ -191,10 +198,10 @@ export class Sha1 implements IHash {
 	}
 
 	/**
-     * Create an empty IHash using the same algorithm
-     */
+	 * Create an empty IHash using the same algorithm
+	 */
 	newEmpty(): IHash {
-  		return new Sha1();
+		return new Sha1();
 	}
 
 	/**

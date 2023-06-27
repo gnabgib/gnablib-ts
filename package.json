@@ -2,13 +2,12 @@
 	"name": "gnablib",
 	"version": "0.2.5",
 	"description": "A zero dependency library, with provenance, TypeScript/JavaScript applications.",
+	"type": "module",
 	"types": "/release/index.d.ts",
 	"scripts": {
 		"preversion": "npm run deeptest",
 		"version": "npm run build && git add -A",
 		"postversion": "git push && git push --tags",
-		"format": "prettier --write \"src/**/*.{ts,js}\"",
-		"format:check": "prettier --check \"src/**/*.{js,ts}\"",
 		"lint": "eslint \"src/**/*.{js,ts}\"",
 		"test": "uvu -r tsm -i \"(.slow.test.ts|.log)$\" tst",
 		"test:coverage": "c8 --include=src npm test",
@@ -155,18 +154,17 @@
 	"homepage": "https://github.com/gnabgib/gnablib-ts#readme",
 	"devDependencies": {
 		"@types/node": "^20.3.1",
+		"terser": "^5.18.1",
+		"tsm": "^2.3.0",
+		"typescript": "^5.1.3",
+		"uvu": "^0.5.6"
+	},
+	"optionalDependencies": {
 		"@typescript-eslint/eslint-plugin": "^5.60.0",
 		"@typescript-eslint/parser": "^5.60.0",
 		"c8": "^8.0.0",
 		"eslint": "^8.43.0",
-		"eslint-config-prettier": "^8.8.0",
 		"eslint-plugin-import": "^2.27.5",
-		"prettier": "^2.8.8",
-		"terser": "^5.18.1",
-		"tsm": "^2.3.0",
-		"typedoc": "^0.24.8",
-		"typescript": "^5.1.3",
-		"uvu": "^0.5.6"
-	},
-	"type": "module"
+		"typedoc": "^0.24.8"
+	}
 }

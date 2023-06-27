@@ -3,6 +3,8 @@
 //import { hex } from "../encoding/Hex.js";
 import { utf8 } from "../encoding/Utf8.js";
 import type { IHash } from "../hash/IHash.js";
+import { Sha1 } from "../hash/Sha1.js";
+import { Sha256, Sha512 } from "../hash/Sha2.js";
 import { Hmac } from "../mac/Hmac.js";
 import { safety } from "../primitive/Safety.js";
 import { U32 } from "../primitive/U32.js";
@@ -13,7 +15,7 @@ import { U32 } from "../primitive/U32.js";
 
 /**
  * Generate a key from a password
- * @param hash Underlying hash to use
+ * @param hash Underlying hash to use (within an HMAC construct)
  * @param password string (will be utf8 encoded) or bytes
  * @param salt string (will be utf8 encoded) or bytes
  * @param count Number of iterations, in 2000 this was 1000, in 2005: 4096, 2023: 600000 (SHA256), 210000 (SHA512)
@@ -47,4 +49,15 @@ export function pbkdf2(hash:IHash,password:Uint8Array|string,salt:Uint8Array|str
         ptr+=hash.size;
     }
     return ret.subarray(0,keySize);
+}
+
+/** Generate a key from a password using HMAC-SHA1 */
+export function pbkdf2_hmac_sha1(password:Uint8Array|string,salt:Uint8Array|string,count:number,keySize:number):Uint8Array {
+    return pbkdf2(new Sha1(),password,salt,count,keySize);
+}
+export function pbkdf2_hmac_sha256(password:Uint8Array|string,salt:Uint8Array|string,count:number,keySize:number):Uint8Array {
+    return pbkdf2(new Sha256(),password,salt,count,keySize);
+}
+export function pbkdf2_hmac_sha512(password:Uint8Array|string,salt:Uint8Array|string,count:number,keySize:number):Uint8Array {
+    return pbkdf2(new Sha512(),password,salt,count,keySize);
 }

@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm ci
+      - run: npm ci --no-optional
       - run: npm test
 
   publish-npm:
@@ -30,7 +30,7 @@ jobs:
           node-version: 18
           registry-url: https://registry.npmjs.org/
       - run: npm install -g npm
-      - run: npm ci
+      - run: npm ci --no-optional
       - run: npm run build
       - run: ./compress
       - run: npm publish --provenance

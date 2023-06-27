@@ -27,9 +27,9 @@ const sha1Hex:hashHex[]=[
     },
 ];
 
+const hash=new Sha1();
 for (const test of sha1Hex) {
     //Note we reuse the hash object
-    const hash=new Sha1();
     tsts('hmac-sha1: '+test.data,()=>{
         const bKey=test.key instanceof Uint8Array ? test.key : utf8.toBytes(test.key);
         const bMsg=test.data instanceof Uint8Array ? test.data : utf8.toBytes(test.data);
@@ -39,5 +39,24 @@ for (const test of sha1Hex) {
         assert.is(hex.fromBytes(found),test.expect);
     });
 }
+
+tsts(`clone`,()=>{
+    const mac=new Hmac(hash,Uint8Array.of(1));
+    mac.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(mac.sum()),'D6258E5C147B7A1FB6479BD36A2D8EA7FAAB7C1C');
+    assert.is(hex.fromBytes(mac.sum()),'D6258E5C147B7A1FB6479BD36A2D8EA7FAAB7C1C','double sum doesn\'t mutate');
+    const mac2=mac.clone();
+    assert.is(hex.fromBytes(mac2.sum()),'D6258E5C147B7A1FB6479BD36A2D8EA7FAAB7C1C');
+    mac.write(Uint8Array.of(0));
+
+    assert.is(hex.fromBytes(mac.sum()),'8E67AE6BF0FFA7852B31363C8CF689962699D699');
+    assert.is(hex.fromBytes(mac2.sum()),'D6258E5C147B7A1FB6479BD36A2D8EA7FAAB7C1C','didn\'t mutate clone');
+});
+
+tsts(`sumIn`,()=>{
+    const mac=new Hmac(hash,Uint8Array.of(1));
+    mac.write(Uint8Array.of(0));
+    assert.is(hex.fromBytes(mac.sumIn(1)),'D6');
+});
 
 tsts.run();
