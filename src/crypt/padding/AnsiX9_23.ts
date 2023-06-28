@@ -1,6 +1,7 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { ContentError, InvalidLengthError } from '../../primitive/ErrorExt.js';
+import * as crypto from "crypto";
 
 //https://www.ibm.com/docs/en/linux-on-systems?topic=processes-ansi-x923-cipher-block-chaining
 
