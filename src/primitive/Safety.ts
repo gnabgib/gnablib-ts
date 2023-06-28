@@ -6,12 +6,15 @@ export interface HasLength {
 	get length():number;
 }
 
+/** @namespace */
 export const safety = {
 	/**
 	 * Make sure `test` is a number, and is an integer
 	 * @param test Value to test 
 	 * @param noun
-	 * @throws {@link EnforceTypeError}  Expected [$noun as] integer, got: typeof($value)=$value
+	 * 
+	 * @throws {@link primitive/ErrorExt.EnforceTypeError}
+	 * Expected [$noun as] integer, got: typeof($value)=$value
 	 */
 	isInt:function(test:unknown,noun?:string):number {
 		if (noun===undefined) noun='integer';
@@ -30,8 +33,12 @@ export const safety = {
 	 * @param lowInc Lowest allowed value
 	 * @param highInc Highest allowed value
 	 * @param noun
-	 * @throws {@link EnforceTypeError} Expected [$noun as] integer, got: typeof($value)=$value
-	 * @throws {@link NotInRangeError} $noun/value should be [$lowInc-$highInc], got: $value
+	 * 
+	 * @throws {@link primitive/ErrorExt.EnforceTypeError} 
+	 * Expected [$noun as] integer, got: typeof($value)=$value
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError}
+	 * $noun/value should be [$lowInc-$highInc], got: $value
 	 */
 	intInRangeInc: function(test:number,lowInc:number,highInc:number,noun?:string):void {
 		if (noun===undefined) noun='value';
@@ -46,8 +53,12 @@ export const safety = {
 	 * @param lowInc Lowest possible value
 	 * @param highExc First integer above highest value
 	 * @param noun Value description (default ='value')
-	 * @throws {@link EnforceTypeError} Expected [$noun as] integer, got: typeof($value)=$value
-	 * @throws {@link NotInRangeError} $noun/value should be [$lowInc-$highInc), got: $value
+	 * 
+	 * @throws {@link primitive/ErrorExt.EnforceTypeError}
+	 * Expected [$noun as] integer, got: typeof($value)=$value
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError} 
+	 * $noun/value should be [$lowInc-$highInc), got: $value
 	 */
 	intInRangeIncExc:function(test:number,lowInc:number,highExc:number,noun?:string):void {
 		this.isInt(test,noun);
@@ -61,8 +72,12 @@ export const safety = {
 	 * @param test Value to test
 	 * @param gte Lowest possible value
 	 * @param noun Value description (default='value')
-	 * @throws {@link EnforceTypeError} Expected [$noun as] integer, got: typeof($value)=$value
-	 * @throws {@link NotInRangeError} $noun/value should be x>=${gte}, got: $value
+	 * 
+	 * @throws {@link primitive/ErrorExt.EnforceTypeError}
+	 * Expected [$noun as] integer, got: typeof($value)=$value
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError}
+	 * $noun/value should be x>=${gte}, got: $value
 	 */
 	intGte:function(test:number,gte:number,noun?:string):void {
 		this.isInt(test,noun);
@@ -76,8 +91,12 @@ export const safety = {
 	 * @param test Value to test
 	 * @param gt Below lowest value (exclusive)
 	 * @param noun Value description (default=value)
-	 * @throws {@link EnforceTypeError} Expected [$noun as] integer, got: typeof($value)=$value
-	 * @throws {@link NotInRangeError} $noun/value should be x>${gt}, got: $value
+	 * 
+	 * @throws {@link primitive/ErrorExt.EnforceTypeError}
+	 * Expected [$noun as] integer, got: typeof($value)=$value
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError}
+	 * $noun/value should be x>${gt}, got: $value
 	 */
 	intGt:function(test:number,gt:number,noun?:string):void {
 		this.isInt(test,noun);
@@ -91,8 +110,12 @@ export const safety = {
 	 * @param test Value to test
 	 * @param rules Rule set, true=pass, false=fail
 	 * @param message Message to report on failure (default=Unacceptable value)
-	 * @throws {@link EnforceTypeError} Expected [$noun as] integer, got: typeof($value)=$value
-	 * @throws {@link RangeError} $message/Unacceptable value
+	 * 
+	 * @throws {@link primitive/ErrorExt.EnforceTypeError}
+	 * Expected [$noun as] integer, got: typeof($value)=$value
+	 * 
+	 * @throws {RangeError}
+	 * $message/Unacceptable value
 	 */
 	intSatisfies(test:number,rules:(test:number)=>boolean,message?:string):void {
 		this.isInt(test);
@@ -105,7 +128,9 @@ export const safety = {
 	 * If @param obj is null or undefined a @see NullError is thrown
 	 * @param obj
 	 * @param noun
-	 * @throws {@link NullError} [$noun ]cannot be null
+	 * 
+	 * @throws {@link primitive/ErrorExt.NullError}
+	 * [$noun ]cannot be null
 	 */
 	notNull: function (obj: unknown, noun?: string): void {
 		if (obj === null || obj === undefined) throw new NullError(noun);
@@ -117,8 +142,12 @@ export const safety = {
 	 * @param lowInc Min length (inclusive)
 	 * @param highInc Max length (inclusive) 
 	 * @param noun Value description (default='value')
-	 * @throws {@link NullError} [$noun ]cannot be null
-	 * @throws {@link NotInRangeError} $noun/value length should be $lowInc<=x<=$highInc, got: $test.length
+	 * 
+	 * @throws {@link primitive/ErrorExt.NullError} 
+	 * [$noun ]cannot be null
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError} 
+	 * $noun/value length should be $lowInc<=x<=$highInc, got: $test.length
 	 */
 	lenInRangeInc:function(test:HasLength,lowInc:number,highInc:number,noun?:string):void {
 		this.notNull(test,noun);
@@ -133,8 +162,12 @@ export const safety = {
 	 * @param test Value to test
 	 * @param len Exact length
 	 * @param noun Value description (default='value')
-	 * @throws {@link NullError} [$noun ]cannot be null
-	 * @throws {@link NotInRangeError} $noun/value length should be x==$eq, got: $test.length
+	 * 
+	 * @throws {@link primitive/ErrorExt.NullError} 
+	 * [$noun ]cannot be null
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError} 
+	 * $noun/value length should be x==$eq, got: $test.length
 	 */
 	lenExactly:function(test:HasLength,len:number,noun?:string):void {
 		this.notNull(test,noun);
@@ -149,8 +182,12 @@ export const safety = {
 	 * @param test Value to test
 	 * @param gte Min length (inclusive)
 	 * @param noun Value description (default='value')
-	 * @throws {@link NullError} [$noun ]cannot be null
-	 * @throws {@link NotInRangeError} $noun/value length should be x>=$gte, got: $test.length
+	 * 
+	 * @throws {@link primitive/ErrorExt.NullError} 
+	 * [$noun ]cannot be null
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError} 
+	 * $noun/value length should be x>=$gte, got: $test.length
 	 */
 	lenGte:function(test:HasLength,gte:number,noun?:string):void {
 		this.notNull(test,noun);
@@ -165,7 +202,9 @@ export const safety = {
 	 * @param test 
 	 * @param mul 
 	 * @param noun 
-	 * @throws {@link InvalidLengthError} $noun length needs to be be a multiple of $mul, has $rem extra
+	 * 
+	 * @throws {@link primitive/ErrorExt.InvalidLengthError} 
+	 * $noun length needs to be be a multiple of $mul, has $rem extra
 	 */
 	lenMultiple:function(test:HasLength,mul:number,noun?:string):void {
 		if (noun===undefined) noun='value';
@@ -182,7 +221,9 @@ export const safety = {
 	 * @param lowInc Min value (inclusive)
 	 * @param highExc Max value (exclusive)
 	 * @param noun Value description (default='pos')
-	 * @throws {@link NotInRangeError} $noun/pos should be $lowInc<=x<$highExc, got: $value
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError} 
+	 * $noun/pos should be $lowInc<=x<$highExc, got: $value
 	 */
 	numInRangeIncExc:function(test:number,lowInc:number,highExc:number,noun?:string):void {
 		if (noun===undefined) noun='pos';
@@ -196,7 +237,9 @@ export const safety = {
 	 * @param lowInc Min value (inclusive)
 	 * @param highInc Max value (inclusive)
 	 * @param noun Value description (default='pos')
-	 * @throws {@link NotInRangeError} $noun/pos should be $lowInc<=x<=$highExc, got: $value
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError} 
+	 * $noun/pos should be $lowInc<=x<=$highExc, got: $value
 	 */
 	numInRangeInc:function(test:number,lowInc:number,highInc:number,noun?:string):void {
 		if (noun===undefined) noun='pos';
@@ -209,7 +252,9 @@ export const safety = {
 	 * @param test Value to test
 	 * @param gte Min value (inclusive)
 	 * @param noun Value description (default='pos')
-	 * @throws {@link NotInRangeError} $noun/pos should be x>=$gte, got: $value
+	 * 
+	 * @throws {@link primitive/ErrorExt.NotInRangeError}
+	 * $noun/pos should be x>=$gte, got: $value
 	 */
 	numGte:function(test:number,gte:number,noun?:string):void {
 		if (noun===undefined) noun='pos';

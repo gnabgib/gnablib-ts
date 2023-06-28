@@ -34,6 +34,12 @@ pnpm install gnablib --ignore-scripts
 npm install gnablib --ignore-scripts
 ```
 
+To verify provenance:
+
+```bash
+npm audit signatures
+```
+
 ## Details
 
 
@@ -246,7 +252,7 @@ pnpm install
 ```
 
 Close a issue in commit:
-(close(s|d)|fix(es|ed)|resolve(s|d)) #<id>
+close/closes/closed/fix/fixes/fixed/resolve/resolves/resolved #<id>
 eg closes #2
 
 
@@ -282,6 +288,8 @@ npm update --save
 - Update /w package.json/lock for major
 npm install <package>@<major#>
 eg: npm install c8@8
+- Find a package owner
+npm owner ls <pkgname>
 
 -->
 

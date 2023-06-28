@@ -43,12 +43,15 @@ const tests:[string,string,string][]=[
     ['FFFFFFFFFFFFFFFF','0000000000000000','F21E9A77B71C49BC'],
     ['0123456789ABCDEF','0000000000000000','245946885754369A'],
     ['FEDCBA9876543210','FFFFFFFFFFFFFFFF','6B5C5A9C5D9E0A5A'],
+
+    ['0000000000000000','0000000000000001','64ED065757511FA7'],
+    ['0000000000000000','0808080808080808','B0D4ACB28AA5EBE3'],
 ];
-for (const [key,clear,enc] of tests) {
+for (const [key,plain,enc] of tests) {
     const c=new Blowfish(hex.toBytes(key));
-    tsts(`b(${key}).encrypt(${clear})`, () => {
+    tsts(`b(${key}).encrypt(${plain})`, () => {
         //Set found equal to plain-source-bytes
-        const found=hex.toBytes(clear);
+        const found=hex.toBytes(plain);
         //Encrypt a block (note the test vectors are all one block)
         c.encryptBlock(found);
         assert.is(hex.fromBytes(found),enc);
@@ -58,7 +61,7 @@ for (const [key,clear,enc] of tests) {
         const found=hex.toBytes(enc);
         //Decrypt a block (note the test vectors are all one block)
         c.decryptBlock(found);
-        assert.is(hex.fromBytes(found),clear);
+        assert.is(hex.fromBytes(found),plain);
 	});
 }
 

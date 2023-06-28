@@ -5,9 +5,6 @@ import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
 import { safety } from '../../primitive/Safety.js';
 import { ICrypt } from './ICrypt.js';
 
-//[Description of a New Variable-Length Key, 64-Bit Block Cipher (Blowfish)](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html) (1993)
-//[Wiki: Blowfish (cipher)](https://en.wikipedia.org/wiki/Blowfish_(cipher)#cite_note-blowfish-paper-4)
-
 // A Feistel cipher
 const minKeyLen = 4; //32 bits
 const maxKeyLen = 56; //448 bits
@@ -213,6 +210,20 @@ const sBox3 = Uint32Array.of(
 	0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6,
 );
 
+/**
+ * [Blowfish block Cipher](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
+ * ([Wiki](https://en.wikipedia.org/wiki/Blowfish_(cipher)#cite_note-blowfish-paper-4))
+ * 
+ * Blowfish is a symmetric-key block cipher, designed in 1993 by [Bruce Schneier](https://www.schneier.com/blog/about/) 
+ * and included in many cipher suites and encryption products. Blowfish provides a good encryption rate in software, 
+ * and no effective cryptanalysis of it has been found to date. However, the Advanced Encryption Standard (AES) now 
+ * receives more attention, and Schneier recommends Twofish for modern applications.
+ * 
+ * First Published: *1993*  
+ * Block size: *8 bytes*  
+ * Key size: *4 - 56 bytes*  
+ * Rounds: *16*  
+ */
 export class Blowfish implements ICrypt {
 	/** Block size in bytes */
 	readonly blockSize = 8;
@@ -311,7 +322,9 @@ export class Blowfish implements ICrypt {
      * Decrypt a block (of 8 bytes) in place
      * @param block Source encrypted blocks
      * @param offset Block-offset, default 0. Note 1 is the second block (not byte)
-     * @throws {@link NotEnoughSpaceError} If there's not enough bytes in `block` (`offset+1`*`blockSize`)
+     * 
+	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError} 
+	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
      */
     decryptBlock(block:Uint8Array,offset=0):void {
         const byteStart=offset*this.blockSize;
@@ -327,7 +340,9 @@ export class Blowfish implements ICrypt {
      * Encrypt a block (of 8 bytes) in place
      * @param block Source decrypted blocks
      * @param offset Block-offset, default 0. Note 1 is the second block (not byte)
-     * @throws {@link NotEnoughSpaceError} If there's not enough bytes in `block` (`offset+1`*`blockSize`)
+     * 
+	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError}
+	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
      */
     encryptBlock(block:Uint8Array,offset=0):void {
         const byteStart=offset*this.blockSize;

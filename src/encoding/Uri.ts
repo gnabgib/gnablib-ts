@@ -36,6 +36,7 @@ export interface DecodeOpts {
 	overProvisionOutput?: number;
 }
 
+/** @namespace */
 export const uri = {
 	/**
 	 * Convert an array of bytes to URLEncoded text

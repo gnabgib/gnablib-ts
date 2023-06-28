@@ -8,13 +8,13 @@ export interface ICrypt {
      * @param block Encrypted data
      * @param offset Block-offset. Note 1 is the second block (not byte)
      */
-    decryptBlock(block:Uint8Array,offset:number):void
+    decryptBlock(block:Uint8Array,offset?:number):void
     /**
      * Encrypt a block in place
      * @param block Plain data
      * @param offset Block-offset. Note 1 is the second block (not byte)
      */
-    encryptBlock(block:Uint8Array,offset:number):void
+    encryptBlock(block:Uint8Array,offset?:number):void
     // /**
     //  * Decrypt `enc` bytes into `plain`
     //  * @param plain Destination memory (must be at least `enc` + padding consideration)

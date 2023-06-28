@@ -36,6 +36,7 @@ const last_3_bits = 0x7; // 0000 0111
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder('utf-8');
 
+/** @namespace */
 export const utf8 = {
 	/**
 	 * Encode a unicode code-point into a utf8 byte series (1-4B)

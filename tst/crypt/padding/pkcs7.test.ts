@@ -5,19 +5,19 @@ import { Pkcs5,Pkcs7 } from '../../../src/crypt/padding/Pkcs7';
 
 const tsts = suite('Padding-PKCS7');
 
-const pad8Tests:[string,boolean,string][]=[
-    ['',true,'0808080808080808'],
-    ['01',true,'0107070707070707'],
-    ['0201',true,'0201060606060606'],
-    ['030201',true,'0302010505050505'],
-    ['04030201',true,'0403020104040404'],
-    ['0504030201',true,'0504030201030303'],
-    ['060504030201',true,'0605040302010202'],
-    ['07060504030201',true,'0706050403020101'],
+const pad8Tests:[string,string][]=[
+    ['','0808080808080808'],
+    ['01','0107070707070707'],
+    ['0201','0201060606060606'],
+    ['030201','0302010505050505'],
+    ['04030201','0403020104040404'],
+    ['0504030201','0504030201030303'],
+    ['060504030201','0605040302010202'],
+    ['07060504030201','0706050403020101'],
     //This doesn't work because we MUST pad (the next block would match test:0)
-    //['0807060504030201',true,'0807060504030201'],
+    //['0807060504030201','0807060504030201'],
 ];
-for(const [start,should,padded] of pad8Tests) {
+for(const [start,padded] of pad8Tests) {
     tsts(`pad(${start})`,()=>{
         const bytes=hex.toBytes(start);
         const found=Pkcs7.pad(bytes,8);
@@ -28,8 +28,23 @@ for(const [start,should,padded] of pad8Tests) {
         const found=Pkcs7.unpad(bytes);
         assert.equal(hex.fromBytes(found),start);
     });
-    tsts(`shouldPad(${start})`,()=>{
-        assert.equal(Pkcs7.shouldPad(start.length/2,8),should);
+}
+
+const shouldPad8Tests:[number,number][]=[
+    [0,8],
+    [1,8],
+    [2,8],
+    [3,8],
+    [4,8],
+    [5,8],
+    [6,8],
+    [7,8],
+    [8,8],
+    [9,0],
+];
+for(const [len,size] of shouldPad8Tests) {
+    tsts(`padSize(${len})`,()=>{
+        assert.equal(Pkcs7.padSize(len,8),size);
     });
 }
 

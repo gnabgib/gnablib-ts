@@ -16,6 +16,7 @@ export interface EncodeOpts {
 //https://en.wikipedia.org/wiki/Quoted-printable
 //https://datatracker.ietf.org/doc/html/rfc2045#section-6.7
 
+/** @namespace */
 export const quotedPrintable = {
 	/**
 	 * Convert an array of bytes to QuotedPrintable text

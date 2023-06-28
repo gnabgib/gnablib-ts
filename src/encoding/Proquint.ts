@@ -78,6 +78,7 @@ function wordToQuint(word: number): string {
 	);
 }
 
+/** @namespace */
 export const proquint = {
 	/**
 	 * Convert a series of bytes into proquint

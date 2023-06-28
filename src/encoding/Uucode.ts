@@ -85,6 +85,7 @@ function mapLine(bytes: Uint8Array, charMap: (int: number) => string): string {
 	return ret + '\n';
 }
 
+/** @namespace */
 export const uucode = {
 	/**
 	 * Convert an array of bytes into an uuencoded string

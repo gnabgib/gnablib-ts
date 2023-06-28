@@ -5,19 +5,19 @@ import { AnsiX9_23,Iso10126 } from '../../../src/crypt/padding/AnsiX9_23';
 
 const tsts = suite('Padding-ansi x9-23');
 
-const pad8Tests:[string,boolean,string][]=[
-    ['',true,'FFEEDDCCBBCCAA08'],
-    ['01',true,'01EEDDCCBBCCAA07'],
-    ['0201',true,'0201DDCCBBCCAA06'],
-    ['030201',true,'030201CCBBCCAA05'],
-    ['04030201',true,'04030201BBCCAA04'],
-    ['0504030201',true,'0504030201CCAA03'],
-    ['060504030201',true,'060504030201AA02'],
-    ['07060504030201',true,'0706050403020101'],
+const pad8Tests:[string,string][]=[
+    ['','FFEEDDCCBBCCAA08'],
+    ['01','01EEDDCCBBCCAA07'],
+    ['0201','0201DDCCBBCCAA06'],
+    ['030201','030201CCBBCCAA05'],
+    ['04030201','04030201BBCCAA04'],
+    ['0504030201','0504030201CCAA03'],
+    ['060504030201','060504030201AA02'],
+    ['07060504030201','0706050403020101'],
     //This doesn't work because we MUST pad (the next block would match test:0)
     //['0807060504030201',true,'0807060504030201'],
 ];
-for(const [start,should,egPad] of pad8Tests) {
+for(const [start,egPad] of pad8Tests) {
     //NOTE pad generates random bytes, so we can't know anything but the
     // start and count indicator's values (last byte)
     const padBytes=hex.toBytes(egPad);
@@ -32,8 +32,23 @@ for(const [start,should,egPad] of pad8Tests) {
         const found=AnsiX9_23.unpad(padBytes);
         assert.equal(hex.fromBytes(found),start);
     });
-    tsts(`shouldPad(${start})`,()=>{
-        assert.equal(AnsiX9_23.shouldPad(start.length/2,8),should);
+}
+
+const shouldPad8Tests:[number,number][]=[
+    [0,8],
+    [1,8],
+    [2,8],
+    [3,8],
+    [4,8],
+    [5,8],
+    [6,8],
+    [7,8],
+    [8,8],
+    [9,0],
+];
+for(const [len,size] of shouldPad8Tests) {
+    tsts(`padSize(${len})`,()=>{
+        assert.equal(AnsiX9_23.padSize(len,8),size);
     });
 }
 

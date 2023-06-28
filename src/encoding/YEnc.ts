@@ -38,6 +38,7 @@ export interface DecodeOpts {
 	escapeChar?: string;
 }
 
+/** @namespace */
 export const yEnc = {
 	/**
 	 * Convert an array of bytes to yEnc text

@@ -19,6 +19,7 @@ export interface EncodeOpts {
 	pad?: boolean;
 }
 
+/** @namespace */
 export const ascii85 = {
 	/**
 	 * Convert from an array of bytes to ASCII85 text (btoa or adobe compat)

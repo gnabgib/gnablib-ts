@@ -5,18 +5,18 @@ import { Zero } from '../../../src/crypt/padding/Zero';
 
 const tsts = suite('Padding-Zero/Pad1');
 
-const pad8Tests:[string,boolean,string][]=[
-    ['',true,'0000000000000000'],
-    ['01',true,'0100000000000000'],
-    ['0201',true,'0201000000000000'],
-    ['030201',true,'0302010000000000'],
-    ['04030201',true,'0403020100000000'],
-    ['0504030201',true,'0504030201000000'],
-    ['060504030201',true,'0605040302010000'],
-    ['07060504030201',true,'0706050403020100'],
-    ['0807060504030201',false,'0807060504030201'],
+const pad8Tests:[string,string][]=[
+    ['','0000000000000000'],
+    ['01','0100000000000000'],
+    ['0201','0201000000000000'],
+    ['030201','0302010000000000'],
+    ['04030201','0403020100000000'],
+    ['0504030201','0504030201000000'],
+    ['060504030201','0605040302010000'],
+    ['07060504030201','0706050403020100'],
+    ['0807060504030201','0807060504030201'],
 ];
-for(const [start,should,padded] of pad8Tests) {
+for(const [start,padded] of pad8Tests) {
     tsts(`pad(${start})`,()=>{
         const bytes=hex.toBytes(start);
         const found=Zero.pad(bytes,8);
@@ -27,9 +27,24 @@ for(const [start,should,padded] of pad8Tests) {
         const found=Zero.unpad(bytes);
         assert.equal(hex.fromBytes(found),start);
     });
-    tsts(`shouldPad(${start})`,()=>{
-        assert.equal(Zero.shouldPad(start.length/2,8),should);
-    })
+}
+
+const shouldPad8Tests:[number,number][]=[
+    [0,0],
+    [1,8],
+    [2,8],
+    [3,8],
+    [4,8],
+    [5,8],
+    [6,8],
+    [7,8],
+    [8,0],
+    [9,0],
+];
+for(const [len,size] of shouldPad8Tests) {
+    tsts(`padSize(${len})`,()=>{
+        assert.equal(Zero.padSize(len,8),size);
+    });
 }
 
 tsts(`Input too large throws`,()=>{

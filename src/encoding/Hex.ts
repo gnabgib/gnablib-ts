@@ -40,6 +40,7 @@ function mapCharToInt(char: string): number {
 	return ord - ord_A + 10;
 }
 
+/** @namespace */
 export const hex = {
 	/**
 	 * Convert the 8LSB into two hex chars

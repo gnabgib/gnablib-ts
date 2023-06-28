@@ -63,7 +63,7 @@ export interface IBase32 extends IEncoder{
 	toBytes(base32: string, requirePad?: boolean): Uint8Array;
 }
 
-class Base32 {
+class Base32 implements IBase32 {
 	readonly #decode: Uint8Array;
 	/**
 	 * Whether padding is required (when not specified on @see fromBytes @see toBytes)

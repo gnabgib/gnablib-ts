@@ -5,19 +5,19 @@ import { Iso7816_4 } from '../../../src/crypt/padding/Iso7816_4';
 
 const tsts = suite('Padding-ISO-7816-4/Pad2');
 
-const pad8Tests:[string,boolean,string][]=[
-    ['',true,'8000000000000000'],
-    ['01',true,'0180000000000000'],
-    ['0201',true,'0201800000000000'],
-    ['030201',true,'0302018000000000'],
-    ['04030201',true,'0403020180000000'],
-    ['0504030201',true,'0504030201800000'],
-    ['060504030201',true,'0605040302018000'],
-    ['07060504030201',true,'0706050403020180'],
+const pad8Tests:[string,string][]=[
+    ['','8000000000000000'],
+    ['01','0180000000000000'],
+    ['0201','0201800000000000'],
+    ['030201','0302018000000000'],
+    ['04030201','0403020180000000'],
+    ['0504030201','0504030201800000'],
+    ['060504030201','0605040302018000'],
+    ['07060504030201','0706050403020180'],
     //This doesn't work because we MUST pad (the next block would match test:0)
-    //['0807060504030201',true,'0807060504030201'],
+    //['0807060504030201','0807060504030201'],
 ];
-for(const [start,should,padded] of pad8Tests) {
+for(const [start,padded] of pad8Tests) {
     tsts(`pad(${start})`,()=>{
         const bytes=hex.toBytes(start);
         const found=Iso7816_4.pad(bytes,8);
@@ -28,8 +28,23 @@ for(const [start,should,padded] of pad8Tests) {
         const found=Iso7816_4.unpad(bytes);
         assert.equal(hex.fromBytes(found),start);
     });
-    tsts(`shouldPad(${start})`,()=>{
-        assert.equal(Iso7816_4.shouldPad(start.length/2,8),should);
+}
+
+const shouldPad8Tests:[number,number][]=[
+    [0,8],
+    [1,8],
+    [2,8],
+    [3,8],
+    [4,8],
+    [5,8],
+    [6,8],
+    [7,8],
+    [8,8],
+    [9,0],
+];
+for(const [len,size] of shouldPad8Tests) {
+    tsts(`padSize(${len})`,()=>{
+        assert.equal(Iso7816_4.padSize(len,8),size);
     });
 }
 
