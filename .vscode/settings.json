@@ -1,9 +1,11 @@
 {
     "cSpell.words": [
         "circulant",
+        "Feistel",
         "gnabgib",
         "gnablib",
         "keccak",
-        "proquint"
+        "proquint",
+        "unpad"
     ]
 }

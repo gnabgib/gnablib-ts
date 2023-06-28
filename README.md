@@ -36,16 +36,19 @@ npm install gnablib --ignore-scripts
 
 ## Details
 
+
 ### Augmented Backus-Naur Form /[rfc5234](https://datatracker.ietf.org/doc/html/rfc5234)
 
 - [Operators](https://datatracker.ietf.org/doc/html/rfc5234#section-3)
 - Definition of [core rules](https://datatracker.ietf.org/doc/html/rfc5234#appendix-B.1)
+
 
 ### Algorithms
 
 - Weighted Random Sampling
 - Next power of 2
 - [Thomson NFA (1968)](https://dl.acm.org/doi/10.1145/363347.363387) solver
+
 
 ### Checksum
 
@@ -59,9 +62,25 @@ npm install gnablib --ignore-scripts
 - [MD5Sum](https://en.wikipedia.org/wiki/Md5sum)
 - [SHA1Sum](https://en.wikipedia.org/wiki/Sha1sum)
 
+
+### Crypt
+
+#### Padding
+
+- [ANSI X9.23](https://www.ibm.com/support/knowledgecenter/en/linuxonibm/com.ibm.linux.z.wskc.doc/wskc_c_l0wskc58.html) / ISO 10126 padding
+- [ISO 7816-4](https://en.wikipedia.org/wiki/ISO/IEC_7816) padding
+- [PKCS#7](https://tools.ietf.org/html/rfc5652#section-6.3) / PKCS#5 padding
+- Zero / Null padding
+
+#### Symmetric
+
+- [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
+
+
 ### Error Correction Codes
 
 - [Reed Solomon](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction)
+
 
 ### Encoding
 
@@ -82,13 +101,14 @@ npm install gnablib --ignore-scripts
 - UUID
 - [YEnc](https://en.wikipedia.org/wiki/YEnc)
 
+
 ### Endian
 
 - [Big](https://en.wikipedia.org/wiki/Endianness)
 - Little
 
-### Hash & XOF
 
+### Hash & XOF
 
 #### Hash (Crypto)
 
@@ -109,7 +129,6 @@ Name|Digest sizes|Optional parameters
 [Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)|512|-
 
 † No longer considered cryptographically safe
-
 
 #### XOF
 
@@ -133,14 +152,17 @@ Name|Digest sizes|Optional parameters
 [Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|seed
 [xxHash](https://cyan4973.github.io/xxHash/)|32, 64|seed
 
+
 ### Log
 
 - Structured logging
+
 
 ### KDF
 
 - [HKDF](https://en.wikipedia.org/wiki/HKDF)
 - [PBKDF2](https://www.rfc-editor.org/rfc/rfc8018#section-5.2) pbkdf2_hmac_sha1, pbkdf2_hmac_sha256, pbkdf2_hmac_sha512
+
 
 ### MAC
 
@@ -148,11 +170,13 @@ Name|Digest sizes|Optional parameters
 - [HopMAC](https://www.ietf.org/archive/id/draft-irtf-cfrg-kangarootwelve-10.html#name-security-considerations) (128)
 - [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128, 256)
 
+
 ### Net
 
 - [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing)
 - [IPv4](https://en.wikipedia.org/wiki/Internet_Protocol_version_4)
 - IpTree
+
 
 ### Primitive
 
@@ -170,12 +194,6 @@ Name|Digest sizes|Optional parameters
 - Uint64
 - WindowStr
 
-### TTY
-
-- Foreground, background color (8 color, 213 color, 16M colors)
-- Underline, bold, faint, italic, blink, invert, hide, strike-through, overline text styles
-- Terminal controls (cursor move, screen/line clear)
-
 #### Extensions:
 
 - Bit
@@ -183,6 +201,14 @@ Name|Digest sizes|Optional parameters
 - Int
 - String
 - Uint8Array
+
+
+### TTY
+
+- Foreground, background color (8 color, 213 color, 16M colors)
+- Underline, bold, faint, italic, blink, invert, hide, strike-through, overline text styles
+- Terminal controls (cursor move, screen/line clear)
+
 
 ### Misc
 

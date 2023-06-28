@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { EnforceTypeError,NotInRangeError,NullError } from './ErrorExt.js';
+import { EnforceTypeError,InvalidLengthError,NotInRangeError,NullError } from './ErrorExt.js';
 
 export interface HasLength {
 	get length():number;
@@ -158,6 +158,22 @@ export const safety = {
 		noun+=' length';
 		if (test.length<gte)
 			throw new NotInRangeError(noun,test.length,undefined,undefined,'>=',gte);
+	},
+
+	/**
+	 * Request that `test` is a multiple of `mul` in length (no leftovers)
+	 * @param test 
+	 * @param mul 
+	 * @param noun 
+	 * @throws {@link InvalidLengthError} $noun length needs to be be a multiple of $mul, has $rem extra
+	 */
+	lenMultiple:function(test:HasLength,mul:number,noun?:string):void {
+		if (noun===undefined) noun='value';
+		noun+=' length';
+		const rem=test.length%mul;
+		if (rem!==0) {
+			throw new InvalidLengthError(noun,`to be a multiple of ${mul}`,`${rem} extra`);
+		}
 	},
 
 	/**

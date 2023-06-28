@@ -144,7 +144,13 @@
 		"console",
 		"KangarooTwelve",
 		"HopMAC",
-		"PBKDF2"
+		"PBKDF2",
+		"Blowfish",
+		"ANSI-X9.23",
+		"ISO-10126",
+		"PKCS#5",
+		"PKCS#7",
+		"ISO-7816-4"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

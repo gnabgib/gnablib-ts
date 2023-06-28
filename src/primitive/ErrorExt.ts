@@ -85,10 +85,22 @@ export class ZeroError extends RangeError {
 	}
 }
 
+export class InvalidLengthError extends RangeError {
+	constructor(readonly noun:string,readonly need:string,readonly problem:string) {
+		super(`${noun} needs ${need}, has ${problem}`);
+	}
+}
+
 export class NotEnoughSpaceError extends RangeError {
 	readonly noun: string;
 	readonly need: number;
 	readonly available: number;
+	/**
+	 * ${noun} needs ${need}, has ${available}
+	 * @param noun 
+	 * @param need 
+	 * @param available 
+	 */
 	constructor(noun: string, need: number, available: number) {
 		super(`${noun} needs ${need}, has ${available}`);
 		this.noun = noun;
