@@ -33,3 +33,5 @@ export interface IPad {
 		 */
 		pos?: number): Uint8Array;
 }
+//https://www.di-mgt.com.au/cryptopad.html
+//https://en.wikipedia.org/wiki/Padding_(cryptography)

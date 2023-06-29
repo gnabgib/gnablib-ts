@@ -575,13 +575,13 @@ export class U64 {
 	 * **NOTE** while the content is a copy of internal state, the return is shared memory (with all 8 bytes)
 	 * @returns 1-8 bytes
 	 */
-	toMinBytesBE():Uint8Array {
-		const ret=this.toBytesBE();
-		let i=0;
-		while(i<8) {
-			if (ret[i++]!==0) break;
+	toMinBytesBE(): Uint8Array {
+		const ret = this.toBytesBE();
+		let i = 0;
+		while (i < 8) {
+			if (ret[i++] !== 0) break;
 		}
-		return ret.subarray(i-1);
+		return ret.subarray(i - 1);
 	}
 
 	/**
@@ -601,13 +601,13 @@ export class U64 {
 	 * **NOTE** while the content is a copy of internal state, the return is shared memory (with all 8 bytes)
 	 * @returns 1-8 bytes
 	 */
-	toMinBytesLE():Uint8Array {
-		const ret=this.toBytesLE();
-		let i=8;
-		while(i>0) {
-			if (ret[--i]!==0) break;	
+	toMinBytesLE(): Uint8Array {
+		const ret = this.toBytesLE();
+		let i = 8;
+		while (i > 0) {
+			if (ret[--i] !== 0) break;
 		}
-		return ret.subarray(0,i+1);
+		return ret.subarray(0, i + 1);
 	}
 
 	/**
@@ -678,9 +678,9 @@ export class U64 {
 
 	/**
 	 * Create from a copy of `src` assuming the bytes are in little endian order
-	 * @param src 
-	 * @param pos 
-	 * @returns 
+	 * @param src
+	 * @param pos
+	 * @returns
 	 */
 	static fromBytesLE(src: Uint8Array, pos = 0): U64 {
 		return new U64(fromBytesLE(src, pos));
@@ -942,6 +942,16 @@ export class U64Mut extends U64 {
 	 */
 	static fromBytesBE(src: Uint8Array, pos = 0): U64Mut {
 		return new U64Mut(fromBytesBE(src, pos));
+	}
+
+	/**
+	 * Create from a copy of `src` assuming the bytes are in little endian order
+	 * @param src
+	 * @param pos
+	 * @returns
+	 */
+	static fromBytesLE(src: Uint8Array, pos = 0): U64Mut {
+		return new U64Mut(fromBytesLE(src, pos));
 	}
 
 	/**

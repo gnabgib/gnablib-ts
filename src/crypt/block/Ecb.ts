@@ -14,6 +14,10 @@ import { IBlockMode } from './IBlockMode.js';
  * The disadvantage of this method is a lack of diffusion. 
  * Because ECB encrypts identical plaintext blocks into identical ciphertext blocks,
  * it does not hide data patterns well. ECB is not recommended for use in cryptographic protocols.
+ * 
+ * Parallelizable encryption: **Yes**  
+ * Parallelizable decryption: **Yes**  
+ * Random Read Access: **Yes**  
  *
  * Specified in [FIPS-81](https://csrc.nist.gov/csrc/media/publications/fips/81/archive/1980-12-02/documents/fips81.pdf)
  */

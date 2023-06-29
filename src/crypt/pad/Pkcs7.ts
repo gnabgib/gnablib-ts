@@ -16,9 +16,6 @@ import { ContentError, InvalidLengthError } from '../../primitive/ErrorExt.js';
  * the two can be used interchangeably. 
  */
 export class Pkcs7 {
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	private constructor(){}
-
 	/** {@inheritDoc crypt/pad/IPad.IPad.padSize} */
 	static padSize(inputSize: number, len: number): number {
         return (inputSize<=len)?len:0;

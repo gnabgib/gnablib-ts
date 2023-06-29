@@ -12,9 +12,6 @@ import { InvalidLengthError } from '../../primitive/ErrorExt.js';
  * bytes.  Out-of-bound message length may need to be required.
  */
 export class Zero {
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	private constructor(){}
-
 	/** {@inheritDoc crypt/pad/IPad.IPad.padSize} */
 	static padSize(inputSize: number, len: number): number {
         return (inputSize<len && inputSize>0)?len:0;

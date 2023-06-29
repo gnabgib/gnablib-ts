@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 import { hex } from '../../../src/encoding/Hex';
 import { AnsiX9_23,Iso10126 } from '../../../src/crypt/pad/AnsiX9_23';
 
-const tsts = suite('Padding-ansi x9-23');
+const tsts = suite('Padding-ANSI X9.23');
 
 const pad8Tests:[string,string][]=[
     ['','FFEEDDCCBBCCAA08'],
@@ -59,6 +59,5 @@ tsts(`Input too large throws`,()=>{
 tsts(`Pad too big throws`,()=>{
     assert.throws(()=>Iso10126.unpad(Uint8Array.of(2)));
 });
-
 
 tsts.run();

@@ -13,9 +13,6 @@ const Iso7816_4_marker = 0x80;
  * contain any cryptographic specifications. 
  */
 export class Iso7816_4 {
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	private constructor(){}
-
     /** {@inheritDoc crypt/pad/IPad.IPad.padSize} */
 	static padSize(inputSize: number, len: number): number {
         return (inputSize<=len)?len:0;

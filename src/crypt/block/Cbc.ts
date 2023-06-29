@@ -6,12 +6,22 @@ import { IBlockMode } from "./IBlockMode.js";
 /**
  * [Cipher block chaining (CBC)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_block_chaining_(CBC))
  * 
+ * *Generally no longer recommended (2021)* 
+ * 
  * In Cipher block chaining (CBC) mode, each block of plaintext is XORed with the previous 
  * ciphertext block before being encrypted. This way, each ciphertext block depends on all 
  * plaintext blocks processed up to that point. To make each message unique, an 
  * initialization vector *must* be used in the first block. 
  * 
- * Specified in [FIPS-81](https://csrc.nist.gov/csrc/media/publications/fips/81/archive/1980-12-02/documents/fips81.pdf)
+ * Parallelizable encryption: **No**  
+ * Parallelizable decryption: **Yes**  
+ * Random Read Access: **Yes**  
+ * 
+ * Theoretically secure, but tricky to get right in practice.
+ * 
+ * Specified in 
+ * [FIPS-81](https://csrc.nist.gov/csrc/media/publications/fips/81/archive/1980-12-02/documents/fips81.pdf)
+ * [NIST 800-38A](http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf)
  */
 export class Cbc implements IBlockMode {
     private readonly _crypt: ICrypt;

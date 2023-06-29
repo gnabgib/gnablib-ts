@@ -8,13 +8,12 @@ import * as crypto from 'crypto';
  *
  * In ANSI X9.23, between 1 and 8 bytes are always added as padding. The block is padded with
  * random bytes and the last byte of the block is set to the number of bytes added.
+ * 
+ * Padding **must** be added (so it can be detected/removed by {@link AnsiX9_23.unpad})
  *
  * [ISO 10126-2](http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=18114) (withdrawn 2007 for low-security encryption recommendation) has the same spec
  */
 export class AnsiX9_23 {
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	private constructor() {}
-
 	/** {@inheritDoc crypt/pad/IPad.IPad.padSize} */
 	static padSize(inputSize: number, len: number): number {
 		return inputSize <= len ? len : 0;
