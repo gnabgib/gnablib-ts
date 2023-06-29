@@ -1,6 +1,6 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
-import { IPad } from '../padding/IPad.js';
+import { IPad } from '../pad/IPad.js';
 import { ICrypt } from '../sym/ICrypt.js';
 import { IBlockMode } from './IBlockMode.js';
 
@@ -30,7 +30,7 @@ export class Ecb implements IBlockMode {
 		return this._crypt.blockSize;
 	}
 
-	/** {@inheritDoc crypt/block/IBlockMode.IBlockMode.decryptInto} */
+	/* * {@inheritDoc crypt/block/IBlockMode.IBlockMode.decryptInto} */
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
 		const bsb = this._crypt.blockSize;
 		const safeLen = enc.length - bsb;
@@ -46,7 +46,7 @@ export class Ecb implements IBlockMode {
 		plain.set(this._pad.unpad(lastBlock), safeLen);
 	}
 
-	/** {@inheritDoc crypt/block/IBlockMode.IBlockMode.encryptInto} */
+	/* * {@inheritDoc crypt/block/IBlockMode.IBlockMode.encryptInto} */
 	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
 		const bsb = this._crypt.blockSize;
 		const rem = plain.length % bsb;

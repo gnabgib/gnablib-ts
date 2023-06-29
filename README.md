@@ -71,6 +71,11 @@ npm audit signatures
 
 ### Crypt
 
+#### Block
+
+- [Cipher block chaining (CBC)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_block_chaining_(CBC))
+- [Electronic codebook (ECB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_codebook_(ECB))
+
 #### Padding
 
 - [ANSI X9.23](https://www.ibm.com/support/knowledgecenter/en/linuxonibm/com.ibm.linux.z.wskc.doc/wskc_c_l0wskc58.html) / ISO 10126 padding

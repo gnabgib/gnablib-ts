@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/encoding/Hex';
-import { AnsiX9_23,Iso10126 } from '../../../src/crypt/padding/AnsiX9_23';
+import { AnsiX9_23,Iso10126 } from '../../../src/crypt/pad/AnsiX9_23';
 
 const tsts = suite('Padding-ansi x9-23');
 

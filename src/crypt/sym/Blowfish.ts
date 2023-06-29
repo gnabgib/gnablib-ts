@@ -319,10 +319,8 @@ export class Blowfish implements ICrypt {
 	}
 
     /**
-     * Decrypt a block (of 8 bytes) in place
-     * @param block Source encrypted blocks
-     * @param offset Block-offset, default 0. Note 1 is the second block (not byte)
-     * 
+	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.decryptBlock}
+	 * 
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError} 
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
      */
@@ -337,10 +335,8 @@ export class Blowfish implements ICrypt {
     }
 
     /**
-     * Encrypt a block (of 8 bytes) in place
-     * @param block Source decrypted blocks
-     * @param offset Block-offset, default 0. Note 1 is the second block (not byte)
-     * 
+	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.encryptBlock}
+	 * 
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
      */

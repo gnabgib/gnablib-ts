@@ -86,6 +86,12 @@ export class ZeroError extends RangeError {
 }
 
 export class InvalidLengthError extends RangeError {
+	/**
+	 * ${noun} needs ${need}, has ${problem}
+	 * @param noun 
+	 * @param need 
+	 * @param problem 
+	 */
 	constructor(readonly noun:string,readonly need:string,readonly problem:string) {
 		super(`${noun} needs ${need}, has ${problem}`);
 	}

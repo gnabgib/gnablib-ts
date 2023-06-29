@@ -146,7 +146,9 @@
 		"HopMAC",
 		"PBKDF2",
 		"Blowfish",
-		"PKCS"
+		"PKCS",
+		"ECB",
+		"CBC"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

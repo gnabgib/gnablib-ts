@@ -15,13 +15,13 @@ export class AnsiX9_23 {
 	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	private constructor() {}
 
-	/** {@inheritDoc crypt/padding/IPad.IPad.padSize} */
+	/** {@inheritDoc crypt/pad/IPad.IPad.padSize} */
 	static padSize(inputSize: number, len: number): number {
 		return inputSize <= len ? len : 0;
 	}
 
 	/** 
-     * {@inheritDoc crypt/padding/IPad.IPad.pad} 
+     * {@inheritDoc crypt/pad/IPad.IPad.pad} 
      * 
      * @throws {@link primitive/ErrorExt.InvalidLengthError} 
      * If `input` is too long
@@ -48,7 +48,7 @@ export class AnsiX9_23 {
 	}
 
     /** 
-     * {@inheritDoc crypt/padding/IPad.IPad.unpad} 
+     * {@inheritDoc crypt/pad/IPad.IPad.unpad} 
      * 
 	 * @throws {@link primitive/ErrorExt.ContentError}
 	 * If padding marker isn't found

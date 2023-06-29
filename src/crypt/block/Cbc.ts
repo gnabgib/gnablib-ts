@@ -1,4 +1,5 @@
-import { IPad } from "../padding/IPad.js";
+import { InvalidLengthError } from "../../primitive/ErrorExt.js";
+import { IPad } from "../pad/IPad.js";
 import { ICrypt } from "../sym/ICrypt.js";
 import { IBlockMode } from "./IBlockMode.js";
 
@@ -18,6 +19,8 @@ export class Cbc implements IBlockMode {
     private readonly _iv: Uint8Array;
 
     constructor(crypt: ICrypt, pad: IPad, iv: Uint8Array) {
+        if (iv.length!=crypt.blockSize)
+            throw new InvalidLengthError('iv.length',`to be ${crypt.blockSize}`,''+iv.length);
         this._crypt = crypt;
         this._pad = pad;
         this._iv = iv;
@@ -28,18 +31,52 @@ export class Cbc implements IBlockMode {
     }
 
     decryptInto(plain: Uint8Array, enc: Uint8Array): void {
-
-        throw new Error("Method not implemented.");
+		const bsb = this._crypt.blockSize;
+		const safeLen = enc.length - bsb;
+		let ptr = 0;
+		let block = 0;
+		plain.set(enc.subarray(0, safeLen));
+        let prev=this._iv;
+		while (ptr < safeLen) {
+            const startByte=block*bsb;
+			this._crypt.decryptBlock(plain, block++);
+            for (let i=0;i<bsb;i++) plain[startByte+i] ^=prev[i];
+            prev=enc.subarray(startByte,startByte+bsb);
+			ptr += bsb;
+		}
+		const lastBlock = new Uint8Array(enc.subarray(safeLen));
+		this._crypt.decryptBlock(lastBlock);
+        for (let i=0;i<bsb;i++) lastBlock[i] ^=prev[i];
+		plain.set(this._pad.unpad(lastBlock), safeLen);
     }
+
     encryptInto(enc: Uint8Array, plain: Uint8Array): void {
-        throw new Error("Method not implemented.");
+        const bsb = this._crypt.blockSize;
+		const rem = plain.length % bsb;
+		const safeLen = plain.length - rem;
+		const padBlock = this._pad.padSize(rem === 0 ? bsb : rem, bsb) > 0;
+		const need = safeLen + (padBlock ? bsb : 0);
+
+		enc.set(plain.subarray(0, safeLen));
+
+		let ptr = 0;
+		let block = 0;
+        let prev=this._iv;
+		while (ptr < safeLen) {
+            const startByte=block*bsb;
+            for (let i=0;i<bsb;i++) enc[startByte+i] ^=prev[i];
+			this._crypt.encryptBlock(enc, block++);
+            prev=enc.subarray(startByte,startByte+bsb);
+			ptr += bsb;
+		}
+		if (need > safeLen) {
+			const pad = this._pad.pad(plain.subarray(safeLen), bsb);
+			enc.set(pad, ptr);
+            for (let i=0;i<bsb;i++) enc[ptr+i] ^=prev[i];
+            this._crypt.encryptBlock(enc, block);
+		}
     }
 
-
-    /**
-     * Size required (in bytes) for encrypted form (due to padding, may be larger)
-     * @param plainLen
-     */
     encryptSize(plainLen: number): number {
         const bsb = this._crypt.blockSize;
         const rem = plainLen % bsb;
