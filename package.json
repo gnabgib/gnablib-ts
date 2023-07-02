@@ -148,7 +148,10 @@
 		"Blowfish",
 		"PKCS",
 		"ECB",
-		"CBC"
+		"CBC",
+		"CFB",
+		"OFB",
+		"CTR"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",
