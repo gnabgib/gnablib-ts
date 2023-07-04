@@ -40,7 +40,7 @@ function signMul(firstByte: number): number {
 	//Possible with: 1-bit*2
 	//      0: 1-0*2 = 1
 	//      1: 1-1*2 = -1
-	return 1 - ((firstByte >> 7) & 1) * 2;
+	return 1 - ((firstByte >> 6) & 2);
 }
 
 export const fpb16 = {

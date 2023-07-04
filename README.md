@@ -103,6 +103,7 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 - [ASCII85](https://en.wikipedia.org/wiki/Ascii85)
 - [Base32, zBase32, Base32Hex](https://www.gnabgib.com/tools/base32/), [Crockford32](https://www.crockford.com/base32.html)
 - [Base64, Base64url, B64](https://www.gnabgib.com/tools/base64/)
+- [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
 - [Densely Packed Decimal](https://en.wikipedia.org/wiki/Densely_packed_decimal)
 - [Hex](https://en.wikipedia.org/wiki/Hexadecimal)
 - [IEEE754](https://en.wikipedia.org/wiki/IEEE_754)

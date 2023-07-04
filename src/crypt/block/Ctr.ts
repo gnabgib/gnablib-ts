@@ -9,6 +9,32 @@ export enum CountMode {
     Concat32,
 }
 
+interface ICountMode extends Iterable<Uint8Array> {
+    get length():number;
+    reset():void;
+}
+class IncrBytes implements ICountMode {
+    private readonly _iv:Uint8Array;
+    private readonly _runTime:Uint8Array;
+    
+    constructor(iv:Uint8Array) {
+        this._iv=iv;
+        //A runtime copy
+        this._runTime=iv.slice();
+    }
+
+    get length():number {
+        return this._iv.length;
+    }
+
+    reset(): void {
+        throw new Error("Method not implemented.");
+    }
+    [Symbol.iterator](): Iterator<Uint8Array, any, undefined> {
+        throw new Error("Method not implemented.");
+    }
+}
+
 /**
  * [Counter (CTR)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Counter_(CTR))
  * 
@@ -16,9 +42,6 @@ export enum CountMode {
  * It generates the next keystream block by encrypting successive values of a "counter". 
  * The counter can be any function which produces a sequence which is guaranteed not to repeat 
  * for a long time, although an actual increment-by-one counter is the simplest and most popular.
- * 
- * See {@link Ctr.incrIv} for a counter based on an IV/nonce that increments by 1 after each round
- * See {@link Ctr.concat32} for a counter based on the concatenation of an IV/nonce with 4 bytes holding size
  * 
  * Also known as: integer counter mode (ICM), segmented integer counter (SIC) mode
  * 

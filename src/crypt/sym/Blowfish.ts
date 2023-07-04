@@ -209,6 +209,7 @@ const sBox3 = Uint32Array.of(
 	0x01c36ae4, 0xd6ebe1f9, 0x90d4f869, 0xa65cdea0, 0x3f09252d, 0xc208e69f,
 	0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6,
 );
+const blockSize=8;
 
 /**
  * [Blowfish block Cipher](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
@@ -226,7 +227,7 @@ const sBox3 = Uint32Array.of(
  */
 export class Blowfish implements ICrypt {
 	/** Block size in bytes */
-	readonly blockSize = 8;
+	readonly blockSize = blockSize;
 	/** permutation array */
 	private readonly _p = pArr.slice();
 	/** substitution box 0 */
@@ -325,9 +326,9 @@ export class Blowfish implements ICrypt {
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
      */
     decryptBlock(block:Uint8Array,offset=0):void {
-        const byteStart=offset*this.blockSize;
-        if (block.length<byteStart+this.blockSize) 
-            throw new NotEnoughSpaceError('block.length',byteStart+this.blockSize,block.length);
+        const byteStart=offset*blockSize;
+        if (block.length<byteStart+blockSize) 
+            throw new NotEnoughSpaceError('block.length',byteStart+blockSize,block.length);
         const b32 = new Uint32Array(block.buffer,byteStart,2);
         asBE.i32(block,byteStart,2);
         this._decBlock(b32.subarray(0,2));
@@ -341,9 +342,9 @@ export class Blowfish implements ICrypt {
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
      */
     encryptBlock(block:Uint8Array,offset=0):void {
-        const byteStart=offset*this.blockSize;
-        if (block.length<byteStart+this.blockSize) 
-            throw new NotEnoughSpaceError('block.length',byteStart+this.blockSize,block.length);
+        const byteStart=offset*blockSize;
+        if (block.length<byteStart+blockSize) 
+            throw new NotEnoughSpaceError('block.length',byteStart+blockSize,block.length);
         const b32 = new Uint32Array(block.buffer,byteStart,2);
         asBE.i32(block,byteStart,2);
         this._encBlock(b32.subarray(0,2));
