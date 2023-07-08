@@ -217,8 +217,9 @@ const blockSize=8;
  * 
  * Blowfish is a symmetric-key block cipher, designed in 1993 by [Bruce Schneier](https://www.schneier.com/blog/about/) 
  * and included in many cipher suites and encryption products. Blowfish provides a good encryption rate in software, 
- * and no effective cryptanalysis of it has been found to date. However, the Advanced Encryption Standard (AES) now 
- * receives more attention, and Schneier recommends Twofish for modern applications.
+ * and no effective cryptanalysis of it has been found to date. However, the 
+ * {@link crypt/sym/Aes.Aes | Advanced Encryption Standard (AES)} now receives more attention, and Schneier recommends 
+ * {@link crypt/sym/Twofish.Twofish | Twofish} for modern applications.
  * 
  * First Published: *1993*  
  * Block size: *8 bytes*  

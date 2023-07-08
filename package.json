@@ -152,7 +152,8 @@
 		"CFB",
 		"OFB",
 		"CTR",
-		"bfloat16"
+		"bfloat16",
+		"AES"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",
