@@ -1,37 +1,91 @@
 import { InvalidLengthError } from "../../primitive/ErrorExt.js";
+import { U32 } from "../../primitive/U32.js";
 import { ICrypt } from "../sym/ICrypt.js";
 import { IBlockMode } from "./IBlockMode.js";
 
-export enum CountMode {
-    /** Increment IV by 1 after each round, IV should be `blockSize` bytes */
-    Incr,
-    /** Concatenate IV with a 4 byte counter, IV should be `blockSize-4` bytes  */
-    Concat32,
+/** Increment an arbitrarily large set of bytes by one big-endian with wrap around  */
+function incrBytes(b:Uint8Array):void {
+    let ptr=b.length-1;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        b[ptr]+=1;
+        //Detect byte-overflow
+        if (b[ptr]==0) {
+            ptr=(ptr-1)%b.length;
+        } else break;
+    }
 }
 
-interface ICountMode extends Iterable<Uint8Array> {
+export interface ICountMode extends Iterable<Uint8Array> {
+    /** Length of hte counter block (in bytes) */
     get length():number;
-    reset():void;
 }
-class IncrBytes implements ICountMode {
+
+export class IncrBytes implements ICountMode {
     private readonly _iv:Uint8Array;
-    private readonly _runTime:Uint8Array;
     
+    /**
+     * Increment IV by 1 after each round
+     * @param iv initialization vector - final counter will be this size
+     */
     constructor(iv:Uint8Array) {
         this._iv=iv;
-        //A runtime copy
-        this._runTime=iv.slice();
     }
 
     get length():number {
         return this._iv.length;
     }
 
-    reset(): void {
-        throw new Error("Method not implemented.");
+    [Symbol.iterator](): Iterator<Uint8Array> {
+        //Runtime copy of IV
+        const run=this._iv.slice();
+        return {
+            next():IteratorResult<Uint8Array> {
+                //Return (we want it in new memory)
+                const ret=run.slice();
+                incrBytes(run);
+                return {
+                    done:false,
+                    value:ret
+                }
+            }
+        }
     }
-    [Symbol.iterator](): Iterator<Uint8Array, any, undefined> {
-        throw new Error("Method not implemented.");
+}
+
+export class Concat32 implements ICountMode {
+    private readonly _iv:Uint8Array;
+    private readonly _count:number;
+
+    /**
+     * Build a counter out of `IV`+(count in 4 bytes)
+     * @param iv initialization vector - final counter will be this size + 4
+     * @param count Starting count (default 0)
+     */
+    constructor(iv:Uint8Array,count=0) {
+        this._iv=iv;
+        this._count=count;
+    }
+
+    get length():number {
+        return this._iv.length+4;
+    }
+
+    [Symbol.iterator](): Iterator<Uint8Array> {
+        //Runtime copy of IV
+        const run=new Uint8Array(this._iv.length+4);
+        let count=this._count;
+        const offset=this._iv.length;
+        run.set(this._iv);
+        return {
+            next():IteratorResult<Uint8Array> {
+                run.set(U32.toBytesBE(count++),offset);
+                return {
+                    done:false,
+                    value:run.slice()
+                }
+            }
+        }
     }
 }
 
@@ -54,71 +108,18 @@ class IncrBytes implements ICountMode {
  */
 export class Ctr implements IBlockMode {
     private readonly _crypt: ICrypt;
-    private readonly _iv:Uint8Array;
-    private readonly _mode:CountMode;
+    private readonly _counter:ICountMode;
 
-    constructor(crypt: ICrypt, iv:Uint8Array, mode:CountMode) {
+    /**
+     * Build a new Counter based block algo using the given algo and counter method
+     * @param crypt Block encryption/decryption algorithm
+     * @param counter Counter method
+     */
+    constructor(crypt: ICrypt, counter:ICountMode) {
         this._crypt = crypt;
-        this._iv=iv;
-        this._mode=mode;
-        if (mode === CountMode.Incr) {
-            if (iv.length!=crypt.blockSize)
-                throw new InvalidLengthError('iv.length',`to be ${crypt.blockSize}`,''+iv.length);
-        } else {
-            if (iv.length+4!=crypt.blockSize)
-                throw new InvalidLengthError('iv.length',`to be ${crypt.blockSize-4}`,''+iv.length);
-        }
-    }
-
-    /** Increment an arbitrarily large set of bytes by one big-endian with wrap around  */
-    private static _incrBytes(b:Uint8Array):void {
-        let ptr=b.length-1;
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            b[ptr]+=1;
-            //Detect byte-overflow
-            if (b[ptr]==0) {
-                ptr=(ptr-1)%b.length;
-            } else break;
-        }
-    }
-
-    /**
-     * Increment `iv` by 1 after each round.
-     * **NOTE** The IV must be random to prevent breaking security
-     * @param iv Initialization vector/nonce, should same number of bytes as `blockSize`
-     */
-    private static* incrIv(iv:Uint8Array):Iterable<Uint8Array> {
-        //Copy the IV
-        const start=iv.slice();
-        while (true) {
-            yield start.slice();
-            Ctr._incrBytes(start);
-        }
-    }
-
-    /**
-     * Concatenate the `iv` with a 32 bit incrementing counter
-     * **NOTE** Should only be used 4294967296 times (2**32)
-     * @param iv Initialization vector/nonce, should same 4 bytes less than `blockSize`
-     * @param incr Increment amount (default 1)
-     */
-    private static* concat32(iv:Uint8Array):Iterable<Uint8Array> {
-        const start=new Uint8Array(iv.length+4);
-        start.set(iv);
-        while (true) {
-            yield start.slice();
-            //Only increment the last 4 bytes
-            Ctr._incrBytes(start.subarray(iv.length));
-        }
-    }
-
-    private gen():Iterable<Uint8Array> {
-        if (this._mode===CountMode.Incr){
-            return Ctr.incrIv(this._iv);
-        } else {
-            return Ctr.concat32(this._iv);
-        }
+        this._counter=counter;
+        if (counter.length!=crypt.blockSize)
+            throw new InvalidLengthError('counter.length',`to be ${crypt.blockSize}`,''+counter.length);
     }
 
     get blockSize(): number {
@@ -132,8 +133,8 @@ export class Ctr implements IBlockMode {
 
         plain.set(enc);
         let ptr = 0;
-        const gen=this.gen();
-        for (const eBlock of gen) {
+        //const gen=this.gen();
+        for (const eBlock of this._counter) {
             if (ptr<safeLen) {
                 this._crypt.encryptBlock(eBlock);
                 for (let i=0;i<bsb;i++) plain[ptr+i] ^=eBlock[i];
@@ -156,8 +157,8 @@ export class Ctr implements IBlockMode {
 		enc.set(plain);
 
 		let ptr = 0;
-        const gen=this.gen();
-        for (const eBlock of gen) {
+        //const gen=this.gen();
+        for (const eBlock of this._counter) {
             if (ptr<safeLen) {
                 this._crypt.encryptBlock(eBlock);
                 for (let i=0;i<bsb;i++) enc[ptr+i] ^=eBlock[i];
