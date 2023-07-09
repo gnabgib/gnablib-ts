@@ -8,15 +8,15 @@
 		"preversion": "npm run deeptest",
 		"version": "npm run build && git add -A",
 		"postversion": "git push && git push --tags",
-		"lint": "eslint \"src/**/*.{js,ts}\"",
+		"lint": "npx eslint \"src/**/*.{js,ts}\"",
 		"test": "uvu -r tsm -i \"(.slow.test.ts|.log)$\" tst",
-		"test:coverage": "c8 --include=src npm test",
-		"test:report": "c8 report --reporter=html",
+		"test:coverage": "npx c8 --include=src npm test",
+		"test:report": "npx c8 report --reporter=html",
 		"deeptest": "uvu -r tsm -i .log$ tst",
 		"prebuild": "rm -rf dist && rm -rf release",
 		"build": "tsc --sourceMap false",
 		"compress": "compress",
-		"doc": "typedoc"
+		"doc": "npx typedoc"
 	},
 	"engines": {
 		"node": ">=15.3.0"
@@ -153,7 +153,8 @@
 		"OFB",
 		"CTR",
 		"bfloat16",
-		"AES"
+		"AES",
+		"CMAC"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",
@@ -162,10 +163,10 @@
 	},
 	"homepage": "https://github.com/gnabgib/gnablib-ts#readme",
 	"devDependencies": {
-		"@types/node": "^20.3.1",
-		"terser": "^5.18.1",
+		"@types/node": "^20.4.1",
+		"terser": "^5.18.2",
 		"tsm": "^2.3.0",
-		"typescript": "^5.1.3",
+		"typescript": "^5.1.6",
 		"uvu": "^0.5.6"
 	},
 	"optionalDevDependencies": {

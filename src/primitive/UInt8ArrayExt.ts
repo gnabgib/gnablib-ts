@@ -20,7 +20,7 @@ export const uint8ArrayExt = {
 		len?: number
 	): Uint8Array {
 		if (len === undefined) len = input.length - start;
-		safety.intInRangeInc(len,0,255,'len');
+		safety.intInRangeInc(len, 0, 255, 'len');
 		const ret = new Uint8Array(len + 1);
 		ret[0] = len;
 		ret.set(input.subarray(start, start + len), 1);
@@ -72,7 +72,7 @@ export const uint8ArrayExt = {
 	): number {
 		const finalBitPos = currentBitPos + bitSize;
 		const bitLen = bytes.length << 3;
-		safety.intInRangeInc(bitSize,0,32,'bitSize');
+		safety.intInRangeInc(bitSize, 0, 32, 'bitSize');
 		if (bitSize < 1) return currentBitPos;
 		if (finalBitPos > bitLen)
 			throw new NotEnoughSpaceError('bytes', currentBitPos + bitSize, bitLen);
@@ -104,5 +104,48 @@ export const uint8ArrayExt = {
 		} while (bitSize > 0);
 
 		return finalBitPos;
+	},
+
+	/**
+	 * Increment an arbitrarily large set of bytes in big-endian by one with overflow/wrap around
+	 * @param b Bytes to increment in place
+	 */
+	incrBE: function (b: Uint8Array): void {
+		let ptr = b.length - 1;
+		while (true) {
+			b[ptr] += 1;
+			//Detect byte-overflow
+			if (b[ptr] == 0 && b.length > 1) {
+				ptr = (ptr - 1) % b.length;
+			} else break;
+		}
+	},
+
+	/**
+	 * Left-shift an arbitrarily large set of bytes by `by`
+	 * @param b
+	 * @param by
+	 */
+	lShiftEq: function (b: Uint8Array, by: number): void {
+		const dist = 0 | (by / 8);
+		const shift = by % 8;
+		const iShift = 8 - shift;
+		const n = b.length - dist;
+		let i = 0;
+		for (; i < n; i++) {
+			b[i] = (b[i + dist] << shift) | (b[i + dist + 1] >>> iShift);
+		}
+		for (; i < b.length; i++) b[i] = 0;
+	},
+
+	/**
+	 * Xor an arbitrarily large set of bytes `x` into arbitrarily large set of bytes `b`
+	 * @param b Bytes to xor x into
+	 * @param x Bytes to xor in
+	 */
+	xorEq: function (b: Uint8Array, x: Uint8Array): void {
+		let n = b.length;
+		if (x.length < n) n = x.length;
+		for (let i = 0; i < n; i++) b[i] ^= x[i];
 	},
 };

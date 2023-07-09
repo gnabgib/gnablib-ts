@@ -184,6 +184,7 @@ Name|Digest sizes|Optional parameters
 
 ### MAC
 
+- [CMAC](https://datatracker.ietf.org/doc/rfc4493/)
 - [HMAC](https://en.wikipedia.org/wiki/HMAC) (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
 - [HopMAC](https://www.ietf.org/archive/id/draft-irtf-cfrg-kangarootwelve-10.html#name-security-considerations) (128)
 - [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128, 256)

@@ -1,20 +1,8 @@
 import { InvalidLengthError } from "../../primitive/ErrorExt.js";
 import { U32 } from "../../primitive/U32.js";
+import { uint8ArrayExt } from "../../primitive/UInt8ArrayExt.js";
 import { ICrypt } from "../sym/ICrypt.js";
 import { IBlockMode } from "./IBlockMode.js";
-
-/** Increment an arbitrarily large set of bytes by one big-endian with wrap around  */
-function incrBytes(b:Uint8Array):void {
-    let ptr=b.length-1;
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        b[ptr]+=1;
-        //Detect byte-overflow
-        if (b[ptr]==0) {
-            ptr=(ptr-1)%b.length;
-        } else break;
-    }
-}
 
 export interface ICountMode extends Iterable<Uint8Array> {
     /** Length of hte counter block (in bytes) */
@@ -43,7 +31,7 @@ export class IncrBytes implements ICountMode {
             next():IteratorResult<Uint8Array> {
                 //Return (we want it in new memory)
                 const ret=run.slice();
-                incrBytes(run);
+                uint8ArrayExt.incrBE(run);
                 return {
                     done:false,
                     value:ret

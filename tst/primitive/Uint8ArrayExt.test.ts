@@ -2,6 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { uint8ArrayExt } from '../../src/primitive/UInt8ArrayExt';
 import { hex } from '../../src/encoding/Hex';
+import { Assert } from '../../src/test/assert';
 
 const tsts = suite('UInt8Array');
 
@@ -91,5 +92,70 @@ tsts(`pushInt`, () => {
 	//Trying to push too much data will throw
 	assert.throws(() => uint8ArrayExt.pushInt(1, 16, a, bitPos));
 });
+
+const incrTests:[string,string][]=[
+	['01','02'],
+	['FE','FF'],
+	['FF','00'],//Wrap around
+	['00','01'],
+	['00FF','0100'],
+	['FF00','FF01'],
+	['FFFF','0000'],//Wrap around
+	['FFFFFFFFFF','0000000000']
+];
+for(const [start,end] of incrTests) {
+	tsts(`incr(${start})`,()=>{
+		const found=hex.toBytes(start);
+		uint8ArrayExt.incrBE(found);
+		Assert.bytesMatchHex(found,end);	
+	});
+	//assert.is(hex.fromBytes(found),end);
+}
+
+const lShiftTests:[string,number,string][]=[
+	['01',1,'02'],
+	['01',2,'04'],
+	['01',3,'08'],
+	['01',4,'10'],
+	['0001',8,'0100'],
+	['000001',11,'000800'],
+	['000001',13,'002000'],
+	['000001',15,'008000'],
+	['000001',16,'010000'],
+	//10100101 10100101 10100101
+	['A5A5A5',1,'4B4B4A'],
+	['A5A5A5',2,'969694'],
+	['A5A5A5',3,'2D2D28'],
+	['A5A5A5',4,'5A5A50'],
+	['A5A5A5',7,'D2D280'],
+	['A5A5A5',8,'A5A500'],
+	['A5A5A5',9,'4B4A00'],
+	['A5A5A5',15,'D28000'],
+	['A5A5A5',16,'A50000'],
+	['A5A5A5',23,'800000'],
+	['A5A5A5',24,'000000'],
+	['A5A5A5',420,'000000'],
+];
+for(const [start,by,end] of lShiftTests) {
+	tsts(`incr(${start})`,()=>{
+		const found=hex.toBytes(start);
+		uint8ArrayExt.lShiftEq(found,by);
+		Assert.bytesMatchHex(found,end);	
+	});
+}
+
+const xorTests:[string,string,string][]=[
+	['01','','01'],
+	['','01',''],
+	['02','01','03'],
+];
+for(const [b,x,expect] of xorTests) {
+	tsts(`xorEq(${b},${x})`,()=>{
+		const found=hex.toBytes(b);
+		uint8ArrayExt.xorEq(found,hex.toBytes(x));
+		Assert.bytesMatchHex(found,expect);	
+	});
+
+}
 
 tsts.run();
