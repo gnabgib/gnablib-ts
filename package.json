@@ -154,7 +154,8 @@
 		"CTR",
 		"bfloat16",
 		"AES",
-		"CMAC"
+		"CMAC",
+		"Twofish"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

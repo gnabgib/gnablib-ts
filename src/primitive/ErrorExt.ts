@@ -15,6 +15,18 @@ export class NotInRangeError<T> extends RangeError {
 	}
 }
 
+export class InvalidValueError<T> extends RangeError {
+	/**
+	 * ${noun} should be in ($values), got $value
+	 * @param noun 
+	 * @param value 
+	 * @param values 
+	 */
+	constructor(readonly noun:string,readonly value:T,... values:T[]) {
+		super(`${noun} should be in (${values.join(', ')}), got ${value}`);
+	}
+}
+
 /**
  * $noun should be $lowInc<=x<=$highInc, got: $value
  * $noun should be $lowInc, got: $value
