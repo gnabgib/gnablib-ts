@@ -54,44 +54,37 @@ export class Cmac implements IHash {
 	readonly #block = new Uint8Array(blockSize);
 	/** Position of data written to block */
 	#bPos = 0;
-	/** Runtime AES(k) from last block */
-	readonly #state = new Uint8Array(blockSize);
 
+	/**
+	 * Build a new CMAC generator with key
+	 * **Do not** inject a built AES object - internal use only (will not setup k1/k2 keys properly)
+	 * @param keyOrCrypt Uint8Array of bytes to be used as a key
+	 */
 	constructor(keyOrCrypt: Uint8Array | Aes) {
 		if (keyOrCrypt instanceof Aes) {
 			this.#aes = keyOrCrypt;
+			this.#k1 = new Uint8Array(blockSize);
+			this.#k2 = new Uint8Array(blockSize);
 		} else {
 			this.#aes = new Aes(keyOrCrypt);
+			[this.#k1, this.#k2] = generateSubKey(this.#aes);
 		}
-		[this.#k1, this.#k2] = generateSubKey(this.#aes);
-	}
-
-	private crypt(): void {
-		uint8ArrayExt.xorEq(this.#block, this.#state);
-		this.#aes.encryptBlock(this.#block);
-		this.#state.set(this.#block);
-		this.#bPos = 0;
 	}
 
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
-		while (nToWrite > 0) {
-			if (space >= nToWrite) {
-				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
-				//Update pos
-				this.#bPos += nToWrite;
-				return;
-			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
-			this.#bPos += space;
-			this.crypt();
-			dPos += space;
-			nToWrite -= space;
-			space = this.blockSize;
+		//Xor in full blocks and crypt
+		while (nToWrite > blockSize) {
+			for (let i = 0; i < blockSize; i++)
+				this.#block[this.#bPos++] ^= data[dPos++];
+			this.#aes.encryptBlock(this.#block);
+			this.#bPos = 0;
+			nToWrite -= blockSize;
 		}
+		//Xor in any remainder
+		while(dPos<data.length)
+			this.#block[this.#bPos++] ^= data[dPos++];
 	}
 
 	sum(): Uint8Array {
@@ -103,29 +96,33 @@ export class Cmac implements IHash {
 			//When the size is exactly a block xor k1, crypt and we're done
 			uint8ArrayExt.xorEq(this.#block, this.#k1);
 		} else {
-			//Otherwise xor k2, crypt and.. we're done
-			this.#block[this.#bPos++] = 0x80;
-			this.#block.fill(0, this.#bPos);
+			//Otherwise add the end marker, xor k2, crypt and.. we're done
+			this.#block[this.#bPos++] ^= 0x80;
 			uint8ArrayExt.xorEq(this.#block, this.#k2);
 		}
-		this.crypt();
-		return this.#state;
+		this.#aes.encryptBlock(this.#block);
+		this.#bPos = 0;
+		return this.#block;
 	}
 
 	reset(): void {
 		this.#bPos = 0;
-		this.#state.fill(0);
+		this.#block.fill(0);
 	}
 
 	newEmpty(): IHash {
-		return new Cmac(this.#aes);
+		const ret = new Cmac(this.#aes);
+		ret.#k1.set(this.#k1);
+		ret.#k2.set(this.#k2);
+		return ret;
 	}
 
 	clone(): IHash {
 		const ret = new Cmac(this.#aes);
+		ret.#k1.set(this.#k1);
+		ret.#k2.set(this.#k2);
 		ret.#block.set(this.#block);
 		ret.#bPos = this.#bPos;
-		ret.#state.set(this.#state);
 		return ret;
 	}
 }
