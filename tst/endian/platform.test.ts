@@ -92,6 +92,26 @@ for(const [src,pos,count,invert] of u64tests) {
     });
 }
 
+const set32Tests:[string,number,number,number,number,number,number][]=[
+    ['00000000',4,3,2,1,0x04030201,0x01020304],
+];
+for(const [start,b0,b1,b2,b3,expectBE,expectLE] of set32Tests) {
+    tsts(`asBE.set32(${start})`,()=>{
+        const s=hex.toBytes(start);
+        const s32=new Uint32Array(s.buffer);
+            
+        asBE.set32(s,0,b0,b1,b2,b3);
+        assert.is(s32[0],expectBE);
+    })
+    tsts(`asLE.set32(${start})`,()=>{
+        const s=hex.toBytes(start);
+        const s32=new Uint32Array(s.buffer);
+    
+        asLE.set32(s,0,b0,b1,b2,b3);
+        assert.is(s32[0],expectLE);
+    })
+}
+
 
 tsts('asB',()=>{
     const src='0102';

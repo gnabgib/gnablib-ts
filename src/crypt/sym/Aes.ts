@@ -1,5 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-2.0 */
 
+import { asBE } from '../../endian/platform.js';
 import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
 import { U32 } from '../../primitive/U32.js';
 import { ICrypt } from './ICrypt.js';
@@ -416,16 +417,15 @@ export class Aes implements ICrypt {
 
 	private _encBlock(data: Uint8Array) {
 		//Read into u32
-		let s0 = U32.iFromBytesBE(data, 0);
-		let s1 = U32.iFromBytesBE(data, 4);
-		let s2 = U32.iFromBytesBE(data, 8);
-		let s3 = U32.iFromBytesBE(data, 12);
+		const d32 = new Uint32Array(data.buffer, data.byteOffset, 4);
+		//We assume big-endian
+		asBE.i32(data, 0, 4);
 
 		//AddRoundKey: Section 5.1.4
-		s0 ^= this.#encKey[0];
-		s1 ^= this.#encKey[1];
-		s2 ^= this.#encKey[2];
-		s3 ^= this.#encKey[3];
+		d32[0] ^= this.#encKey[0];
+		d32[1] ^= this.#encKey[1];
+		d32[2] ^= this.#encKey[2];
+		d32[3] ^= this.#encKey[3];
 
 		//44/4-2=9, 52/4-2=11, 60/4-2=13
 		//This is 1 less than number of rounds, because the last round differs
@@ -438,47 +438,47 @@ export class Aes implements ICrypt {
 		// prettier-ignore
 		for (let r = 0; r < nr1; r++) {
 			//Combo: SubBytes (5.1.1), ShiftRows (5.1.2), MixColumns (5.1.3), AddRoundKey (5.1.4)
-			t0 = this.#encKey[k + 0] ^ te0[s0 >>> 24] ^ te1[(s1 >>> 16) &0xff] ^ te2[(s2 >>> 8) &0xff] ^ te3[s3 &0xff];
-			t1 = this.#encKey[k + 1] ^ te0[s1 >>> 24] ^ te1[(s2 >>> 16) &0xff] ^ te2[(s3 >>> 8) &0xff] ^ te3[s0 &0xff];
-			t2 = this.#encKey[k + 2] ^ te0[s2 >>> 24] ^ te1[(s3 >>> 16) &0xff] ^ te2[(s0 >>> 8) &0xff] ^ te3[s1 &0xff];
-			t3 = this.#encKey[k + 3] ^ te0[s3 >>> 24] ^ te1[(s0 >>> 16) &0xff] ^ te2[(s1 >>> 8) &0xff] ^ te3[s2 &0xff];
-			k += 4; s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+			t0 = this.#encKey[k++] ^ 
+				te0[d32[0]>>>24] ^ te1[(d32[1]>>>16) &0xff] ^ te2[(d32[2]>>>8) &0xff] ^ te3[d32[3] &0xff];
+			t1 = this.#encKey[k++] ^ 
+				te0[d32[1]>>>24] ^ te1[(d32[2]>>>16) &0xff] ^ te2[(d32[3]>>>8) &0xff] ^ te3[d32[0] &0xff];
+			t2 = this.#encKey[k++] ^ 
+				te0[d32[2]>>>24] ^ te1[(d32[3]>>>16) &0xff] ^ te2[(d32[0]>>>8) &0xff] ^ te3[d32[1] &0xff];
+			t3 = this.#encKey[k++] ^ 
+				te0[d32[3]>>>24] ^ te1[(d32[0]>>>16) &0xff] ^ te2[(d32[1]>>>8) &0xff] ^ te3[d32[2] &0xff];
+			d32[0] = t0; d32[1] = t1; d32[2] = t2; d32[3] = t3;
 		}
 
 		//Final round: combo SubBytes, ShiftRows
 		// prettier-ignore
-		s0 = (sBox[t0 >>> 24] << 24) | (sBox[(t1 >>> 16) &0xff] << 16) | (sBox[(t2 >>> 8) &0xff] << 8) | sBox[t3 &0xff];
+		asBE.set32(data,0,sBox[t0 >>> 24],sBox[(t1 >>> 16) & 0xff],sBox[(t2 >>> 8) & 0xff],sBox[t3 & 0xff]);
 		// prettier-ignore
-		s1 = (sBox[t1 >>> 24] << 24) | (sBox[(t2 >>> 16) &0xff] << 16) | (sBox[(t3 >>> 8) &0xff] << 8) | sBox[t0 &0xff];
+		asBE.set32(data,1,sBox[t1 >>> 24],sBox[(t2 >>> 16) & 0xff],sBox[(t3 >>> 8) & 0xff],sBox[t0 & 0xff]);
 		// prettier-ignore
-		s2 = (sBox[t2 >>> 24] << 24) | (sBox[(t3 >>> 16) &0xff] << 16) | (sBox[(t0 >>> 8) &0xff] << 8) | sBox[t1 &0xff];
+		asBE.set32(data,2,sBox[t2 >>> 24],sBox[(t3 >>> 16) & 0xff],sBox[(t0 >>> 8) & 0xff],sBox[t1 & 0xff]);
 		// prettier-ignore
-		s3 = (sBox[t3 >>> 24] << 24) | (sBox[(t0 >>> 16) &0xff] << 16) | (sBox[(t1 >>> 8) &0xff] << 8) | sBox[t2 &0xff];
+		asBE.set32(data,3,sBox[t3 >>> 24],sBox[(t0 >>> 16) & 0xff],sBox[(t1 >>> 8) & 0xff],sBox[t2 & 0xff]);
 		//AddRoundKey
-		s0 ^= this.#encKey[k + 0];
-		s1 ^= this.#encKey[k + 1];
-		s2 ^= this.#encKey[k + 2];
-		s3 ^= this.#encKey[k + 3];
+		d32[0] ^= this.#encKey[k++];
+		d32[1] ^= this.#encKey[k++];
+		d32[2] ^= this.#encKey[k++];
+		d32[3] ^= this.#encKey[k];
 
-		//Write output
-		data.set(U32.toBytesBE(s0));
-		data.set(U32.toBytesBE(s1), 4);
-		data.set(U32.toBytesBE(s2), 8);
-		data.set(U32.toBytesBE(s3), 12);
+		//Correct output endian to platform
+		asBE.i32(data, 0, 4);
 	}
 
 	private _decBlock(data: Uint8Array) {
 		//Read into u32
-		let s0 = U32.iFromBytesBE(data, 0);
-		let s1 = U32.iFromBytesBE(data, 4);
-		let s2 = U32.iFromBytesBE(data, 8);
-		let s3 = U32.iFromBytesBE(data, 12);
+		const d32 = new Uint32Array(data.buffer, data.byteOffset, 4);
+		//We assume big-endian
+		asBE.i32(data, 0, 4);
 
 		//AddRoundKey
-		s0 ^= this.#decKey[0];
-		s1 ^= this.#decKey[1];
-		s2 ^= this.#decKey[2];
-		s3 ^= this.#decKey[3];
+		d32[0] ^= this.#decKey[0];
+		d32[1] ^= this.#decKey[1];
+		d32[2] ^= this.#decKey[2];
+		d32[3] ^= this.#decKey[3];
 
 		//44/4-2=9, 52/4-2=11, 60/4-2=13
 		//This is 1 less than number of rounds, because the last round differs
@@ -490,33 +490,34 @@ export class Aes implements ICrypt {
 			t3 = 0;
 		// prettier-ignore
 		for (let r = 0; r < nr1; r++) {
-			t0 = this.#decKey[k + 0] ^ td0[s0 >>> 24] ^ td1[(s3 >>> 16) &0xff] ^ td2[(s2 >>> 8) &0xff] ^ td3[s1 &0xff];
-			t1 = this.#decKey[k + 1] ^ td0[s1 >>> 24] ^ td1[(s0 >>> 16) &0xff] ^ td2[(s3 >>> 8) &0xff] ^ td3[s2 &0xff];
-			t2 = this.#decKey[k + 2] ^ td0[s2 >>> 24] ^ td1[(s1 >>> 16) &0xff] ^ td2[(s0 >>> 8) &0xff] ^ td3[s3 &0xff];
-			t3 = this.#decKey[k + 3] ^ td0[s3 >>> 24] ^ td1[(s2 >>> 16) &0xff] ^ td2[(s1 >>> 8) &0xff] ^ td3[s0 &0xff];
-			k += 4; s0 = t0; s1 = t1; s2 = t2 ;s3 = t3;
+			t0 = this.#decKey[k++] ^ 
+				td0[d32[0]>>>24] ^ td1[(d32[3]>>>16) &0xff] ^ td2[(d32[2]>>>8) &0xff] ^ td3[d32[1] &0xff];
+			t1 = this.#decKey[k++] ^ 
+				td0[d32[1]>>>24] ^ td1[(d32[0]>>>16) &0xff] ^ td2[(d32[3]>>>8) &0xff] ^ td3[d32[2] &0xff];
+			t2 = this.#decKey[k++] ^ 
+				td0[d32[2]>>>24] ^ td1[(d32[1]>>>16) &0xff] ^ td2[(d32[0]>>>8) &0xff] ^ td3[d32[3] &0xff];
+			t3 = this.#decKey[k++] ^ 
+				td0[d32[3]>>>24] ^ td1[(d32[2]>>>16) &0xff] ^ td2[(d32[1]>>>8) &0xff] ^ td3[d32[0] &0xff];
+			d32[0] = t0; d32[1] = t1; d32[2] = t2 ;d32[3] = t3;
 		}
+
 		//Final round
 		// prettier-ignore
-		s0 = (invSBox[t0 >>> 24] << 24) | (invSBox[(t3 >>> 16) &0xff] << 16) | (invSBox[(t2 >>> 8) &0xff] << 8) | invSBox[t1 &0xff];
+		asBE.set32(data,0,invSBox[t0 >>> 24],invSBox[(t3 >>> 16) & 0xff],invSBox[(t2 >>> 8) & 0xff],invSBox[t1 & 0xff]);
 		// prettier-ignore
-		s1 = (invSBox[t1 >>> 24] << 24) | (invSBox[(t0 >>> 16) &0xff] << 16) | (invSBox[(t3 >>> 8) &0xff] << 8) | invSBox[t2 &0xff];
+		asBE.set32(data,1,invSBox[t1 >>> 24],invSBox[(t0 >>> 16) & 0xff],invSBox[(t3 >>> 8) & 0xff],invSBox[t2 & 0xff]);
 		// prettier-ignore
-		s2 = (invSBox[t2 >>> 24] << 24) | (invSBox[(t1 >>> 16) &0xff] << 16) | (invSBox[(t0 >>> 8) &0xff] << 8) | invSBox[t3 &0xff];
+		asBE.set32(data,2,invSBox[t2 >>> 24],invSBox[(t1 >>> 16) & 0xff],invSBox[(t0 >>> 8) & 0xff],invSBox[t3 & 0xff]);
 		// prettier-ignore
-		s3 = (invSBox[t3 >>> 24] << 24) | (invSBox[(t2 >>> 16) &0xff] << 16) | (invSBox[(t1 >>> 8) &0xff] << 8) | invSBox[t0 &0xff];
-
+		asBE.set32(data,3,invSBox[t3 >>> 24],invSBox[(t2 >>> 16) & 0xff],invSBox[(t1 >>> 8) & 0xff],invSBox[t0 & 0xff]);
 		//AddRoundKey
-		s0 ^= this.#decKey[k + 0];
-		s1 ^= this.#decKey[k + 1];
-		s2 ^= this.#decKey[k + 2];
-		s3 ^= this.#decKey[k + 3];
+		d32[0] ^= this.#decKey[k++];
+		d32[1] ^= this.#decKey[k++];
+		d32[2] ^= this.#decKey[k++];
+		d32[3] ^= this.#decKey[k];
 
-		//Write output
-		data.set(U32.toBytesBE(s0));
-		data.set(U32.toBytesBE(s1), 4);
-		data.set(U32.toBytesBE(s2), 8);
-		data.set(U32.toBytesBE(s3), 12);
+		//Correct output endian to platform
+		asBE.i32(data, 0, 4);
 	}
 
 	/**
