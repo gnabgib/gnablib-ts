@@ -1,28 +1,318 @@
 /*! Copyright 2023 the gnablib contributors MPL-2.0 */
 
-import { ICrypt } from "./ICrypt.js";
+import { safety } from '../../primitive/Safety.js';
+import { U32 } from '../../primitive/U32.js';
+import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
+
+// prettier-ignore
+/** Round constants (expand into 64bit) 2.6.1 */
+const roundConst = Uint8Array.of(
+	0xf0, 0xe1, 0xd2, 0xc3, 
+	0xb4, 0xa5, 0x96, 0x87,
+	0x78, 0x69, 0x5a, 0x4b
+);
+/**
+ * XOR 2 U32 (aka U64, endian irrelevant) from `b:bPos64` into `a:aPos64`
+ * @param a
+ * @param aPos64 Position as if U64 (2* for U32)
+ * @param b
+ * @param bPos64 Position as if U64 (2* for U32)
+ */
+function xor64(
+	a: Uint32Array,
+	aPos64: number,
+	b: Uint32Array,
+	bPos64: number
+): void {
+	aPos64 <<= 1; //*2
+	bPos64 <<= 1; //*2
+	a[aPos64] ^= b[bPos64];
+	a[aPos64 + 1] ^= b[bPos64 + 1];
+}
+/**
+ * NOT 2 U32 (aka U64, endian irrelevant) in `a:aPos64`
+ * @param a
+ * @param aPos64 Position as if U64 (2* for U32)
+ */
+function not64(a: Uint32Array, aPos64: number): void {
+	aPos64 <<= 1; //*2
+	a[aPos64] = ~a[aPos64];
+	a[aPos64 + 1] = ~a[aPos64 + 1];
+}
+/**
+ * AND 2 U32 (aka U64, endian irrelevant) from `b:bPos64` into `a:aPos64`
+ * @param a
+ * @param aPos64 Position as if U64 (2* for U32)
+ * @param b
+ * @param bPos64 Position as if U64 (2* for U32)
+ */
+function and64(
+	a: Uint32Array,
+	aPos64: number,
+	b: Uint32Array,
+	bPos64: number
+): void {
+	aPos64 <<= 1; //*2
+	bPos64 <<= 1; //*2
+	a[aPos64] &= b[bPos64];
+	a[aPos64 + 1] &= b[bPos64 + 1];
+}
+
+function ror64(a: Uint8Array, aPos64: number, by: number): void {
+	//Maybe this could be converted into a generic case.. we cast in/out of U32 (big endian) to
+	//Convert into byte pos
+	aPos64 <<= 3; //*8
+
+	by = by & 0x3f; //limit 0-64
+	let fPull = aPos64;
+	let sPull = aPos64 + 4;
+	if (by >= 32) {
+		//If it's a large rotate switch the positions and shrink
+		fPull += 4;
+		sPull = aPos64;
+		by -= 32;
+	}
+	const first = U32.iFromBytesBE(a, fPull);
+	const second = U32.iFromBytesBE(a, sPull);
+	if (by === 0) {
+		a.set(U32.toBytesBE(first), aPos64);
+		a.set(U32.toBytesBE(second), aPos64 + 4);
+	} else {
+		const iBy = 32 - by;
+		a.set(U32.toBytesBE((first >>> by) | (second << iBy)), aPos64);
+		a.set(U32.toBytesBE((second >>> by) | (first << iBy)), aPos64 + 4);
+	}
+}
+
+const stage_init = 0;
+const stage_ad = 1;
+const stage_data = 2;
+const stage_done = 3;
 
 /**
- * [Ascon](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
- * 
- * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines 
- * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC) 
- * 
- * First Published: *2014*  
- * Block size: *8, 16 bytes*  
- * Key size: *16 bytes*  
- * Rounds: *6-8*  
- * 
- * @alpha
+ * [Ascon](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*
+ * Block size: *8, 16 bytes*
+ * Key size: *16 bytes*
+ * Rounds: *6-8*
+ *
+ * Specified in
+ * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
-export class Ascon implements ICrypt {
-    get blockSize(): number {
-        throw new Error("Method not implemented.");
-    }
-    decryptBlock(block: Uint8Array, offset?: number | undefined): void {
-        throw new Error("Method not implemented.");
-    }
-    encryptBlock(block: Uint8Array, offset?: number | undefined): void {
-        throw new Error("Method not implemented.");
-    }
+export class Ascon {
+	readonly blockSize: number;
+	readonly #state = new Uint8Array(40); //320bit state
+	readonly #s32 = new Uint32Array(this.#state.buffer); //10 elements
+	readonly #key: Uint8Array;
+	/** Position in state*/
+	#sPos = 0;
+	/** Stage Init=0/AssocData=1/Data=2 */
+	#stage = stage_init;
+
+	constructor(
+		key: Uint8Array,
+		nonce: Uint8Array,
+		rate: number,
+		readonly aRound: number,
+		readonly bRound: number
+	) {
+		safety.lenInRangeInc(key, 0, 20, 'key'); //0-160 bits
+		safety.lenExactly(nonce, 16, 'nonce'); //128 bits
+		//Note rate/aRound/bRound are tunable but not expected to be exposed so no need for safety checks)
+		this.blockSize = rate;
+		this.#key = key;
+
+		//Initialize (2.4.1)
+		this.#state[0] = key.length << 3;
+		this.#state[1] = rate << 3;
+		this.#state[2] = aRound;
+		this.#state[3] = bRound;
+		const kPos = 4 + (20 - key.length);
+		this.#state.set(key, kPos);
+		this.#state.set(nonce, 24);
+		//Run pa
+		this.p(aRound);
+		//Xor in the key
+		uint8ArrayExt.xorEq(this.#state.subarray(40 - key.length), key);
+		//console.log(`init=${hex.fromBytes(this.#state)}`);
+	}
+
+	/** Permutation 2.6 */
+	private p(rounds: number): void {
+        // prettier-ignore
+		for (let i = 0; i < rounds; i++) {
+			//2.6.1 Add constants
+			//xor in the round constant to the last byte of u64 3/5 = byte 23
+			this.#state[23] ^= roundConst[12 - rounds + i];
+
+			//7.3 (2.6.2 Substitute)
+			xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 4, this.#s32, 3); xor64(this.#s32, 2, this.#s32, 1);
+			const t = this.#s32.slice();
+			not64(t, 0); not64(t, 1); not64(t, 2); not64(t, 3); not64(t, 4);
+			and64(t, 0, this.#s32, 1); and64(t, 1, this.#s32, 2); and64(t, 2, this.#s32, 3); and64(t, 3, this.#s32, 4); and64(t, 4, this.#s32, 0);
+			xor64(this.#s32, 0, t, 1); xor64(this.#s32, 1, t, 2); xor64(this.#s32, 2, t, 3); xor64(this.#s32, 3, t, 4); xor64(this.#s32, 4, t, 0);
+			xor64(this.#s32, 1, this.#s32, 0); xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 3, this.#s32, 2); not64(this.#s32, 2);
+
+			//2.6.3 diffusion
+			//Copy x0-4 twice (so we can ROR in place)
+			const ror0 = this.#state.slice();
+			const ror1 = this.#state.slice();
+			//Rotate per spec
+			ror64(ror0, 0, 19); ror64(ror1, 0, 28);
+			ror64(ror0, 1, 61); ror64(ror1, 1, 39);
+			ror64(ror0, 2,  1); ror64(ror1, 2,  6);
+			ror64(ror0, 3, 10); ror64(ror1, 3, 17);
+			ror64(ror0, 4,  7); ror64(ror1, 4, 41);
+			//Create U32 arrays so we can use xor64
+			const ror0_32 = new Uint32Array(ror0.buffer);
+			const ror1_32 = new Uint32Array(ror1.buffer);
+			xor64(this.#s32, 0, ror0_32, 0); xor64(this.#s32, 0, ror1_32, 0);
+			xor64(this.#s32, 1, ror0_32, 1); xor64(this.#s32, 1, ror1_32, 1);
+			xor64(this.#s32, 2, ror0_32, 2); xor64(this.#s32, 2, ror1_32, 2);
+			xor64(this.#s32, 3, ror0_32, 3); xor64(this.#s32, 3, ror1_32, 3);
+			xor64(this.#s32, 4, ror0_32, 4); xor64(this.#s32, 4, ror1_32, 4);
+		}
+		this.#sPos = 0;
+	}
+
+	writeAssocData(data: Uint8Array): void {
+		if (this.#stage > stage_ad)
+			throw new Error('Associated data can no longer be written');
+		this.#stage = stage_ad;
+		let nToWrite = data.length;
+		let dPos = 0;
+		//Xor in full blocks and permute
+		while (nToWrite >= this.blockSize) {
+			for (let i = 0; i < this.blockSize; i++)
+				this.#state[this.#sPos++] ^= data[dPos++];
+			this.p(this.bRound);
+			nToWrite -= this.blockSize;
+		}
+		//Xor in any remainder
+		while (dPos < data.length) this.#state[this.#sPos++] ^= data[dPos++];
+	}
+
+	private finalizeAssocData(): void {
+		if (this.#stage > stage_ad)
+			throw new Error('AD has already been finalized');
+		if (this.#stage === stage_ad) {
+			//If we started writing AD we need to finish
+			//Append a 1
+			this.#state[this.#sPos] ^= 0x80;
+			//Permute
+			this.p(this.bRound);
+		}
+		//Add the domain separator NOTE 2.4.2: "After processing A (also if s=0), a 1 bit domain separator is xored into S"
+		this.#state[39] ^= 1;
+		this.#stage = stage_data;
+	}
+
+	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
+		if (this.#stage < stage_data) this.finalizeAssocData();
+		else if (this.#stage == stage_done)
+			throw new Error('Cannot encrypt data after finalization');
+		this.#stage = stage_data;
+
+		let nToWrite = plain.length;
+		let pPos = 0;
+		let ePos = 0;
+		//Xor in full blocks
+		while (nToWrite >= this.blockSize) {
+			for (; this.#sPos < this.blockSize; )
+				this.#state[this.#sPos++] ^= plain[pPos++];
+			//Copy out the cipher
+			enc.set(this.#state.subarray(0, this.blockSize), ePos);
+			this.p(this.bRound);
+			nToWrite -= this.blockSize;
+			ePos += this.blockSize;
+		}
+		if (pPos < plain.length) {
+			//Xor any remainder
+			while (pPos < plain.length) this.#state[this.#sPos++] ^= plain[pPos++];
+			//Copy out the cipher
+			enc.set(this.#state.subarray(0, this.#sPos), pPos - this.#sPos);
+		}
+	}
+
+	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
+		if (this.#stage < stage_data) this.finalizeAssocData();
+		else if (this.#stage == stage_done)
+			throw new Error('Cannot decrypt data after finalization');
+		this.#stage = stage_data;
+
+		let nToWrite = enc.length;
+		let pPos = 0;
+		let space = this.blockSize - this.#sPos;
+		plain.set(enc);
+		//Xor out full blocks
+		while (nToWrite >= this.blockSize) {
+			for (; this.#sPos < this.blockSize; )
+				plain[pPos++] ^= this.#state[this.#sPos++];
+			//Update state
+			this.#state.set(enc.subarray(pPos - space, pPos));
+			this.p(this.bRound);
+			nToWrite -= this.blockSize;
+			space = this.blockSize;
+		}
+		if (pPos < plain.length) {
+			space = plain.length - pPos;
+			while (pPos < plain.length) plain[pPos++] ^= this.#state[this.#sPos++];
+			//Update state
+			this.#state.set(enc.subarray(pPos - space));
+		}
+	}
+
+	verify(tag: Uint8Array): boolean {
+		//End assoc writing
+		if (this.#stage < stage_data) this.finalizeAssocData();
+		//End data writing
+		this.#state[this.#sPos] ^= 0x80;
+		this.#stage = stage_done;
+		//Xor in key after blockSize
+		for (let i = 0; i < this.#key.length; i++)
+			this.#state[this.blockSize + i] ^= this.#key[i];
+		//pA
+		this.p(this.aRound);
+		//Xor up to 16 bytes of key at end of state
+		const n = this.#key.length < 16 ? this.#key.length : 16;
+		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
+			this.#state[i++] ^= this.#key[j++];
+
+		let zero = 0;
+		for (let i = 0; i < tag.length; i++) zero |= tag[i] ^ this.#state[24 + i];
+		return zero === 0;
+	}
+
+	finalize(): Uint8Array {
+		//End assoc writing
+		if (this.#stage < stage_data) this.finalizeAssocData();
+		//End data writing
+		this.#state[this.#sPos++] ^= 0x80;
+		this.#stage = stage_done;
+		//Xor in key after blockSize
+		for (let i = 0; i < this.#key.length; i++)
+			this.#state[this.blockSize + i] ^= this.#key[i];
+		//pA
+		this.p(this.aRound);
+		//Xor up to 16 bytes of key at end of state
+		const n = this.#key.length < 16 ? this.#key.length : 16;
+		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
+			this.#state[i++] ^= this.#key[j++];
+		//Return last 16 bytes of state
+		return this.#state.slice(24);
+	}
+
+	encryptSize(plainLen: number): number {
+		return plainLen;
+	}
 }
+
+// K=key, N=nonce (128bit), A=associated data, C=ciphertext, T=tag (128bits), P=plaintext
+// k - Key size (bits)
+// r - Rate (also block size for P/C/A)
+// a - Initialization/final round number
+// b - Intermediate round number

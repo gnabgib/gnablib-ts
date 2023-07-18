@@ -91,6 +91,7 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 #### Symmetric
 
 - [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)
+- [Ascon](https://ascon.iaik.tugraz.at/index.html)
 - [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
 - [Twofish](https://www.schneier.com/academic/twofish/)
 

@@ -155,7 +155,8 @@
 		"bfloat16",
 		"AES",
 		"CMAC",
-		"Twofish"
+		"Twofish",
+		"Ascon"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

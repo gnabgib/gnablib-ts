@@ -245,7 +245,7 @@ export class Blowfish implements ICrypt {
 	}
 
 	private _f(x: number): number {
-		const h = (this._s0[x >>> 24] + this._s1[(x >>> 16) & 0xff]) >>> 0;
+		const h = this._s0[x >>> 24] + this._s1[(x >>> 16) & 0xff];
 		return (h ^ this._s2[(x >>> 8) & 0xff]) + this._s3[x & 0xff];
 	}
 
@@ -294,29 +294,24 @@ export class Blowfish implements ICrypt {
 		const data = Uint32Array.of(0, 0);
 		for (let i = 0; i < pArr.length; i += 2) {
 			this._encBlock(data);
-			this._p[i] = data[0];
-			this._p[i + 1] = data[1];
+			this._p.set(data,i);
 		}
 		//Loop unroll for each sBox - since they're not arrays we cannot roll
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s0[j] = data[0];
-			this._s0[j + 1] = data[1];
+			this._s0.set(data,j);
 		}
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s1[j] = data[0];
-			this._s1[j + 1] = data[1];
+			this._s1.set(data,j);
 		}
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s2[j] = data[0];
-			this._s2[j + 1] = data[1];
+			this._s2.set(data,j);
 		}
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s3[j] = data[0];
-			this._s3[j + 1] = data[1];
+			this._s3.set(data,j);
 		}
 	}
 
