@@ -1,9 +1,9 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
 import { safety } from '../../primitive/Safety.js';
-import { ICrypt } from './ICrypt.js';
+import { IBlockCrypt } from '../IBlockCrypt.js';
 
 // A Feistel cipher
 const minKeyLen = 4; //32 bits
@@ -226,7 +226,7 @@ const blockSize=8;
  * Key size: *4 - 56 bytes*  
  * Rounds: *16*  
  */
-export class Blowfish implements ICrypt {
+export class Blowfish implements IBlockCrypt {
 	/** Block size in bytes */
 	readonly blockSize = blockSize;
 	/** permutation array */
@@ -316,7 +316,7 @@ export class Blowfish implements ICrypt {
 	}
 
     /**
-	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.decryptBlock}
+	 * {@inheritDoc crypt/IBlockCrypt.IBlockCrypt.decryptBlock}
 	 * 
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError} 
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
@@ -332,7 +332,7 @@ export class Blowfish implements ICrypt {
     }
 
     /**
-	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.encryptBlock}
+	 * {@inheritDoc crypt/IBlockCrypt.IBlockCrypt.encryptBlock}
 	 * 
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)

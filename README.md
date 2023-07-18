@@ -1,12 +1,13 @@
 # gnablib
 
-A zero dependency library, with provenance, TypeScript/JavaScript applications for the web, Node or Deno.
+Cryptography and verification, encoding and extended types. The tools you need for any project.
+Zero dependencies, provenance signing, TypeScript typing.  Build applications for the web, Node or Deno.
 
 [![CI](https://github.com/gnabgib/gnablib-ts/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gnabgib/gnablib-ts/actions)
 [![NPM Version](https://img.shields.io/npm/v/gnablib?color=33cd56&logo=npm)](https://www.npmjs.com/package/gnablib)
 [![install size](https://packagephobia.com/badge?p=gnablib)](https://packagephobia.com/result?p=gnablib)
 ![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/gnablib)
-![Lines of code](https://img.shields.io/tokei/lines/github/gnabgib/gnablib-ts)
+![Lines of code](https://tokei.rs/b1/github/gnabgib/gnablib-ts)
 
 <!-- 
 Too new:
@@ -22,16 +23,8 @@ Renders 0 deps as red/not found (portrays alarm)
 
 This module is available through [NPM](https://www.npmjs.com/). There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)
 
-**PNPM**
-
 ```bash
-pnpm install gnablib --ignore-scripts
-```
-
-**NPM**
-
-```bash
-npm install gnablib --ignore-scripts
+(pnpm|npm) install gnablib --ignore-scripts
 ```
 
 To verify provenance:
@@ -91,7 +84,7 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 #### Symmetric
 
 - [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)
-- [Ascon](https://ascon.iaik.tugraz.at/index.html)
+- [Ascon-128, Ascon-128a, Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)
 - [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
 - [Twofish](https://www.schneier.com/academic/twofish/)
 

@@ -1,8 +1,8 @@
 /*! Copyright 2023 gnabgib MPL-2.0 */
 
 import { IPad } from '../pad/IPad.js';
-import { ICrypt } from '../sym/ICrypt.js';
-import { IBlockMode } from './IBlockMode.js';
+import { IBlockCrypt } from '../IBlockCrypt.js';
+import { IFullCrypt } from '../IFullCrypt.js';
 
 /**
  * [Electronic codebook (ECB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_codebook_(ECB))
@@ -21,11 +21,11 @@ import { IBlockMode } from './IBlockMode.js';
  *
  * Specified in [FIPS-81](https://csrc.nist.gov/csrc/media/publications/fips/81/archive/1980-12-02/documents/fips81.pdf)
  */
-export class Ecb implements IBlockMode {
-	private readonly _crypt: ICrypt;
+export class Ecb implements IFullCrypt {
+	private readonly _crypt: IBlockCrypt;
 	private readonly _pad: IPad;
 
-	constructor(crypt: ICrypt, pad: IPad) {
+	constructor(crypt: IBlockCrypt, pad: IPad) {
 		this._crypt = crypt;
 		this._pad = pad;
 	}
@@ -34,7 +34,6 @@ export class Ecb implements IBlockMode {
 		return this._crypt.blockSize;
 	}
 
-	/* * {@inheritDoc crypt/block/IBlockMode.IBlockMode.decryptInto} */
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
 		const bsb = this._crypt.blockSize;
 		const safeLen = enc.length - bsb;
@@ -50,7 +49,6 @@ export class Ecb implements IBlockMode {
 		plain.set(this._pad.unpad(lastBlock), safeLen);
 	}
 
-	/* * {@inheritDoc crypt/block/IBlockMode.IBlockMode.encryptInto} */
 	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
 		const bsb = this._crypt.blockSize;
 		const rem = plain.length % bsb;
@@ -77,7 +75,7 @@ export class Ecb implements IBlockMode {
 	}
 
 	/** 
-     * {@inheritDoc crypt/block/IBlockMode.IBlockMode.encryptSize}
+     * {@inheritDoc crypt/IFullCrypt.IFullCrypt.encryptSize}
 	 *
 	 * @example
 	 * ```

@@ -1,11 +1,11 @@
-/*! Copyright 2023 the gnablib contributors MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import {
 	InvalidValueError,
 	NotEnoughSpaceError,
 } from '../../primitive/ErrorExt.js';
 import { U32 } from '../../primitive/U32.js';
-import { ICrypt } from './ICrypt.js';
+import { IBlockCrypt } from '../IBlockCrypt.js';
 
 const blockSize = 16;
 const mdsPolynomial = 0x169; // x^8 + x^6 + x^5 + x^3 + 1, Section 4.2
@@ -140,7 +140,7 @@ function sBoxGen(b: Uint8Array, key: Uint8Array, offset: number): number {
  *
  * [Spec](https://www.schneier.com/wp-content/uploads/2016/02/paper-twofish-paper.pdf)
  */
-export class Twofish implements ICrypt {
+export class Twofish implements IBlockCrypt {
 	readonly blockSize = blockSize;
 	private readonly _s0 = new Uint32Array(256);
 	private readonly _s1 = new Uint32Array(256);
@@ -287,7 +287,7 @@ export class Twofish implements ICrypt {
 	}
 
 	/**
-	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.decryptBlock}
+	 * {@inheritDoc crypt/IBlockCrypt.IBlockCrypt.decryptBlock}
 	 *
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
@@ -304,7 +304,7 @@ export class Twofish implements ICrypt {
 	}
 
 	/**
-	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.encryptBlock}
+	 * {@inheritDoc crypt/IBlockCrypt.IBlockCrypt.encryptBlock}
 	 *
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)

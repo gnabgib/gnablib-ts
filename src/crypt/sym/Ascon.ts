@@ -1,8 +1,9 @@
-/*! Copyright 2023 the gnablib contributors MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { safety } from '../../primitive/Safety.js';
 import { U32 } from '../../primitive/U32.js';
 import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
+import { IAead } from '../IAead.js';
 
 // prettier-ignore
 /** Round constants (expand into 64bit) 2.6.1 */
@@ -74,16 +75,18 @@ function ror64(a: Uint8Array, aPos64: number, by: number): void {
 	}
 	const first = U32.iFromBytesBE(a, fPull);
 	const second = U32.iFromBytesBE(a, sPull);
-	if (by === 0) {
-		a.set(U32.toBytesBE(first), aPos64);
-		a.set(U32.toBytesBE(second), aPos64 + 4);
-	} else {
-		const iBy = 32 - by;
-		a.set(U32.toBytesBE((first >>> by) | (second << iBy)), aPos64);
-		a.set(U32.toBytesBE((second >>> by) | (first << iBy)), aPos64 + 4);
-	}
+    //Complete implementation, but Ascon doesn't 0/32/64 bit rotate so we can skip
+	// if (by === 0) {
+	// 	a.set(U32.toBytesBE(first), aPos64);
+	// 	a.set(U32.toBytesBE(second), aPos64 + 4);
+	// } else {
+	const iBy = 32 - by;
+	a.set(U32.toBytesBE((first >>> by) | (second << iBy)), aPos64);
+	a.set(U32.toBytesBE((second >>> by) | (first << iBy)), aPos64 + 4);
+	// }
 }
 
+const tagSize=16;
 const stage_init = 0;
 const stage_ad = 1;
 const stage_data = 2;
@@ -95,15 +98,16 @@ const stage_done = 3;
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *8, 16 bytes*
- * Key size: *16 bytes*
+ * First Published: *2014*  
+ * Block size: *8, 16 bytes*  
+ * Key size: *16 bytes*  
  * Rounds: *6-8*
  *
  * Specified in
  * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
-export class Ascon {
+class Ascon implements IAead {
+    readonly tagSize=tagSize;
 	readonly blockSize: number;
 	readonly #state = new Uint8Array(40); //320bit state
 	readonly #s32 = new Uint32Array(this.#state.buffer); //10 elements
@@ -113,6 +117,14 @@ export class Ascon {
 	/** Stage Init=0/AssocData=1/Data=2 */
 	#stage = stage_init;
 
+    /**
+     * Construct a new Ascon AEAD state 
+     * @param key Secret key, in bytes, 0-20 in length
+     * @param nonce Nonce, in bytes, exactly 16 bytes
+     * @param rate Rate - a tunable parameter
+     * @param aRound Number of rounds for a permutations - a tunable parameter
+     * @param bRound Number of rounds for b permutations - a tunable parameter
+     */
 	constructor(
 		key: Uint8Array,
 		nonce: Uint8Array,
@@ -138,7 +150,6 @@ export class Ascon {
 		this.p(aRound);
 		//Xor in the key
 		uint8ArrayExt.xorEq(this.#state.subarray(40 - key.length), key);
-		//console.log(`init=${hex.fromBytes(this.#state)}`);
 	}
 
 	/** Permutation 2.6 */
@@ -179,7 +190,11 @@ export class Ascon {
 		this.#sPos = 0;
 	}
 
-	writeAssocData(data: Uint8Array): void {
+    /**
+     * Add associated data (can be called multiple times, must be done before {@link encryptInto}/{@link decryptInto})
+     * @param data 
+     */
+	writeAD(data: Uint8Array): void {
 		if (this.#stage > stage_ad)
 			throw new Error('Associated data can no longer be written');
 		this.#stage = stage_ad;
@@ -197,8 +212,6 @@ export class Ascon {
 	}
 
 	private finalizeAssocData(): void {
-		if (this.#stage > stage_ad)
-			throw new Error('AD has already been finalized');
 		if (this.#stage === stage_ad) {
 			//If we started writing AD we need to finish
 			//Append a 1
@@ -309,6 +322,81 @@ export class Ascon {
 	encryptSize(plainLen: number): number {
 		return plainLen;
 	}
+}
+/**
+ * [Ascon-128](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Key size: *16 bytes*  
+ * Rounds: *6*
+ *
+ * Specified in
+ * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+export class Ascon128 extends Ascon {
+    /**
+     * Construct a new Ascon-128 AEAD state 
+     * @param key Secret key, in bytes, exactly 16 bytes
+     * @param nonce Nonce, in bytes, exactly 16 bytes
+     */
+    constructor(key: Uint8Array, nonce: Uint8Array) {
+        super(key,nonce,8,12,6);
+        safety.lenExactly(key, 16, 'key'); //128 bits
+    }
+}
+/**
+ * [Ascon-128a](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*  
+ * Block size: *16 bytes*  
+ * Key size: *16 bytes*  
+ * Rounds: *8*
+ *
+ * Specified in
+ * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+export class Ascon128a extends Ascon {
+    /**
+     * Construct a new Ascon-128a AEAD state 
+     * @param key Secret key, in bytes, exactly 16 bytes
+     * @param nonce Nonce, in bytes, exactly 16 bytes
+     */
+    constructor(key: Uint8Array, nonce: Uint8Array) {
+        super(key,nonce,16,12,8);
+        safety.lenExactly(key, 16, 'key'); //128 bits
+    }
+}
+/**
+ * [Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Key size: *20 bytes*  
+ * Rounds: *6*
+ *
+ * Specified in
+ * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+export class Ascon80pq extends Ascon {
+    /**
+     * Construct a new Ascon-128a AEAD state 
+     * @param key Secret key, in bytes, exactly 20 bytes
+     * @param nonce Nonce, in bytes, exactly 16 bytes
+     */
+    constructor(key: Uint8Array, nonce: Uint8Array) {
+        super(key,nonce,8,12,6);
+        safety.lenExactly(key, 20, 'key'); //160 bits
+    }
 }
 
 // K=key, N=nonce (128bit), A=associated data, C=ciphertext, T=tag (128bits), P=plaintext

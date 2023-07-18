@@ -1,6 +1,6 @@
 import { InvalidLengthError } from "../../primitive/ErrorExt.js";
-import { ICrypt } from "../sym/ICrypt.js";
-import { IBlockMode } from "./IBlockMode.js";
+import { IBlockCrypt } from "../IBlockCrypt.js";
+import { IFullCrypt } from "../IFullCrypt.js";
 
 /**
  * [Output Feedback (OFB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_feedback_(CFB))
@@ -16,11 +16,11 @@ import { IBlockMode } from "./IBlockMode.js";
  * [FIPS-81](https://csrc.nist.gov/csrc/media/publications/fips/81/archive/1980-12-02/documents/fips81.pdf)
  * [NIST 800-38A](http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf)
  */
-export class Ofb implements IBlockMode {
-    private readonly _crypt: ICrypt;
+export class Ofb implements IFullCrypt {
+    private readonly _crypt: IBlockCrypt;
     private readonly _iv: Uint8Array;
 
-    constructor(crypt: ICrypt, iv: Uint8Array) {
+    constructor(crypt: IBlockCrypt, iv: Uint8Array) {
         if (iv.length!=crypt.blockSize)
             throw new InvalidLengthError('iv.length',`to be ${crypt.blockSize}`,''+iv.length);
         this._crypt = crypt;

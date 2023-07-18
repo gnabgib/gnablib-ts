@@ -1,9 +1,9 @@
-/*! Copyright 2023 the gnablib contributors MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
 import { U32 } from '../../primitive/U32.js';
-import { ICrypt } from './ICrypt.js';
+import { IBlockCrypt } from '../IBlockCrypt.js';
 
 const blockSize = 16;
 // prettier-ignore
@@ -403,7 +403,7 @@ function expandKey(key: Uint8Array, enc: Uint32Array, dec: Uint32Array): void {
  * - [FIBS-197-upd1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf)
  * - [RIJNDAEL Amended](https://csrc.nist.gov/csrc/media/projects/cryptographic-standards-and-guidelines/documents/aes-development/rijndael-ammended.pdf)
  */
-export class Aes implements ICrypt {
+export class Aes implements IBlockCrypt {
 	readonly blockSize = blockSize;
 	readonly #encKey: Uint32Array;
 	readonly #decKey: Uint32Array;
@@ -521,7 +521,7 @@ export class Aes implements ICrypt {
 	}
 
 	/**
-	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.decryptBlock}
+	 * {@inheritDoc crypt/IBlockCrypt.IBlockCrypt.decryptBlock}
 	 *
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
@@ -538,7 +538,7 @@ export class Aes implements ICrypt {
 	}
 
 	/**
-	 * {@inheritDoc crypt/sym/ICrypt.ICrypt.encryptBlock}
+	 * {@inheritDoc crypt/IBlockCrypt.IBlockCrypt.encryptBlock}
 	 *
 	 * @throws {@link primitive/ErrorExt.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)

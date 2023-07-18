@@ -1,5 +1,9 @@
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-export interface IBlockMode {
+/**
+ * A full encryption provider capable of encrypting plaintext, and decrypting ciphertext.
+ */
+export interface IFullCrypt {
     /** Block size in bytes */
     get blockSize(): number;
     /**

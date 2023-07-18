@@ -1,8 +1,8 @@
 import { InvalidLengthError } from "../../primitive/ErrorExt.js";
 import { U32 } from "../../primitive/U32.js";
 import { uint8ArrayExt } from "../../primitive/UInt8ArrayExt.js";
-import { ICrypt } from "../sym/ICrypt.js";
-import { IBlockMode } from "./IBlockMode.js";
+import { IBlockCrypt } from "../IBlockCrypt.js";
+import { IFullCrypt } from "../IFullCrypt.js";
 
 export interface ICountMode extends Iterable<Uint8Array> {
     /** Length of hte counter block (in bytes) */
@@ -94,8 +94,8 @@ export class Concat32 implements ICountMode {
  * Specified in 
  * [NIST 800-38A](http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf)
  */
-export class Ctr implements IBlockMode {
-    private readonly _crypt: ICrypt;
+export class Ctr implements IFullCrypt {
+    private readonly _crypt: IBlockCrypt;
     private readonly _counter:ICountMode;
 
     /**
@@ -103,7 +103,7 @@ export class Ctr implements IBlockMode {
      * @param crypt Block encryption/decryption algorithm
      * @param counter Counter method
      */
-    constructor(crypt: ICrypt, counter:ICountMode) {
+    constructor(crypt: IBlockCrypt, counter:ICountMode) {
         this._crypt = crypt;
         this._counter=counter;
         if (counter.length!=crypt.blockSize)
