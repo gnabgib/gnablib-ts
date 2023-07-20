@@ -1,3 +1,5 @@
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+
 import { hex } from '../encoding/Hex.js';
 
 export type errorSetting = {

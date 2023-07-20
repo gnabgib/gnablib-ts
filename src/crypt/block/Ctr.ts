@@ -1,3 +1,5 @@
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+
 import { InvalidLengthError } from "../../primitive/ErrorExt.js";
 import { U32 } from "../../primitive/U32.js";
 import { uint8ArrayExt } from "../../primitive/UInt8ArrayExt.js";

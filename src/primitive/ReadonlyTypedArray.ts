@@ -1,4 +1,4 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 //Take all of this with a grain of salt, (T|J)S sort of ignore (you'll get a TS error, but you can still mutate)
 type TypedArrayMutableProperties =

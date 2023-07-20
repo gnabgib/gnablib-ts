@@ -144,6 +144,30 @@ for(const {descr,k,n,pt,ad,ct,tag} of aead128Tests) {
     });
 }
 
+tsts(`AD after finalize throws`,()=>{
+    const a=new Ascon128(hex.toBytes('000102030405060708090A0B0C0D0E0F'),hex.toBytes('000102030405060708090A0B0C0D0E0F'));
+    a.finalize();
+    assert.throws(()=>a.writeAD(new Uint8Array(0)));
+
+})
+
+tsts(`encrypt after finalize throws`,()=>{
+    const a=new Ascon128(hex.toBytes('000102030405060708090A0B0C0D0E0F'),hex.toBytes('000102030405060708090A0B0C0D0E0F'));
+    a.finalize();
+    assert.throws(()=>a.encryptInto(new Uint8Array(0),new Uint8Array(0)));
+});
+
+tsts(`decrypt after finalize throws`,()=>{
+    const a=new Ascon128(hex.toBytes('000102030405060708090A0B0C0D0E0F'),hex.toBytes('000102030405060708090A0B0C0D0E0F'));
+    a.finalize();
+    assert.throws(()=>a.decryptInto(new Uint8Array(0),new Uint8Array(0)));
+});
+
+tsts(`encryptSize`,()=>{
+    const a=new Ascon128(hex.toBytes('000102030405060708090A0B0C0D0E0F'),hex.toBytes('000102030405060708090A0B0C0D0E0F'));
+    assert.equal(13,a.encryptSize(13));
+});
+
 
 // const ror64Tests:[string,number,string][]=[
 //     ['0102030405060708',0, '0102030405060708'],

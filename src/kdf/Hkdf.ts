@@ -1,4 +1,4 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from "../hash/IHash.js";
 import { Hmac } from "../mac/Hmac.js";

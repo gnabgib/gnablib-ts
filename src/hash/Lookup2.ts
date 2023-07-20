@@ -1,6 +1,5 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-//import { Hex } from '../encoding/Hex.js';
 import type { IHash } from './IHash.js';
 import { asBE, asLE } from '../endian/platform.js';
 

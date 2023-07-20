@@ -1,6 +1,5 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../../encoding/Hex.js';
 import { IHash } from '../../hash/IHash.js';
 import { safety } from '../../primitive/Safety.js';
 import { U32 } from '../../primitive/U32.js';
@@ -77,7 +76,7 @@ function ror64(a: Uint8Array, aPos64: number, by: number): void {
 	}
 	const first = U32.iFromBytesBE(a, fPull);
 	const second = U32.iFromBytesBE(a, sPull);
-    //Complete implementation, but Ascon doesn't 0/32/64 bit rotate so we can skip
+	//Complete implementation, but Ascon doesn't 0/32/64 bit rotate so we can skip
 	// if (by === 0) {
 	// 	a.set(U32.toBytesBE(first), aPos64);
 	// 	a.set(U32.toBytesBE(second), aPos64 + 4);
@@ -88,92 +87,46 @@ function ror64(a: Uint8Array, aPos64: number, by: number): void {
 	// }
 }
 
-const tagSize=16;
+const tagSize = 16;
 const stage_init = 0;
 const stage_ad = 1;
 const stage_data = 2;
 const stage_done = 3;
 
-/**
- * [Ascon](https://ascon.iaik.tugraz.at/index.html)
- *
- * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
- * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
- *
- * First Published: *2014*  
- * Block size: *8, 16 bytes*  
- * Key size: *16 bytes*  
- * Rounds: *6-8*
- *
- * Specified in
- * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
- */
-class _AsconAead implements IAead {
-    readonly tagSize=tagSize;
-	readonly blockSize: number;
-	readonly #state = new Uint8Array(40); //320bit state
-	readonly #s32 = new Uint32Array(this.#state.buffer); //10 elements
-	readonly #key: Uint8Array;
+abstract class AAscon {
+	/** 40 bytes / 320 bit state */
+	protected readonly state = new Uint8Array(40);
+	/** 10 elements */
+	protected readonly s32 = new Uint32Array(this.state.buffer);
 	/** Position in state*/
-	#sPos = 0;
-	/** Stage Init=0/AssocData=1/Data=2 */
-	#stage = stage_init;
+	protected sPos = 0;
 
-    /**
-     * Construct a new Ascon AEAD state 
-     * @param key Secret key, in bytes, 0-20 in length
-     * @param nonce Nonce, in bytes, exactly 16 bytes
-     * @param rate Rate - a tunable parameter
-     * @param aRound Number of rounds for a permutations - a tunable parameter
-     * @param bRound Number of rounds for b permutations - a tunable parameter
-     */
 	constructor(
-		key: Uint8Array,
-		nonce: Uint8Array,
-		rate: number,
+		readonly blockSize: number,
 		readonly aRound: number,
 		readonly bRound: number
-	) {
-		safety.lenInRangeInc(key, 0, 20, 'key'); //0-160 bits
-		safety.lenExactly(nonce, 16, 'nonce'); //128 bits
-		//Note rate/aRound/bRound are tunable but not expected to be exposed so no need for safety checks)
-		this.blockSize = rate;
-		this.#key = key;
-
-		//Initialize (2.4.1)
-		this.#state[0] = key.length << 3;
-		this.#state[1] = rate << 3;
-		this.#state[2] = aRound;
-		this.#state[3] = bRound;
-		const kPos = 4 + (20 - key.length);
-		this.#state.set(key, kPos);
-		this.#state.set(nonce, 24);
-		//Run pa
-		this.p(aRound);
-		//Xor in the key
-		uint8ArrayExt.xorEq(this.#state.subarray(40 - key.length), key);
-	}
+	) {}
 
 	/** Permutation 2.6 */
-	private p(rounds: number): void {
-        // prettier-ignore
+	protected p(rounds: number): void {
+		// prettier-ignore
 		for (let i = 0; i < rounds; i++) {
 			//2.6.1 Add constants
 			//xor in the round constant to the last byte of u64 3/5 = byte 23
-			this.#state[23] ^= roundConst[12 - rounds + i];
+			this.state[23] ^= roundConst[12 - rounds + i];
 
 			//7.3 (2.6.2 Substitute)
-			xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 4, this.#s32, 3); xor64(this.#s32, 2, this.#s32, 1);
-			const t = this.#s32.slice();
+			xor64(this.s32, 0, this.s32, 4); xor64(this.s32, 4, this.s32, 3); xor64(this.s32, 2, this.s32, 1);
+			const t = this.s32.slice();
 			not64(t, 0); not64(t, 1); not64(t, 2); not64(t, 3); not64(t, 4);
-			and64(t, 0, this.#s32, 1); and64(t, 1, this.#s32, 2); and64(t, 2, this.#s32, 3); and64(t, 3, this.#s32, 4); and64(t, 4, this.#s32, 0);
-			xor64(this.#s32, 0, t, 1); xor64(this.#s32, 1, t, 2); xor64(this.#s32, 2, t, 3); xor64(this.#s32, 3, t, 4); xor64(this.#s32, 4, t, 0);
-			xor64(this.#s32, 1, this.#s32, 0); xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 3, this.#s32, 2); not64(this.#s32, 2);
+			and64(t, 0, this.s32, 1); and64(t, 1, this.s32, 2); and64(t, 2, this.s32, 3); and64(t, 3, this.s32, 4); and64(t, 4, this.s32, 0);
+			xor64(this.s32, 0, t, 1); xor64(this.s32, 1, t, 2); xor64(this.s32, 2, t, 3); xor64(this.s32, 3, t, 4); xor64(this.s32, 4, t, 0);
+			xor64(this.s32, 1, this.s32, 0); xor64(this.s32, 0, this.s32, 4); xor64(this.s32, 3, this.s32, 2); not64(this.s32, 2);
 
 			//2.6.3 diffusion
 			//Copy x0-4 twice (so we can ROR in place)
-			const ror0 = this.#state.slice();
-			const ror1 = this.#state.slice();
+			const ror0 = this.state.slice();
+			const ror1 = this.state.slice();
 			//Rotate per spec
 			ror64(ror0, 0, 19); ror64(ror1, 0, 28);
 			ror64(ror0, 1, 61); ror64(ror1, 1, 39);
@@ -183,19 +136,75 @@ class _AsconAead implements IAead {
 			//Create U32 arrays so we can use xor64
 			const ror0_32 = new Uint32Array(ror0.buffer);
 			const ror1_32 = new Uint32Array(ror1.buffer);
-			xor64(this.#s32, 0, ror0_32, 0); xor64(this.#s32, 0, ror1_32, 0);
-			xor64(this.#s32, 1, ror0_32, 1); xor64(this.#s32, 1, ror1_32, 1);
-			xor64(this.#s32, 2, ror0_32, 2); xor64(this.#s32, 2, ror1_32, 2);
-			xor64(this.#s32, 3, ror0_32, 3); xor64(this.#s32, 3, ror1_32, 3);
-			xor64(this.#s32, 4, ror0_32, 4); xor64(this.#s32, 4, ror1_32, 4);
+			xor64(this.s32, 0, ror0_32, 0); xor64(this.s32, 0, ror1_32, 0);
+			xor64(this.s32, 1, ror0_32, 1); xor64(this.s32, 1, ror1_32, 1);
+			xor64(this.s32, 2, ror0_32, 2); xor64(this.s32, 2, ror1_32, 2);
+			xor64(this.s32, 3, ror0_32, 3); xor64(this.s32, 3, ror1_32, 3);
+			xor64(this.s32, 4, ror0_32, 4); xor64(this.s32, 4, ror1_32, 4);
 		}
-		this.#sPos = 0;
+		this.sPos = 0;
+	}
+}
+
+/**
+ * [Ascon](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*
+ * Block size: *8, 16 bytes*
+ * Key size: *16 bytes*
+ * Rounds: *6-8*
+ *
+ * Specified in
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+class _AsconAead extends AAscon implements IAead {
+	readonly tagSize = tagSize;
+	readonly #key: Uint8Array;
+	/** Stage Init=0/AssocData=1/Data=2 */
+	#stage = stage_init;
+
+	/**
+	 * Construct a new Ascon AEAD state
+	 * @param key Secret key, in bytes, 0-20 in length
+	 * @param nonce Nonce, in bytes, exactly 16 bytes
+	 * @param rate Rate - a tunable parameter
+	 * @param aRound Number of rounds for a permutations - a tunable parameter
+	 * @param bRound Number of rounds for b permutations - a tunable parameter
+	 */
+	constructor(
+		key: Uint8Array,
+		nonce: Uint8Array,
+		rate: number,
+		aRound: number,
+		bRound: number
+	) {
+		super(rate, aRound, bRound);
+		safety.lenInRangeInc(key, 0, 20, 'key'); //0-160 bits
+		safety.lenExactly(nonce, 16, 'nonce'); //128 bits
+		//Note rate/aRound/bRound are tunable but not expected to be exposed so no need for safety checks)
+		this.#key = key;
+
+		//Initialize (2.4.1)
+		this.state[0] = key.length << 3;
+		this.state[1] = rate << 3;
+		this.state[2] = aRound;
+		this.state[3] = bRound;
+		const kPos = 4 + (20 - key.length);
+		this.state.set(key, kPos);
+		this.state.set(nonce, 24);
+		//Run pa
+		this.p(aRound);
+		//Xor in the key
+		uint8ArrayExt.xorEq(this.state.subarray(40 - key.length), key);
 	}
 
-    /**
-     * Add associated data (can be called multiple times, must be done before {@link encryptInto}/{@link decryptInto})
-     * @param data 
-     */
+	/**
+	 * Add associated data (can be called multiple times, must be done before {@link encryptInto}/{@link decryptInto})
+	 * @param data
+	 */
 	writeAD(data: Uint8Array): void {
 		if (this.#stage > stage_ad)
 			throw new Error('Associated data can no longer be written');
@@ -205,24 +214,24 @@ class _AsconAead implements IAead {
 		//Xor in full blocks and permute
 		while (nToWrite >= this.blockSize) {
 			for (let i = 0; i < this.blockSize; i++)
-				this.#state[this.#sPos++] ^= data[dPos++];
+				this.state[this.sPos++] ^= data[dPos++];
 			this.p(this.bRound);
 			nToWrite -= this.blockSize;
 		}
 		//Xor in any remainder
-		while (dPos < data.length) this.#state[this.#sPos++] ^= data[dPos++];
+		while (dPos < data.length) this.state[this.sPos++] ^= data[dPos++];
 	}
 
 	private finalizeAssocData(): void {
 		if (this.#stage === stage_ad) {
 			//If we started writing AD we need to finish
 			//Append a 1
-			this.#state[this.#sPos] ^= 0x80;
+			this.state[this.sPos] ^= 0x80;
 			//Permute
 			this.p(this.bRound);
 		}
 		//Add the domain separator NOTE 2.4.2: "After processing A (also if s=0), a 1 bit domain separator is xored into S"
-		this.#state[39] ^= 1;
+		this.state[39] ^= 1;
 		this.#stage = stage_data;
 	}
 
@@ -237,19 +246,19 @@ class _AsconAead implements IAead {
 		let ePos = 0;
 		//Xor in full blocks
 		while (nToWrite >= this.blockSize) {
-			for (; this.#sPos < this.blockSize; )
-				this.#state[this.#sPos++] ^= plain[pPos++];
+			for (; this.sPos < this.blockSize; )
+				this.state[this.sPos++] ^= plain[pPos++];
 			//Copy out the cipher
-			enc.set(this.#state.subarray(0, this.blockSize), ePos);
+			enc.set(this.state.subarray(0, this.blockSize), ePos);
 			this.p(this.bRound);
 			nToWrite -= this.blockSize;
 			ePos += this.blockSize;
 		}
 		if (pPos < plain.length) {
 			//Xor any remainder
-			while (pPos < plain.length) this.#state[this.#sPos++] ^= plain[pPos++];
+			while (pPos < plain.length) this.state[this.sPos++] ^= plain[pPos++];
 			//Copy out the cipher
-			enc.set(this.#state.subarray(0, this.#sPos), pPos - this.#sPos);
+			enc.set(this.state.subarray(0, this.sPos), pPos - this.sPos);
 		}
 	}
 
@@ -261,23 +270,23 @@ class _AsconAead implements IAead {
 
 		let nToWrite = enc.length;
 		let pPos = 0;
-		let space = this.blockSize - this.#sPos;
+		let space = this.blockSize - this.sPos;
 		plain.set(enc);
 		//Xor out full blocks
 		while (nToWrite >= this.blockSize) {
-			for (; this.#sPos < this.blockSize; )
-				plain[pPos++] ^= this.#state[this.#sPos++];
+			for (; this.sPos < this.blockSize; )
+				plain[pPos++] ^= this.state[this.sPos++];
 			//Update state
-			this.#state.set(enc.subarray(pPos - space, pPos));
+			this.state.set(enc.subarray(pPos - space, pPos));
 			this.p(this.bRound);
 			nToWrite -= this.blockSize;
 			space = this.blockSize;
 		}
 		if (pPos < plain.length) {
 			space = plain.length - pPos;
-			while (pPos < plain.length) plain[pPos++] ^= this.#state[this.#sPos++];
+			while (pPos < plain.length) plain[pPos++] ^= this.state[this.sPos++];
 			//Update state
-			this.#state.set(enc.subarray(pPos - space));
+			this.state.set(enc.subarray(pPos - space));
 		}
 	}
 
@@ -285,20 +294,20 @@ class _AsconAead implements IAead {
 		//End assoc writing
 		if (this.#stage < stage_data) this.finalizeAssocData();
 		//End data writing
-		this.#state[this.#sPos] ^= 0x80;
+		this.state[this.sPos] ^= 0x80;
 		this.#stage = stage_done;
 		//Xor in key after blockSize
 		for (let i = 0; i < this.#key.length; i++)
-			this.#state[this.blockSize + i] ^= this.#key[i];
+			this.state[this.blockSize + i] ^= this.#key[i];
 		//pA
 		this.p(this.aRound);
 		//Xor up to 16 bytes of key at end of state
 		const n = this.#key.length < 16 ? this.#key.length : 16;
 		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
-			this.#state[i++] ^= this.#key[j++];
+			this.state[i++] ^= this.#key[j++];
 
 		let zero = 0;
-		for (let i = 0; i < tag.length; i++) zero |= tag[i] ^ this.#state[24 + i];
+		for (let i = 0; i < tag.length; i++) zero |= tag[i] ^ this.state[24 + i];
 		return zero === 0;
 	}
 
@@ -306,19 +315,19 @@ class _AsconAead implements IAead {
 		//End assoc writing
 		if (this.#stage < stage_data) this.finalizeAssocData();
 		//End data writing
-		this.#state[this.#sPos++] ^= 0x80;
+		this.state[this.sPos++] ^= 0x80;
 		this.#stage = stage_done;
 		//Xor in key after blockSize
 		for (let i = 0; i < this.#key.length; i++)
-			this.#state[this.blockSize + i] ^= this.#key[i];
+			this.state[this.blockSize + i] ^= this.#key[i];
 		//pA
 		this.p(this.aRound);
 		//Xor up to 16 bytes of key at end of state
 		const n = this.#key.length < 16 ? this.#key.length : 16;
 		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
-			this.#state[i++] ^= this.#key[j++];
+			this.state[i++] ^= this.#key[j++];
 		//Return last 16 bytes of state
-		return this.#state.slice(24);
+		return this.state.slice(24);
 	}
 
 	encryptSize(plainLen: number): number {
@@ -332,24 +341,24 @@ class _AsconAead implements IAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Key size: *16 bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Key size: *16 bytes*
  * Rounds: *6*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
 export class Ascon128 extends _AsconAead {
-    /**
-     * Construct a new Ascon-128 AEAD state 
-     * @param key Secret key, in bytes, exactly 16 bytes
-     * @param nonce Nonce, in bytes, exactly 16 bytes
-     */
-    constructor(key: Uint8Array, nonce: Uint8Array) {
-        super(key,nonce,8,12,6);
-        safety.lenExactly(key, 16, 'key'); //128 bits
-    }
+	/**
+	 * Construct a new Ascon-128 AEAD state
+	 * @param key Secret key, in bytes, exactly 16 bytes
+	 * @param nonce Nonce, in bytes, exactly 16 bytes
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array) {
+		super(key, nonce, 8, 12, 6);
+		safety.lenExactly(key, 16, 'key'); //128 bits
+	}
 }
 
 /**
@@ -358,24 +367,24 @@ export class Ascon128 extends _AsconAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *16 bytes*  
- * Key size: *16 bytes*  
+ * First Published: *2014*
+ * Block size: *16 bytes*
+ * Key size: *16 bytes*
  * Rounds: *8*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
 export class Ascon128a extends _AsconAead {
-    /**
-     * Construct a new Ascon-128a AEAD state 
-     * @param key Secret key, in bytes, exactly 16 bytes
-     * @param nonce Nonce, in bytes, exactly 16 bytes
-     */
-    constructor(key: Uint8Array, nonce: Uint8Array) {
-        super(key,nonce,16,12,8);
-        safety.lenExactly(key, 16, 'key'); //128 bits
-    }
+	/**
+	 * Construct a new Ascon-128a AEAD state
+	 * @param key Secret key, in bytes, exactly 16 bytes
+	 * @param nonce Nonce, in bytes, exactly 16 bytes
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array) {
+		super(key, nonce, 16, 12, 8);
+		safety.lenExactly(key, 16, 'key'); //128 bits
+	}
 }
 
 /**
@@ -384,141 +393,116 @@ export class Ascon128a extends _AsconAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Key size: *20 bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Key size: *20 bytes*
  * Rounds: *6*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
 export class Ascon80pq extends _AsconAead {
-    /**
-     * Construct a new Ascon-128a AEAD state 
-     * @param key Secret key, in bytes, exactly 20 bytes
-     * @param nonce Nonce, in bytes, exactly 16 bytes
-     */
-    constructor(key: Uint8Array, nonce: Uint8Array) {
-        super(key,nonce,8,12,6);
-        safety.lenExactly(key, 20, 'key'); //160 bits
-    }
+	/**
+	 * Construct a new Ascon-128a AEAD state
+	 * @param key Secret key, in bytes, exactly 20 bytes
+	 * @param nonce Nonce, in bytes, exactly 16 bytes
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array) {
+		super(key, nonce, 8, 12, 6);
+		safety.lenExactly(key, 20, 'key'); //160 bits
+	}
 }
 
-class _AsconHash implements IHash {
-    readonly #state = new Uint8Array(40); //320bit state
-	readonly #s32 = new Uint32Array(this.#state.buffer); //10 elements
-	/** Position in state*/
-	#sPos = 0;
-    constructor(
-        readonly blockSize: number,
-		private readonly aRound: number,
-		private readonly bRound: number,
-        readonly size:number,
-        private readonly xof:boolean
+class _AsconHash extends AAscon implements IHash {
+	// readonly state = new Uint8Array(40); //320bit state
+	// readonly #s32 = new Uint32Array(this.state.buffer); //10 elements
+	// /** Position in state*/
+	// sPos = 0;
+	constructor(
+		rate: number,
+		aRound: number,
+		bRound: number,
+		readonly size: number,
+		private readonly xof: boolean
 	) {
-		this.#state[1] = blockSize << 3;
-		this.#state[2] = aRound;
-		this.#state[3] = aRound-bRound;
-        //00 40 0c 00 00000100
-        //Hash/HashA set the output size to 256 in U32 (00000100, setting byte 6 to 1)
-        //But Xof/XofA sets it to zero.. even if you set it to.. 256
-        if (!this.xof) this.#state[6]=1;
+		super(rate, aRound, bRound);
+		this.state[1] = rate << 3;
+		this.state[2] = aRound;
+		this.state[3] = aRound - bRound;
+		//00 40 0c 00 00000100
+		//Hash/HashA set the output size to 256 in U32 (00000100, setting byte 6 to 1)
+		//But Xof/XofA sets it to zero.. even if you set it to.. 256
+		if (!this.xof) this.state[6] = 1;
 		//Run pa
 		this.p(aRound);
-    }
-
-    /** Permutation 2.6 */
-	private p(rounds: number): void {
-        // prettier-ignore
-		for (let i = 0; i < rounds; i++) {
-			//2.6.1 Add constants
-			//xor in the round constant to the last byte of u64 3/5 = byte 23
-			this.#state[23] ^= roundConst[12 - rounds + i];
-
-			//7.3 (2.6.2 Substitute)
-			xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 4, this.#s32, 3); xor64(this.#s32, 2, this.#s32, 1);
-			const t = this.#s32.slice();
-			not64(t, 0); not64(t, 1); not64(t, 2); not64(t, 3); not64(t, 4);
-			and64(t, 0, this.#s32, 1); and64(t, 1, this.#s32, 2); and64(t, 2, this.#s32, 3); and64(t, 3, this.#s32, 4); and64(t, 4, this.#s32, 0);
-			xor64(this.#s32, 0, t, 1); xor64(this.#s32, 1, t, 2); xor64(this.#s32, 2, t, 3); xor64(this.#s32, 3, t, 4); xor64(this.#s32, 4, t, 0);
-			xor64(this.#s32, 1, this.#s32, 0); xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 3, this.#s32, 2); not64(this.#s32, 2);
-
-			//2.6.3 diffusion
-			//Copy x0-4 twice (so we can ROR in place)
-			const ror0 = this.#state.slice();
-			const ror1 = this.#state.slice();
-			//Rotate per spec
-			ror64(ror0, 0, 19); ror64(ror1, 0, 28);
-			ror64(ror0, 1, 61); ror64(ror1, 1, 39);
-			ror64(ror0, 2,  1); ror64(ror1, 2,  6);
-			ror64(ror0, 3, 10); ror64(ror1, 3, 17);
-			ror64(ror0, 4,  7); ror64(ror1, 4, 41);
-			//Create U32 arrays so we can use xor64
-			const ror0_32 = new Uint32Array(ror0.buffer);
-			const ror1_32 = new Uint32Array(ror1.buffer);
-			xor64(this.#s32, 0, ror0_32, 0); xor64(this.#s32, 0, ror1_32, 0);
-			xor64(this.#s32, 1, ror0_32, 1); xor64(this.#s32, 1, ror1_32, 1);
-			xor64(this.#s32, 2, ror0_32, 2); xor64(this.#s32, 2, ror1_32, 2);
-			xor64(this.#s32, 3, ror0_32, 3); xor64(this.#s32, 3, ror1_32, 3);
-			xor64(this.#s32, 4, ror0_32, 4); xor64(this.#s32, 4, ror1_32, 4);
-		}
-		this.#sPos = 0;
 	}
 
-    write(data: Uint8Array): void {
+	write(data: Uint8Array): void {
 		let nToWrite = data.length;
-        let length=this.blockSize-this.#sPos;
+		let length = this.blockSize - this.sPos;
 		let dPos = 0;
 		//Xor in full blocks and permute
 		while (nToWrite >= length) {
-            for (; this.#sPos < this.blockSize; )
-                this.#state[this.#sPos++] ^= data[dPos++];
+			for (; this.sPos < this.blockSize; )
+				this.state[this.sPos++] ^= data[dPos++];
 			this.p(this.bRound);
 			nToWrite -= this.blockSize;
-            length=this.blockSize;
+			length = this.blockSize;
 		}
 		//Xor in any remainder
-		while (dPos < data.length) this.#state[this.#sPos++] ^= data[dPos++];
-    }
+		while (dPos < data.length) this.state[this.sPos++] ^= data[dPos++];
+	}
 
-    sum(): Uint8Array {
-        return this.clone().sumIn();
-    }
+	sum(): Uint8Array {
+		return this.clone().sumIn();
+	}
 
-    sumIn(): Uint8Array {
-        this.#state[this.#sPos++] ^= 0x80;
-        const ret=new Uint8Array(this.size);
-        this.p(this.aRound);
-        let pos=0;
-        while(pos+this.blockSize<this.size) {
-            ret.set(this.#state.subarray(0,this.blockSize),pos);
-            pos+=this.blockSize;
-            this.p(this.bRound);
-        }
-        ret.set(this.#state.subarray(0,this.size-pos),pos);
-        return ret;
-    }
-    
-    reset(): void {
-        this.#s32.fill(0);
-		this.#state[1] = this.blockSize << 3;
-		this.#state[2] = this.aRound;
-		this.#state[3] = this.aRound-this.bRound;
-        if (!this.xof) this.#state[6]=1;
-        this.#sPos=0;
-        this.p(this.aRound);
-    }
+	sumIn(): Uint8Array {
+		this.state[this.sPos++] ^= 0x80;
+		const ret = new Uint8Array(this.size);
+		this.p(this.aRound);
+		let pos = 0;
+		while (pos + this.blockSize < this.size) {
+			ret.set(this.state.subarray(0, this.blockSize), pos);
+			pos += this.blockSize;
+			this.p(this.bRound);
+		}
+		ret.set(this.state.subarray(0, this.size - pos), pos);
+		return ret;
+	}
 
-    newEmpty(): IHash {
-        return new _AsconHash(this.blockSize,this.aRound,this.bRound,this.size,this.xof);
-    }
+	reset(): void {
+		this.s32.fill(0);
+		this.state[1] = this.blockSize << 3;
+		this.state[2] = this.aRound;
+		this.state[3] = this.aRound - this.bRound;
+		if (!this.xof) this.state[6] = 1;
+		this.sPos = 0;
+		this.p(this.aRound);
+	}
 
-    clone(): IHash {
-        const ret=new _AsconHash(this.blockSize,this.aRound,this.bRound,this.size,this.xof);
-        ret.#state.set(this.#state);
-        ret.#sPos=this.#sPos;
-        return ret;
-    }
+	newEmpty(): IHash {
+		return new _AsconHash(
+			this.blockSize,
+			this.aRound,
+			this.bRound,
+			this.size,
+			this.xof
+		);
+	}
+
+	clone(): IHash {
+		const ret = new _AsconHash(
+			this.blockSize,
+			this.aRound,
+			this.bRound,
+			this.size,
+			this.xof
+		);
+		ret.state.set(this.state);
+		ret.sPos = this.sPos;
+		return ret;
+	}
 }
 
 /**
@@ -527,18 +511,18 @@ class _AsconHash implements IHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/12*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/12*
  * Hash size: *32 bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
 export class AsconHash extends _AsconHash {
-    constructor() {
-        super(8,12,12,32,false);
-    }
+	constructor() {
+		super(8, 12, 12, 32, false);
+	}
 }
 
 /**
@@ -547,18 +531,18 @@ export class AsconHash extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/8*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/8*
  * Hash size: *32 bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
 export class AsconHashA extends _AsconHash {
-    constructor() {
-        super(8,12,8,32,false);
-    }
+	constructor() {
+		super(8, 12, 8, 32, false);
+	}
 }
 
 /**
@@ -567,18 +551,18 @@ export class AsconHashA extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/12*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/12*
  * Hash size: *? bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
 export class AsconXof extends _AsconHash {
-    constructor(digestSize:number) {
-        super(8,12,12,digestSize,true);
-    }
+	constructor(digestSize: number) {
+		super(8, 12, 12, digestSize, true);
+	}
 }
 
 /**
@@ -587,20 +571,20 @@ export class AsconXof extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/8*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/8*
  * Hash size: *? bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
 export class AsconXofA extends _AsconHash {
-    constructor(digestSize:number) {
-        super(8,12,8,digestSize,true);
-        //X: super(8,12,12,?,true);
-        //Xa: super(8,12,8,?,true);
-    }
+	constructor(digestSize: number) {
+		super(8, 12, 8, digestSize, true);
+		//X: super(8,12,12,?,true);
+		//Xa: super(8,12,8,?,true);
+	}
 }
 
 // K=key, N=nonce (128bit), A=associated data, C=ciphertext, T=tag (128bits), P=plaintext

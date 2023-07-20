@@ -1,4 +1,4 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Uint64 } from '../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../encoding/ieee754-fpb.js';

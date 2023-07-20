@@ -79,4 +79,21 @@ for (const {descr,msg,md} of katTests) {
 	});
 }
 
+tsts(`reset`,()=>{
+	const hash=new AsconHash();
+    hash.write(hex.toBytes('000102030405060708090A0B0C0D0E0F'));
+    assert.equal(hex.fromBytes(hash.sum()),'D4E56C4841E2A0069D4F07E61B2DCA94FD6D3F9C0DF78393E6E8292921BC841D');
+    hash.reset();
+    assert.equal(hex.fromBytes(hash.sum()),'7346BC14F036E87AE03D0997913088F5F68411434B3CF8B54FA796A80D251F91');
+});
+
+tsts(`newEmpty`,()=>{
+	const hash=new AsconHash();
+    hash.write(hex.toBytes('000102030405060708090A0B0C0D0E0F'));
+    assert.equal(hex.fromBytes(hash.sum()),'D4E56C4841E2A0069D4F07E61B2DCA94FD6D3F9C0DF78393E6E8292921BC841D');
+    const hash2=hash.newEmpty();
+    hash2.write(hex.toBytes('000102030405060708090A0B0C0D0E0F'));
+    assert.equal(hex.fromBytes(hash2.sum()),'D4E56C4841E2A0069D4F07E61B2DCA94FD6D3F9C0DF78393E6E8292921BC841D');
+});
+
 tsts.run();

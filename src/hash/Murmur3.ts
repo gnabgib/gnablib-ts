@@ -1,4 +1,4 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from './IHash.js';
 import { U32 } from '../primitive/U32.js';

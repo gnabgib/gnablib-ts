@@ -1,4 +1,4 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 //[Block check character](https://en.wikipedia.org/wiki/Block_check_character)
 

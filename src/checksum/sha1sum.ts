@@ -1,4 +1,4 @@
-/*! Copyright 2022-2023 gnabgib MPL-2.0 */
+/*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
 
 import { Sha1 } from '../hash/Sha1.js';
 

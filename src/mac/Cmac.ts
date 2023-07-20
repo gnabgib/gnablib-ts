@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Aes } from '../crypt/sym/Aes.js';
 import type { IHash } from '../hash/IHash.js';

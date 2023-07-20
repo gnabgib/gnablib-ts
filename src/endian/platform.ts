@@ -1,3 +1,5 @@
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+
 // IBM s390x is big endian
 // https://github.com/multiarch/qemu-user-static
 // https://community.ibm.com/community/user/ibmz-and-linuxone/blogs/javier-perez1/2021/01/19/endianness-guidance-for-open-source-projects

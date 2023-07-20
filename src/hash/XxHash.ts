@@ -1,6 +1,5 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-//import { Hex } from '../encoding/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
 import { U32 } from '../primitive/U32.js';
 import { U64, U64Mut, U64MutArray } from '../primitive/U64.js';

@@ -1,3 +1,5 @@
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+
 import { InvalidLengthError } from "../../primitive/ErrorExt.js";
 import { IBlockCrypt } from "../IBlockCrypt.js";
 import { IFullCrypt } from "../IFullCrypt.js";

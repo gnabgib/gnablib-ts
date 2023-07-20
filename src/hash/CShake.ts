@@ -1,2 +1,3 @@
-/*! Copyright 2023 gnabgib MPL-2.0 */
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+
 export { CShake128, CShake256 } from './Keccak.js';
