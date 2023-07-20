@@ -1,4 +1,4 @@
-interface IKat {
+export interface IKat {
     descr?:string,
     k:string,
     n:string,

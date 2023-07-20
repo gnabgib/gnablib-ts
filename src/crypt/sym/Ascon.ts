@@ -1,5 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
+import { hex } from '../../encoding/Hex.js';
+import { IHash } from '../../hash/IHash.js';
 import { safety } from '../../primitive/Safety.js';
 import { U32 } from '../../primitive/U32.js';
 import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
@@ -104,9 +106,9 @@ const stage_done = 3;
  * Rounds: *6-8*
  *
  * Specified in
- * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
-class Ascon implements IAead {
+class _AsconAead implements IAead {
     readonly tagSize=tagSize;
 	readonly blockSize: number;
 	readonly #state = new Uint8Array(40); //320bit state
@@ -323,6 +325,7 @@ class Ascon implements IAead {
 		return plainLen;
 	}
 }
+
 /**
  * [Ascon-128](https://ascon.iaik.tugraz.at/index.html)
  *
@@ -335,9 +338,9 @@ class Ascon implements IAead {
  * Rounds: *6*
  *
  * Specified in
- * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
-export class Ascon128 extends Ascon {
+export class Ascon128 extends _AsconAead {
     /**
      * Construct a new Ascon-128 AEAD state 
      * @param key Secret key, in bytes, exactly 16 bytes
@@ -348,6 +351,7 @@ export class Ascon128 extends Ascon {
         safety.lenExactly(key, 16, 'key'); //128 bits
     }
 }
+
 /**
  * [Ascon-128a](https://ascon.iaik.tugraz.at/index.html)
  *
@@ -360,9 +364,9 @@ export class Ascon128 extends Ascon {
  * Rounds: *8*
  *
  * Specified in
- * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
-export class Ascon128a extends Ascon {
+export class Ascon128a extends _AsconAead {
     /**
      * Construct a new Ascon-128a AEAD state 
      * @param key Secret key, in bytes, exactly 16 bytes
@@ -373,6 +377,7 @@ export class Ascon128a extends Ascon {
         safety.lenExactly(key, 16, 'key'); //128 bits
     }
 }
+
 /**
  * [Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)
  *
@@ -385,9 +390,9 @@ export class Ascon128a extends Ascon {
  * Rounds: *6*
  *
  * Specified in
- * -[NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
  */
-export class Ascon80pq extends Ascon {
+export class Ascon80pq extends _AsconAead {
     /**
      * Construct a new Ascon-128a AEAD state 
      * @param key Secret key, in bytes, exactly 20 bytes
@@ -396,6 +401,205 @@ export class Ascon80pq extends Ascon {
     constructor(key: Uint8Array, nonce: Uint8Array) {
         super(key,nonce,8,12,6);
         safety.lenExactly(key, 20, 'key'); //160 bits
+    }
+}
+
+class _AsconHash implements IHash {
+    readonly #state = new Uint8Array(40); //320bit state
+	readonly #s32 = new Uint32Array(this.#state.buffer); //10 elements
+	/** Position in state*/
+	#sPos = 0;
+    constructor(
+        readonly blockSize: number,
+		private readonly aRound: number,
+		private readonly bRound: number,
+        readonly size:number,
+        private readonly xof:boolean
+	) {
+		this.#state[1] = blockSize << 3;
+		this.#state[2] = aRound;
+		this.#state[3] = aRound-bRound;
+        //00 40 0c 00 00000100
+        //Hash/HashA set the output size to 256 in U32 (00000100, setting byte 6 to 1)
+        //But Xof/XofA sets it to zero.. even if you set it to.. 256
+        if (!this.xof) this.#state[6]=1;
+		//Run pa
+		this.p(aRound);
+    }
+
+    /** Permutation 2.6 */
+	private p(rounds: number): void {
+        // prettier-ignore
+		for (let i = 0; i < rounds; i++) {
+			//2.6.1 Add constants
+			//xor in the round constant to the last byte of u64 3/5 = byte 23
+			this.#state[23] ^= roundConst[12 - rounds + i];
+
+			//7.3 (2.6.2 Substitute)
+			xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 4, this.#s32, 3); xor64(this.#s32, 2, this.#s32, 1);
+			const t = this.#s32.slice();
+			not64(t, 0); not64(t, 1); not64(t, 2); not64(t, 3); not64(t, 4);
+			and64(t, 0, this.#s32, 1); and64(t, 1, this.#s32, 2); and64(t, 2, this.#s32, 3); and64(t, 3, this.#s32, 4); and64(t, 4, this.#s32, 0);
+			xor64(this.#s32, 0, t, 1); xor64(this.#s32, 1, t, 2); xor64(this.#s32, 2, t, 3); xor64(this.#s32, 3, t, 4); xor64(this.#s32, 4, t, 0);
+			xor64(this.#s32, 1, this.#s32, 0); xor64(this.#s32, 0, this.#s32, 4); xor64(this.#s32, 3, this.#s32, 2); not64(this.#s32, 2);
+
+			//2.6.3 diffusion
+			//Copy x0-4 twice (so we can ROR in place)
+			const ror0 = this.#state.slice();
+			const ror1 = this.#state.slice();
+			//Rotate per spec
+			ror64(ror0, 0, 19); ror64(ror1, 0, 28);
+			ror64(ror0, 1, 61); ror64(ror1, 1, 39);
+			ror64(ror0, 2,  1); ror64(ror1, 2,  6);
+			ror64(ror0, 3, 10); ror64(ror1, 3, 17);
+			ror64(ror0, 4,  7); ror64(ror1, 4, 41);
+			//Create U32 arrays so we can use xor64
+			const ror0_32 = new Uint32Array(ror0.buffer);
+			const ror1_32 = new Uint32Array(ror1.buffer);
+			xor64(this.#s32, 0, ror0_32, 0); xor64(this.#s32, 0, ror1_32, 0);
+			xor64(this.#s32, 1, ror0_32, 1); xor64(this.#s32, 1, ror1_32, 1);
+			xor64(this.#s32, 2, ror0_32, 2); xor64(this.#s32, 2, ror1_32, 2);
+			xor64(this.#s32, 3, ror0_32, 3); xor64(this.#s32, 3, ror1_32, 3);
+			xor64(this.#s32, 4, ror0_32, 4); xor64(this.#s32, 4, ror1_32, 4);
+		}
+		this.#sPos = 0;
+	}
+
+    write(data: Uint8Array): void {
+		let nToWrite = data.length;
+        let length=this.blockSize-this.#sPos;
+		let dPos = 0;
+		//Xor in full blocks and permute
+		while (nToWrite >= length) {
+            for (; this.#sPos < this.blockSize; )
+                this.#state[this.#sPos++] ^= data[dPos++];
+			this.p(this.bRound);
+			nToWrite -= this.blockSize;
+            length=this.blockSize;
+		}
+		//Xor in any remainder
+		while (dPos < data.length) this.#state[this.#sPos++] ^= data[dPos++];
+    }
+
+    sum(): Uint8Array {
+        return this.clone().sumIn();
+    }
+
+    sumIn(): Uint8Array {
+        this.#state[this.#sPos++] ^= 0x80;
+        const ret=new Uint8Array(this.size);
+        this.p(this.aRound);
+        let pos=0;
+        while(pos+this.blockSize<this.size) {
+            ret.set(this.#state.subarray(0,this.blockSize),pos);
+            pos+=this.blockSize;
+            this.p(this.bRound);
+        }
+        ret.set(this.#state.subarray(0,this.size-pos),pos);
+        return ret;
+    }
+    
+    reset(): void {
+        this.#s32.fill(0);
+		this.#state[1] = this.blockSize << 3;
+		this.#state[2] = this.aRound;
+		this.#state[3] = this.aRound-this.bRound;
+        if (!this.xof) this.#state[6]=1;
+        this.#sPos=0;
+        this.p(this.aRound);
+    }
+
+    newEmpty(): IHash {
+        return new _AsconHash(this.blockSize,this.aRound,this.bRound,this.size,this.xof);
+    }
+
+    clone(): IHash {
+        const ret=new _AsconHash(this.blockSize,this.aRound,this.bRound,this.size,this.xof);
+        ret.#state.set(this.#state);
+        ret.#sPos=this.#sPos;
+        return ret;
+    }
+}
+
+/**
+ * [Ascon-Hash](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/12*  
+ * Hash size: *32 bytes*
+ *
+ * Specified in
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+export class AsconHash extends _AsconHash {
+    constructor() {
+        super(8,12,12,32,false);
+    }
+}
+
+/**
+ * [Ascon-HashA](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/8*  
+ * Hash size: *32 bytes*
+ *
+ * Specified in
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+export class AsconHashA extends _AsconHash {
+    constructor() {
+        super(8,12,8,32,false);
+    }
+}
+
+/**
+ * [Ascon-HashA](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/12*  
+ * Hash size: *? bytes*
+ *
+ * Specified in
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+export class AsconXof extends _AsconHash {
+    constructor(digestSize:number) {
+        super(8,12,12,digestSize,true);
+    }
+}
+
+/**
+ * [Ascon-HashA](https://ascon.iaik.tugraz.at/index.html)
+ *
+ * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
+ * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
+ *
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/8*  
+ * Hash size: *? bytes*
+ *
+ * Specified in
+ * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
+ */
+export class AsconXofA extends _AsconHash {
+    constructor(digestSize:number) {
+        super(8,12,8,digestSize,true);
+        //X: super(8,12,12,?,true);
+        //Xa: super(8,12,8,?,true);
     }
 }
 

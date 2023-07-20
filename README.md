@@ -127,6 +127,7 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 
 Name|Digest sizes|Optional parameters
 -------|----------------------|-------------------
+[Ascon-Hash, Ascon-HashA](https://ascon.iaik.tugraz.at/index.html)|256|-
 [Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function))|256, 512|salt
 [Blake2b](https://www.blake2.net/)|8-512, 256, 384, 512|key, salt, personalization
 [Blake2s](https://www.blake2.net/)|8-256, 224, 256|key, salt, personalization
@@ -147,6 +148,7 @@ Name|Digest sizes|Optional parameters
 
 Name|Capacities|Optional parameters
 -------|-----------|-------------------
+[Ascon-Xof, Ascon-XofA](https://ascon.iaik.tugraz.at/index.html)|256|digest size
 [cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, function name, customization
 [KangarooTwelve](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|128|digest size, customization
 [KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, key, customization

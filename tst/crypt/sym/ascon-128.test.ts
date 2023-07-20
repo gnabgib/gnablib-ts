@@ -2,19 +2,11 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/encoding/Hex';
 import { Ascon128 } from '../../../src/crypt/sym/Ascon';
+import { IKat } from './IKat';
 
 
 const tsts = suite('Ascon-128');
 
-interface IKat {
-    descr?:string,
-    k:string,
-    n:string,
-    ad:string,
-    pt:string,
-    ct:string,
-    tag:string
-}
 
 const aead128Tests:IKat[]=[
     {

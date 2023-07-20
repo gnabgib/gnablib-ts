@@ -2,6 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/encoding/Hex';
 import { Ascon128a } from '../../../src/crypt/sym/Ascon';
+import { IKat } from './IKat';
 
 
 const tsts = suite('Ascon-128a');
