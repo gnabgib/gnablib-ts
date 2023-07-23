@@ -86,6 +86,7 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 - [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)
 - [Ascon-128, Ascon-128a, Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)
 - [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
+- [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)
 - [Twofish](https://www.schneier.com/academic/twofish/)
 
 

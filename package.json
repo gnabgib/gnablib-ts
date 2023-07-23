@@ -156,7 +156,8 @@
 		"AES",
 		"CMAC",
 		"Twofish",
-		"Ascon"
+		"Ascon",
+		"ChaCha20"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",
