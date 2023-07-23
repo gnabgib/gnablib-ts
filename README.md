@@ -306,4 +306,4 @@ npm owner ls <pkgname>
 
 ## License
 
-[MPL-2.0](LICENSE)
+[MPL-1.1](LICENSE)

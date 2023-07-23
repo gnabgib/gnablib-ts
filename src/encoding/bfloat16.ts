@@ -1,3 +1,5 @@
+/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+
 import { safety } from "../primitive/Safety.js";
 import { fpb32 } from "./ieee754-fpb.js";
 
