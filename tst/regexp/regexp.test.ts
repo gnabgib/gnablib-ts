@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { escape } from '../src/RegExp';
+import { escape } from '../../src/RegExp/index';
 
 const tsts = suite('RegExp');
 
