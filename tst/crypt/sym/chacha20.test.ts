@@ -4,7 +4,7 @@ import { hex } from '../../../src/encoding/Hex';
 import { ChaCha20 } from '../../../src/crypt/sym/ChaCha';
 
 
-const tsts = suite('RFC7539/ChaCha2');
+const tsts = suite('ChaCha20/RFC 7539');
 
 
 const testEnc:[string,string,string,number,string,string][]=[
