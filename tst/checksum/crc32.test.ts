@@ -5,12 +5,17 @@ import { utf8 } from '../../src/encoding/Utf8';
 
 const tsts = suite('CRC32');
 
-//Testing sources:
-// - https://crccalc.com/
-// - http://zorc.breitbandkatze.de/crc.html
-const asciiSet = [
+const asciiSet:[string,number][] = [
+	//https://github.com/froydnj/ironclad/blob/master/testing/test-vectors/crc32.testvec
 	['', 0],
 	['a', 0xe8b7be43],
+	['abc', 0x352441c2],
+	['message digest', 0x20159d7f],
+	['abcdefghijklmnopqrstuvwxyz',0x4c2750bd],
+	['ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',0x1fc2e6d2],
+	['12345678901234567890123456789012345678901234567890123456789012345678901234567890', 0x7ca94a72],
+
+	//https://crccalc.com/ | http://zorc.breitbandkatze.de/crc.html
 	['f', 0x76d32be0],
 	['fo', 0xaf73a217],
 	['foo', 0x8c736521],
@@ -20,7 +25,7 @@ const asciiSet = [
 	['abcde', 0x8587d865],
 	['123456789', 0xcbf43926],
 	['foo bar baz٪☃🍣', 0x5b4b18f3],
-	['gnabgib', 0x8ee5af75],
+	['gnablib', 0x82B04094],
 ];
 
 for (const pair of asciiSet) {

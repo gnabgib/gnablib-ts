@@ -136,6 +136,7 @@ function sBoxGen(b: Uint8Array, key: Uint8Array, offset: number): number {
  * First Published: *1998*  
  * Block size: *16 bytes*  
  * Key size: *16, 24, 32 bytes*  
+ * Nonce size: *0 bytes*  
  * Rounds: *16*
  *
  * [Spec](https://www.schneier.com/wp-content/uploads/2016/02/paper-twofish-paper.pdf)

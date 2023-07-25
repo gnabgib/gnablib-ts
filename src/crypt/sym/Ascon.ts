@@ -341,9 +341,10 @@ class _AsconAead extends AAscon implements IAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *8 bytes*
- * Key size: *16 bytes*
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Key size: *16 bytes*  
+ * Nonce size: *16 bytes*  
  * Rounds: *6*
  *
  * Specified in
@@ -367,9 +368,10 @@ export class Ascon128 extends _AsconAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *16 bytes*
- * Key size: *16 bytes*
+ * First Published: *2014*  
+ * Block size: *16 bytes*  
+ * Key size: *16 bytes*  
+ * Nonce size: *16 bytes*  
  * Rounds: *8*
  *
  * Specified in
@@ -393,9 +395,10 @@ export class Ascon128a extends _AsconAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *8 bytes*
- * Key size: *20 bytes*
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Key size: *20 bytes*  
+ * Nonce size: *16 bytes*  
  * Rounds: *6*
  *
  * Specified in
@@ -414,10 +417,6 @@ export class Ascon80pq extends _AsconAead {
 }
 
 class _AsconHash extends AAscon implements IHash {
-	// readonly state = new Uint8Array(40); //320bit state
-	// readonly #s32 = new Uint32Array(this.state.buffer); //10 elements
-	// /** Position in state*/
-	// sPos = 0;
 	constructor(
 		rate: number,
 		aRound: number,
@@ -511,10 +510,10 @@ class _AsconHash extends AAscon implements IHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *8 bytes*
- * Rounds: *12/12*
- * Hash size: *32 bytes*
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/12*  
+ * Hash size: *32 bytes*  
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
@@ -531,10 +530,10 @@ export class AsconHash extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *8 bytes*
- * Rounds: *12/8*
- * Hash size: *32 bytes*
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/8*  
+ * Hash size: *32 bytes*  
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
@@ -551,10 +550,10 @@ export class AsconHashA extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *8 bytes*
- * Rounds: *12/12*
- * Hash size: *? bytes*
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/12*  
+ * Hash size: *? bytes*  
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
@@ -571,10 +570,10 @@ export class AsconXof extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*
- * Block size: *8 bytes*
- * Rounds: *12/8*
- * Hash size: *? bytes*
+ * First Published: *2014*  
+ * Block size: *8 bytes*  
+ * Rounds: *12/8*  
+ * Hash size: *? bytes*  
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
@@ -586,9 +585,3 @@ export class AsconXofA extends _AsconHash {
 		//Xa: super(8,12,8,?,true);
 	}
 }
-
-// K=key, N=nonce (128bit), A=associated data, C=ciphertext, T=tag (128bits), P=plaintext
-// k - Key size (bits)
-// r - Rate (also block size for P/C/A)
-// a - Initialization/final round number
-// b - Intermediate round number

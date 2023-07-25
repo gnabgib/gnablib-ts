@@ -393,9 +393,10 @@ function expandKey(key: Uint8Array, enc: Uint32Array, dec: Uint32Array): void {
  * Also known by its original name Rijndael, AES is a symmetric-key block cipher, designed in 1998 by
  * [Joan Daemen](https://en.wikipedia.org/wiki/Joan_Daemen) and [Vincent Rijmen](https://en.wikipedia.org/wiki/Vincent_Rijmen)
  *
- * First Published: *1998*
- * Block size: *16 bytes*
- * Key Size: *16, 24, 32 bytes*
+ * First Published: *1998*  
+ * Block size: *16 bytes*  
+ * Key Size: *16, 24, 32 bytes*  
+ * Nonce size: *0 bytes*  
  * Rounds: *10, 12, 14* (key size dependent)
  *
  * Specified in

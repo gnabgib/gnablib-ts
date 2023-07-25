@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/encoding/Hex';
-import { Iso7816_4 } from '../../../src/crypt/pad/Iso7816_4';
+import { Iso7816_4,Iso9797_1 } from '../../../src/crypt/pad/Iso7816_4';
 
 const tsts = suite('Padding-ISO-7816-4/Pad2');
 
@@ -53,7 +53,7 @@ tsts(`Input too large throws`,()=>{
 });
 
 tsts(`No marker throws`,()=>{
-    assert.throws(()=>Iso7816_4.unpad(Uint8Array.of(1)));
+    assert.throws(()=>Iso9797_1.unpad(Uint8Array.of(1)));
 });
 
 tsts.run();

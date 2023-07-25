@@ -224,6 +224,7 @@ const blockSize=8;
  * First Published: *1993*  
  * Block size: *8 bytes*  
  * Key size: *4 - 56 bytes*  
+ * Nonce size: *0 bytes*  
  * Rounds: *16*  
  */
 export class Blowfish implements IBlockCrypt {

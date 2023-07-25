@@ -11,6 +11,8 @@ const Iso7816_4_marker = 0x80;
  * until the end of the block is reached. ISO/IEC 7816-4 itself is a communication 
  * standard for smart cards containing a file system, and in itself does not 
  * contain any cryptographic specifications. 
+ * 
+ * [ISO 9797-1](https://en.wikipedia.org/wiki/ISO/IEC_9797-1) padding method 2
  */
 export class Iso7816_4 {
     /** {@inheritDoc crypt/pad/IPad.IPad.padSize} */
@@ -69,3 +71,6 @@ export class Iso7816_4 {
 		return input.subarray(0, pos);
 	}
 }
+
+/** @inheritDoc Iso7816_4*/
+export const Iso9797_1 = Iso7816_4;

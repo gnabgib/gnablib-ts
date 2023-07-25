@@ -54,6 +54,7 @@ npm audit signatures
 - [adler32](https://datatracker.ietf.org/doc/html/rfc1950)
 - [Block check character](https://en.wikipedia.org/wiki/Block_check_character)
 - [cksum](https://en.wikipedia.org/wiki/Cksum)
+- [CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)
 - [CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)
 - [fletcher](http://www.zlib.net/maxino06_fletcher-adler.pdf) 16, 32, 64
 - [Longitudinal redundancy check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)
@@ -77,7 +78,8 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 #### Padding
 
 - [ANSI X9.23](https://www.ibm.com/support/knowledgecenter/en/linuxonibm/com.ibm.linux.z.wskc.doc/wskc_c_l0wskc58.html) / ISO 10126 padding
-- [ISO 7816-4](https://en.wikipedia.org/wiki/ISO/IEC_7816) padding
+- [ISO 7816-4 padding](https://en.wikipedia.org/wiki/ISO/IEC_7816)
+- [ISO 9797-1 padding 2](https://en.wikipedia.org/wiki/ISO/IEC_9797-1)
 - [PKCS#7](https://tools.ietf.org/html/rfc5652#section-6.3) / PKCS#5 padding
 - Zero / Null padding
 

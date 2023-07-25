@@ -151,6 +151,12 @@ class ChaCha implements IFullCrypt {
  * - [RFC7539](https://datatracker.ietf.org/doc/html/rfc7539#autoid-11)
  */
 export class ChaCha20 extends ChaCha {
+	/**
+	 * 
+	 * @param key Key bytes, exactly 32 bytes (256 bits)
+	 * @param nonce Non-repeated  NONCE, exactly 12 bytes (96 bits)
+	 * @param count Block count generally 0 or 1 (default 0)
+	 */
 	constructor(key: Uint8Array, nonce: Uint8Array, count = 0) {
 		super(key, nonce, count, 20);
 	}
