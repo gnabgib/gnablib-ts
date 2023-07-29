@@ -12,6 +12,7 @@ const reverses = [
 	['🙂', '🙂'], //https://unicode-table.com/en/1F642/
 	['😊', '😊'], //https://unicode-table.com/en/1F60A/
 	['🧑‍🤝‍🧑', '🧑‍🤝‍🧑'], //https://unicode.org/emoji/charts/full-emoji-list.html#family - 5points
+	['mañana','anañam'],//https://mathiasbynens.be/notes/javascript-unicode
 	['Hello World 😃🎉', '🎉😃 dlroW olleH'],
 ];
 

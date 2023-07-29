@@ -20,13 +20,13 @@ class SalsaBlock {
 
 	constructor(readonly rounds: number) {}
 
-	// prettier-ignore
-	private quartRound(a: number, b: number, c: number, d: number) {
-        this.u32[b] ^=  U32.rol(this.u32[a] + this.u32[d], 7);
-        this.u32[c] ^=  U32.rol(this.u32[b] + this.u32[a], 9);
-        this.u32[d] ^=  U32.rol(this.u32[c] + this.u32[b], 13);
-        this.u32[a] ^=  U32.rol(this.u32[d] + this.u32[c], 18);
-	}
+	// // prettier-ignore
+	// private quartRound(a: number, b: number, c: number, d: number) {
+    //     this.u32[b] ^=  U32.rol(this.u32[a] + this.u32[d], 7);
+    //     this.u32[c] ^=  U32.rol(this.u32[b] + this.u32[a], 9);
+    //     this.u32[d] ^=  U32.rol(this.u32[c] + this.u32[b], 13);
+    //     this.u32[a] ^=  U32.rol(this.u32[d] + this.u32[c], 18);
+	// }
 
 	public block(): void {
         // prettier-ignore
@@ -102,8 +102,11 @@ class Salsa implements IFullCrypt {
 		rounds: number
 	) {
 		this.#b = new SalsaBlock(rounds);
+        /* C K K K
+         * K C N N
+         * P P C K
+         * K K K C */
 
-        //If the key 
         let ka:Uint8Array;
         let kb:Uint8Array;
         let rc:Array<number>;
@@ -123,7 +126,7 @@ class Salsa implements IFullCrypt {
             asLE.i32(kb,0,4);
             rc=sigma;
         } else throw new InvalidValueError('key.length', key.length, 16, 32);
-		safety.lenExactly(nonce, 8, 'nonce'); //96 bit nonce
+		safety.lenExactly(nonce, 8, 'nonce'); //64 bit nonce
 
 		//CONSTANTS
 		this.#state[0] = rc[0];
@@ -215,6 +218,10 @@ function hSalsa(
 	safety.lenExactly(key, 32, 'key'); //256 bit key
 	safety.lenGte(input, 16, 'input'); //128 bit input
 	const b = new SalsaBlock(rounds);
+    /* C K K K
+     * K C I I
+     * I I C K
+     * K K K C */
 
 	//Setup block
 	//CONSTANTS
@@ -224,23 +231,14 @@ function hSalsa(
 	b.u32[15] = sigma[3];
 
 	//KEY (8 u32)
-	const k = key.slice();
-	asLE.i32(k, 0, 8);
-	const k32 = new Uint32Array(k.buffer);
-	b.u32[1] = k32[0];
-	b.u32[2] = k32[1];
-	b.u32[3] = k32[2];
-	b.u32[4] = k32[3];
-	b.u32[11] = k32[4];
-	b.u32[12] = k32[5];
-	b.u32[13] = k32[6];
-	b.u32[14] = k32[7];
+    b.u8.set(key.slice(0,16),4);
+    b.u8.set(key.slice(16,32),44);//11*4
 
-	//Input (4 u32)
-	const n = input.slice(0,16);
-	asLE.i32(n, 0, 4);
-	const n32 = new Uint32Array(n.buffer);
-	b.u32.set(n32, 6);
+	//Input (4 u32) - because input could be >16
+    b.u8.set(input.subarray(0,16),24);//6*4
+    
+    //Make sure everything is LE
+    asLE.i32(b.u8,0,16);
 
 	//Generate output
 	b.block();
@@ -305,40 +303,42 @@ export class Salsa20 extends Salsa {
 	}
 }
 
-// /**
-//  * HSalsa20 Turns 256 bits of key + 128 bits of input into 256 bits of output
-//  * @param output At least 32 bytes (256 bits / 8 U32)
-//  * @param key Exactly 32 bytes (256 bits / 8 U32)
-//  * @param input At least 16 bytes (128 bits / 4 U32) - only first 16 bytes are used
-//  */
-// export function hSalsa20(
-//     output: Uint8Array,
-// 	key: Uint8Array,
-// 	input: Uint8Array
-// ):void {
-//     hSalsa(output,key,input,20);
-// }
+/**
+ * HSalsa20 Turns 256 bits of key + 128 bits of input into 256 bits of output
+ * @param output At least 32 bytes (256 bits / 8 U32)
+ * @param key Exactly 32 bytes (256 bits / 8 U32)
+ * @param input At least 16 bytes (128 bits / 4 U32) - only first 16 bytes are used
+ */
+export function hSalsa20(
+    output: Uint8Array,
+	key: Uint8Array,
+	input: Uint8Array
+):void {
+    hSalsa(output,key,input,20);
+}
 
-// /**
-//  * [XSalsa20](https://en.wikipedia.org/wiki/Salsa20#XSalsa20_with_192-bit_nonce)
-//  * 
-//  * XSalsa20 is a variant of {@link Salsa20} that allows a 192 bit (24 byte) nonce, far more
-//  * than Salsa's 64 bit (8 byte) nonce.  Larger nonce allows longer reuse of keys (you should
-//  * not reuse nonces).
-//  * 
-//  * First Published: *2008*  
-//  * Blocksize: *64 bytes*  
-//  * Key size: *16, 32 bytes*  
-//  * Nonce size: *24 bytes*  
-//  * Rounds: *20*  
-//  */
-// export class XSalsa20 extends XSalsa {
-//     /**
-// 	 * @param key Key bytes, 32 bytes in length (256 bits, 8 U32)
-// 	 * @param nonce Non-repeated NONCE, exactly 24 bytes (192 bits, 6 U32)
-// 	 * @param count Block count generally 0 or 1 (default 0)
-// 	 */
-// 	constructor(key: Uint8Array, nonce: Uint8Array, count = U64.zero) {
-// 		super(key, nonce, count, 20);
-// 	}
-// }
+/**
+ * [XSalsa20](https://en.wikipedia.org/wiki/Salsa20#XSalsa20_with_192-bit_nonce)
+ * 
+ * XSalsa20 is a variant of {@link Salsa20} that allows a 192 bit (24 byte) nonce, far more
+ * than Salsa's 64 bit (8 byte) nonce.  Larger nonce allows longer reuse of keys (you should
+ * not reuse nonces).
+ * 
+ * First Published: *2008*  
+ * Blocksize: *64 bytes*  
+ * Key size: *16, 32 bytes*  
+ * Nonce size: *24 bytes*  
+ * Rounds: *20*  
+ */
+export class XSalsa20 extends XSalsa {
+    /**
+	 * @param key Key bytes, 32 bytes in length (256 bits, 8 U32)
+	 * @param nonce Non-repeated NONCE, exactly 24 bytes (192 bits, 6 U32)
+	 * @param count Block count generally 0 or 1 (default 0)
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array, count = U64.zero) {
+		super(key, nonce, count, 20);
+	}
+}
+
+//Salsa20_12 Salsa20_8 XSalsa20_12 XSalsa20_8

@@ -91,6 +91,7 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 - [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)
 - [Salsa20](http://cr.yp.to/snuffle/spec.pdf)
 - [Twofish](https://www.schneier.com/academic/twofish/)
+- [XSalsa20](https://en.wikipedia.org/wiki/Salsa20#XSalsa20_with_192-bit_nonce)
 
 
 ### Error Correction Codes
