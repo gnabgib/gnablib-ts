@@ -160,7 +160,8 @@
 		"ChaCha20",
 		"Salsa20",
 		"CRC24",
-		"XSalsa20"
+		"XSalsa20",
+		"XChaCha20"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

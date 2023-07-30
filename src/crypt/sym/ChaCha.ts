@@ -151,71 +151,71 @@ class ChaCha implements IFullCrypt {
 	}
 }
 
-// function hChaCha(
-// 	output: Uint8Array,
-// 	key: Uint8Array,
-// 	input: Uint8Array,
-// 	rounds: number
-// ):void {
-//     safety.lenGte(output,32,'output'); //256 bit output
-// 	safety.lenExactly(key, 32, 'key'); //256 bit key
-// 	safety.lenGte(input, 16, 'input'); //128 bit input
-// 	const b = new ChaChaBlock(rounds);
-// 	/* C C C C
-// 	 * K K K K
-// 	 * K K K K
-// 	 * I I I I */
+function hChaCha(
+	output: Uint8Array,
+	key: Uint8Array,
+	input: Uint8Array,
+	rounds: number
+):void {
+    safety.lenGte(output,32,'output'); //256 bit output
+	safety.lenExactly(key, 32, 'key'); //256 bit key
+	safety.lenGte(input, 16, 'input'); //128 bit input
+	const b = new ChaChaBlock(rounds);
+	/* C C C C
+	 * K K K K
+	 * K K K K
+	 * I I I I */
 
-// 	//Setup block
-// 	//CONSTANTS
-// 	b.u32.set(sigma);
+	//Setup block
+	//CONSTANTS
+	b.u32.set(sigma);
 
-// 	//KEY (8 u32)
-// 	b.u8.set(key,16);//4*4
+	//KEY (8 u32)
+	b.u8.set(key,16);//4*4
 
-// 	//Input (4 u32) - because input could be >16
-// 	b.u8.set(input.slice(0,16),48);//12*4
+	//Input (4 u32) - because input could be >16
+	b.u8.set(input.slice(0,16),48);//12*4
 
-//     //Make sure everything is LE
-//     asLE.i32(b.u8,0,16);
+    //Make sure everything is LE
+    asLE.i32(b.u8,0,16);
 
-// 	//Generate output
-// 	b.block();
-// 	const b32 = new Uint32Array(
-// 		output.buffer,
-// 		output.byteOffset,
-// 		output.byteLength >>> 2
-// 	);
-// 	b32[0] = b.u32[0];
-// 	b32[1] = b.u32[1];
-// 	b32[2] = b.u32[2];
-// 	b32[3] = b.u32[3];
-// 	b32[4] = b.u32[12];
-// 	b32[5] = b.u32[13];
-// 	b32[6] = b.u32[14];
-// 	b32[7] = b.u32[15];
-//     asLE.i32(output,0,8);
-// }
+	//Generate output
+	b.block();
+	const b32 = new Uint32Array(
+		output.buffer,
+		output.byteOffset,
+		output.byteLength >>> 2
+	);
+	b32[0] = b.u32[0];
+	b32[1] = b.u32[1];
+	b32[2] = b.u32[2];
+	b32[3] = b.u32[3];
+	b32[4] = b.u32[12];
+	b32[5] = b.u32[13];
+	b32[6] = b.u32[14];
+	b32[7] = b.u32[15];
+    asLE.i32(output,0,8);
+}
 
-// class XChaCha extends ChaCha {
-// 	constructor(
-// 		key: Uint8Array,
-// 		nonce: Uint8Array,
-// 		count: number,
-// 		rounds: number
-//     ) {
-//         safety.lenExactly(nonce, 24, 'nonce'); //192 bit nonce
+class XChaCha extends ChaCha {
+	constructor(
+		key: Uint8Array,
+		nonce: Uint8Array,
+		count: number,
+		rounds: number
+    ) {
+        safety.lenExactly(nonce, 24, 'nonce'); //192 bit nonce
                 
-//         //Generate z (hChaCha output)
-//         const z=new Uint8Array(32);
-//         hChaCha(z,key,nonce,rounds);
+        //Generate z (hChaCha output)
+        const z=new Uint8Array(32);
+        hChaCha(z,key,nonce,rounds);
 
-// 		const n=new Uint8Array(12);
-// 		n.set(nonce.subarray(16),4);
+		const n=new Uint8Array(12);
+		n.set(nonce.subarray(16),4);
 
-//         super(z,n,count,rounds);
-//     }
-// }
+        super(z,n,count,rounds);
+    }
+}
 
 /**
  * [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)
@@ -247,39 +247,39 @@ export class ChaCha20 extends ChaCha {
 	}
 }
 
-// /**
-//  * hChaCha20 turns 256 bits of key + 128 bits of input into 256 bits of output
-//  * @param output At least 32 bytes (256 bits / 8 U32)
-//  * @param key Exactly 32 bytes (256 bits / 8 U32)
-//  * @param input At least 16 bytes (128 bits / 4 U32) - only first 16 bytes are used
-//  */
-// export function hChaCha20(
-// 	output: Uint8Array,
-// 	key: Uint8Array,
-// 	input: Uint8Array
-// ):void {
-//     hChaCha(output,key,input,20);
-// }
+/**
+ * hChaCha20 turns 256 bits of key + 128 bits of input into 256 bits of output
+ * @param output At least 32 bytes (256 bits / 8 U32)
+ * @param key Exactly 32 bytes (256 bits / 8 U32)
+ * @param input At least 16 bytes (128 bits / 4 U32) - only first 16 bytes are used
+ */
+export function hChaCha20(
+	output: Uint8Array,
+	key: Uint8Array,
+	input: Uint8Array
+):void {
+    hChaCha(output,key,input,20);
+}
 
-// /**
-//  * [XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)
-//  * 
-//  * XChaCha20 is a variant of {@link ChaCha20} that allows a 192 bit (24 byte) nonce, more
-//  * than ChaCha's 96 bit (12 byte) nonce.  Larger nonce allows longer reuse of keys (you should
-//  * not reuse nonces).
-//  * 
-//  * Blocksize: *64 bytes*  
-//  * Key size: *32 bytes*  
-//  * Nonce size: *24 bytes*  
-//  * Rounds: *20*
-//  */
-// export class XChaCha20 extends XChaCha {
-//     /**
-// 	 * @param key Key bytes, 32 bytes in length (256 bits, 8 U32)
-// 	 * @param nonce Non-repeated NONCE, exactly 24 bytes (192 bits, 6 U32)
-// 	 * @param count Block count generally 0 or 1 (default 0)
-// 	 */
-// 	constructor(key: Uint8Array, nonce: Uint8Array, count = 0) {
-// 		super(key, nonce, count, 20);
-// 	}
-// }
+/**
+ * [XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)
+ * 
+ * XChaCha20 is a variant of {@link ChaCha20} that allows a 192 bit (24 byte) nonce, more
+ * than ChaCha's 96 bit (12 byte) nonce.  Larger nonce allows longer reuse of keys (you should
+ * not reuse nonces).
+ * 
+ * Blocksize: *64 bytes*  
+ * Key size: *32 bytes*  
+ * Nonce size: *24 bytes*  
+ * Rounds: *20*
+ */
+export class XChaCha20 extends XChaCha {
+    /**
+	 * @param key Key bytes, 32 bytes in length (256 bits, 8 U32)
+	 * @param nonce Non-repeated NONCE, exactly 24 bytes (192 bits, 6 U32)
+	 * @param count Block count generally 0 or 1 (default 0)
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array, count = 0) {
+		super(key, nonce, count, 20);
+	}
+}
