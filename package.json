@@ -161,7 +161,8 @@
 		"Salsa20",
 		"CRC24",
 		"XSalsa20",
-		"XChaCha20"
+		"XChaCha20",
+		"UInt"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

@@ -118,6 +118,8 @@ export class U64 {
 		//Long multiplication!
 		// FFFF*FFFF (biggest possible uint16s) = FFFE0001
 		// FFFFFFFF*FFFFFFFF (biggest possible uint32s) = FFFFFFFE00000001
+		// - We can't multiple U32 because JS only goes to U51 before switching
+		// to floating point
 		const a0 = a[aPos] & maxU16;
 		const a1 = a[aPos] >>> 16;
 		const a2 = a[aPos + 1] & maxU16;

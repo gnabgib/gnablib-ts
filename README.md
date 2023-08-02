@@ -214,6 +214,7 @@ Name|Digest sizes|Optional parameters
 - U32, U32Mut, U32MutArray
 - U64, U64Mut, U64MutArray
 - Uint64
+- UInt, UIntMut
 - WindowStr
 
 #### Extensions:
