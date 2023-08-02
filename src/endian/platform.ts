@@ -43,13 +43,10 @@ const invert = {
 	 */
 	i32(b: Uint8Array, pos = 0, count = 1): void {
 		let t: number;
+		// prettier-ignore
 		do {
-			t = b[pos];
-			b[pos] = b[pos + 3];
-			b[pos + 3] = t;
-			t = b[pos + 1];
-			b[pos + 1] = b[pos + 2];
-			b[pos + 2] = t;
+			t = b[pos]; b[pos] = b[pos + 3]; b[pos + 3] = t;
+			t = b[pos + 1]; b[pos + 1] = b[pos + 2]; b[pos + 2] = t;
 			pos += 4;
 		} while (--count > 0);
 	},
@@ -61,19 +58,12 @@ const invert = {
 	 */
 	i64(b: Uint8Array, pos = 0, count = 1): void {
 		let t: number;
+		// prettier-ignore
 		do {
-			t = b[pos];
-			b[pos] = b[pos + 7];
-			b[pos + 7] = t;
-			t = b[pos + 1];
-			b[pos + 1] = b[pos + 6];
-			b[pos + 6] = t;
-			t = b[pos + 2];
-			b[pos + 2] = b[pos + 5];
-			b[pos + 5] = t;
-			t = b[pos + 3];
-			b[pos + 3] = b[pos + 4];
-			b[pos + 4] = t;
+			t = b[pos]; b[pos] = b[pos + 7]; b[pos + 7] = t; 
+			t = b[pos + 1]; b[pos + 1] = b[pos + 6]; b[pos + 6] = t;
+			t = b[pos + 2]; b[pos + 2] = b[pos + 5]; b[pos + 5] = t;
+			t = b[pos + 3]; b[pos + 3] = b[pos + 4]; b[pos + 4] = t;
 			pos += 8;
 		} while (--count > 0);
 	},

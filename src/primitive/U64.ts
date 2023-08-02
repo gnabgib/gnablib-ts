@@ -102,12 +102,11 @@ export class U64 {
 		//Not
 		a.arr[a.pos] = ~a.arr[a.pos];
 		a.arr[a.pos + 1] = ~a.arr[a.pos + 1];
-		//Add one, we only need to check for one value for carry
-		if (a.arr[a.pos] === 0xffffffff) {
-			a.arr[a.pos] = 0;
-			a.arr[a.pos + 1] += 1;
-		} else {
-			a.arr[a.pos] += 1;
+
+		a.arr[a.pos]+=1;
+		//If overflow add to next block
+		if (a.arr[a.pos]==0) {
+			a.arr[a.pos+1]+=1;
 		}
 	}
 	protected _subEq(a: Uint32Array, aPos: number, b: U64) {

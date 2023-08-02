@@ -2,7 +2,7 @@
 // import { asLE } from "../endian/platform.js";
 // import { IHash } from "../hash/IHash.js";
 // import { safety } from "../primitive/Safety.js";
-// import { U128Mut } from "../primitive/U128.js";
+// import { U128, U128Mut } from "../primitive/U128.js";
 // import { U64, U64Mut, U64MutArray } from "../primitive/U64.js";
 
 // const blockSize=16;
@@ -27,6 +27,7 @@
 
 //     readonly #r:Uint8Array;
 //     readonly #r32:Uint32Array;
+//     readonly #r2:U128;
 //     readonly #s:Uint8Array;
 
 //     //We only use 1 extra byte but to point a #b32 at it, it needs to be a multiple of 4
@@ -44,8 +45,12 @@
 //     ) {
 //         safety.lenExactly(key,32,'key');//256
 //         this.#r=key.slice(0,16);
-//         asLE.i32(this.#r,0,4);
+//         this.#r2=U128.fromBytesLE(this.#r).and(U128.fromUint32Quad(0x0fffffff,0x0ffffffc,0x0ffffffc,0x0ffffffc));
+        
+        
+//         //asLE.i32(this.#r,0,4);
 //         this.#r32=new Uint32Array(this.#r.buffer,0,4);
+//         //this.#r2=U128.fromArray(this.#r32);
         
 //         this.#s=key.slice(16,32);
 //         asLE.i32(this.#s,0,4);
@@ -57,7 +62,8 @@
 //         this.#r32[3]&=0x0ffffffc;
 
 //         // console.log(`s=${hex.fromBytes(this.#s)}`);
-//         // console.log(`r=${hex.fromBytes(this.#r)}`);
+//          console.log(`r=${hex.fromBytes(this.#r)}`);
+//          console.log(`r2=${this.#r2.toString()}`);
 //     }
 
 //     private hash() {
@@ -72,6 +78,7 @@
 
 
 //         //Add to accumulator
+//         this.#a2.addEq(U128.fromArray(this.#b32));
 //         this.#a.at(0).addEq(U64.fromIntUnsafe(this.#b32[0]));
 //         this.#a.at(1).addEq(U64.fromIntUnsafe(this.#b32[1]));
 //         this.#a.at(2).addEq(U64.fromIntUnsafe(this.#b32[2]));
@@ -93,43 +100,43 @@
 //         a[3]=this.#a.at(3).low;
 //         a[4]=this.#a.at(4).low;
 //         console.log(`a+b'=${hex.fromU64a(this.#a,' ')}`);
+//         console.log(`A+b =${this.#a2.toString()}`);
 
 //         //Long multiply
-//         this.#a.at(0).set(U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r[0])));
+//         this.#a.at(0).set(U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r32[0])));
 //         this.#a.at(1).set(
-//             U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r[1])).addEq(
-//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r[0])))
+//             U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r32[1])).addEq(
+//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r32[0])))
 //         );
 //         this.#a.at(2).set(
-//             U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r[2])).addEq(
-//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r[1]))).addEq(
-//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r[0])))
+//             U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r32[2])).addEq(
+//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r32[1]))).addEq(
+//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r32[0])))
 //         );
 //         this.#a.at(3).set(
-//             U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r[3])).addEq(
-//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r[2]))).addEq(
-//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r[1]))).addEq(
-//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r[0])))
+//             U64Mut.fromIntUnsafe(a[0]).mulEq(U64.fromIntUnsafe(this.#r32[3])).addEq(
+//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r32[2]))).addEq(
+//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r32[1]))).addEq(
+//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r32[0])))
 //         );
 //         this.#a.at(4).set(
-//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r[3])).addEq(
-//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r[2]))).addEq(
-//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r[1]))).addEq(
-//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r[0])))
+//             U64Mut.fromIntUnsafe(a[1]).mulEq(U64.fromIntUnsafe(this.#r32[3])).addEq(
+//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r32[2]))).addEq(
+//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r32[1]))).addEq(
+//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r32[0])))
 //         );
 //         this.#a.at(5).set(
-//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r[3])).addEq(
-//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r[2]))).addEq(
-//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r[1])))
+//             U64Mut.fromIntUnsafe(a[2]).mulEq(U64.fromIntUnsafe(this.#r32[3])).addEq(
+//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r32[2]))).addEq(
+//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r32[1])))
 //         );
 //         this.#a.at(6).set(
-//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r[3])).addEq(
-//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r[2])))
+//             U64Mut.fromIntUnsafe(a[3]).mulEq(U64.fromIntUnsafe(this.#r32[3])).addEq(
+//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r32[2])))
 //         );
 //         this.#a.at(7).set(
-//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r[3]))
+//             U64Mut.fromIntUnsafe(a[4]).mulEq(U64.fromIntUnsafe(this.#r32[3]))
 //         );
-//         console.log(`a*r =${hex.fromU64a(this.#a,' ')}`);
 
 //         //Carry
 //         this.#a.at(1).addEq(U64.fromIntUnsafe(this.#a.at(0).high));
@@ -151,6 +158,10 @@
 //         this.#a.at(2).andEq(U64.fromIntUnsafe(0xFFFFFFFF));
 //         this.#a.at(3).andEq(U64.fromIntUnsafe(0xFFFFFFFF));
 //         this.#a.at(4).andEq(U64.fromIntUnsafe(0x00000003));
+//         console.log(`a*r =${hex.fromU64a(this.#a,' ')}`);
+//         this.#a2.mulEq(this.#r2);
+//         console.log(`A*R =${this.#a2.toString()}`);
+
 
 //         this.#a.at(0).addEq(U64.fromIntUnsafe(a[0])).addEq(U64.fromIntUnsafe(a[0]>>>2|a[1]<<30));
 //         this.#a.at(1).addEq(U64.fromIntUnsafe(a[1])).addEq(U64.fromIntUnsafe(a[1]>>>2|a[2]<<30));
