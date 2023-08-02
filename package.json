@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.2.26",
+	"version": "0.2.27",
 	"description": "A zero dependency library, with provenance, TypeScript/JavaScript applications.",
 	"type": "module",
 	"types": "/release/index.d.ts",
