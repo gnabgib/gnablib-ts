@@ -96,33 +96,6 @@ export class UInt {
 		}
 		return carry;
 	}
-	// protected static _addEqA(
-	// 	a: Uint32Array,
-	// 	aPos: number,
-	//     aSize: number,
-	// 	b: Uint32Array,
-	// 	bPos: number,
-	//     bSize: number,
-	// ): number {
-	//     let carry = 0;
-	//     let n=aSize;
-	//     if (bSize < n) n=bSize;
-	//     for (let i=0;i<n;i++) {
-	//         let add=a[aPos+i] + b[bPos+i] + carry;
-	//         //Carry can only be 0/1
-	//         carry = add > maxU32 ? 1 : 0;
-	//         a[aPos+i]=add;
-	//     }
-	// 	return carry;
-	// }
-	// protected _addEqU(
-	// 	a: Uint32Array,
-	// 	aPos: number,
-	// 	aSize: number,
-	// 	b: UInt
-	// ): number {
-	//     return UInt._addEqA(a,aPos,aSize,b.arr,b.pos,b.size);
-	// }
 	protected _neg(): void {
 		let add = 1;
 		for (let i = 0; i < this.size; i++) {
@@ -566,6 +539,10 @@ export class UIntMut extends UInt {
 	 */
 	zero(): void {
 		this.arr.fill(0, this.pos, this.pos + this.size);
+	}
+
+	static zeroSize(size: number): UIntMut {
+		return new UIntMut(new Uint32Array(size), size);
 	}
 
 	/**

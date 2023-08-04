@@ -191,6 +191,7 @@ Name|Digest sizes|Optional parameters
 - [HMAC](https://en.wikipedia.org/wiki/HMAC) (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
 - [HopMAC](https://www.ietf.org/archive/id/draft-irtf-cfrg-kangarootwelve-10.html#name-security-considerations) (128 From Kangaroo Twelve)
 - [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128, 256 from Keccak)
+- [Poly1305](https://datatracker.ietf.org/doc/html/rfc7539#autoid-14)
 
 
 ### Net

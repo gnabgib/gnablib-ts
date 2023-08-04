@@ -114,6 +114,22 @@ export const hex = {
 		return ret;
 	},
 
+	fromU16s: function(
+		u16s: Uint16Array | IReadArray<Uint16Array>,
+		join = ''
+	): string {
+		let ret = '';
+		for (const u of u16s) {
+			ret +=
+				tbl[(u >> 12) & 0xf] +
+				tbl[(u >> 8) & 0xf] +
+				tbl[(u >> 4) & 0xf] +
+				tbl[u & 0xf] +
+				join;
+		}
+		return ret;
+	},
+
 	fromU32s: function(
 		u32s: Uint32Array | IReadArray<Uint32Array>,
 		join = ''
