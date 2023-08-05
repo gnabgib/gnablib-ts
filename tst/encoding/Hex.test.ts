@@ -99,6 +99,15 @@ for (const [str,arr] of toBytesTests) {
 	});
 }
 
+const fromU16sTests:[Uint16Array,string][]=[
+	[Uint16Array.of(1,2),'00010002'],
+];
+for (const [arr,str] of fromU16sTests) {
+	tsts('fromU16s: ' + str, () => {
+		assert.is(hex.fromU16s(arr), str);
+	});
+}
+
 const fromU32sTests:[Uint32Array,string][]=[
 	[Uint32Array.of(1,2),'0000000100000002'],
 ];

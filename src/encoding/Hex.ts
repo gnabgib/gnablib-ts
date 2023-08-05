@@ -57,7 +57,7 @@ export const hex = {
 	 * @throws ContentError - if there aren't exactly 2 chars, or either char isn't valid hex
 	 * @returns
 	 */
-	toByte: function(hex: string): number {
+	toByte: function (hex: string): number {
 		if (hex.length !== 2)
 			throw new ContentError('hex', 'need pairs of (zero padded)', hex);
 		return (mapCharToInt(hex[0]) << 4) | mapCharToInt(hex[1]);
@@ -69,7 +69,7 @@ export const hex = {
 	 * @param u32
 	 * @returns
 	 */
-	fromI32Compress: function(u32: number): string {
+	fromI32Compress: function (u32: number): string {
 		//2 chars
 		let ret = tbl[(u32 >> 4) & 0xf] + tbl[u32 & 0xf];
 		if (u32 < 0x100) return ret;
@@ -85,7 +85,7 @@ export const hex = {
 		return tbl[(u32 >>> 28) & 0xf] + tbl[(u32 >> 24) & 0xf] + ret;
 	},
 
-	fromI32: function(i32: number): string {
+	fromI32: function (i32: number): string {
 		return (
 			tbl[(i32 >>> 28) & 0xf] +
 			tbl[(i32 >> 24) & 0xf] +
@@ -98,7 +98,7 @@ export const hex = {
 		);
 	},
 
-	fromBytes: function(
+	fromBytes: function (
 		bytes:
 			| Uint8Array
 			| Int8Array
@@ -114,8 +114,8 @@ export const hex = {
 		return ret;
 	},
 
-	fromU16s: function(
-		u16s: Uint16Array | IReadArray<Uint16Array>,
+	fromU16s: function (
+		u16s: Uint16Array | Int16Array | IReadArray<Uint16Array> | IReadArray<Int16Array>,
 		join = ''
 	): string {
 		let ret = '';
@@ -130,8 +130,8 @@ export const hex = {
 		return ret;
 	},
 
-	fromU32s: function(
-		u32s: Uint32Array | IReadArray<Uint32Array>,
+	fromU32s: function (
+		u32s: Uint32Array | Int32Array | IReadArray<Uint32Array> | IReadArray<Int32Array>,
 		join = ''
 	): string {
 		let ret = '';
@@ -150,7 +150,7 @@ export const hex = {
 		return ret;
 	},
 
-	fromU64: function(u64: U64): string {
+	fromU64: function (u64: U64): string {
 		const b = u64.toBytesBE();
 		return (
 			tbl[b[0] >> 4] +
@@ -172,7 +172,7 @@ export const hex = {
 		);
 	},
 
-	fromU64a: function(u64a: U64MutArray, join = ''): string {
+	fromU64a: function (u64a: U64MutArray, join = ''): string {
 		let ret = '';
 		for (let i = 0; i < u64a.length; i++) {
 			const b = u64a.at(i).toBytesBE();
@@ -198,7 +198,7 @@ export const hex = {
 		return ret;
 	},
 
-	toBytes: function(hex: string, ignore?: string): Uint8Array {
+	toBytes: function (hex: string, ignore?: string): Uint8Array {
 		ignore = ignore ?? whitespace;
 		const arr = new Uint8Array(Math.ceil(hex.length / 2));
 		let carry = 0;
@@ -222,4 +222,4 @@ export const hex = {
 			);
 		return arr.slice(0, arrPtr);
 	},
-}
+};

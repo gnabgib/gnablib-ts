@@ -20,7 +20,7 @@ const blockSize = 16;
  * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
  */
 export class Poly1305 implements IHash {
-	//floodyberry implementation https://github.com/floodyberry/poly1305-donna/blob/master/poly1305-donna-16.h
+	//poly1305-donna https://github.com/floodyberry/poly1305-donna/
 	readonly blockSize = blockSize; //128
 	readonly size = blockSize; //128
 
@@ -83,22 +83,37 @@ export class Poly1305 implements IHash {
 		// h *= r, (partial) h %= p
 		let c = 0;
 		const d = new Uint32Array(10);
-		for (let i = 0; i < 10; i++) {
+		let i = 0,
+			j = 0;
+		for (; i < 5; i++) {
 			d[i] = c;
-			for (let j = 0; j < 10; j++) {
-				//Sum(h[i] * r[i] * 5) will overflow slightly above 6 products with an unclamped r, so carry at
-				d[i] +=
-					this.#a[j] * (j <= i ? this.#r[i - j] : 5 * this.#r[i + 10 - j]);
-				if (j === 4) {
-					c = d[i] >>> 13;
-					d[i] &= 0x1fff;
-				}
-			}
+			for (j = 0; j <= i; j++) d[i] += this.#a[j] * this.#r[i - j];
+			for (; j < 5; j++) d[i] += this.#a[j] * 5 * this.#r[i + 10 - j];
+			c = d[i] >>> 13;
+			d[i] &= 0x1fff;
+			d[i] += this.#a[5] * 5 * this.#r[i + 5];
+			d[i] += this.#a[6] * 5 * this.#r[i + 4];
+			d[i] += this.#a[7] * 5 * this.#r[i + 3];
+			d[i] += this.#a[8] * 5 * this.#r[i + 2];
+			d[i] += this.#a[9] * 5 * this.#r[i + 1];
 			c += d[i] >>> 13;
 			d[i] &= 0x1fff;
 		}
-		c = (c << 2) + c; //c *= 5
-		c += d[0];
+		for (; i < 10; i++) {
+			d[i] = c;
+			d[i] += this.#a[0] * this.#r[i - 0];
+			d[i] += this.#a[1] * this.#r[i - 1];
+			d[i] += this.#a[2] * this.#r[i - 2];
+			d[i] += this.#a[3] * this.#r[i - 3];
+			d[i] += this.#a[4] * this.#r[i - 4];
+			c = d[i] >>> 13;
+			d[i] &= 0x1fff;
+			for (j = 5; j <= i; j++) d[i] += this.#a[j] * this.#r[i - j];
+			for (; j < 10; j++) d[i] += this.#a[j] * 5 * this.#r[i + 10 - j];
+			c += d[i] >>> 13;
+			d[i] &= 0x1fff;
+		}
+		c = c * 5 + d[0];
 		d[0] = c & 0x1fff;
 		c >>>= 13;
 		d[1] += c;
@@ -141,9 +156,8 @@ export class Poly1305 implements IHash {
 		}
 
 		//Full carry accumulator
-		let c = this.#a[1] >>> 13;
-		this.#a[1] &= 0x1fff;
-		for (let i = 2; i < 10; i++) {
+		let c = 0;
+		for (let i = 1; i < 10; i++) {
 			this.#a[i] += c;
 			c = this.#a[i] >>> 13;
 			this.#a[i] &= 0x1fff;
@@ -156,22 +170,21 @@ export class Poly1305 implements IHash {
 		this.#a[1] &= 0x1fff;
 		this.#a[2] += c;
 
-		// compute accumulator - p
+		// compute accumulator -p
 		const g = new Uint16Array(10);
-		g[0] = this.#a[0] + 5;
-		c = g[0] >>> 13;
-		g[0] &= 0x1fff;
-		for (let i = 1; i < 10; i++) {
+		c = 5;
+		for (let i = 0; i < 10; i++) {
 			g[i] = this.#a[i] + c;
 			c = g[i] >>> 13;
 			g[i] &= 0x1fff;
 		}
 
-		//select a if a < p, or a-p if a >= p
-		let mask = (c ^ 1) - 1;
-		for (let i = 10; i--; ) g[i] &= mask;
-		mask = ~mask;
-		for (let i = 10; i--; ) this.#a[i] = (this.#a[i] & mask) | g[i];
+		//select a if a<p, or a-p if a >= p
+		const mask = (c ^ 1) - 1;
+		const iMask = ~mask;
+		for (let i = 0; i < 10; i++) {
+			this.#a[i] = (this.#a[i] & iMask) | (g[i] & mask);
+		}
 
 		//a %= (2^128)
 		// prettier-ignore
@@ -188,11 +201,11 @@ export class Poly1305 implements IHash {
 
 		const ret = new Uint8Array(blockSize);
 		const r16 = new Uint16Array(ret.buffer);
-		let f = this.#a[0] + this.#s[0];
-		this.#a[0] = f;
-		for (let i = 1; i < 8; i++) {
-			f = this.#a[i] + this.#s[i] + (f >>> 16);
+		let f = 0;
+		for (let i = 0; i < 8; i++) {
+			f = this.#a[i] + this.#s[i] + f;
 			this.#a[i] = f;
+			f >>>= 16;
 		}
 		r16.set(this.#a.subarray(0, 8));
 		asLE.i16(ret, 0, 8);
