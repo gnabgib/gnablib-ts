@@ -1,10 +1,15 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
+import { IAead } from '../crypt/IAead.js';
+import { IFullCrypt } from '../crypt/IFullCrypt.js';
+import { ChaCha20 } from '../crypt/sym/ChaCha.js';
 import { asLE } from '../endian/platform.js';
 import { IHash } from '../hash/IHash.js';
+import { NotInRangeError } from '../primitive/ErrorExt.js';
 import { safety } from '../primitive/Safety.js';
+import { U64, U64Mut } from '../primitive/U64.js';
 
-const blockSize = 16;
+const tagSize = 16;
 
 /**
  * [Poly1305](https://datatracker.ietf.org/doc/html/rfc8439#autoid-14)
@@ -21,15 +26,15 @@ const blockSize = 16;
  */
 export class Poly1305 implements IHash {
 	//poly1305-donna https://github.com/floodyberry/poly1305-donna/
-	readonly blockSize = blockSize; //128
-	readonly size = blockSize; //128
+	readonly blockSize = tagSize; //128
+	readonly size = tagSize; //128
 
 	readonly #r = new Uint16Array(10);
 	readonly #s: Uint16Array;
 	readonly #a = new Uint16Array(10);
 
 	/** Temp processing block */
-	readonly #block = new Uint8Array(blockSize);
+	readonly #block = new Uint8Array(tagSize);
 	readonly #b16 = new Uint16Array(this.#block.buffer);
 	/** Position of data written to block */
 	#bPos = 0;
@@ -85,6 +90,23 @@ export class Poly1305 implements IHash {
 		const d = new Uint32Array(10);
 		let i = 0,
 			j = 0;
+		/**
+		 * Partial deconstruction of the following to avoid some of the 
+		 * branches (improving processing speed since hash is likely called several times)
+		 * - I agree it's uglier/slightly harder to follow, but; performance.
+		for (i = 0, c = 0; i < 10; i++) {
+			d[i] = c;
+			for (j = 0; j < 10; j++) {
+				d[i] += this.#a[j] * ((j <= i) ? this.#r[i - j] : (5 * this.#r[i + 10 - j]));
+				if (j == 4) {
+					c = (d[i] >> 13);
+					d[i] &= 0x1fff;
+				}
+			}
+			c += d[i] >> 13;
+			d[i] &= 0x1fff;
+		}
+		*/
 		for (; i < 5; i++) {
 			d[i] = c;
 			for (j = 0; j <= i; j++) d[i] += this.#a[j] * this.#r[i - j];
@@ -199,7 +221,7 @@ export class Poly1305 implements IHash {
 			this.#a[7] = (this.#a[8] >>  8) | (this.#a[9] <<  5);
 		}
 
-		const ret = new Uint8Array(blockSize);
+		const ret = new Uint8Array(tagSize);
 		const r16 = new Uint16Array(ret.buffer);
 		let f = 0;
 		for (let i = 0; i < 8; i++) {
@@ -233,5 +255,180 @@ export class Poly1305 implements IHash {
 		ret.#bPos = this.#bPos;
 		ret.#a.set(this.#a);
 		return ret;
+	}
+
+	/**
+	 * Section 2.6 - generate from key + nonce
+	 * - Intended to be used with Salsa/XSalsa/ChaCha/XChaCha
+	 * @param key
+	 * @param nonce
+	 */
+	static fromCrypt(c: IFullCrypt): Poly1305 {
+		//Make sure the crypt generates at least 32 bits
+		//(otherwise we'll have a counter rollover which is out of spec)
+		if (c.blockSize < 32)
+			throw new NotInRangeError(
+				'c.blockSize',
+				c.blockSize,
+				undefined,
+				undefined,
+				'>=',
+				32
+			);
+		//While we only need 32 bits, we want to consume a full block so the counter increments
+		//(assuming it's a counter based scheme, which it is if it's a Salsa/ChaCha variant)
+		const key = new Uint8Array(c.blockSize);
+		c.encryptInto(key, key);
+		return new Poly1305(key.subarray(0, 32));
+	}
+}
+
+const stage_init = 0;
+const stage_ad = 1;
+const stage_data = 2;
+const stage_done = 3;
+
+interface IFullCryptBuilder {
+	new (key: Uint8Array, nonce: Uint8Array): IFullCrypt;
+}
+
+class Poly1305Aead implements IAead {
+	//Accept Salsa/XSalsa/ChaCha/XChaCha and AEAD and.. make it so
+	readonly tagSize = tagSize;
+	#hash: Poly1305;
+	#crypt: IFullCrypt;
+	/** Stage Init=0/AssocData=1/Data=2 */
+	#stage = stage_init;
+	readonly #adLen = U64Mut.fromUint32Pair(0, 0);
+	readonly #cLen = U64Mut.fromUint32Pair(0, 0);
+
+	constructor(key: Uint8Array, nonce: Uint8Array, ctor: IFullCryptBuilder) {
+		this.#crypt = new ctor(key, nonce);
+		this.#hash = Poly1305.fromCrypt(this.#crypt);
+		//Conveniently the protocol wants hash using counter=0, and crypt
+		// using counter>=1, so we can the same object for both
+	}
+
+	get blockSize(): number {
+		return this.#crypt.blockSize;
+	}
+
+	/**
+	 * Add associated data (can be called multiple times, must be done before {@link encryptInto}/{@link decryptInto})
+	 * @param data
+	 */
+	writeAD(data: Uint8Array): void {
+		if (this.#stage > stage_ad)
+			throw new Error('Associated data can no longer be written');
+		this.#stage = stage_ad;
+		this.#adLen.addEq(U64.fromInt(data.length));
+		this.#hash.write(data);
+	}
+
+	private finalizeAD(): void {
+		if (this.#stage === stage_ad) {
+			//Add enough zeros to make adLen a multiple of 16
+			const padCount = 16 - (this.#adLen.low & 0xf);
+			//If padCount is less than 16.. aka needed, add zeros to the hash
+			if (padCount < 16) this.#hash.write(new Uint8Array(padCount));
+		}
+		this.#stage = stage_data;
+	}
+
+	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
+		if (this.#stage < stage_data) this.finalizeAD();
+		else if (this.#stage == stage_done)
+			throw new Error('Cannot encrypt data after finalization');
+		this.#stage = stage_data;
+
+		this.#crypt.encryptInto(enc, plain);
+		this.#hash.write(enc);
+		this.#cLen.addEq(U64.fromInt(plain.length));
+	}
+
+	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
+		if (this.#stage < stage_data) this.finalizeAD();
+		else if (this.#stage == stage_done)
+			throw new Error('Cannot decrypt data after finalization');
+		this.#stage = stage_data;
+
+		this.#crypt.decryptInto(plain, enc);
+		this.#hash.write(enc);
+		this.#cLen.addEq(U64.fromInt(plain.length));
+	}
+
+	verify(tag: Uint8Array): boolean {
+		//End assoc writing
+		if (this.#stage < stage_data) this.finalizeAD();
+		if (this.#stage === stage_data) {
+			//Add enough zeros to make adLen a multiple of 16
+			const padCount = 16 - (this.#cLen.low & 0xf);
+			//If padCount is less than 16.. aka needed, add zeros to the hash
+			if (padCount < 16) this.#hash.write(new Uint8Array(padCount));
+
+			//Add AD len in LE
+			this.#hash.write(this.#adLen.toBytesLE());
+			//Add C len in LE
+			this.#hash.write(this.#cLen.toBytesLE());
+		}
+		this.#stage = stage_done;
+		//Make sure the provided tag is the right size
+		safety.lenExactly(tag, tagSize, 'tag');
+
+		const foundTag = this.#hash.sumIn();
+
+		let zero = 0;
+		for (let i = 0; i < foundTag.length; i++) zero |= tag[i] ^ foundTag[i];
+		return zero === 0;
+	}
+
+	finalize(): Uint8Array {
+		//End assoc writing
+		if (this.#stage < stage_data) this.finalizeAD();
+		if (this.#stage === stage_data) {
+			//Add enough zeros to make adLen a multiple of 16
+			const padCount = 16 - (this.#cLen.low & 0xf);
+			//If padCount is less than 16.. aka needed, add zeros to the hash
+			if (padCount < 16) this.#hash.write(new Uint8Array(padCount));
+
+			//Add AD len in LE
+			this.#hash.write(this.#adLen.toBytesLE());
+			//Add C len in LE
+			this.#hash.write(this.#cLen.toBytesLE());
+		}
+		this.#stage = stage_done;
+		return this.#hash.sumIn();
+	}
+
+	encryptSize(plainLen: number): number {
+		return plainLen;
+	}
+}
+
+/**
+ * [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
+ *
+ * ChaCha20-Poly1305 is an authenticated encryption with additional data (AEAD)
+ * algorithm, that combines the ChaCha20 stream cipher with the Poly1305 message
+ * authentication code.
+ *
+ * First Published: *2013*  
+ * Blocksize: *64 bytes/512 bits*  
+ * Key size: *16, 32 bytes/128, 256 bits*  
+ * Nonce size: *12 bytes/96 bits*  
+ * Rounds: *20*
+ *
+ * Specified in
+ * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
+ * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
+ */
+export class ChaCha20_Poly1305 extends Poly1305Aead {
+	/**
+	 * Construct a new ChaCha20-Poly1305 AEAD state
+	 * @param key Secret key, in bytes, exactly 32 bytes
+	 * @param nonce Nonce, in bytes, exactly 12 bytes
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array) {
+		super(key, nonce, ChaCha20);
 	}
 }

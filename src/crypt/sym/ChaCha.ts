@@ -128,7 +128,7 @@ class ChaCha implements IFullCrypt {
 	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
 		let nToWrite = plain.length;
 		let pos = 0;
-		enc.set(plain);
+		if (plain!=enc) enc.set(plain);
 		//Encrypt full blocks
 		while (nToWrite >= blockSize) {
 			this.block();
@@ -226,9 +226,9 @@ class XChaCha extends ChaCha {
  * CTR block mode
  *
  * First Published: *2008*  
- * Blocksize: *64 bytes*  
- * Key size: *16, 32 bytes*  
- * Nonce size: *12 bytes*  
+ * Blocksize: *64 bytes/512 bits*  
+ * Key size: *16, 32 bytes/128, 256 bits*  
+ * Nonce size: *12 bytes/96 bits*  
  * Rounds: *20*
  *
  * Specified in
@@ -268,9 +268,9 @@ export function hChaCha20(
  * than ChaCha's 96 bit (12 byte) nonce.  Larger nonce allows longer reuse of keys (you should
  * not reuse nonces).
  * 
- * Blocksize: *64 bytes*  
- * Key size: *32 bytes*  
- * Nonce size: *24 bytes*  
+ * Blocksize: *64 bytes/512 bits*  
+ * Key size: *32 bytes/256 bits*  
+ * Nonce size: *24 bytes/192 bits*  
  * Rounds: *20*
  */
 export class XChaCha20 extends XChaCha {

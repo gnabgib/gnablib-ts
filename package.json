@@ -163,7 +163,8 @@
 		"XSalsa20",
 		"XChaCha20",
 		"UInt",
-		"Poly1305"
+		"Poly1305",
+		"ChaCha20-Poly1305"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

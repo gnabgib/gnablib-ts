@@ -2,6 +2,8 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/encoding/Hex';
 import { Poly1305 } from '../../src/mac/Poly1305';
+import { ChaCha20 } from '../../src/crypt/sym/ChaCha';
+import { Ascon128 } from '../../src/crypt/sym/Ascon';
 
 const tsts = suite('Poly1305');
 
@@ -206,5 +208,52 @@ tsts('newEmpty',()=>{
     //Note it doesn't have any written data
     assert.is(hex.fromBytes(other.sum()),'00000000000000000000000000000000','clone sum');
 });
+
+const fromChaChaTests:[string, string,string,string,string][]=[
+    [
+        'RFC7539 Sec 2.6',
+        '808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F',
+        '000000000001020304050607',
+        '8AD5A08B905F81CC815040274AB29471A833B637E3FD0DA508DBB8E2FDD1A646',
+        '923E3F4657B5AFB4A83FC9EBD7B0A048'
+    ],
+    [
+        'RFC7539 A.4 #1',
+        '0000000000000000000000000000000000000000000000000000000000000000',
+        '000000000000000000000000',
+        '76B8E0ADA0F13D90405D6AE55386BD28BDD219B8A08DED1AA836EFCC8B770DC7',
+        '4EB972C9A8FB3A1B382BB4D36F5FFAD1'
+    ],
+    [
+        'RFC7539 A.4 #2',
+        '0000000000000000000000000000000000000000000000000000000000000001',
+        '000000000000000000000002',
+        'ECFA254F845F647473D3CB140DA9E87606CB33066C447B87BC2666DDE3FBB739',
+        'AD442319D1BBF88C08EF64E332CF5A42'
+    ],
+    [
+        'RFC7539 A.4 #3',
+        '1C9240A5EB55D38AF333888604F6B5F0473917C1402B80099DCA5CBC207075C0',
+        '000000000000000000000002',
+        '965E3BC6F9EC7ED9560808F4D229F94B137FF275CA9B3FCBDD59DEAAD23310AE',
+        '4CB5BC7D00441ED74664E8AF16A807BD'
+    ],
+];
+for(const [descr,key,nonce,expectKey,expectPolyZero] of fromChaChaTests) {
+    tsts(`fromCrypt{${descr}}`,()=>{
+        const kBytes=hex.toBytes(key);
+        const nBytes=hex.toBytes(nonce);
+        const c=new ChaCha20(kBytes,nBytes);
+        const mac=Poly1305.fromCrypt(c);
+        assert.instance(mac,Poly1305);
+        mac.write(new Uint8Array(mac.blockSize));
+        assert.is(hex.fromBytes(mac.sum()),expectPolyZero,'polyZero (calc)');
+    })
+}
+
+tsts(`fromCrypt-badSizeThrows`,()=>{
+    const a=new Ascon128(new Uint8Array(16),new Uint8Array(16));
+    assert.throws(()=>Poly1305.fromCrypt(a));
+})
 
 tsts.run();

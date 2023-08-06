@@ -89,6 +89,7 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 - [Ascon-128, Ascon-128a, Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)
 - [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
 - [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)
+- [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
 - [Salsa20](http://cr.yp.to/snuffle/spec.pdf)
 - [Twofish](https://www.schneier.com/academic/twofish/)
 - [XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)
