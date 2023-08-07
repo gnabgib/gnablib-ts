@@ -54,21 +54,6 @@ const testEnc:[string,string,string,U64,string,string][]=[
         hex.fromBytes(utf8.toBytes('gnablib')),
         '4ABBA295D64242'
     ],
-    //https://8gwifi.org/naclencdec.jsp
-    // [
-    //     'Large input 1',
-    //     '000102030405060708090a0b0c0d0e0f',
-    //     '0301040105090206',
-    //     U64.zero,
-    //     'D39F0D734C3752B70375DE25BFBBEA8831EDB330016AB2DBAFC7A6305610B3CF1FF0203F0F535DA174933071EE37CC244FC9EB4F03519C2FCB1AF4F358766836',
-    //     '6D2AB2A89CF0F8EEA8C4BECB1A6EAA9A1D1D961A961EEBF9BEA3FB30459033397628989DB4391B5E6B2AEC231B6F7272DBECE8876F9B6E1218E85F9EB31330CA'
-    // ],
-    // [
-    //     'ECRYPT  1',
-    //     '80000000000000000000000000000000',
-    //     '0000000000000000',
-    //     ''
-    // ]
 ];
 for(const [descr,key,nonce,counter,plain,enc] of testEnc) {
     tsts(`enc(${descr})`,()=>{

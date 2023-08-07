@@ -8,7 +8,7 @@ const tsts = suite('Salsa20-Poly1305');
 
 const tests:[string,string,string,string,string,string,string][]=[
     [
-        'Calculated',
+        'Calculated - this is an inferred cipher, ChaCha20/XChaCha20 are preferred',
         '808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F',
         '07000000'+'40414243',
         '50515253C0C1C2C3C4C5C6C7',

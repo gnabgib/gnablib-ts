@@ -22,8 +22,8 @@ const tagSize = 16;
  * Key size: *32 bytes*
  *
  * Specified in
- * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
- * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
+ * - [RFC8439 (2018)](https://datatracker.ietf.org/doc/html/rfc8439)
+ * - ~[RFC7539 (2015)](https://datatracker.ietf.org/doc/html/rfc7539)~
  */
 export class Poly1305 implements IHash {
 	//poly1305-donna https://github.com/floodyberry/poly1305-donna/
@@ -420,8 +420,40 @@ class Poly1305Aead implements IAead {
  * Rounds: *20*
  *
  * Specified in
- * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
- * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
+ * - [RFC8439 (2018)](https://datatracker.ietf.org/doc/html/rfc8439)
+ * - ~[RFC7539 (2015)](https://datatracker.ietf.org/doc/html/rfc7539)~
+ * 
+ * @example
+ * To encrypt a message `plainHex` 
+ * ```js
+ * import { hex } from 'gnablib/encoding/Hex.js';
+ * import { ChaCha20_Poly1305 } from 'gnablib/crypt/sym/ChaCha20_Poly1305';
+ * 
+ * //From RFC7539-Section 2.8.2
+ * const keyHex='808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F';
+ * const nonceHex='070000004041424344454647';
+ * const aadHex='50515253C0C1C2C3C4C5C6C7';
+ * const plainHex='4C616469657320616E642047656E746C656D656E206F662074686520636C6173'+
+ * 	'73206F66202739393A204966204920636F756C64206F6666657220796F75206F'+
+ *  '6E6C79206F6E652074697020666F7220746865206675747572652C2073756E7'+
+ * 	'3637265656E20776F756C642062652069742E';
+ * 
+ * const key=hex.toBytes(keyHex);
+ * const nonce=hex.toBytes(nonceHex);
+ * 
+ * const c=new ChaCha20_Poly1305(key, nonce);
+ * //Adding AAD is optional - you can skip this call if there's no data
+ * c.writeAD(hex.toBytes(aadHex));
+ * 
+ * const plain=hex.toBytes(plainHex);
+ * const enc=new Uint8Array(plain.length);
+ * 
+ * c.encryptInto(enc, plain);
+ * const tag=c.finalize();
+ * 
+ * console.log(`enc=${hex.fromBytes(enc)}`);// enc=D31A8D34648E60DB7B86AFBC53EF7E..
+ * console.log(`tag=${hex.fromBytes(tag)}`);// tag=1AE10B594F09E26A7E902ECBD0600691
+ * ```
  */
 export class ChaCha20_Poly1305 extends Poly1305Aead {
 	/**
@@ -446,16 +478,12 @@ export class ChaCha20_Poly1305 extends Poly1305Aead {
  * Key size: *32 bytes/256 bits*  
  * Nonce size: *12 bytes/96 bits*  
  * Rounds: *20*
- *
- * Specified in
- * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
- * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
  */
 export class Salsa20_Poly1305 extends Poly1305Aead {
 	/**
 	 * Construct a new Salsa20-Poly1305 AEAD state
 	 * @param key Secret key, in bytes, exactly 32 bytes
-	 * @param nonce Nonce, in bytes, exactly 12 bytes
+	 * @param nonce Nonce, in bytes, exactly 8 bytes
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, Salsa20);
@@ -474,10 +502,41 @@ export class Salsa20_Poly1305 extends Poly1305Aead {
  * Key size: *32 bytes/256 bits*  
  * Nonce size: *24 bytes/192 bits*  
  * Rounds: *20*
- *
- * Specified in
- * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
- * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
+ * 
+ * Specified in:
+ * - [IETF Draft (2018)](https://datatracker.ietf.org/doc/html/draft-arciszewski-xchacha)
+ * 
+ *  * @example
+ * To encrypt a message `plainHex` 
+ * ```js
+ * import { hex } from 'gnablib/encoding/Hex.js';
+ * import { XChaCha20_Poly1305 } from 'gnablib/crypt/sym/XChaCha20_Poly1305';
+ * 
+ * //From draft-arciszewski-xchacha Section A.1
+ * const keyHex='808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F';
+ * const nonceHex='404142434445464748494A4B4C4D4E4F5051525354555657';
+ * const aadHex='50515253C0C1C2C3C4C5C6C7';
+ * const plainHex='4C616469657320616E642047656E746C656D656E206F662074686520636C6173'+
+ * 	'73206F66202739393A204966204920636F756C64206F6666657220796F75206F'+
+ *  '6E6C79206F6E652074697020666F7220746865206675747572652C2073756E7'+
+ * 	'3637265656E20776F756C642062652069742E';
+ * 
+ * const key=hex.toBytes(keyHex);
+ * const nonce=hex.toBytes(nonceHex);
+ * 
+ * const c=new ChaCha20_Poly1305(key, nonce);
+ * //Adding AAD is optional - you can skip this call if there's no data
+ * c.writeAD(hex.toBytes(aadHex));
+ * 
+ * const plain=hex.toBytes(plainHex);
+ * const enc=new Uint8Array(plain.length);
+ * 
+ * c.encryptInto(enc, plain);
+ * const tag=c.finalize();
+ * 
+ * console.log(`enc=${hex.fromBytes(enc)}`);// enc=BD6D179D3E83D43B9576579493C0E9..
+ * console.log(`tag=${hex.fromBytes(tag)}`);// tag=C0875924C1C7987947DEAFD8780ACF49
+ * ```
  */
 export class XChaCha20_Poly1305 extends Poly1305Aead {
 	/**
@@ -502,10 +561,6 @@ export class XChaCha20_Poly1305 extends Poly1305Aead {
  * Key size: *32 bytes/256 bits*  
  * Nonce size: *24 bytes/192 bits*  
  * Rounds: *20*
- *
- * Specified in
- * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
- * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
  */
 export class XSalsa20_Poly1305 extends Poly1305Aead {
 	/**
