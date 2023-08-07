@@ -2,7 +2,8 @@
 
 import { IAead } from '../crypt/IAead.js';
 import { IFullCrypt } from '../crypt/IFullCrypt.js';
-import { ChaCha20 } from '../crypt/sym/ChaCha.js';
+import { ChaCha20, XChaCha20 } from '../crypt/sym/ChaCha.js';
+import { Salsa20, XSalsa20 } from '../crypt/sym/Salsa.js';
 import { asLE } from '../endian/platform.js';
 import { IHash } from '../hash/IHash.js';
 import { NotInRangeError } from '../primitive/ErrorExt.js';
@@ -414,7 +415,7 @@ class Poly1305Aead implements IAead {
  *
  * First Published: *2013*  
  * Blocksize: *64 bytes/512 bits*  
- * Key size: *16, 32 bytes/128, 256 bits*  
+ * Key size: *32 bytes/256 bits*  
  * Nonce size: *12 bytes/96 bits*  
  * Rounds: *20*
  *
@@ -430,5 +431,89 @@ export class ChaCha20_Poly1305 extends Poly1305Aead {
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, ChaCha20);
+	}
+}
+
+/**
+ * [Salsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305)
+ *
+ * Salsa20-Poly1305 is an authenticated encryption with additional data (AEAD)
+ * algorithm, that combines the Salsa20 stream cipher with the Poly1305 message
+ * authentication code.
+ *
+ * First Published: *2013*  
+ * Blocksize: *64 bytes/512 bits*  
+ * Key size: *32 bytes/256 bits*  
+ * Nonce size: *12 bytes/96 bits*  
+ * Rounds: *20*
+ *
+ * Specified in
+ * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
+ * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
+ */
+export class Salsa20_Poly1305 extends Poly1305Aead {
+	/**
+	 * Construct a new Salsa20-Poly1305 AEAD state
+	 * @param key Secret key, in bytes, exactly 32 bytes
+	 * @param nonce Nonce, in bytes, exactly 12 bytes
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array) {
+		super(key, nonce, Salsa20);
+	}
+}
+
+/**
+ * [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)
+ *
+ * XChaCha20-Poly1305 is an authenticated encryption with additional data (AEAD)
+ * algorithm, that combines the XChaCha20 stream cipher with the Poly1305 message
+ * authentication code.
+ *
+ * First Published: *2013*  
+ * Blocksize: *64 bytes/512 bits*  
+ * Key size: *32 bytes/256 bits*  
+ * Nonce size: *24 bytes/192 bits*  
+ * Rounds: *20*
+ *
+ * Specified in
+ * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
+ * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
+ */
+export class XChaCha20_Poly1305 extends Poly1305Aead {
+	/**
+	 * Construct a new XChaCha20-Poly1305 AEAD state
+	 * @param key Secret key, in bytes, exactly 32 bytes
+	 * @param nonce Nonce, in bytes, exactly 24 bytes
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array) {
+		super(key, nonce, XChaCha20);
+	}
+}
+
+/**
+ * [XSalsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)
+ *
+ * XSalsa20-Poly1305 is an authenticated encryption with additional data (AEAD)
+ * algorithm, that combines the XSalsa20 stream cipher with the Poly1305 message
+ * authentication code.
+ *
+ * First Published: *2013*  
+ * Blocksize: *64 bytes/512 bits*  
+ * Key size: *32 bytes/256 bits*  
+ * Nonce size: *24 bytes/192 bits*  
+ * Rounds: *20*
+ *
+ * Specified in
+ * - [RFC8439](https://datatracker.ietf.org/doc/html/rfc8439)
+ * - ~[RFC7539](https://datatracker.ietf.org/doc/html/rfc7539)~
+ */
+export class XSalsa20_Poly1305 extends Poly1305Aead {
+	/**
+	 * Construct a new XSalsa20-Poly1305 AEAD state
+	 * @param key Secret key, in bytes, exactly 32 bytes
+	 * @param nonce Nonce, in bytes, exactly 24 bytes
+	 */
+	constructor(key: Uint8Array, nonce: Uint8Array) {
+		super(key, nonce, XSalsa20);
 	}
 }

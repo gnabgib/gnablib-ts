@@ -86,14 +86,17 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 #### Symmetric
 
 - [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)
-- [Ascon-128, Ascon-128a, Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)
+- [Ascon-128, Ascon-128a, Ascon-80pq](https://ascon.iaik.tugraz.at/index.html) AEAD
 - [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
 - [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)
-- [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)
+- [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305) AEAD
 - [Salsa20](http://cr.yp.to/snuffle/spec.pdf)
+- [Salsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305) AEAD
 - [Twofish](https://www.schneier.com/academic/twofish/)
 - [XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)
+- [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant) AEAD
 - [XSalsa20](https://en.wikipedia.org/wiki/Salsa20#XSalsa20_with_192-bit_nonce)
+- [XSalsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305) AEAD
 
 
 ### Error Correction Codes

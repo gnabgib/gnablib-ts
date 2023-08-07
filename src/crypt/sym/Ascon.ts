@@ -222,7 +222,7 @@ class _AsconAead extends AAscon implements IAead {
 		while (dPos < data.length) this.state[this.sPos++] ^= data[dPos++];
 	}
 
-	private finalizeAssocData(): void {
+	private finalizeAD(): void {
 		if (this.#stage === stage_ad) {
 			//If we started writing AD we need to finish
 			//Append a 1
@@ -236,7 +236,7 @@ class _AsconAead extends AAscon implements IAead {
 	}
 
 	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
-		if (this.#stage < stage_data) this.finalizeAssocData();
+		if (this.#stage < stage_data) this.finalizeAD();
 		else if (this.#stage == stage_done)
 			throw new Error('Cannot encrypt data after finalization');
 		this.#stage = stage_data;
@@ -263,7 +263,7 @@ class _AsconAead extends AAscon implements IAead {
 	}
 
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
-		if (this.#stage < stage_data) this.finalizeAssocData();
+		if (this.#stage < stage_data) this.finalizeAD();
 		else if (this.#stage == stage_done)
 			throw new Error('Cannot decrypt data after finalization');
 		this.#stage = stage_data;
@@ -292,7 +292,7 @@ class _AsconAead extends AAscon implements IAead {
 
 	verify(tag: Uint8Array): boolean {
 		//End assoc writing
-		if (this.#stage < stage_data) this.finalizeAssocData();
+		if (this.#stage < stage_data) this.finalizeAD();
 		//End data writing
 		this.state[this.sPos] ^= 0x80;
 		this.#stage = stage_done;
@@ -313,7 +313,7 @@ class _AsconAead extends AAscon implements IAead {
 
 	finalize(): Uint8Array {
 		//End assoc writing
-		if (this.#stage < stage_data) this.finalizeAssocData();
+		if (this.#stage < stage_data) this.finalizeAD();
 		//End data writing
 		this.state[this.sPos++] ^= 0x80;
 		this.#stage = stage_done;
