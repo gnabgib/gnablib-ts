@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {lineBreak,whiteSpace,printable,asciiCased} from '../../src/primitive/Utf';
+import { utf } from '../../src/primitive';
 
 const tsts = suite('Utf');
 
@@ -19,7 +19,7 @@ const lineBreakTests:[number|string,boolean][]=[
 let count=0;
 for(const [ord,expect] of lineBreakTests) {
     tsts(`lineBreak[${count++}]`,()=>{
-        assert.is(lineBreak(ord),expect);
+        assert.is(utf.lineBreak(ord),expect);
     });
 }
 
@@ -38,7 +38,7 @@ const whiteSpaceTests:[number|string,boolean][]=[
 count=0;
 for(const [ord,expect] of whiteSpaceTests) {
     tsts(`whiteSpace[${count++}]`,()=>{
-        assert.is(whiteSpace(ord),expect);
+        assert.is(utf.whiteSpace(ord),expect);
     });
 }
 
@@ -54,7 +54,7 @@ const printableTests:[number|string,boolean][]=[
 count=0;
 for(const [ord,expect] of printableTests) {
     tsts(`printable[${count++}]`,()=>{
-        assert.is(printable(ord),expect);
+        assert.is(utf.printable(ord),expect);
     });
 }
 
@@ -70,7 +70,7 @@ const asciiCasedTests:[number|string,boolean][]=[
 count=0;
 for(const [ord,expect] of asciiCasedTests) {
     tsts(`asciiCased[${count++}]`,()=>{
-        assert.is(asciiCased(ord),expect);
+        assert.is(utf.asciiCased(ord),expect);
     });
 }
 

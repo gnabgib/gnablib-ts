@@ -9,9 +9,8 @@ import {
 	aztecData8,
 	aztecData10,
 	aztecData12,
-} from '../../src/ecc/ReedSolomon';
-import { utf8 } from '../../src/encoding/Utf8';
-import {hex} from '../../src/encoding/Hex';
+} from '../../src/ecc';
+import { hex, utf8 } from '../../src/codec';
 
 const tsts = suite('Reed-Solomon');
 

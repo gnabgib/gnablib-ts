@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { crc24 } from '../../src/checksum/crc24';
-import { utf8 } from '../../src/encoding/Utf8';
+import { crc24 } from '../../src/checksum';
+import { utf8 } from '../../src/codec';
 
 const tsts = suite('CRC24/RFC 4880');
 

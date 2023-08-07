@@ -20,6 +20,7 @@
  */
 
 import { EnforceTypeError } from './ErrorExt.js';
+import { IDurationComponents } from './interfaces/IDurationComponents.js';
 import { safety } from './Safety.js';
 import { stringExt } from './StringExt.js';
 
@@ -29,17 +30,6 @@ const microPerMin = secPerMin * microPerSec;
 const minPerHour = 60;
 // const hourPerDay = 24;
 const monPerYear = 12;
-// const approxDayPerMon = 30.5; //30.42, 30.5 leap
-
-export interface DurationComponents {
-	year: number; //float
-	month: number; //float
-	day: number; //float
-	hour: number; //int
-	minute: number; //int
-	second: number; //int
-	micro: number; //int
-}
 
 export class Duration {
 	private readonly ym: number;
@@ -220,7 +210,7 @@ export class Duration {
 		return m * 100 + this.secondMicro;
 	}
 
-	toDto(): DurationComponents {
+	toDto(): IDurationComponents {
 		const mo = this.month;
 		const y = (this.ym - mo) / monPerYear;
 		//Bring hmsu locally and shift it's scale as we harvest values
@@ -258,7 +248,7 @@ export class Duration {
 	 * @param d
 	 * @returns
 	 */
-	static fromDurationComponents(d: DurationComponents | Duration): Duration {
+	static fromDurationComponents(d: IDurationComponents | Duration): Duration {
 		if (d instanceof Duration) d = d.toDto();
 		return new Duration(
 			d.year,

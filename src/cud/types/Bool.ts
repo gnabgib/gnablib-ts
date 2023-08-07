@@ -4,9 +4,9 @@ import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
-import type { Valid } from './Valid.js';
+import type { IValid } from '../interfaces/IValid.js';
 
-export class Bool extends ACudColType implements Valid<boolean> {
+export class Bool extends ACudColType implements IValid<boolean> {
 	readonly mysqlType = 'tinyint(1)'; //boolean,bool map
 	readonly sqliteType = 'TINYINT'; //Integer affinity
 	readonly postgresType = 'boolean';

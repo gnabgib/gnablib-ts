@@ -1,8 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { yEnc } from '../../src/encoding/YEnc';
-import { utf8 } from '../../src/encoding/Utf8';
-import { hex } from '../../src/encoding/Hex';
+import { hex, utf8, yEnc } from '../../src/codec';
 
 const tsts = suite('yEnc');
 

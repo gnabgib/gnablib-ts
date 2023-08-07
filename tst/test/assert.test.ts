@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Assert, errorSetting} from '../../src/test/assert';
+import {Assert, errorSetting} from '../../src/test';
 
 const tsts = suite('Asset');
 

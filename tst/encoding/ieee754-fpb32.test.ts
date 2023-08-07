@@ -1,8 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/encoding/Hex';
-import { fpb32 } from '../../src/encoding/ieee754-fpb';
-import { U32 } from '../../src/primitive/U32';
+import { fpb32, hex } from '../../src/codec';
+import { U32 } from '../../src/primitive';
 
 const tsts = suite('IEEE754/Float32');
 

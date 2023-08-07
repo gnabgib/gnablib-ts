@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {adler32} from '../../src/checksum/adler';
-import { utf8 } from '../../src/encoding/Utf8';
+import {adler32} from '../../src/checksum';
+import { utf8 } from '../../src/codec';
 
 
 const tsts = suite('Adler/RFC 1950');

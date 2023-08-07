@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/encoding/Hex';
 import {
+	hex,
 	toDense2,
 	toDense2Unsafe,
 	toDense3,
@@ -10,7 +10,7 @@ import {
 	fromDense3,
 	toDense3Unsafe,
 	fromDense3Unsafe,
-} from '../../src/encoding/DenselyPackedDecimal';
+} from '../../src/codec';
 
 const tsts = suite('Densely packed decimal');
 

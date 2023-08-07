@@ -1,6 +1,8 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Cidr } from './Cidr.js';
+import { ICidrValue } from './interfaces/ICidrValue.js';
+import { IValueMerge } from './interfaces/IValueMerge.js';
 import { IpV4 } from './Ip.js';
 
 interface ITreeNode<T> {
@@ -66,8 +68,6 @@ class NoneNode<T> implements ITreeNode<T> {
 	}
 }
 
-export type valueMerge<T> = (value1: T, value2: T) => T;
-
 /**
  * A node (or fork) that represents two paths
  */
@@ -107,7 +107,7 @@ class TreeNode<T> implements ITreeNode<T> {
 		bit: number,
 		end: number,
 		value: T,
-		merge: valueMerge<T>
+		merge: IValueMerge<T>
 	): ITreeNode<T> {
 		//A tree is default empty (none node) and slowly filled with data.
 		// So a none node either stays or switches to all or normal nodes (forks /w left/right paths)
@@ -153,13 +153,11 @@ function pickFirst<T>(value1: T, value2: T): T {
 	return value1;
 }
 
-export type CidrValue<T> = { cidr: Cidr; value: T };
-
 export class IpTree<T> {
 	private _root: ITreeNode<T> = new NoneNode<T>();
-	private _merge: valueMerge<T>;
+	private _merge: IValueMerge<T>;
 
-	constructor(merge?: valueMerge<T>) {
+	constructor(merge?: IValueMerge<T>) {
 		this._merge = merge || pickFirst;
 	}
 
@@ -215,8 +213,8 @@ export class IpTree<T> {
 		return this._root.contains(ipv4.toInt(), 31);
 	}
 
-	listCidr(): CidrValue<T>[] {
-		const ret: CidrValue<T>[] = [];
+	listCidr(): ICidrValue<T>[] {
+		const ret: ICidrValue<T>[] = [];
 		this._root.output(0, 31, (p, b, v) =>
 			ret.push({ cidr: new Cidr(IpV4.fromInt(p), b), value: v })
 		);

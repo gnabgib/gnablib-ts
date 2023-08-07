@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/encoding/Hex';
-import { U64Mut,U64 } from '../../src/primitive/U64';
+import { hex } from '../../src/codec';
+import { U64Mut,U64 } from '../../src/primitive';
 
 const tsts = suite('U64Mut');
 

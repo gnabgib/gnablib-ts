@@ -1,8 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/encoding/Hex';
-import { fpb16 } from '../../src/encoding/ieee754-fpb';
-import { U16 } from '../../src/primitive/U16';
+import { fpb16,hex } from '../../src/codec';
+import { U16 } from '../../src/primitive';
 
 const tsts = suite('IEEE754/Float Binary16');
 

@@ -2,15 +2,17 @@
 
 import { nextPow2 } from '../algo/nextPow2.js';
 import {
-	IMatchDetail,
 	MatchFail,
-	IMatchResult,
 	MatchSuccess,
 } from '../primitive/MatchResult.js';
+import { IMatchResult } from "../primitive/interfaces/IMatchResult.js";
+import { IMatchDetail } from "../primitive/interfaces/IMatchDetail.js";
 import { safety } from '../primitive/Safety.js';
 import { stringExt } from '../primitive/StringExt.js';
-import { asciiCased, printable } from '../primitive/Utf.js';
+import { utf } from '../primitive/Utf.js';
 import type { WindowStr } from '../primitive/WindowStr.js';
+import { IBnf } from './interfaces/IBnf.js';
+import { IBnfRepeat } from './interfaces/IBnfRepeat.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 //Augmented Backus-Naur Form
@@ -20,45 +22,6 @@ const CONCAT_SEP = ' ';
 const CONCAT_SEP_HEX = '.';
 const ALT_SEP = ' / ';
 
-/**
- * BNF interface
- */
-export interface IBnf {
-	/**
-	 * Name of the component (default undefined)
-	 */
-	get name(): string | undefined;
-	/**
-	 * Whether non-printable characters are found within
-	 */
-	get nonPrintable(): boolean;
-	/**
-	 * Catching length, min/max
-	 */
-	get length(): [number, number];
-	/**
-	 * BNF syntax description of the rule
-	 * @param asHex
-	 */
-	descr(asHex: boolean): string;
-	/**
-	 * Test whether `s` contains this at the beginning
-	 * @param s
-	 */
-	atStartOf(s: WindowStr): IMatchResult;
-	/**
-	 * Casting to primitive type, debug
-	 */
-	[Symbol.toPrimitive](/*hint="string"/"number"/"default"*/): string;
-	/**
-	 * Node specific debug
-	 */
-	[consoleDebugSymbol](/*depth, options, inspect*/): unknown;
-}
-
-export interface IBnfRepeat extends IBnf {
-	get rule(): IBnf;
-}
 
 function bnfCharArrToStr(asHex: boolean, set: BnfChar[]): string {
 	return asHex
@@ -115,7 +78,7 @@ export class BnfChar implements IBnf {
 		ord: number,
 		caseInsensitive: boolean | undefined
 	): boolean | undefined {
-		if (asciiCased(ord)) {
+		if (utf.asciiCased(ord)) {
 			//default sensitive
 			if (caseInsensitive === undefined) return false;
 			return caseInsensitive;
@@ -124,7 +87,7 @@ export class BnfChar implements IBnf {
 	}
 
 	get nonPrintable(): boolean {
-		return !printable(this.ord);
+		return !utf.printable(this.ord);
 	}
 
 	get length(): [number, number] {

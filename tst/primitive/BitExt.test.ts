@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { bitExt, Carrier } from '../../src/primitive/BitExt';
+import { bitExt, Carrier } from '../../src/primitive';
 
 const tsts = suite('BitExt');
 

@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { uint8ArrayExt } from '../../src/primitive/UInt8ArrayExt';
-import { hex } from '../../src/encoding/Hex';
-import { Assert } from '../../src/test/assert';
+import { uint8ArrayExt } from '../../src/primitive';
+import { hex } from '../../src/codec';
+import { Assert } from '../../src/test';
 
 const tsts = suite('UInt8Array');
 

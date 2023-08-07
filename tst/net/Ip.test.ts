@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { IpV4 } from '../../src/net/Ip';
+import { IpV4 } from '../../src/net';
 
 const tsts = suite('IP/v4');
 

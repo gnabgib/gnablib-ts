@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { ascii85 } from '../../src/encoding/Ascii85';
-import { utf8 } from '../../src/encoding/Utf8';
+import { ascii85, utf8 } from '../../src/codec';
 
 const tsts = suite('Ascii85');
 

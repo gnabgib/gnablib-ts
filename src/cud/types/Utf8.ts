@@ -6,12 +6,12 @@ import {
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
-import type { Valid } from './Valid.js';
-import { utf8 } from '../../encoding/Utf8.js';
+import type { IValid } from '../interfaces/IValid.js';
+import { utf8 } from '../../codec/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { safety } from '../../primitive/Safety.js';
 
-abstract class AUtf8 extends ACudColType implements Valid<string> {
+abstract class AUtf8 extends ACudColType implements IValid<string> {
 	protected abstract get _lenBytes(): number;
 	protected abstract get _maxStrLen(): number;
 	//BLOB, TEXT types cannot have default values (MySQL)

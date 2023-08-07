@@ -2,8 +2,13 @@
 
 import { nextPow2 } from '../algo/nextPow2.js';
 import { NotEnoughSpaceError, NotSupportedError } from './ErrorExt.js';
+import { IReadTyped } from './interfaces/IReadTyped.js';
 import { intExt } from './IntExt.js';
-import type { IReadArray, IReadWriteArray } from './IRWArray.js';
+import type { IReadArray } from './interfaces/IReadArray.js';
+import type { IReadWriteArray } from './interfaces/IReadWriteArray.js';
+import { IWriteTyped } from './interfaces/IWriteTyped.js';
+import { IBufferer } from './interfaces/IBufferer.js';
+import { IBuildable } from './interfaces/IBuildable.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 // Because the interfaces, functions and SharedType<T> are not exported
@@ -17,82 +22,6 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const defaultCap = 4;
 const linearSwitch = 1024 * 1024;
 const emptyBuffer = new ArrayBuffer(0);
-
-/**
- * At build time we expect input: ArrayBuffer/offset/length, and to know how many bytes is required for storage
- * You can fool this by adhering to this interface
- */
-export interface IBuildable<T> {
-	new (buffer: ArrayBuffer, offset: number, length: number): T;
-	get BYTES_PER_ELEMENT(): number;
-}
-
-/**
- * Used to harvest the buffer from TypedArray implementations
- * You can fool this by adhering to this interface (providing a .buffer getter)
- * NAME: Uses go paradigm of feature +er
- */
-export interface IBufferer {
-	get buffer(): ArrayBuffer;
-}
-
-/**
- * The least we need out of a TypedArray for reading (mostly taken from MDN)
- */
-export interface IReadTyped<T> extends IBufferer {
-	[index: number]: number;
-	get BYTES_PER_ELEMENT(): number;
-	get byteLength(): number;
-	get byteOffset(): number;
-	get length(): number;
-	slice(start?: number | undefined, end?: number | undefined): T;
-	entries(): IterableIterator<[number, number]>;
-	every(
-		predicate: (value: number, index: number, array: T) => unknown,
-		thisArg?: unknown
-	): boolean;
-	filter(
-		predicate: (value: number, index: number, array: T) => unknown,
-		thisArg?: unknown
-	): T;
-	find(
-		predicate: (value: number, index: number, obj: T) => boolean,
-		thisArg?: unknown
-	): number | undefined;
-	findIndex(
-		predicate: (value: number, index: number, obj: T) => boolean,
-		thisArg?: unknown
-	): number;
-	forEach(
-		action: (value: number, index: number, array: T) => void,
-		thisArg?: unknown
-	): void;
-	includes(searchElement: number, fromIndex?: number | undefined): boolean;
-	indexOf(searchElement: number, fromIndex?: number | undefined): number;
-	join(separator: string): string;
-	keys(): IterableIterator<number>;
-	lastIndexOf(searchElement: number, fromIndex?: number | undefined): number;
-	map(
-		callbackfn: (value: number, index: number, array: T) => number,
-		thisArg?: unknown
-	): T;
-	some(
-		predicate: (value: number, index: number, array: T) => unknown,
-		thisArg?: unknown
-	): boolean;
-	values(): IterableIterator<number>;
-	[Symbol.iterator](): IterableIterator<number>;
-}
-
-/**
- * The least we need out of a TypedArray for reading+writing (mostly taken from MDN)
- */
-export interface IWriteTyped<T> extends IReadTyped<T> {
-	fill(value: number, start?: number | undefined, end?: number | undefined): T;
-	reverse(): T;
-	set(array: ArrayLike<number>, offset?: number | undefined): void;
-	sort(compareFn?: ((a: number, b: number) => number) | undefined): T;
-}
 
 /**
  * When <1MB use powers of 2 to allocate memory, after that use nearest 1MB alignment (that's larger)
@@ -475,7 +404,6 @@ class SharedTyped<T extends IReadTyped<T>> {
 	 * @returns
 	 */
 	toJSON(): unknown {
-		//console.log(this._view.values());
 		return Array.from(this._view.values());
 	}
 

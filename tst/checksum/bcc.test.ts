@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { bcc } from '../../src/checksum/bcc';
+import { bcc } from '../../src/checksum';
 
 const tsts = suite('BCC/RFC 914');
 

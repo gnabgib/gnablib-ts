@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { luhnInt, luhnStr } from '../../src/checksum/luhn';
+import { luhnInt, luhnStr } from '../../src/checksum';
 
 const tsts = suite('Luhn/ISO 7812');
 

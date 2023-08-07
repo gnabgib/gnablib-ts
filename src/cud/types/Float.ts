@@ -1,13 +1,13 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { fpb32,fpb64 } from '../../encoding/ieee754-fpb.js';
+import { fpb32,fpb64 } from '../../codec/ieee754-fpb.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
-import type { Valid } from './Valid.js';
+import type { IValid } from '../interfaces/IValid.js';
 
-abstract class AFloat extends ACudColType implements Valid<number> {
+abstract class AFloat extends ACudColType implements IValid<number> {
 	constructor(nullable = false) {
 		super(nullable);
 	}

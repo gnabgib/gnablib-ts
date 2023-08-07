@@ -1,28 +1,10 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
+import { IMatchResult } from "./interfaces/IMatchResult.js";
+import { IMatchDetail } from "./interfaces/IMatchDetail.js";
 import { StringBuilder } from "./StringBuilder.js";
 import type { WindowStr } from "./WindowStr.js";
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-
-export interface IMatchDetail {
-    name?:string;
-    value:WindowStr;
-    components?:IMatchDetail[];
-}
-export interface IMatchResult {
-    /**
-     * Successful match
-     */
-    get fail():boolean;
-    /**
-     * (optional) Remaining window
-     */
-    get remain():WindowStr|undefined;
-    /**
-     * (optional) Match detail
-     */
-    get result():IMatchDetail|undefined;
-}
 
 export class MatchSuccess implements IMatchResult {
     constructor(readonly remain:WindowStr,readonly result:IMatchDetail) {

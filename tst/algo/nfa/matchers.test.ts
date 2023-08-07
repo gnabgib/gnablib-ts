@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {  CharMatch, InsensitiveMatch, Nfa, RangeMatch } from '../../../src/algo/nfa/index.js';
+import {  CharMatch, InsensitiveMatch, RangeMatch } from '../../../src/algo';
 
 const tsts = suite('matchers');
 

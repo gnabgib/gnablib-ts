@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { MatchDetail, MatchSuccess } from '../../src/primitive/MatchResult';
-import { WindowStr } from '../../src/primitive/WindowStr';
+import { MatchDetail, MatchSuccess, WindowStr } from '../../src/primitive';
 
 const tsts = suite('MatchSuccess');
 

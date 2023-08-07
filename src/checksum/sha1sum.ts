@@ -1,6 +1,6 @@
 /*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
 
-import { Sha1 } from '../hash/Sha1.js';
+import { Sha1 } from '../crypto/hash/Sha1.js';
 
 /**
  * Same as SHA1

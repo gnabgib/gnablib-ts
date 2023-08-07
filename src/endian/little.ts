@@ -1,7 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Uint64 } from '../primitive/Uint64.js';
-import { fpb16, fpb32, fpb64 } from '../encoding/ieee754-fpb.js';
+import { fpb16, fpb32, fpb64 } from '../codec/ieee754-fpb.js';
 import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
 import { safety } from '../primitive/Safety.js';
 

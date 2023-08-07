@@ -1,9 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/encoding/Hex';
-import { ArrayBufferWindow } from '../../src/encoding/ArrayBufferWindow';
-import { Uint64 } from '../../src/primitive/Uint64';
-import { Int64 } from '../../src/primitive/Int64';
+import { ArrayBufferWindow, hex } from '../../src/codec';
+import { Int64, Uint64 } from '../../src/primitive';
 
 const tsts = suite('ArrayBufferWindow');
 //Let's make the test code a bit more readable

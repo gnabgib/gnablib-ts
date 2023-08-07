@@ -1,6 +1,6 @@
 /*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
 
-import { Md5 } from '../hash/Md5.js';
+import { Md5 } from '../crypto/hash/Md5.js';
 
 /**
  * Same as MD5

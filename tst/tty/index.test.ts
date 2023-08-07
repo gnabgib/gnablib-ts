@@ -1,7 +1,7 @@
 /* eslint-disable no-control-regex */
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Underline,Weight,LetterStyle,Blink,tty, reset, Color,demo, Ctrl, BgColor, Invert, Hide, StrikeThrough, Overline} from '../../src/tty/index';
+import {Underline,Weight,LetterStyle,Blink,tty, reset, Color,demo, Ctrl, BgColor, Invert, Hide, StrikeThrough, Overline} from '../../src/tty';
 
 
 const tsts = suite('TTY');

@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { StringBuilder } from '../../src/primitive/StringBuilder';
+import { StringBuilder } from '../../src/primitive';
 
 const tsts = suite('StringBuilder');
 

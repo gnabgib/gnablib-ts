@@ -1,8 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { IpV4 } from '../../src/net/Ip';
-import { Cidr } from '../../src/net/Cidr';
-import { CidrValue, IpTree } from '../../src/net/IpTree';
+import { Cidr, ICidrValue, IpTree, IpV4 } from '../../src/net';
 
 const tsts = suite('IpTree');
 
@@ -58,7 +56,7 @@ const rangeToList:[string,string,string[]][]=[
 ];
 for (const [st,en,expStr] of rangeToList) {
 	//Convert expected into a Cidr array
-	const exp: CidrValue<object>[] = [];
+	const exp: ICidrValue<object>[] = [];
 	for (const s of expStr) exp.push({ cidr: Cidr.fromString(s), value: {}});
 
 	tsts('rangeToList ' + st + '-' + en, () => {

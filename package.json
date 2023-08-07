@@ -14,17 +14,57 @@
 		"test:report": "npx c8 report --reporter=html",
 		"deeptest": "uvu -r tsm -i .log$ tst",
 		"prebuild": "rm -rf dist && rm -rf release",
-		"build": "tsc --sourceMap false",
+		"build": "tsc",
 		"compress": "compress",
-		"doc": "npx typedoc"
+		"doc": "npx typedoc",
+		"types":"tsc --outFile \"./dist/index.d.ts\" --emitDeclarationOnly true --isolatedModules false --declaration true"
 	},
 	"engines": {
 		"node": ">=15.3.0"
 	},
 	"exports": {
-		".": {
-			"types": "./release/*.d.ts",
-			"default": "./release/*.js"
+		"./abnf":{
+			"types":"./release/abnf/index.d.ts",
+			"default":"./release/abnf/index.js"
+		},
+		"./algo":{
+			"default":"./release/algo/index.js"
+		},
+		"./checksum":{
+			"default":"./release/checksum/index.js"
+		},
+		"./codec":{
+			"default":"./release/codec/index.js"
+		},
+		"./crypto":{
+			"default":"./release/crypto/index.js"
+		},
+		"./cud":{
+			"default":"./release/cud/index.js"
+		},
+		"./ecc":{
+			"default":"./release/ecc/index.js"
+		},
+		"./endian":{
+			"default":"./release/endian/index.js"
+		},
+		"./log":{
+			"default":"./release/log/index.js"
+		},
+		"./net":{
+			"default":"./release/net/index.js"
+		},
+		"./primitive":{
+			"default":"./release/primitive/index.js"
+		},
+		"./regexp":{
+			"default":"./release/regexp/index.js"
+		},
+		"./test":{
+			"default":"./release/test/index.js"
+		},
+		"./tty":{
+			"default":"./release/tty/index.js"
 		},
 		"./package.json": "./package.json"
 	},

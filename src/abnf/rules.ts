@@ -7,9 +7,9 @@ import {
 	BnfRange,
 	BnfRepeat,
 	BnfString,
-	IBnf,
-	IBnfRepeat,
 } from './bnf.js';
+import {IBnf} from './interfaces/IBnf.js'
+import {IBnfRepeat} from './interfaces/IBnfRepeat.js'
 
 //Augmented Backus-Naur Form
 //https://datatracker.ietf.org/doc/html/rfc5234

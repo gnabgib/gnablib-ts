@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import type { IStructuredLogger } from './IStructuredLogger.js';
+import type { IStructuredLogger } from './interfaces/IStructuredLogger.js';
 import type { LogEntry } from './LogEntry.js';
 
 export class LogConsole implements IStructuredLogger {

@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../encoding/Hex.js';
+import { hex } from '../codec/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
 import { safety } from './Safety.js';
 
@@ -263,7 +263,6 @@ export class U64 {
 	lRot(by: number): U64 {
 		const s = this.shift(by & rotMask64);
 		// [hh hl lh ll]
-		//console.log(hex.fromU32s(s,' '));
 		return new U64(Uint32Array.of(s[3] | s[1], s[2] | s[0]));
 	}
 

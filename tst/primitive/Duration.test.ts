@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Duration } from '../../src/primitive/Duration';
+import { Duration } from '../../src/primitive';
 
 const tsts = suite('Duration');
 

@@ -49,21 +49,50 @@ npm audit signatures
 - [Thomson NFA (1968)](https://dl.acm.org/doi/10.1145/363347.363387) solver
 
 
-### Checksum
+### Checksum/Hash
 
-- [adler32](https://datatracker.ietf.org/doc/html/rfc1950)
-- [Block check character](https://en.wikipedia.org/wiki/Block_check_character)
-- [cksum](https://en.wikipedia.org/wiki/Cksum)
-- [CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)
-- [CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)
-- [fletcher](http://www.zlib.net/maxino06_fletcher-adler.pdf) 16, 32, 64
-- [Longitudinal redundancy check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)
-- [Luhn](https://en.wikipedia.org/wiki/Luhn_algorithm)
-- [MD5Sum](https://en.wikipedia.org/wiki/Md5sum)
-- [SHA1Sum](https://en.wikipedia.org/wiki/Sha1sum)
+A checksum; can be used to prevent/identify accidental changes.  A hash; maps some data to another, often
+used for hash tables, or to speed up comparison.
+
+Name|Sum size bits|Optional parameters
+-------|----------------------|-------------------
+[adler32](https://datatracker.ietf.org/doc/html/rfc1950)|32|
+[Block check character](https://en.wikipedia.org/wiki/Block_check_character)|8|
+[cksum](https://en.wikipedia.org/wiki/Cksum)|32|
+[CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)|24|
+[CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)|32|
+[fletcher](http://www.zlib.net/maxino06_fletcher-adler.pdf)|16, 32, 64|
+[Longitudinal redundancy check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)|8|
+[Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed
+[Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|seed
+[Luhn](https://en.wikipedia.org/wiki/Luhn_algorithm)|3.5|
+[MD5Sum](https://en.wikipedia.org/wiki/Md5sum)|128|
+[Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed
+[SHA1Sum](https://en.wikipedia.org/wiki/Sha1sum)|160|
+[Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|seed
+[xxHash](https://cyan4973.github.io/xxHash/)|32, 64|seed
 
 
-### Crypt
+### Codec
+
+- [ASCII85](https://en.wikipedia.org/wiki/Ascii85)
+- [Base32, zBase32, Base32Hex](https://www.gnabgib.com/tools/base32/), [Crockford32](https://www.crockford.com/base32.html)
+- [Base64, Base64url, B64](https://www.gnabgib.com/tools/base64/)
+- [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
+- [Densely Packed Decimal](https://en.wikipedia.org/wiki/Densely_packed_decimal)
+- [Hex](https://en.wikipedia.org/wiki/Hexadecimal)
+- [IEEE754](https://en.wikipedia.org/wiki/IEEE_754) Binary
+- [Proquint](http://www.gnabgib.com/tools/proquint/)
+- [QuotedPrintable](https://datatracker.ietf.org/doc/html/rfc2045#section-6.7)
+- [ROT13, ROT13.5, ROT47 ](https://en.wikipedia.org/wiki/ROT13)
+- [URI](https://datatracker.ietf.org/doc/html/rfc3986#page-11)
+- [UTF8](https://datatracker.ietf.org/doc/html/rfc3629)
+- [uuencode](https://en.wikipedia.org/wiki/Uuencoding)
+- UUID
+- [YEnc](https://en.wikipedia.org/wiki/YEnc)
+
+
+### Crypto
 
 #### Block
 
@@ -73,7 +102,8 @@ npm audit signatures
 - [Electronic CodeBook (ECB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_codebook_(ECB))
 - [Output FeedBack (OFB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_feedback_(CFB))
 
-CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Niels_Ferguson) and [Bruce Schneier](https://www.schneier.com/blog/about/)
+CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Niels_Ferguson) and [Bruce Schneier](https://www.schneier.com/blog/about/). 
+ECB should not be used.
 
 #### Padding
 
@@ -85,55 +115,28 @@ CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Nie
 
 #### Symmetric
 
-- [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)
-- [Ascon-128, Ascon-128a, Ascon-80pq](https://ascon.iaik.tugraz.at/index.html) AEAD
-- [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
-- [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)
-- [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305) AEAD
-- [Salsa20](http://cr.yp.to/snuffle/spec.pdf)
-- [Salsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305) AEAD
-- [Twofish](https://www.schneier.com/academic/twofish/)
-- [XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)
-- [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant) AEAD
-- [XSalsa20](https://en.wikipedia.org/wiki/Salsa20#XSalsa20_with_192-bit_nonce)
-- [XSalsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305) AEAD
+Name|Block size|Key size|Nonce size|Features
+-|-|-|-|-
+[Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)|16|16, 24, 32|0|
+[Ascon-128](https://ascon.iaik.tugraz.at/index.html)|8|16|16|AEAD
+[Ascon-128a](https://ascon.iaik.tugraz.at/index.html)|16|16|16|AEAD
+[Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)|8|20|16|AEAD, Resistance to quantum adversary
+[Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)|8|4-56|0|
+[ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)|64|16, 32|12
+[ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)|64|32|12|AEAD
+[Salsa20](http://cr.yp.to/snuffle/spec.pdf)|64|16, 32|8
+[Salsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305)|64|32|12|AEAD
+[Twofish](https://www.schneier.com/academic/twofish/)|16|16, 24, 32|0|
+[XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)|64|32|24|
+[XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)|64|32|24|AEAD
+[XSalsa20](https://en.wikipedia.org/wiki/Salsa20#XSalsa20_with_192-bit_nonce)|64|16, 32|24|
+[XSalsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305)|64|32|24|AEAD
 
+#### Secure Hash
 
-### Error Correction Codes
-
-- [Reed Solomon](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction)
-
-
-### Encoding
-
-- [ASCII85](https://en.wikipedia.org/wiki/Ascii85)
-- [Base32, zBase32, Base32Hex](https://www.gnabgib.com/tools/base32/), [Crockford32](https://www.crockford.com/base32.html)
-- [Base64, Base64url, B64](https://www.gnabgib.com/tools/base64/)
-- [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
-- [Densely Packed Decimal](https://en.wikipedia.org/wiki/Densely_packed_decimal)
-- [Hex](https://en.wikipedia.org/wiki/Hexadecimal)
-- [IEEE754](https://en.wikipedia.org/wiki/IEEE_754)
-- [Proquint](http://www.gnabgib.com/tools/proquint/)
-- [QuotedPrintable](https://datatracker.ietf.org/doc/html/rfc2045#section-6.7)
-- [ROT13](https://en.wikipedia.org/wiki/ROT13)
-- ROT13.5
-- ROT47
-- [URI](https://datatracker.ietf.org/doc/html/rfc3986#page-11)
-- [UTF8](https://datatracker.ietf.org/doc/html/rfc3629)
-- [uuencode](https://en.wikipedia.org/wiki/Uuencoding), uudecode
-- UUID
-- [YEnc](https://en.wikipedia.org/wiki/YEnc)
-
-
-### Endian
-
-- [Big](https://en.wikipedia.org/wiki/Endianness)
-- Little
-
-
-### Hash & XOF
-
-#### Hash (Crypto)
+Cryptography hash functions that have the properties:
+- Finding an input string that matches a hash value (*pre-image*) is hard
+- Finding a pair of messages that generate the same hash value (*collision*) is hard
 
 Name|Digest sizes|Optional parameters
 -------|----------------------|-------------------
@@ -154,7 +157,28 @@ Name|Digest sizes|Optional parameters
 
 † No longer considered cryptographically safe
 
-#### XOF
+#### Key Derivation Function (KDF)
+
+A cryptographic algorithm that derives one or more secret keys from a secret value.  Can be used to stretch keys (make them longer), or obtain a key in a particular format (eg making a key a fixed length)
+
+- [HKDF](https://en.wikipedia.org/wiki/HKDF)
+- [PBKDF2](https://www.rfc-editor.org/rfc/rfc8018#section-5.2) pbkdf2_hmac_sha1, pbkdf2_hmac_sha256, pbkdf2_hmac_sha512
+
+#### Message Authentication Code (MAC)
+
+Also known as an authentication tag, a short piece of information to authenticate a message.  Protect integrity, and authenticity.
+
+Name|Tag Size
+-|-
+[CMAC](https://datatracker.ietf.org/doc/rfc4493/)|16 (AES)
+[HMAC](https://en.wikipedia.org/wiki/HMAC)|Depends on hash (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
+[HopMAC](https://www.ietf.org/archive/id/draft-irtf-cfrg-kangarootwelve-10.html#name-security-considerations)|16 (Kangaroo Twelve)
+[KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32 (Keccak)
+[Poly1305](https://datatracker.ietf.org/doc/html/rfc7539#autoid-14)|16
+
+#### EXtendable-Output Function (XOF)
+
+A secure hash that can produce output of any desired length.
 
 Name|Capacities|Optional parameters
 -------|-----------|-------------------
@@ -167,35 +191,21 @@ Name|Capacities|Optional parameters
 [TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, customization
 [TurboSHAKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|128, 256|digest size, customization
 
-#### Hash (Non-Crypto)
 
-Name|Digest sizes|Optional parameters
--------|----------------------|-------------------
-[Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed
-[Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|seed
-[Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed
-[Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|seed
-[xxHash](https://cyan4973.github.io/xxHash/)|32, 64|seed
+### Error Correction Codes
+
+- [Reed Solomon](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction)
+
+
+### Endian
+
+- [Big](https://en.wikipedia.org/wiki/Endianness)
+- Little
 
 
 ### Log
 
 - Structured logging
-
-
-### KDF
-
-- [HKDF](https://en.wikipedia.org/wiki/HKDF)
-- [PBKDF2](https://www.rfc-editor.org/rfc/rfc8018#section-5.2) pbkdf2_hmac_sha1, pbkdf2_hmac_sha256, pbkdf2_hmac_sha512
-
-
-### MAC
-
-- [CMAC](https://datatracker.ietf.org/doc/rfc4493/) (128 From AES)
-- [HMAC](https://en.wikipedia.org/wiki/HMAC) (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
-- [HopMAC](https://www.ietf.org/archive/id/draft-irtf-cfrg-kangarootwelve-10.html#name-security-considerations) (128 From Kangaroo Twelve)
-- [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (128, 256 from Keccak)
-- [Poly1305](https://datatracker.ietf.org/doc/html/rfc7539#autoid-14)
 
 
 ### Net
@@ -231,6 +241,11 @@ Name|Digest sizes|Optional parameters
 - Uint8Array
 
 
+### RegExp
+
+- RegExp escape string
+
+
 ### TTY
 
 - Foreground, background color (8 color, 213 color, 16M colors)
@@ -238,9 +253,6 @@ Name|Digest sizes|Optional parameters
 - Terminal controls (cursor move, screen/line clear)
 
 
-### Misc
-
-- RegExp escape string
 
 <!--
 ## Development
@@ -251,7 +263,7 @@ Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runn
 npm test 
 ```
 
-Content will be output into `/dist/**`
+Content will be output into `/dist/**` and then compressed into `/release/**`
 
 ```bash
 npm run build
@@ -267,6 +279,13 @@ Review code coverage
 ```bash
 npm run test:coverage
 ```
+
+Currently excluded from build (from package.json):
+- Since it's not complete, let's skip publishing Create-Update-Delete (CUD) features
+		"./cud":{
+			"default":"./release/cud/index.js"
+		},
+
 
 Resume after checkout
 ```bash

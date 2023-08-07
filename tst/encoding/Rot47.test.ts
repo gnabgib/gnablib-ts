@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
-import * as assert from 'uvu/assert';
-import { shift } from '../../src/encoding/Rot47';
-import { utf8 } from '../../src/encoding/Utf8';
+import * as assert from 'uvu/assert'
+import { rot47, utf8 } from '../../src/codec';
 
 //https://www.boxentriq.com/code-breaking/rot13 (13+13.5+47)
 
@@ -35,14 +34,14 @@ const encodePairs = [
 for (const pair of encodePairs) {
 	tsts('Encode:' + pair[0], () => {
 		const b = utf8.toBytes(pair[0]);
-		const enc = shift(b);
+		const enc = rot47(b);
 		const encUtf8 = utf8.fromBytes(enc);
 		assert.is(encUtf8, pair[1]);
 	});
 
 	tsts('Decode:' + pair[1], () => {
 		const b = utf8.toBytes(pair[1]);
-		const enc = shift(b);
+		const enc = rot47(b);
 		const decUtf8 = utf8.fromBytes(enc);
 		assert.is(decUtf8, pair[0]);
 	});

@@ -1,7 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { safety } from './Safety.js';
-import { hex } from '../encoding/Hex.js';
+import { hex } from '../codec/Hex.js';
 import {
 	EnforceTypeError,
 	NegativeError,

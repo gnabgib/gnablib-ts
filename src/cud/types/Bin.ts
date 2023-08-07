@@ -6,7 +6,7 @@ import {
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
-import type { Valid } from './Valid.js';
+import type { IValid } from '../interfaces/IValid.js';
 import { safety } from '../../primitive/Safety.js';
 
 const len1Byte = 255;
@@ -14,7 +14,7 @@ const len2Byte = 65536; //65k
 const len3Byte = 16777216; //16M
 const len4Byte = 1000000000; //1G - both Postgres and SQLite have this constraint
 
-abstract class ABin extends ACudColType implements Valid<Uint8Array> {
+abstract class ABin extends ACudColType implements IValid<Uint8Array> {
 	//BLOB, TEXT types cannot have default values (MySQL)
 	readonly sqliteType = 'BLOB'; //Blob affinity
 	readonly postgresType = 'bytea';

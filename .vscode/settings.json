@@ -4,11 +4,13 @@
         "ciphertext",
         "circulant",
         "codebook",
+        "descr",
         "Feistel",
         "gnabgib",
         "gnablib",
         "keccak",
         "proquint",
+        "tsts",
         "unpad"
     ]
 }

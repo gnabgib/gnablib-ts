@@ -1,126 +1,135 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/encoding/Hex';
-import { asBE, asE, asLE, isLE } from '../../src/endian/platform';
+import { hex } from '../../src/codec';
+import { asBE, asE, asLE, isLE } from '../../src/endian';
 
 const tsts = suite('Platform');
 
-const u16tests:[string,number,number,string][]=[
-    ['0102',0,1,'0201'],
-    ['01020304',0,1,'02010304'],
-    ['01020304',0,2,'02010403'],
+const u16tests: [string, number, number, string][] = [
+	['0102', 0, 1, '0201'],
+	['01020304', 0, 1, '02010304'],
+	['01020304', 0, 2, '02010403'],
 ];
-for(const [src,pos,count,invert] of u16tests) {
-    tsts(`asLE.i16(${src},${pos},${count})`,()=>{
-        const s=hex.toBytes(src);
-        asLE.i16(s,pos,count);
-        if (isLE) {
-            assert.is(hex.fromBytes(s),src);
-        } else {
-            assert.is(hex.fromBytes(s),invert);
-        }
-    });
+for (const [src, pos, count, invert] of u16tests) {
+	tsts(`asLE.i16(${src},${pos},${count})`, () => {
+		const s = hex.toBytes(src);
+		asLE.i16(s, pos, count);
+		if (isLE) {
+			assert.is(hex.fromBytes(s), src);
+		} else {
+			assert.is(hex.fromBytes(s), invert);
+		}
+	});
 }
-for(const [src,pos,count,invert] of u16tests) {
-    tsts(`asBE.i16(${src},${pos},${count})`,()=>{
-        const s=hex.toBytes(src);
-        //const inv=hex.toBytes(invert);
-        asBE.i16(s,pos,count);
-        if (isLE) {
-            assert.is(hex.fromBytes(s),invert);            
-        } else {
-            assert.is(hex.fromBytes(s),src);
-        }
-    });
+for (const [src, pos, count, invert] of u16tests) {
+	tsts(`asBE.i16(${src},${pos},${count})`, () => {
+		const s = hex.toBytes(src);
+		//const inv=hex.toBytes(invert);
+		asBE.i16(s, pos, count);
+		if (isLE) {
+			assert.is(hex.fromBytes(s), invert);
+		} else {
+			assert.is(hex.fromBytes(s), src);
+		}
+	});
 }
 
-const u32tests:[string,number,number,string][]=[
-    ['01020304',0,1,'04030201'],
-    ['0102030405060708',0,1,'0403020105060708'],
-    ['0102030405060708',0,2,'0403020108070605'],
+const u32tests: [string, number, number, string][] = [
+	['01020304', 0, 1, '04030201'],
+	['0102030405060708', 0, 1, '0403020105060708'],
+	['0102030405060708', 0, 2, '0403020108070605'],
 ];
-for(const [src,pos,count,invert] of u32tests) {
-    tsts(`asLE.i32(${src},${pos},${count})`,()=>{
-        const s=hex.toBytes(src);
-        asLE.i32(s,pos,count);
-        if (isLE) {
-            assert.is(hex.fromBytes(s),src);
-        } else {
-            assert.is(hex.fromBytes(s),invert);
-        }
-    });
+for (const [src, pos, count, invert] of u32tests) {
+	tsts(`asLE.i32(${src},${pos},${count})`, () => {
+		const s = hex.toBytes(src);
+		asLE.i32(s, pos, count);
+		if (isLE) {
+			assert.is(hex.fromBytes(s), src);
+		} else {
+			assert.is(hex.fromBytes(s), invert);
+		}
+	});
 }
-for(const [src,pos,count,invert] of u32tests) {
-    tsts(`asBE.i32(${src},${pos},${count})`,()=>{
-        const s=hex.toBytes(src);
-        //const inv=hex.toBytes(invert);
-        asBE.i32(s,pos,count);
-        if (isLE) {
-            assert.is(hex.fromBytes(s),invert);            
-        } else {
-            assert.is(hex.fromBytes(s),src);
-        }
-    });
+for (const [src, pos, count, invert] of u32tests) {
+	tsts(`asBE.i32(${src},${pos},${count})`, () => {
+		const s = hex.toBytes(src);
+		//const inv=hex.toBytes(invert);
+		asBE.i32(s, pos, count);
+		if (isLE) {
+			assert.is(hex.fromBytes(s), invert);
+		} else {
+			assert.is(hex.fromBytes(s), src);
+		}
+	});
 }
 
-const u64tests:[string,number,number,string][]=[
-    ['0102030405060708',0,1,'0807060504030201'],
-    ['000102030405060708090A0B0C0D0E0F',0,1,'070605040302010008090A0B0C0D0E0F'],
-    ['000102030405060708090A0B0C0D0E0F',0,2,'07060504030201000F0E0D0C0B0A0908'],
+const u64tests: [string, number, number, string][] = [
+	['0102030405060708', 0, 1, '0807060504030201'],
+	[
+		'000102030405060708090A0B0C0D0E0F',
+		0,
+		1,
+		'070605040302010008090A0B0C0D0E0F',
+	],
+	[
+		'000102030405060708090A0B0C0D0E0F',
+		0,
+		2,
+		'07060504030201000F0E0D0C0B0A0908',
+	],
 ];
-for(const [src,pos,count,invert] of u64tests) {
-    tsts(`asLE.i64(${src},${pos},${count})`,()=>{
-        const s=hex.toBytes(src);
-        asLE.i64(s,pos,count);
-        if (isLE) {
-            assert.is(hex.fromBytes(s),src);
-        } else {
-            assert.is(hex.fromBytes(s),invert);
-        }
-    });
+for (const [src, pos, count, invert] of u64tests) {
+	tsts(`asLE.i64(${src},${pos},${count})`, () => {
+		const s = hex.toBytes(src);
+		asLE.i64(s, pos, count);
+		if (isLE) {
+			assert.is(hex.fromBytes(s), src);
+		} else {
+			assert.is(hex.fromBytes(s), invert);
+		}
+	});
 }
-for(const [src,pos,count,invert] of u64tests) {
-    tsts(`asBE.i64(${src},${pos},${count})`,()=>{
-        const s=hex.toBytes(src);
-        //const inv=hex.toBytes(invert);
-        asBE.i64(s,pos,count);
-        if (isLE) {
-            assert.is(hex.fromBytes(s),invert);            
-        } else {
-            assert.is(hex.fromBytes(s),src);
-        }
-    });
+for (const [src, pos, count, invert] of u64tests) {
+	tsts(`asBE.i64(${src},${pos},${count})`, () => {
+		const s = hex.toBytes(src);
+		//const inv=hex.toBytes(invert);
+		asBE.i64(s, pos, count);
+		if (isLE) {
+			assert.is(hex.fromBytes(s), invert);
+		} else {
+			assert.is(hex.fromBytes(s), src);
+		}
+	});
 }
 
-const set32Tests:[string,number,number,number,number,number,number][]=[
-    ['00000000',4,3,2,1,0x04030201,0x01020304],
+const set32Tests: [string, number, number, number, number, number, number][] = [
+	['00000000', 4, 3, 2, 1, 0x04030201, 0x01020304],
 ];
-for(const [start,b0,b1,b2,b3,expectBE,expectLE] of set32Tests) {
-    tsts(`asBE.set32(${start})`,()=>{
-        const s=hex.toBytes(start);
-        const s32=new Uint32Array(s.buffer);
-            
-        asBE.set32(s,0,b0,b1,b2,b3);
-        assert.is(s32[0],expectBE);
-    })
-    tsts(`asLE.set32(${start})`,()=>{
-        const s=hex.toBytes(start);
-        const s32=new Uint32Array(s.buffer);
-    
-        asLE.set32(s,0,b0,b1,b2,b3);
-        assert.is(s32[0],expectLE);
-    })
+for (const [start, b0, b1, b2, b3, expectBE, expectLE] of set32Tests) {
+	tsts(`asBE.set32(${start})`, () => {
+		const s = hex.toBytes(start);
+		const s32 = new Uint32Array(s.buffer);
+
+		asBE.set32(s, 0, b0, b1, b2, b3);
+		assert.is(s32[0], expectBE);
+	});
+	tsts(`asLE.set32(${start})`, () => {
+		const s = hex.toBytes(start);
+		const s32 = new Uint32Array(s.buffer);
+
+		asLE.set32(s, 0, b0, b1, b2, b3);
+		assert.is(s32[0], expectLE);
+	});
 }
 
-
-tsts('asB',()=>{
-    const src='0102';
-    const inv='0201';
-    const s=hex.toBytes(src);
-    asE(!isLE).i16(s);
-    assert.is(hex.fromBytes(s),src);
-    asE(isLE).i16(s);
-    assert.is(hex.fromBytes(s),inv);
+tsts('asB', () => {
+	const src = '0102';
+	const inv = '0201';
+	const s = hex.toBytes(src);
+	asE(!isLE).i16(s);
+	assert.is(hex.fromBytes(s), src);
+	asE(isLE).i16(s);
+	assert.is(hex.fromBytes(s), inv);
 });
 
 // //We write in big endian

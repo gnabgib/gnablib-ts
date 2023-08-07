@@ -1,15 +1,15 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import type { PostgresType } from './PostgresType.js';
-import type { SqliteType } from './SqliteType.js';
-import type { MysqlType } from './MysqlType.js';
+import type { IPostgresType } from '../interfaces/IPostgresType.js';
+import type { ISqliteType } from '../interfaces/ISqliteType.js';
+import type { IMysqlType } from '../interfaces/IMysqlType.js';
 import type { ColType } from './ColType.js';
 import type { FromBinResult } from '../../primitive/FromBinResult.js';
 
 const nullMarker = 0x80;
 
 export abstract class ACudColType
-	implements MysqlType, PostgresType, SqliteType
+	implements IMysqlType, IPostgresType, ISqliteType
 {
 	public readonly nullable: boolean;
 

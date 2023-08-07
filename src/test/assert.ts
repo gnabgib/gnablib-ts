@@ -1,11 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../encoding/Hex.js';
-
-export type errorSetting = {
-	percent?: number;
-	amount?: number;
-};
+import { hex } from '../codec/index.js';
+import { errorSetting } from './interfaces/errorSetting.js';
 
 // // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // function errStr(s: errorSetting): string {

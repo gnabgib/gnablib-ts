@@ -1,8 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { DateTime } from '../../src/primitive/DateTime';
-import { hex } from '../../src/encoding/Hex';
-import { U64 } from '../../src/primitive/U64';
+import { DateTime, U64 } from '../../src/primitive';
+import { hex } from '../../src/codec';
 
 const tsts = suite('DateTime');
 

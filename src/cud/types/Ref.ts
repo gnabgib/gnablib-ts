@@ -7,7 +7,7 @@ import {
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
-import type { Valid } from './Valid.js';
+import type { IValid } from '../interfaces/IValid.js';
 import { Int64 } from '../../primitive/Int64.js';
 import { TableName } from '../TableName.js';
 import { ColName } from '../ColName.js';
@@ -17,7 +17,7 @@ import { safety } from '../../primitive/Safety.js';
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = new Int64(0, 0);
 
-abstract class ARef extends ACudColType implements Valid<number | Int64> {
+abstract class ARef extends ACudColType implements IValid<number | Int64> {
 	protected abstract get _maxByteLen(): number;
 	protected abstract get _max64(): Int64;
 	protected abstract get _cudPrefix(): string;

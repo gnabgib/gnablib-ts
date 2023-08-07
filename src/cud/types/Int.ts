@@ -8,13 +8,13 @@ import {
 } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
-import type { Valid } from './Valid.js';
+import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { safety } from '../../primitive/Safety.js';
 
 //sql engines keep everything signed
 
-abstract class AInt extends ACudColType implements Valid<number | Int64> {
+abstract class AInt extends ACudColType implements IValid<number | Int64> {
 	protected abstract get _maxByteLen(): number;
 	protected abstract get _min64(): Int64;
 	protected abstract get _max64(): Int64;

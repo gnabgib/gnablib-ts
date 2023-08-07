@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { lrc } from '../../src/checksum/lrc';
+import { lrc } from '../../src/checksum';
 
 const tsts = suite('LRC/ISO 1155, RFC 935');
 

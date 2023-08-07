@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { shift } from '../../src/encoding/Rot13';
-import { utf8 } from '../../src/encoding/Utf8';
+import { rot13, utf8 } from '../../src/codec';
 
 const tsts = suite('ROT13');
 
@@ -32,14 +31,14 @@ const encodePairs = [
 for (const pair of encodePairs) {
 	tsts('Encode:' + pair[0], () => {
 		const b = utf8.toBytes(pair[0]);
-		const enc = shift(b);
+		const enc = rot13(b);
 		const encUtf8 = utf8.fromBytes(enc);
 		assert.is(encUtf8, pair[1]);
 	});
 
 	tsts('Decode:' + pair[1], () => {
 		const b = utf8.toBytes(pair[1]);
-		const enc = shift(b);
+		const enc = rot13(b);
 		const decUtf8 = utf8.fromBytes(enc);
 		assert.is(decUtf8, pair[0]);
 	});

@@ -1,8 +1,10 @@
 import { suite } from 'uvu';
-import wtRnd from '../../src/algo/WeightRand';
-import {Assert} from '../../src/test/assert';
+import { RandTk } from '../../src/algo';
+import { Assert } from '../../src/test';
 
-const tsts = suite('WeightRand');
+const tsts = suite('RandTk.Weighted');
+
+const rand = new RandTk(Math.random);
 
 const relativeSet: { wts: number[]; ss: number }[] = [
 	//Pointless (equal values, just random)
@@ -26,7 +28,7 @@ for (const set of relativeSet) {
 	tsts(`wtRnd.relative([${wts}] =${wtMax}) *${sampleSize}:`, () => {
 		const counts = new Uint32Array(wtCount);
 		for (let i = 0; i < sampleSize; i++) {
-			const n = wtRnd.relative(wts, Math.random);
+			const n = rand.weightedRelative(wts);
 			Assert.inClosedOpen(n, 0, wtCount);
 			counts[n]++;
 		}
@@ -34,7 +36,12 @@ for (const set of relativeSet) {
 		//Assert sample reasonable
 		for (let i = 0; i < wtCount; i++) {
 			//2.5% error margin
-            Assert.equalish(counts[i],(wts[i] / wtMax) * sampleSize,{percent:2.5},`wt[${i}]`)
+			Assert.equalish(
+				counts[i],
+				(wts[i] / wtMax) * sampleSize,
+				{ percent: 2.5 },
+				`wt[${i}]`
+			);
 			//assertEqualish(counts[i], (wts[i] / wtMax) * sampleSize, 2.5, `wt[${i}]`);
 		}
 	});
@@ -54,7 +61,7 @@ for (const set of cumulativeSet) {
 	tsts(`wtRnd.cumulative([${wts}]) *${sampleSize}:`, () => {
 		const counts = new Uint32Array(wtCount);
 		for (let i = 0; i < sampleSize; i++) {
-			const n = wtRnd.cumulative(wts, Math.random);
+			const n = rand.weightedCumulative(wts);
 			Assert.inClosedOpen(n, 0, wtCount);
 			counts[n]++;
 		}
@@ -66,7 +73,7 @@ for (const set of cumulativeSet) {
 			Assert.equalish(
 				counts[i],
 				((wts[i] - pastWt) / wtMax) * sampleSize,
-				{percent:2.5},
+				{ percent: 2.5 },
 				`wt[${i}]`
 			);
 			pastWt = wts[i];

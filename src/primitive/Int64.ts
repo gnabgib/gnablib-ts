@@ -1,7 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { safety } from './Safety.js';
-import { hex } from '../encoding/Hex.js';
+import { hex } from '../codec/Hex.js';
 import { EnforceTypeError, NotSupportedError } from './ErrorExt.js';
 
 const maxU32 = 0xffffffff;
@@ -244,34 +244,22 @@ export class Int64 {
 	gt(other: Int64): boolean {
 		//When one is negative, there's a clear winner (no compare required)
 		if (this.negative && !other.negative) {
-			// if (this.toBigInt()>=other.toBigInt())
-			//     console.log(`? ${this.toString()}>${other.toString()}=f`);
 			return false;
 		}
 		if (!this.negative && other.negative) {
-			// if (this.toBigInt()<=other.toBigInt())
-			//     console.log(`? ${this.toString()}>${other.toString()}=t`);
 			return true;
 		}
 		//Compare high
 		if (this.highU32 > other.highU32) {
-			// if (this.toBigInt()<=other.toBigInt())
-			//     console.log(`? ${this.toString()}>${other.toString()}=t`);
 			return true;
 		}
 		if (this.highU32 < other.highU32) {
-			// if (this.toBigInt()>=other.toBigInt())
-			//     console.log(`? ${this.toString()}>${other.toString()}=f`);
 			return false;
 		}
 		//If high matches, compare low
 		if (this.lowU32 > other.lowU32) {
-			// if (this.toBigInt() <= other.toBigInt())
-			// 	console.log(`4? ${this.toString()}>${other.toString()}=t`);
 			return true;
 		}
-		// if (this.toBigInt() > other.toBigInt())
-		// 	console.log(`5? ${this.toString()}>${other.toString()}=f`);
 		return false;
 		//return this.lowI32 > other.lowI32;
 	}

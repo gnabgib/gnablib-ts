@@ -2,8 +2,8 @@
 
 import { DateTime } from '../primitive/DateTime.js';
 import { intExt } from '../primitive/IntExt.js';
-import { utf8 } from '../encoding/Utf8.js';
-import { fpb64 } from '../encoding/ieee754-fpb.js';
+import { utf8 } from '../codec/Utf8.js';
+import { fpb64 } from '../codec/ieee754-fpb.js';
 import { Uint64 } from '../primitive/Uint64.js';
 import { intToMinBytes, uintToMinBytes } from '../endian/big.js';
 import { Int64 } from '../primitive/Int64.js';

@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../encoding/Hex.js';
+import { hex } from '../codec/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
 import { safety } from './Safety.js';
 

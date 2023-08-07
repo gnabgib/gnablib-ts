@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/encoding/Hex';
-import { intExt } from '../../src/primitive/IntExt';
+import { hex } from '../../src/codec';
+import { intExt } from '../../src/primitive';
 
 const tsts = suite('IntExt');
 

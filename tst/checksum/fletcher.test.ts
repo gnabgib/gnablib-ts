@@ -4,9 +4,8 @@ import {
 	fletcher16,
 	fletcher32,
 	fletcher64,
-} from '../../src/checksum/fletcher';
-import { utf8 } from '../../src/encoding/Utf8';
-import { hex } from '../../src/encoding/Hex';
+} from '../../src/checksum';
+import { hex, utf8 } from '../../src/codec';
 
 const tsts = suite('Fletcher/RFC 1146');
 

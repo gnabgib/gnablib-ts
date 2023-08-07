@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { stringExt } from '../../src/primitive/StringExt';
+import { stringExt } from '../../src/primitive';
 
 const tsts = suite('StringExt');
 

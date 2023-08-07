@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive/WindowStr.js';
-import { InsensitiveMatch, CharMatch, Nfa } from '../../src/algo/nfa/index.js';
+import { WindowStr } from '../../src/primitive';
+import { InsensitiveMatch, CharMatch, Nfa } from '../../src/algo';
 
 const tsts = suite('Thompson NFA');
 

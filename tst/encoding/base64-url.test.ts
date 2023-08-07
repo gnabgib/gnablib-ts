@@ -1,8 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { base64url } from '../../src/encoding/Base64';
-import { utf8 } from '../../src/encoding/Utf8';
-import { hex } from '../../src/encoding/Hex';
+import { base64url, hex, utf8 } from '../../src/codec';
 
 const tsts = suite('Base64url/RFC 4648');
 

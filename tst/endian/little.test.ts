@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import * as littleEndian from '../../src/endian/little';
-import {hex } from '../../src/encoding/Hex';
+import { littleEndian } from '../../src/endian';
+import { hex } from '../../src/codec';
 
 const tsts = suite('Little endian encoding');
 
@@ -23,7 +23,6 @@ const u32Pairs = [
 
 for (const pair of u32Pairs) {
 	const h = hex.fromBytes(new Uint8Array(pair[0] as number[]));
-
 
 	tsts('u32 as bytes:' + h, () => {
 		const b = littleEndian.u32ToBytes(pair[1] as number);

@@ -1,7 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { LogLevel } from './LogLevel.js';
-import type { IStructuredLogger } from './IStructuredLogger.js';
+import type { IStructuredLogger } from './interfaces/IStructuredLogger.js';
 import { LogEntry } from './LogEntry.js';
 import { LogConsole } from './LogConsole.js';
 import { safety } from '../primitive/Safety.js';

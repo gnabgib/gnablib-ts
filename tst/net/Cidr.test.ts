@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { IpV4 } from '../../src/net/Ip';
-import { Cidr } from '../../src/net/Cidr';
+import { Cidr, IpV4 } from '../../src/net';
 
 const tsts = suite('CIDR');
 
@@ -20,7 +19,7 @@ const cidrs:[number[],number,string,string,boolean,string,number][] =[
     [[128,0,0,0],31,    '128.0.0.0',    '128.0.0.1',        true,  '128.0.0.0/31',     2],
 ]
 
-for (const [ip,mask,start,end,normal,str,count] of cidrs) {
+for (const [ip, mask, start, end, normal, str, count] of cidrs) {
 	const ipAddr = new IpV4(Uint8Array.from(ip));
 	const cidr = new Cidr(ipAddr, mask);
 
@@ -54,7 +53,7 @@ for (const [ip,mask,start,end,normal,str,count] of cidrs) {
 	});
 }
 
-const badParse:string[] = [
+const badParse: string[] = [
 	'1.1.1.1/33', //Bad mask
 	'1000.1.1.1/24', //Bad IP (quad part)
 	'1.1.1/24', //Bad IP (quad count)
@@ -70,14 +69,14 @@ for (const test of badParse) {
 	});
 }
 
-const otherParse:[string,string][] = [
+const otherParse: [string, string][] = [
 	['10.10.10.0 /24', '10.10.10.0/24'], //Space ignored
 	['10.10.10.0/\t24', '10.10.10.0/24'], //Space ignored
 	['\t10.10.10.0/\t24\t', '10.10.10.0/24'], //Space ignored
 	['10.10.10.10/24', '10.10.10.0/24'], //Normalized after parse
 ];
 
-for (const [start,expect] of otherParse) {
+for (const [start, expect] of otherParse) {
 	tsts('fromString ' + start, () => {
 		const c = Cidr.fromString(start);
 		assert.is(c.toString(), expect);
@@ -101,7 +100,7 @@ for (const test of equals) {
 }
 
 //10.10.10.0/24 contains:
-const contains:[string,boolean][] = [
+const contains: [string, boolean][] = [
 	['10.10.10.0', true],
 	['10.10.10.255', true],
 	['10.10.11.0', false],
@@ -109,7 +108,7 @@ const contains:[string,boolean][] = [
 	['0.0.0.0', false],
 ];
 const c = new Cidr(IpV4.fromParts(10, 10, 10, 0), 24);
-for (const [start,expect] of contains) {
+for (const [start, expect] of contains) {
 	const ipv4 = IpV4.fromString(start);
 	tsts(`10.10.10.0/24 contains ${start}`, () => {
 		assert.equal(c.containsIp(ipv4), expect);

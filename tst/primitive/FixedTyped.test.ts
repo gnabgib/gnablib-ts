@@ -5,7 +5,7 @@ import {
 	FixedTyped,
 	FixedUint8Array,
 	FixedUint16Array,
-} from '../../src/primitive/TypedArrayExt';
+} from '../../src/primitive';
 
 const tsts = suite('FixedTyped');
 

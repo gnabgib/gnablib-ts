@@ -1,49 +1,48 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import * as bnf from "../abnf/bnf.js";
-//import { bnf } from "../abnf/bnf.js";
+import { BnfAlt, BnfChar, BnfConcat, BnfString, BnfRepeat } from '../abnf/bnf.js';
 import { rules } from "../abnf/rules.js";
 import { WindowStr,WindowStrish } from "./WindowStr.js";
 
 //URI or URL? All URLs are URI
 
 // URI https://www.rfc-editor.org/rfc/rfc3986#page-16
-const subDelimiters= bnf.BnfAlt.Split("!$&'()*+,;=",undefined,'sub-delims');
-const genDelimiters=bnf.BnfAlt.Split(":/?#[]@",undefined,'gen-delims');
-/*Non standard*/const slash=new bnf.BnfChar('/');
-/*Non standard*/const questionMark=new bnf.BnfChar('?');
-/*Non standard*/const colon=new bnf.BnfChar(':');
-/*Non standard*/const at=new bnf.BnfChar('@');
-/*Non standard*/const hash=new bnf.BnfChar('#');
-/*Non standard*/const dcolon=new bnf.BnfString("::");
-/*Non standard*/const dslash=new bnf.BnfString("//");
-/*Non standard*/const dash=new bnf.BnfChar('-');
-const reserved=new bnf.BnfAlt(subDelimiters,genDelimiters);
+const subDelimiters= BnfAlt.Split("!$&'()*+,;=",undefined,'sub-delims');
+const genDelimiters=BnfAlt.Split(":/?#[]@",undefined,'gen-delims');
+/*Non standard*/const slash=new BnfChar('/');
+/*Non standard*/const questionMark=new BnfChar('?');
+/*Non standard*/const colon=new BnfChar(':');
+/*Non standard*/const at=new BnfChar('@');
+/*Non standard*/const hash=new BnfChar('#');
+/*Non standard*/const dcolon=new BnfString("::");
+/*Non standard*/const dslash=new BnfString("//");
+/*Non standard*/const dash=new BnfChar('-');
+const reserved=new BnfAlt(subDelimiters,genDelimiters);
 reserved.name='reserved';
-const unreserved=new bnf.BnfAlt(rules.ALPHA,rules.DIGIT,dash,rules.DOT,new bnf.BnfChar('_'),new bnf.BnfChar('~'));
+const unreserved=new BnfAlt(rules.ALPHA,rules.DIGIT,dash,rules.DOT,new BnfChar('_'),new BnfChar('~'));
 unreserved.name='unreserved';
-const pctEncoded=new bnf.BnfConcat(new bnf.BnfChar('%'),rules.HEXDIG,rules.HEXDIG);
+const pctEncoded=new BnfConcat(new BnfChar('%'),rules.HEXDIG,rules.HEXDIG);
 pctEncoded.name='pct-encoded';
-const pchar=new bnf.BnfAlt(unreserved,pctEncoded,subDelimiters,colon,at);
+const pchar=new BnfAlt(unreserved,pctEncoded,subDelimiters,colon,at);
 pchar.name='pchar';
 pchar.suppressComponents=true;
-const fragment=bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(pchar,slash,questionMark),'fragment');
+const fragment=BnfRepeat.ZeroPlus(new BnfAlt(pchar,slash,questionMark),'fragment');
 fragment.suppressComponents=true;
-const query=bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(pchar,slash,questionMark),'query');
+const query=BnfRepeat.ZeroPlus(new BnfAlt(pchar,slash,questionMark),'query');
 query.suppressComponents=true;
-const segment=bnf.BnfRepeat.ZeroPlus(pchar,'segment');
-const segmentNz=bnf.BnfRepeat.OnePlus(pchar,'segment-nz');
-const segmentNzNc=bnf.BnfRepeat.OnePlus(new bnf.BnfAlt(unreserved,pctEncoded,subDelimiters,at),'segment-nz-nc');
-/*Non standard*/const pathSegment=new bnf.BnfConcat(slash,segment);
+const segment=BnfRepeat.ZeroPlus(pchar,'segment');
+const segmentNz=BnfRepeat.OnePlus(pchar,'segment-nz');
+const segmentNzNc=BnfRepeat.OnePlus(new BnfAlt(unreserved,pctEncoded,subDelimiters,at),'segment-nz-nc');
+/*Non standard*/const pathSegment=new BnfConcat(slash,segment);
 pathSegment.suppressComponents=true;
-const pathRootless=new bnf.BnfConcat(segmentNz,bnf.BnfRepeat.ZeroPlus(pathSegment));
+const pathRootless=new BnfConcat(segmentNz,BnfRepeat.ZeroPlus(pathSegment));
 pathRootless.name='path-rootless';
-const pathNoscheme=new bnf.BnfConcat(segmentNzNc,bnf.BnfRepeat.ZeroPlus(pathSegment));
+const pathNoscheme=new BnfConcat(segmentNzNc,BnfRepeat.ZeroPlus(pathSegment));
 pathNoscheme.name='path-noscheme';
-const pathAbsolute=new bnf.BnfConcat(slash,bnf.BnfRepeat.Optional(new bnf.BnfConcat(segmentNz,bnf.BnfRepeat.ZeroPlus(pathSegment))));
+const pathAbsolute=new BnfConcat(slash,BnfRepeat.Optional(new BnfConcat(segmentNz,BnfRepeat.ZeroPlus(pathSegment))));
 pathAbsolute.name='path-absolute';
-const pathAbempty=bnf.BnfRepeat.ZeroPlus(pathSegment,'path-abempty');
-const path=new bnf.BnfAlt(
+const pathAbempty=BnfRepeat.ZeroPlus(pathSegment,'path-abempty');
+const path=new BnfAlt(
     pathAbempty,//begins with / or is empty
     pathAbsolute,//begins with / but not //
     pathNoscheme,//beings with a non-colon segment
@@ -51,102 +50,102 @@ const path=new bnf.BnfAlt(
     rules.EMPTY//zero characters (this is a useful definition?)
     );
 path.name='path';
-const regName=bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(unreserved,pctEncoded,subDelimiters),'reg-name');
+const regName=BnfRepeat.ZeroPlus(new BnfAlt(unreserved,pctEncoded,subDelimiters),'reg-name');
 regName.suppressComponents=true;
 //const decOct=rules.DECIMAL_OCTET;
 //const ipv4Address=rules.IPv4_ADDRESS;
-const h16=bnf.BnfRepeat.Between(1,4,rules.HEXDIG,'h16');
-const ls32=new bnf.BnfAlt(new bnf.BnfConcat(h16,colon,h16),rules.IPv4_ADDRESS);
+const h16=BnfRepeat.Between(1,4,rules.HEXDIG,'h16');
+const ls32=new BnfAlt(new BnfConcat(h16,colon,h16),rules.IPv4_ADDRESS);
 ls32.name='ls32'
-const h16_colon=new bnf.BnfConcat(h16,colon);
-const ipv6Address=new bnf.BnfAlt(
-    new bnf.BnfConcat(bnf.BnfRepeat.Exactly(6,h16_colon),ls32),
-    new bnf.BnfConcat(dcolon,bnf.BnfRepeat.Exactly(5,h16_colon),ls32),
-    new bnf.BnfConcat(bnf.BnfRepeat.Optional(h16),dcolon,bnf.BnfRepeat.Exactly(4,h16_colon),ls32),
-    new bnf.BnfConcat(bnf.BnfRepeat.Optional(new bnf.BnfConcat(bnf.BnfRepeat.Between(0,1,h16_colon),h16)),dcolon,bnf.BnfRepeat.Exactly(3,h16_colon),ls32),
-    new bnf.BnfConcat(bnf.BnfRepeat.Optional(new bnf.BnfConcat(bnf.BnfRepeat.Between(0,2,h16_colon),h16)),dcolon,bnf.BnfRepeat.Exactly(2,h16_colon),ls32),
-    new bnf.BnfConcat(bnf.BnfRepeat.Optional(new bnf.BnfConcat(bnf.BnfRepeat.Between(0,3,h16_colon),h16)),dcolon,h16_colon,ls32),
-    new bnf.BnfConcat(bnf.BnfRepeat.Optional(new bnf.BnfConcat(bnf.BnfRepeat.Between(0,4,h16_colon),h16)),dcolon,ls32),
-    new bnf.BnfConcat(bnf.BnfRepeat.Optional(new bnf.BnfConcat(bnf.BnfRepeat.Between(0,5,h16_colon),h16)),dcolon,h16),
-    new bnf.BnfConcat(bnf.BnfRepeat.Optional(new bnf.BnfConcat(bnf.BnfRepeat.Between(0,6,h16_colon),h16)),dcolon),
+const h16_colon=new BnfConcat(h16,colon);
+const ipv6Address=new BnfAlt(
+    new BnfConcat(BnfRepeat.Exactly(6,h16_colon),ls32),
+    new BnfConcat(dcolon,BnfRepeat.Exactly(5,h16_colon),ls32),
+    new BnfConcat(BnfRepeat.Optional(h16),dcolon,BnfRepeat.Exactly(4,h16_colon),ls32),
+    new BnfConcat(BnfRepeat.Optional(new BnfConcat(BnfRepeat.Between(0,1,h16_colon),h16)),dcolon,BnfRepeat.Exactly(3,h16_colon),ls32),
+    new BnfConcat(BnfRepeat.Optional(new BnfConcat(BnfRepeat.Between(0,2,h16_colon),h16)),dcolon,BnfRepeat.Exactly(2,h16_colon),ls32),
+    new BnfConcat(BnfRepeat.Optional(new BnfConcat(BnfRepeat.Between(0,3,h16_colon),h16)),dcolon,h16_colon,ls32),
+    new BnfConcat(BnfRepeat.Optional(new BnfConcat(BnfRepeat.Between(0,4,h16_colon),h16)),dcolon,ls32),
+    new BnfConcat(BnfRepeat.Optional(new BnfConcat(BnfRepeat.Between(0,5,h16_colon),h16)),dcolon,h16),
+    new BnfConcat(BnfRepeat.Optional(new BnfConcat(BnfRepeat.Between(0,6,h16_colon),h16)),dcolon),
 );
 ipv6Address.name='IPv6address';
-const ipvFuture=new bnf.BnfConcat(new bnf.BnfChar("v"),bnf.BnfRepeat.OnePlus(rules.HEXDIG),rules.DOT,
-    bnf.BnfRepeat.OnePlus(new bnf.BnfAlt(unreserved,subDelimiters,colon)));
+const ipvFuture=new BnfConcat(new BnfChar("v"),BnfRepeat.OnePlus(rules.HEXDIG),rules.DOT,
+    BnfRepeat.OnePlus(new BnfAlt(unreserved,subDelimiters,colon)));
 ipvFuture.name='IPvFuture';
-const ipLiteral=new bnf.BnfConcat(new bnf.BnfChar("["),new bnf.BnfAlt(ipv6Address,ipvFuture),new bnf.BnfChar("]"));
+const ipLiteral=new BnfConcat(new BnfChar("["),new BnfAlt(ipv6Address,ipvFuture),new BnfChar("]"));
 ipLiteral.name='IP-literal';
-const port=bnf.BnfRepeat.ZeroPlus(rules.DIGIT,'port');
-const host=new bnf.BnfAlt(ipLiteral,rules.IPv4_ADDRESS,regName);
+const port=BnfRepeat.ZeroPlus(rules.DIGIT,'port');
+const host=new BnfAlt(ipLiteral,rules.IPv4_ADDRESS,regName);
 host.name='host';
-const userInfo=bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(unreserved,pctEncoded,subDelimiters,colon));
+const userInfo=BnfRepeat.ZeroPlus(new BnfAlt(unreserved,pctEncoded,subDelimiters,colon));
 userInfo.name='userinfo';
-const authority=new bnf.BnfConcat(
-    bnf.BnfRepeat.Optional(new bnf.BnfConcat(userInfo,at)),
+const authority=new BnfConcat(
+    BnfRepeat.Optional(new BnfConcat(userInfo,at)),
     host,
-    bnf.BnfRepeat.Optional(new bnf.BnfConcat(colon,port)));
+    BnfRepeat.Optional(new BnfConcat(colon,port)));
 authority.name='authority';
-const scheme=new bnf.BnfConcat(
+const scheme=new BnfConcat(
     rules.ALPHA,
-    bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(rules.ALPHA,rules.DIGIT,new bnf.BnfChar('+'),dash,rules.DOT)))
+    BnfRepeat.ZeroPlus(new BnfAlt(rules.ALPHA,rules.DIGIT,new BnfChar('+'),dash,rules.DOT)))
 scheme.name='scheme';
 scheme.suppressComponents=true;
-const relativePart=new bnf.BnfAlt(
-    new bnf.BnfConcat(dslash,authority,pathAbempty),
+const relativePart=new BnfAlt(
+    new BnfConcat(dslash,authority,pathAbempty),
     pathAbsolute,
     pathNoscheme,
     rules.EMPTY
 );
 relativePart.name='relative-part';
-const relativeRef=new bnf.BnfConcat(
+const relativeRef=new BnfConcat(
     relativePart,
-    bnf.BnfRepeat.Optional(new bnf.BnfConcat(questionMark,query)),
-    bnf.BnfRepeat.Optional(new bnf.BnfConcat(hash,fragment))
+    BnfRepeat.Optional(new BnfConcat(questionMark,query)),
+    BnfRepeat.Optional(new BnfConcat(hash,fragment))
 );
 relativeRef.name='relative-ref';
-const heirPart=new bnf.BnfAlt(
-    new bnf.BnfConcat(dslash,authority,pathAbempty),
+const heirPart=new BnfAlt(
+    new BnfConcat(dslash,authority,pathAbempty),
     pathAbsolute,
     pathRootless,
     rules.EMPTY
 );
 heirPart.name='heir-part';
-const absoluteUri=new bnf.BnfConcat(scheme,colon,heirPart,bnf.BnfRepeat.Optional(new bnf.BnfConcat(questionMark,query)));
+const absoluteUri=new BnfConcat(scheme,colon,heirPart,BnfRepeat.Optional(new BnfConcat(questionMark,query)));
 absoluteUri.name='absolute-URI';
-// export const uri=new bnf.Concat(
+// export const uri=new BnfConcat(
 //     scheme,colon,
 //     heirPart,
-//     bnf.Repeat.Optional(new bnf.Concat(questionMark,query)),
-//     bnf.Repeat.Optional(new bnf.Concat(hash,fragment))
+//     BnfRepeat.Optional(new BnfConcat(questionMark,query)),
+//     BnfRepeat.Optional(new BnfConcat(hash,fragment))
 // );
 // uri.name='URI';
-// const uriReference=new bnf.Alt(uri,relativeRef);
+// const uriReference=new Alt(uri,relativeRef);
 // uriReference.name='URI-reference';
 
 // URN
-const qComponent=new bnf.BnfConcat(pchar,bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(pchar,slash,questionMark)));
+const qComponent=new BnfConcat(pchar,BnfRepeat.ZeroPlus(new BnfAlt(pchar,slash,questionMark)));
 qComponent.name='q-component';
 qComponent.suppressComponents=true;
-const rComponent=new bnf.BnfConcat(pchar,bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(pchar,slash,questionMark)));
+const rComponent=new BnfConcat(pchar,BnfRepeat.ZeroPlus(new BnfAlt(pchar,slash,questionMark)));
 rComponent.name='r-component';
 rComponent.suppressComponents=true;
-const rqComponents=new bnf.BnfConcat(
-    bnf.BnfRepeat.Optional(new bnf.BnfConcat(new bnf.BnfString("?+"),rComponent)),
-    bnf.BnfRepeat.Optional(new bnf.BnfConcat(new bnf.BnfString("?="),qComponent))
+const rqComponents=new BnfConcat(
+    BnfRepeat.Optional(new BnfConcat(new BnfString("?+"),rComponent)),
+    BnfRepeat.Optional(new BnfConcat(new BnfString("?="),qComponent))
 );
 rqComponents.name='rq-components';
-const nss=new bnf.BnfConcat(pchar,bnf.BnfRepeat.ZeroPlus(new bnf.BnfAlt(pchar,slash)));
+const nss=new BnfConcat(pchar,BnfRepeat.ZeroPlus(new BnfAlt(pchar,slash)));
 nss.name='NSS';
 nss.suppressComponents=true;
-const ldh=new bnf.BnfAlt(rules.ALPHANUM,dash);
-const nid=new bnf.BnfConcat(rules.ALPHANUM,bnf.BnfRepeat.Between(0,30,ldh),rules.ALPHANUM);
+const ldh=new BnfAlt(rules.ALPHANUM,dash);
+const nid=new BnfConcat(rules.ALPHANUM,BnfRepeat.Between(0,30,ldh),rules.ALPHANUM);
 nid.name='NID';
-const assignedName=new bnf.BnfConcat(new bnf.BnfString("urn"),colon,nid,colon,nss);
+const assignedName=new BnfConcat(new BnfString("urn"),colon,nid,colon,nss);
 assignedName.name='assigned-name';
-const namestring=new bnf.BnfConcat(
+const namestring=new BnfConcat(
     assignedName,
-    bnf.BnfRepeat.Optional(rqComponents),
-    bnf.BnfRepeat.Optional(new bnf.BnfConcat(hash,fragment)));
+    BnfRepeat.Optional(rqComponents),
+    BnfRepeat.Optional(new BnfConcat(hash,fragment)));
 
 // export class Uri {
 // }
@@ -157,7 +156,7 @@ const namestring=new bnf.BnfConcat(
 // hex 0-9A-F
 
 //console.log(namestring.descr());
-console.log(nid.descr());
+//console.log(nid.descr());
 
 export class Urn {
     readonly nid:string;

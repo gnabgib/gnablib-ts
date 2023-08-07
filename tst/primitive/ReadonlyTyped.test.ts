@@ -4,7 +4,7 @@ import {
 	ReadonlyTyped,
 	ReadonlyUint8Array,
 	ReadonlyUint16Array,
-} from '../../src/primitive/TypedArrayExt';
+} from '../../src/primitive';
 
 const tsts = suite('ReadonlyTyped');
 

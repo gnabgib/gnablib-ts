@@ -4,10 +4,10 @@ import { NullError } from '../../primitive/ErrorExt.js';
 import { DateTime } from '../../primitive/DateTime.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
-import type { Valid } from './Valid.js';
+import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 
-export class DateTimeCol extends ACudColType implements Valid<DateTime> {
+export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 	/*MySQL supports microsecond res, but only for years 1000-9999 which is smaller than -4713-294276 (doh)*/
 	readonly mysqlType = 'BIGINT';
 	/*SQLite supports second resolution (int) or milliseconds in some formats (which can be dropped) 

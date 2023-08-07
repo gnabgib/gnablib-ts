@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 //import * as assert from 'uvu/assert';
-import {md5Sum} from '../../src/checksum/md5sum';
-import { utf8 } from '../../src/encoding/Utf8';
-import {Assert} from '../../src/test/assert';
+import {md5Sum} from '../../src/checksum';
+import { utf8 } from '../../src/codec';
+import {Assert} from '../../src/test';
 
 const tsts = suite('MD5sum/RFC 1321');
 

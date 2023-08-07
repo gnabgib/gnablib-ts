@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { utf8 } from '../../encoding/Utf8.js';
+import { utf8 } from '../../codec/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { safety } from '../../primitive/Safety.js';
 

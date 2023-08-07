@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { safety } from '../../src/primitive/Safety';
+import { safety } from '../../src/primitive';
 
 const tsts = suite('safety');
 

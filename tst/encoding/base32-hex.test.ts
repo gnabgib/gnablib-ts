@@ -1,8 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { base32hex } from '../../src/encoding/Base32';
-import { utf8 } from '../../src/encoding/Utf8';
-import { hex } from '../../src/encoding/Hex';
+import { base32hex, hex, utf8 } from '../../src/codec';
 
 const tsts = suite('Base32hex/RFC 4648');
 
