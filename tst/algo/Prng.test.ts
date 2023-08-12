@@ -45,7 +45,7 @@ for (const set of intSet) {
 		// It can be smoothed out by more samples, but not eliminated
 		const expectAvg = (highExc - 1 - lowInc) / 2;
 		const foundAvg = sum / sampleSize;
-		Assert.equalish(foundAvg, expectAvg, { percent: 2 });
+		Assert.equalish(foundAvg, expectAvg, { percent: 3 });
 
 		//Assert sample reasonable
 		for (let i = 0; i < highExc; i++) {

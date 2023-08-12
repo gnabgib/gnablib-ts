@@ -1,6 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { ContentError, InvalidLengthError } from '../../primitive/ErrorExt.js';
+import { getRandomValues } from 'crypto';
 
 /**
  * [ANSI X9.23 padding](https://www.ibm.com/docs/en/linux-on-systems?topic=processes-ansi-x923-cipher-block-chaining)
@@ -38,7 +39,7 @@ export class AnsiX9_23 {
 		if (need < 0)
 			throw new InvalidLengthError('input', 'at most ' + len, `${len - need}`);
 		const randPad = new Uint8Array(need - 1);
-		crypto.getRandomValues(randPad);
+		getRandomValues(randPad);
 		ret.set(input.subarray(pos));
 		ret.set(randPad, len - need);
 		ret[len - 1] = randPad.length + 1;
