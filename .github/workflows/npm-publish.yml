@@ -32,6 +32,7 @@ jobs:
       - run: npm install -g npm
       - run: npm ci --omit=optional
       - run: npm run build
+      - run: npm run types
       - run: ./compress
       - run: npm publish --provenance
         env:

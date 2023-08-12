@@ -6,7 +6,7 @@
 	"types": "/release/index.d.ts",
 	"scripts": {
 		"preversion": "npm run deeptest",
-		"version": "npm run build && git add -A",
+		"version": "npm run build && npm run types && git add -A",
 		"postversion": "git push && git push --tags",
 		"lint": "npx eslint \"src/**/*.{js,ts}\"",
 		"test": "uvu -r tsm -i \"(.slow.test.ts|.log)$\" tst",
