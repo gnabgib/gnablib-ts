@@ -56,7 +56,7 @@ export class U32 {
 	 */
 	protected static _mulEq(a: Uint32Array, aPos: number, b32: U32): number {
 		const b0 = b32.arr[b32.pos] & maxU16;
-		const b1 = (b32.arr[b32.pos] >>> 16) & maxU16;
+		const b1 = b32.arr[b32.pos] >>> 16;
 		return a[aPos] * b0 + ((a[aPos] * b1) << 16);
 	}
 

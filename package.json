@@ -207,7 +207,8 @@
 		"ChaCha20-Poly1305",
 		"XChaCha20-Poly1305",
 		"Salsa20-Poly1305",
-		"XSalsa20-Poly1305"
+		"XSalsa20-Poly1305",
+		"rabbit-cipher"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"license": "MPL-1.1",

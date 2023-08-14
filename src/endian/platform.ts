@@ -28,10 +28,9 @@ const invert = {
 	 * @param count How many i16 to correct (default 1)
 	 */
 	i16(b: Uint8Array, pos = 0, count = 1): void {
+		// prettier-ignore
 		do {
-			const t = b[pos];
-			b[pos] = b[pos + 1];
-			b[pos + 1] = t;
+			const t = b[pos]; b[pos] = b[pos + 1]; b[pos + 1] = t;
 			pos += 2;
 		} while (--count > 0);
 	},
@@ -49,6 +48,8 @@ const invert = {
 			t = b[pos + 1]; b[pos + 1] = b[pos + 2]; b[pos + 2] = t;
 			pos += 4;
 		} while (--count > 0);
+		//S[i] = (((S[i] << 8)  | (S[i] >>> 24)) & 0x00ff00ff) |
+		//       (((S[i] << 24) | (S[i] >>> 8))  & 0xff00ff00);
 	},
 	/**
 	 * Maybe switch byte order
@@ -65,6 +66,18 @@ const invert = {
 			t = b[pos + 2]; b[pos + 2] = b[pos + 5]; b[pos + 5] = t;
 			t = b[pos + 3]; b[pos + 3] = b[pos + 4]; b[pos + 4] = t;
 			pos += 8;
+		} while (--count > 0);
+	},
+	/**
+	 * Maybe switch byte order
+	 * @param b Byte array
+	 * @param pos Position of first byte (default 0)
+	 * @param count How many i128 to correct (default 1)
+	 */
+	i128(b:Uint8Array,pos=0,count=1):void {
+		do {
+			b.subarray(pos,pos+16).reverse();
+			pos+=16;
 		} while (--count > 0);
 	},
 	/**
@@ -101,6 +114,8 @@ const leave = {
 	i32(_b: Uint8Array, _pos = 0, _count = 1): void {},
 	// eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
 	i64(_b: Uint8Array, _pos = 0, _count = 1): void {},
+	// eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+	i128(_b: Uint8Array, _pos = 0, _count = 1): void {},
 	set32(
 		b: Uint8Array,
 		i32Pos: number,

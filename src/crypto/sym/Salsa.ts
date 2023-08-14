@@ -164,7 +164,7 @@ class Salsa implements IFullCrypt {
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
 		let nToWrite = enc.length;
 		let pos = 0;
-		plain.set(enc);
+		if (enc !== plain) plain.set(enc);
 		//Decrypt full blocks
 		while (nToWrite >= blockSize) {
 			this.block();
@@ -185,7 +185,7 @@ class Salsa implements IFullCrypt {
 	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
 		let nToWrite = plain.length;
 		let pos = 0;
-		enc.set(plain);
+		if (enc !== plain) enc.set(plain);
 		//Encrypt full blocks
 		while (nToWrite >= blockSize) {
 			this.block();

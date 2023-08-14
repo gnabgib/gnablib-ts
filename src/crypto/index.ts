@@ -82,6 +82,7 @@ export { Ascon128, Ascon128a, Ascon80pq } from './sym/Ascon.js';
 export { Blowfish } from './sym/Blowfish.js';
 export { ChaCha20 } from './sym/ChaCha.js';
 export { ChaCha20_Poly1305 } from './mac/Poly1305.js';
+export { Rabbit } from './sym/Rabbit.js';
 export { Salsa20 } from './sym/Salsa.js';
 export { Salsa20_Poly1305 } from './mac/Poly1305.js';
 export { Twofish } from './sym/Twofish.js';
