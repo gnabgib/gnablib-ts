@@ -78,7 +78,7 @@ export class Month implements ISerializer {
 
 	/**
 	 * Create a month from a string, accepts:
-	 * 'now', a 2 digit unsigned integer, short or long form month (based on local localization)
+	 * 'now', a 1-2 digit unsigned integer, short or long form month (based on local localization)
 	 *
 	 * Throws if:
 	 * - Not a string, or $str is empty

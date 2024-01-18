@@ -22,6 +22,8 @@ const serSet:[number,string][] = [
     [58,'003A'],
     [59,'003B'],
     [999,'03E7'],
+    [1000,'03E8'],//1 second
+    [1000,'03E8'],
     [9999,'270F'],
     [59999,'EA5F'],//max
 ];
@@ -60,6 +62,24 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>SecondMs.deserialize(br,stor).validate());
 });
 
+const toStrSet:[number,string,string][]=[
+    [1,'0.001','00.001'],
+    [2,'0.002','00.002'],
+    [12,'0.012','00.012'],
+    [59,'0.059','00.059'],
+    [1666,'1.666','01.666'],
+    [59999,'59.999','59.999'],
+];
+for (const [se,str,isoStr] of toStrSet) {
+    const s = SecondMs.new(se);
+    tsts(`toString(${se})`,()=>{        
+        assert.equal(s.toString(),str);
+    });
+    tsts(`toIsoString(${se})`,()=>{        
+        assert.equal(s.toIsoString(),isoStr);
+    });
+}
+
 tsts(`new`,()=>{
     const sms=SecondMs.new(11);
     assert.is(sms.valueMs(),11);
@@ -74,7 +94,6 @@ tsts(`new-provide storage`,()=>{
 tsts(`fromDate`,()=>{
     const dt=new Date(2001,2,3,4,5,6,777);
     const sms=SecondMs.fromDate(dt);
-    console.log(dt.getMilliseconds());
     assert.is(sms.valueMs(),dt.getSeconds()*1000+dt.getMilliseconds());
 });
 tsts(`fromDate-provide storage`,()=>{
@@ -108,6 +127,78 @@ tsts(`second/millisecond`,()=>{
     assert.is(m.valueOf(),1.666,'valueOf');
     //The full value in ms
     assert.is(m.valueMs(),1666,'valueMs')
+});
+
+const parseSet:[string,number][]=[
+    ['1',1],
+    ['01',1],
+    ['1.1',1.1],
+    ['01.1',1.1],
+    ['1.01',1.01],
+    ['1.001',1.001],
+    ['02',2],
+    ['43',43],
+    ['59',59],
+    //Doesn't have to be zero padded
+    ['2',2],
+
+    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
+    [10,10],
+    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
+    [1.5,1.5],
+];
+for (const [str,expect] of parseSet) {
+    tsts(`parse(${str})`,()=>{
+        const stor=new Uint8Array(2);
+        const s=SecondMs.parse(str,stor);
+        assert.equal(s.valueOf(),expect);
+    });
+}
+
+tsts(`parse(now)`,()=>{
+    //Turns out setup of unit tests on the full suite is >second so this can't be part of a set
+    //Note: This could fail at the end of the year :|
+    const n=new Date();
+    const s=SecondMs.parse('now');
+    assert.equal(s.second,n.getSeconds());
 })
+
+const badParseStrict:string[]=[
+    //Should be zero padded
+    '1',
+    '3',
+    //Needs 3 decimal places
+    '01',
+    '1.01'
+];
+for (const str of badParseStrict) {
+    tsts(`parse(${str},undefined,true)`,()=>{
+        assert.throws(()=>SecondMs.parse(str,undefined,true));
+    });
+}
+
+const badParse:unknown[]=[
+    //Primitives
+    undefined,//Undefined not allowed
+    null,//null not allowed
+    true,
+    //Symbol("year"),
+
+    //Bad strings
+    '',//Empty string not allowed
+    'tomorrow',//We support "now" only
+    '1.0005',//Floating point /w too many decimals
+    '1e1',//10 in scientific - not allowed
+    '+01',//Can't have sign
+    //Out of range:
+    '320',
+    '1000',
+];
+for (const unk of badParse) {
+    tsts(`badParse(${unk})`,()=>{
+        //@ts-ignore - this is the point of the test
+        assert.throws(()=>SecondMs.parse(unk));
+    })
+}
 
 tsts.run();

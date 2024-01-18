@@ -1,7 +1,9 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
+
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
 const u8MemSize = 1;
@@ -14,14 +16,15 @@ export class Second implements ISerializer {
 		this.#v = storage;
 	}
 
-	/** Second of minute (0-59) */
-	public get value(): number {
-		return this.#v[0];
-	}
-
 	/** Second, not zero padded (0-59) */
 	public toString(): string {
 		return this.#v[0].toString();
+	}
+
+	/** Second, zero padded (00-59) */
+	public toIsoString(): string {
+		let r = this.#v[0].toString();
+		return ('00' + r).substring(r.length);
 	}
 
 	/** Second of minute (0-59) */
@@ -68,6 +71,48 @@ export class Second implements ISerializer {
 		}
 		storage[0] = date.getSeconds();
 		return new Second(storage);
+	}
+
+	/**
+	 * Create a second from a string accepts:
+	 * 'now', a 1-2 digit unsigned integer
+	 *
+	 * Throws if:
+	 * - Not a string, or $str is empty
+	 * - There's no available $storage
+	 * - The integer value of $str is out of range
+	 * - The content of $str isn't valid
+	 */
+	public static parse(
+		str: string,
+		storage?: Uint8Array,
+		strict = false
+	): Second {
+		const strVal = safe.string.nullEmpty(str);
+		if (strVal === undefined)
+			throw new ContentError('require string content', str);
+		if (strVal.toLowerCase() === 'now') return this.now(storage);
+
+		//Only parse integers (no floating point/scientific notation)
+		const r = strVal.match(/^\s*(\d+)\s*$/);
+		if (r !== null) {
+			if (strict) {
+				if (r[1].length != 2)
+					throw new ContentError(
+						'expecting 2 digit unsigned integer-string',
+						strVal
+					);
+			} else {
+				if (r[1].length > 2)
+					throw new ContentError(
+						'expecting 1-2 digit unsigned integer-string',
+						strVal
+					);
+			}
+			const intVal = parseInt(r[1], 10);
+			return this.new(intVal, storage);
+		}
+		throw new ContentError('expecting unsigned integer-string', strVal);
 	}
 
 	/** Create this minute (local) */

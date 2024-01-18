@@ -1,7 +1,9 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
+
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
 const u8MemSize = 2;
@@ -27,6 +29,13 @@ export class SecondMs implements ISerializer {
 	/** Second, not zero padded 0.000-59.999 */
 	public toString(): string {
 		return (((this.#v[0] << 8) | this.#v[1]) / 1000).toFixed(3);
+	}
+
+	/** Second, zero padded (00.000-59.000) */
+	public toIsoString(): string {
+		let r = ((this.#v[0] << 8) | this.#v[1]).toString();
+		r = ('00000' + r).substring(r.length);
+		return r.substring(0, 2) + '.' + r.substring(2);
 	}
 
 	/** Second as a floating-number (0.000-59.999) */
@@ -82,6 +91,47 @@ export class SecondMs implements ISerializer {
 		}
 		this.writeValue(storage, date.getSeconds() * 1000 + date.getMilliseconds());
 		return new SecondMs(storage);
+	}
+
+	/**
+	 * Create a second+ms from a string accepts:
+	 * 'now', a 1-2 digit unsigned integer, a 2-5 digit unsigned float
+	 *
+	 * Throws if:
+	 * - Not a string, or $str is empty
+	 * - There's no available $storage
+	 * - The integer value of $str is out of range
+	 * - The content of $str isn't valid
+	 */
+	public static parse(
+		str: string,
+		storage?: Uint8Array,
+		strict = false
+	): SecondMs {
+		const strVal = safe.string.nullEmpty(str);
+		if (strVal === undefined)
+			throw new ContentError('require string content', str);
+		if (strVal.toLowerCase() === 'now') return this.now(storage);
+
+		//Only parse integers (no floating point/scientific notation)
+		const r = strVal.match(/^\s*(\d\d?)(?:\.(\d{1,3}))?\s*$/);
+		if (r !== null) {
+			if (strict) {
+				if (r[1].length != 2 || r[2].length != 3)
+					throw new ContentError(
+						'expecting ##.### unsigned float-string',
+						strVal
+					);
+			}
+			const i1 = parseInt(r[1], 10);
+			let i2 = 0;
+			if (r[2]) {
+				i2 = parseInt(r[2]);
+				i2 *= 10 ** (3 - r[2].length);
+			}
+			return this.new(i1 * 1000 + i2, storage);
+		}
+		throw new ContentError('expecting unsigned float-string', strVal);
 	}
 
 	/** Create this minute (local) */

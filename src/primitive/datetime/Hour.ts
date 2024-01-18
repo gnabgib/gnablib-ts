@@ -1,7 +1,9 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
+
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
 const u8MemSize = 1;
@@ -14,14 +16,15 @@ export class Hour implements ISerializer {
 		this.#v = storage;
 	}
 
-	/** Hour (0-23) */
-	public get value(): number {
-		return this.#v[0];
-	}
-
 	/** Hour, not zero padded (0-23) */
 	public toString(): string {
 		return this.#v[0].toString();
+	}
+
+	/** Hour, zero padded (01-23) */
+	public toIsoString(): string {
+		const r = '0' + this.#v[0].toString();
+		return r.substring(r.length - 2);
 	}
 
 	/** Hour as a number (0-23) */
@@ -68,6 +71,44 @@ export class Hour implements ISerializer {
 		}
 		storage[0] = date.getHours();
 		return new Hour(storage);
+	}
+
+	/**
+	 * Create an hour from a string accepts:
+	 * 'now', a 1-2 digit unsigned integer
+	 *
+	 * Throws if:
+	 * - Not a string, or $str is empty
+	 * - There's no available $storage
+	 * - The integer value of $str is out of range
+	 * - The content of $str isn't valid
+	 */
+	public static parse(str: string, storage?: Uint8Array, strict = false): Hour {
+		const strVal = safe.string.nullEmpty(str);
+		if (strVal === undefined)
+			throw new ContentError('require string content', str);
+		if (strVal.toLowerCase() === 'now') return this.now(storage);
+
+		//Only parse integers (no floating point/scientific notation)
+		const r = strVal.match(/^\s*(\d+)\s*$/);
+		if (r !== null) {
+			if (strict) {
+				if (r[1].length != 2)
+					throw new ContentError(
+						'expecting 2 digit unsigned integer-string',
+						strVal
+					);
+			} else {
+				if (r[1].length > 2)
+					throw new ContentError(
+						'expecting 1-2 digit unsigned integer-string',
+						strVal
+					);
+			}
+			const intVal = parseInt(r[1], 10);
+			return this.new(intVal, storage);
+		}
+		throw new ContentError('expecting unsigned integer-string', strVal);
 	}
 
 	/** Create this hour (local) */

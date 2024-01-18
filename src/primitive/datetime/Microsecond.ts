@@ -1,7 +1,9 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
+
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
 const u8MemSize = 3;
@@ -18,6 +20,12 @@ export class Microsecond implements ISerializer {
 	public toString(): string {
 		return this.valueOf().toString();
 		//return stringExt.padStart(this.valueOf().toString(),6,'0');
+	}
+
+	/** Microseconds, zero padded (000000-999999) */
+	public toIsoString(): string {
+		const r = this.valueOf().toString();
+		return ('000000' + r).substring(r.length);
 	}
 
 	/** Microseconds (0-999999) */
@@ -71,6 +79,42 @@ export class Microsecond implements ISerializer {
 		}
 		this.writeValue(storage, date.getMilliseconds() * 1000);
 		return new Microsecond(storage);
+	}
+
+	/**
+	 * Create a microsecond from a string accepts:
+	 * 'now', a 1-6 digit unsigned integer
+	 *
+	 * Throws if:
+	 * - Not a string, or $str is empty
+	 * - There's no available $storage
+	 * - The integer value of $str is out of range
+	 * - The content of $str isn't valid
+	 */
+	public static parse(
+		str: string,
+		storage?: Uint8Array,
+		strict = false
+	): Microsecond {
+		const strVal = safe.string.nullEmpty(str);
+		if (strVal === undefined)
+			throw new ContentError('require string content', str);
+		if (strVal.toLowerCase() === 'now') return this.now(storage);
+
+		//Only parse integers (no floating point/scientific notation)
+		const r = strVal.match(/^\s*(\d{1,6})\s*$/);
+		if (r !== null) {
+			if (strict) {
+				if (r[1].length != 6)
+					throw new ContentError(
+						'expecting 6 digit unsigned integer-string',
+						strVal
+					);
+			}
+			const intVal = parseInt(r[1], 10);
+			return this.new(intVal, storage);
+		}
+		throw new ContentError('expecting unsigned integer-string', strVal);
 	}
 
 	/** Create this microSecond (local) */

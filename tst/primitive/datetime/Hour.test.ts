@@ -38,7 +38,7 @@ const serSet:[number,string][] = [
 for (const [mi,ser] of serSet) {
     tsts(`ser(${mi})`,()=>{
         const h = Hour.new(mi);
-        assert.equal(h.value,mi);
+        assert.equal(h.valueOf(),mi);
     
         const bw=new BitWriter(Math.ceil(Hour.serialBits/8));
         h.serialize(bw);
@@ -49,7 +49,7 @@ for (const [mi,ser] of serSet) {
         const bytes=hex.toBytes(ser);
         const br=new BitReader(bytes);
         const h=Hour.deserialize(br).validate();
-        assert.is(h.value,mi);
+        assert.is(h.valueOf(),mi);
     });
 }
 
@@ -70,9 +70,25 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Hour.deserialize(br,stor).validate());
 });
 
+const toStrSet:[number,string,string][]=[
+    [1,'1','01'],
+    [2,'2','02'],
+    [12,'12','12'],
+    [23,'23','23'],
+];
+for (const [hr,str,isoStr] of toStrSet) {
+    const h = Hour.new(hr);
+    tsts(`toString(${hr})`,()=>{        
+        assert.equal(h.toString(),str);
+    });
+    tsts(`toIsoString(${hr})`,()=>{        
+        assert.equal(h.toIsoString(),isoStr);
+    });
+}
+
 tsts(`new`,()=>{
     const h=Hour.new(11);
-    assert.is(h.value,11);
+    assert.is(h.valueOf(),11);
     assert.is(h.toString(),'11');
 });
 tsts(`new-provide storage`,()=>{
@@ -84,13 +100,13 @@ tsts(`new-provide storage`,()=>{
 tsts(`fromDate`,()=>{
     const dt=new Date(2001,2,3,4,5,6);
     const h=Hour.fromDate(dt);
-    assert.is(h.value,dt.getHours());
+    assert.is(h.valueOf(),dt.getHours());
 });
 tsts(`fromDate-provide storage`,()=>{
     const stor=new Uint8Array(1);
     const dt=new Date(2001,2,3,4,5,6);
     const h=Hour.fromDate(dt,stor);
-    assert.is(h.value,dt.getHours());
+    assert.is(h.valueOf(),dt.getHours());
 });
 
 tsts(`now`,()=>{
@@ -98,7 +114,7 @@ tsts(`now`,()=>{
     const h=Hour.now();
     //This isn't a great test, but let's use a date object to compare 
     //(tiny chance of this test failing near midnight)
-    assert.is(h.value,dt.getHours());
+    assert.is(h.valueOf(),dt.getHours());
 });
 
 tsts(`nowUtc`,()=>{
@@ -106,8 +122,73 @@ tsts(`nowUtc`,()=>{
     const h=Hour.nowUtc();
     //This isn't a great test, but let's use a date object to compare 
     //(tiny chance of this test failing near midnight UTC)
-    assert.is(h.value,dt.getUTCHours());
+    assert.is(h.valueOf(),dt.getUTCHours());
 });
 
+const parseSet:[string,number][]=[
+    //Completely valid
+    ['01',1],
+    ['02',2],
+    ['03',3],
+    ['04',4],
+    ['05',5],
+    ['06',6],
+    ['07',7],
+    ['08',8],
+    ['09',9],
+    ['10',10],
+    ['20',20],
+    ['23',23],
+    //Doesn't have to be zero padded
+    ['2',2],
+
+    //Note: This could fail at the end of the year :|
+    ['now',new Date().getHours()],
+    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
+    [10,10],
+];
+for (const [str,expect] of parseSet) {
+    tsts(`parse(${str})`,()=>{
+        const stor=new Uint8Array(1);
+        const d=Hour.parse(str,stor);
+        assert.equal(d.valueOf(),expect);
+    });
+}
+
+const badParseStrict:string[]=[
+    //Should be zero padded
+    '1',
+    '3',
+];
+for (const str of badParseStrict) {
+    tsts(`parse(${str},undefined,true)`,()=>{
+        assert.throws(()=>Hour.parse(str,undefined,true));
+    });
+}
+
+const badParse:unknown[]=[
+    //Primitives
+    undefined,//Undefined not allowed
+    null,//null not allowed
+    true,
+    //Symbol("year"),
+    1.5,//Like integers, this is converted to a string, but floating point isn't allowed
+
+    //Bad strings
+    '',//Empty string not allowed
+    'tomorrow',//We support "now" only
+    '1.5',//Floating point - not allowed
+    '1e1',//10 in scientific - not allowed
+    '+01',//Can't have sign
+    //Out of range:
+    '32',
+    '1000',
+];
+for (const unk of badParse) {
+    tsts(`badParse(${unk})`,()=>{
+        //@ts-ignore - this is the point of the test
+        assert.throws(()=>Hour.parse(unk));
+    })
+}
 
 tsts.run();

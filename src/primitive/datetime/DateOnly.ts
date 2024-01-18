@@ -3,7 +3,6 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
-import { stringExt } from '../StringExt.js';
 import { Day } from './Day.js';
 import { Month } from './Month.js';
 import { Year } from './Year.js';
@@ -13,15 +12,15 @@ const u8MemSize = 4;
 /** A year-month-day, in the range -10000-01-01 - +22767-12-31 */
 export class DateOnly {
 	static readonly serialBits = 24;
-	readonly year: Year;
-	readonly month: Month;
-	readonly day: Day;
 
-	private constructor(y: Year, m: Month, d: Day) {
-		this.year = y;
-		this.month = m;
-		this.day = d;
-	}
+	private constructor(
+		/** Years (-10000 - +22767) ISO8601 */
+		readonly year: Year,
+		/** Months (1-12) */
+		readonly month: Month,
+		/** Days (1-31) */
+		readonly day: Day
+	) {}
 
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
@@ -58,6 +57,11 @@ export class DateOnly {
 		this.day.serialize(target);
 	}
 
+    /**
+	 * Test internal state is valid, throws if it's not
+	 * You should call this after a deserialize unless you trust the source
+	 * @returns self (chainable)
+	 */
 	public validate(): DateOnly {
 		//no validate for year
 		this.month.validate();
@@ -102,8 +106,6 @@ export class DateOnly {
 			safe.lengthAtLeast(storage, u8MemSize);
 		}
 		const u16 = new Uint16Array(storage.buffer);
-		//Note we depend on JS Date here to catch a point in time
-		//(rather than relying on each component's now() method which could cause inconsistency)
 		const y = Year.new(date.getFullYear(), u16);
 		const m = Month.new(date.getMonth() + 1, storage.subarray(2, 3));
 		const d = Day.new(date.getDate(), storage.subarray(3, 4));

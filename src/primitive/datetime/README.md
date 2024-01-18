@@ -75,6 +75,13 @@ NOTE: locale-dependent parsing (short/long name) should only be used when the lo
 - Can be invalid (from an untrusted serialized source)
     - There's 8 extra values in base 2
 
+- Use .valueOf() for integer hours
+
+- .parse() accepts any of the following:
+    - "now" (use current hour in local time)
+    - 1 digit unsigned integer (0-9) if strict=false (default)
+    - 2 digit unsigned integer, possibly zero padded (00-23)
+
 ### Minute
 
 - Uses 1 byte of memory
@@ -82,6 +89,13 @@ NOTE: locale-dependent parsing (short/long name) should only be used when the lo
 - Can represent 0-59
 - Can be invalid (from an untrusted serialized source)
     - There's 4 extra values in base 2
+
+- Use .valueOf() for integer minutes
+
+- .parse() accepts any of the following:
+    - "now" (use current minute in local time)
+    - 1 digit unsigned integer (0-9) if strict=false (default)
+    - 2 digit unsigned integer, possibly zero padded (00-59)
 
 ### Second
 
@@ -92,6 +106,13 @@ NOTE: locale-dependent parsing (short/long name) should only be used when the lo
 - Can be invalid (from an untrusted serialized source)
     - There's 4 extra values in base 2
 
+- Use .valueOf() for integer seconds
+
+- .parse() accepts any of the following:
+    - "now" (use current second in local time)
+    - 1 digit unsigned integer (0-9) if strict=false (default)
+    - 2 digit unsigned integer, possibly zero padded (00-59)
+
 ### SecondMs
 
 - Uses 2 bytes of memory
@@ -101,11 +122,59 @@ NOTE: locale-dependent parsing (short/long name) should only be used when the lo
 - Can be invalid (from an untrusted serialized source)
     - There's 5535 extra values in base 2
 
-- Use .second for integer second component (only)
-- Use .millisecond for integer millisecond component (only)
-- Use .valueOf() for floating second+ms component (all)
-- Use .valueMs() for integer second+ms component (all)
+- Use .second for integer second component (eg 2)
+- Use .millisecond for integer millisecond component (eg 24)
+- Use .valueOf() for floating second+ms component (eg 2.024)
+- Use .valueMs() for integer second+ms component (eg 2024)
+
+- .parse() accepts any of the following:
+    - "now" (use current second+ms in local time)
+    - 1 digit unsigned integer (0-9) representing seconds only, if strict=false (default)
+    - 2 digit unsigned integer (00-59) representing seconds only, if strict=false (default)
+    - 2-4 digit unsigned float representing seconds and some ms, if strict=false (default)
+    - 5 digit unsigned float representing seconds and ms (zero padded/trailed)
 
 ### Microsecond
+
+- Uses 3 bytes of memory
+- Serializes into 20 bits
+- Can represent 0-999999 (in us) or 0.000000 - 0.999999 (in s)
+- Can be invalid (from an untrusted serialized source)
+    - There's 48576 extra values in base 2
+
+- Use .valueOf() for integer us
+
+- .parse() accepts any of the following:
+    - "now" (use current us in local time)
+    - 1-5 digit unsigned integer (0-99999) if strict=false (default)
+    - 6 digit unsigned integer, possibly zero padded (000000-999999)
+
+### UtcOrNot
+
+- Uses 1 byte of memory
+- Serializes into 1 bit
+- Represents whether the time is in UTC or not
+
+- Use .valueOf() for 1=UTC, 0=not
+- Use .valueBool() for true=UTC false=not
+
+- .parse() accepts any of the following:
+    - an empty string (not UTC)
+    - a string of only whitespace (not UTC)
+    - a whitespace padded string including 'Z' (UTC)
+
 ### TimeOnly
 
+- Uses 7 bytes of memory
+- Serializes to 38 bits
+- Can represent 0:0:0.000000 - 23:59:59.999999 
+- No support for leap seconds
+- Can be invalid (from untrusted serialized sources - see above)
+
+- Use .valueOf() to get as a 100 shifted integer (eg 11:41:06.012345 is 114106012345)
+- Use .toString() to get an RFC3339 (ISO8601) formatted string (eg "11:41:06.012345Z")
+    - Hours are always 2 digits (possibly zero prefixed)
+    - Minutes are always 2 digits (possibly zero prefixed)
+    - Seconds are always 2 digits (possibly zero prefixed)
+    - Microseconds are always 6 digits (possibly zero trailed)
+    - If UTC a "Z" will be appended

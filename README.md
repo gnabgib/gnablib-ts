@@ -218,7 +218,7 @@ Name|Capacities|Optional parameters
 
 ### Primitive
 
-- DateTime
+- DateTime, DateOnly, TimeOnly
 - Duration
 - Fixed TypedArray
 - Int64
