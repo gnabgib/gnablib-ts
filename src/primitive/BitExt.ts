@@ -1,5 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
+
 export const bitsPerByte = 8;
 export const size16Bytes = 2;
 export const i16SizeBits = size16Bytes * bitsPerByte;

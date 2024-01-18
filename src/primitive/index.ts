@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-export type { IHasLength } from './interfaces/IHasLength.js';
+export type { ILengther } from './interfaces/ILengther.js';
 
 export { bitExt, Carrier } from './BitExt.js';
 export { DateTime } from './DateTime.js';

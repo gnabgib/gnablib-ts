@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from './Safety.js';
+import { somewhatSafe as safe } from '../safe/index.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const NOT_FOUND = -1;
 // type splitter= {
@@ -16,7 +16,8 @@ export class WindowStr {
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	private readonly _src: String;
 	private readonly _start: number;
-	private readonly _length: number;
+	/** Length/size of the window (in characters) */
+	readonly length: number;
 
 	/**
 	 * Build from source
@@ -28,11 +29,11 @@ export class WindowStr {
 	 * @param end Integer 0 < (source.length-start) (default source.length-start)
 	 */
 	constructor(source: string | WindowStr, start = 0, length?: number) {
-		safety.intInRangeInc(start, 0, source.length, 'start');
+		safe.int.inRangeInc(start,0,source.length);
 		if (length === undefined) {
 			length = source.length - start;
 		} else {
-			safety.intInRangeInc(length, 0, source.length - start, 'length');
+			safe.int.inRangeInc(length,0,source.length-start);
 		}
 		if (source instanceof WindowStr) {
 			this._src = source._src;
@@ -41,25 +42,18 @@ export class WindowStr {
 			this._src = new String(source);
 			this._start = start;
 		}
-		this._length = length;
-	}
-
-	/**
-	 * Length/size of the window (in characters)
-	 */
-	get length(): number {
-		return this._length;
+		this.length = length;
 	}
 
 	private get _end(): number {
-		return this._start + this._length;
+		return this._start + this.length;
 	}
 
 	/**
 	 * Whether the window is empty
 	 */
 	get empty(): boolean {
-		return this._length === 0;
+		return this.length === 0;
 	}
 
 	/**
@@ -70,34 +64,24 @@ export class WindowStr {
 	 * @returns character (UTF16)|''
 	 */
 	charAt(idx: number): string {
-		if (idx < 0) idx += this._length;
-		safety.intInRangeIncExc(idx, 0, this._length, 'idx');
+		if (idx < 0) idx += this.length;
+		safe.int.inRangeInc(idx,0,this.length-1);
 		return this._src.charAt(idx + this._start);
 	}
 
 	/**
-	 * Return the unicode value of the character at the specific index
+	 * Return the unicode code point of the character at the specific index
 	 * @throws EnforceTypeError idx not an integer
 	 * @throws OutOfRangeError idx invalid value
 	 * @param idx Integer 0 < (length-1)
-	 * @returns Integer 0-65535|NaN
+	 * @returns Integer 0-4294967295
 	 */
-	charCodeAt(idx: number): number {
-		safety.intInRangeIncExc(idx, 0, this._length, 'idx');
-		return this._src.charCodeAt(idx + this._start);
+	codePointAt(idx: number): number {
+		if (idx < 0) idx += this.length;
+		safe.int.inRangeInc(idx,0,this.length-1);
+		//@ts-ignore - We've already tested out of range idx (above), so we know it's a number
+		return this._src.codePointAt(idx + this._start);
 	}
-
-	// /**
-	//  * Return the unicode code point unicode value of the character at the specific index
-	//  * @throws EnforceTypeError idx not an integer
-	//  * @throws OutOfRangeError idx invalid value
-	//  * @param idx Integer 0 < (length-1)
-	//  * @returns Integer 0-4294967295
-	//  */
-	// codePointAt(idx: number): number | undefined {
-	// 	inRangeInclusive(idx, 0, this._length - 1, 'idx');
-	// 	return this._src.codePointAt(idx + this._start);
-	// }
 
 	/**
 	 * Whether the window ends with the given string (exactly)
@@ -118,14 +102,14 @@ export class WindowStr {
 	 */
 	indexOf(searchString: string, start?: number): number {
 		if (start === undefined) start = 0;
-		safety.intInRangeInc(start, 0, this._length, 'start');
+		safe.int.inRangeInc(start,0,this.length);
 		let pos = this._src.indexOf(searchString, this._start + start);
 		//Not found - return
 		if (pos < 0) return NOT_FOUND;
 		//Correct scope
 		pos -= this._start;
 		//Filter out positions out of scope
-		return pos <= this._length - searchString.length ? pos : NOT_FOUND;
+		return pos <= this.length - searchString.length ? pos : NOT_FOUND;
 	}
 
 	/**
@@ -135,9 +119,9 @@ export class WindowStr {
 	 */
 	lastIndexOf(searchString: string, length?: number): number {
 		if (length === undefined) {
-			length = this._length;
+			length = this.length;
 		} else {
-			safety.intInRangeInc(length, 0, this._length, 'length');
+			safe.int.inRangeInc(length,0,this.length);
 		}
 		const lastIndexPos = this._start + length - searchString.length;
 		//Because JS treats <=0 as 0 in lastIndexPos we need to catch negative
@@ -159,7 +143,7 @@ export class WindowStr {
 	 * @returns
 	 */
 	left(length: number): WindowStr {
-		safety.intInRangeInc(length, 0, this._length, 'length');
+		safe.int.inRangeInc(length,0,this.length);
 		return new WindowStr(this, 0, length);
 	}
 
@@ -179,8 +163,8 @@ export class WindowStr {
 	 * @returns
 	 */
 	right(length: number): WindowStr {
-		safety.intInRangeInc(length, 0, this._length, 'length');
-		return new WindowStr(this, this._length - length);
+		safe.int.inRangeInc(length,0,this.length);
+		return new WindowStr(this, this.length - length);
 	}
 
 	/**
@@ -236,7 +220,7 @@ export class WindowStr {
 	 */
 	sub(start: number, length?: number): WindowStr {
 		//If start is low, add length (-1 will give you the last char)
-		if (start < 0) start += this._length;
+		if (start < 0) start += this.length;
 		return new WindowStr(this, start, length);
 	}
 

@@ -250,7 +250,7 @@ export class Nfa {
         for (;i<str.length;i++) {
             const nextStates:Node[]=[];
             for(const s of currentStates) {
-                const next=s.transition(str.charCodeAt(i),this.debug);
+                const next=s.transition(str.codePointAt(i),this.debug);
                 if (next) {
                     this.addNextState(next,nextStates,[]);
                 }

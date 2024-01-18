@@ -3,6 +3,10 @@
 import { escape } from '../regexp/index.js';
 import { safety } from './Safety.js';
 
+//codePointAt >> charCodeAt
+// - charCodeAt is constrained to UTF16 0-65535 values, while codePointAt allows any UTF32/UTF8 character
+// - note there are still surrogates so codePointAt may only provide some of the character (eg composed emoji)
+
 export const stringExt = {
 	wrap: function (source: string, width: number, join?: string): string {
 		safety.numGte(width,0,'width');

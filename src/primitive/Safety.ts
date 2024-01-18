@@ -1,7 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { EnforceTypeError,InvalidLengthError,NotInRangeError,NullError } from './ErrorExt.js';
-import { IHasLength } from './interfaces/IHasLength.js';
+import { ILengther } from './interfaces/ILengther.js';
 
 /** @namespace */
 export const safety = {
@@ -146,7 +146,7 @@ export const safety = {
 	 * @throws {@link ./NotInRangeError} 
 	 * $noun/value length should be $lowInc<=x<=$highInc, got: $test.length
 	 */
-	lenInRangeInc:function(test:IHasLength,lowInc:number,highInc:number,noun?:string):void {
+	lenInRangeInc:function(test:ILengther,lowInc:number,highInc:number,noun?:string):void {
 		this.notNull(test,noun);
 		if (noun===undefined) noun='value';
 		noun+=' length';
@@ -166,7 +166,7 @@ export const safety = {
 	 * @throws {@link ./NotInRangeError} 
 	 * $noun/value length should be x==$eq, got: $test.length
 	 */
-	lenExactly:function(test:IHasLength,len:number,noun?:string):void {
+	lenExactly:function(test:ILengther,len:number,noun?:string):void {
 		this.notNull(test,noun);
 		if (noun===undefined) noun='value';
 		noun+=' length';
@@ -186,7 +186,7 @@ export const safety = {
 	 * @throws {@link ./NotInRangeError} 
 	 * $noun/value length should be x>=$gte, got: $test.length
 	 */
-	lenGte:function(test:IHasLength,gte:number,noun?:string):void {
+	lenGte:function(test:ILengther,gte:number,noun?:string):void {
 		this.notNull(test,noun);
 		if (noun===undefined) noun='value';
 		noun+=' length';
@@ -203,7 +203,7 @@ export const safety = {
 	 * @throws {@link ./InvalidLengthError} 
 	 * $noun length needs to be be a multiple of $mul, has $rem extra
 	 */
-	lenMultiple:function(test:IHasLength,mul:number,noun?:string):void {
+	lenMultiple:function(test:ILengther,mul:number,noun?:string):void {
 		if (noun===undefined) noun='value';
 		noun+=' length';
 		const rem=test.length%mul;

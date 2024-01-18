@@ -113,7 +113,7 @@ export class DateTime {
 	 * Value as a UInt64, in a uint8 array (since JS doesn't support 64bit integers)
 	 */
 	serialize(): U64 {
-		//27 bits: year/month/day
+		//27 bits: year/month/day = 18(262144) + 4 (16)+ 5(32)
 		let days = this._day - 1; //There is no day 0 so drop 1 from count
 		for (let i = 1; i < this._month; i++) days += daysInMonth[i - 1];
 		//daysInMonth is 1 short for months after feb on leap years

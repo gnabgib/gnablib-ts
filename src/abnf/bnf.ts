@@ -121,10 +121,10 @@ export class BnfChar implements IBnf {
 		let match = false;
 		if (this.caseInsensitive) {
 			//Fold to lower case (upper case will break other codepoints)
-			const c = s.charCodeAt(0) | 0x20;
+			const c = s.codePointAt(0) | 0x20;
 			match = c === (this.ord | 0x20);
 		} else {
-			match = s.charCodeAt(0) === this.ord;
+			match = s.codePointAt(0) === this.ord;
 		}
 		if (!match) {
 			return new MatchFail(0);
@@ -207,7 +207,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 
 	atStartOf(s: WindowStr): IMatchResult {
 		if (s.length === 0) return new MatchFail(0);
-		const c = s.charCodeAt(0);
+		const c = s.codePointAt(0);
 		if (c < this.start.ord || c > this.end.ord) {
 			return new MatchFail(0);
 		}

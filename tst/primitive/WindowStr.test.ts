@@ -40,7 +40,6 @@ const badBuildTests: {
 }[] = [
 	{ str: 'Hello', start: -1 }, //Start out of range
 	{ str: 'Hello', start: 6 }, //Start out of range
-	{ str: 'Hello', start: 1.1 }, //Start not an int
 	{ str: 'Hello', end: -1 }, //End out of range
 	{ str: 'Hello', end: 6 }, //End out of range
 ];
@@ -474,8 +473,8 @@ tsts('WindowStr(Hello£) -integrated', () => {
 	const w = new WindowStr('Hello£');
 	assert.is(w.length, 6);
 	assert.is(w.empty, false);
-	assert.is(w.charCodeAt(0), 72);
-	assert.is(w.charCodeAt(5), 163);
+	assert.is(w.codePointAt(0), 72);
+	assert.is(w.codePointAt(5), 163);
 });
 
 tsts.run();

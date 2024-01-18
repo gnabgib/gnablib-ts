@@ -8,3 +8,4 @@
 export interface IBufferer {
 	get buffer(): ArrayBuffer;
 }
+
