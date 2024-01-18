@@ -104,7 +104,7 @@ export const superSafe:ISafe = {
             if (!(typeof test === "number")) throw new TypeError(`Not a float: ${test}`);
         },
         coerce: somewhatSafe.float.coerce
-    }
+    },
     string: {
         is:function(test:unknown) {
             if (typeof test !== "string") throw new TypeError(`Not a string: ${test}`);

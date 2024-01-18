@@ -9,7 +9,7 @@ import { ISerializer } from '../interfaces/ISerializer.js';
 
 // Year + Month + Day: Ser in 24 bits, d=5, m=4, leaving 15 bits [32768] for year
 const maxHeYear = 32767; //0x7fff
-const maxIsoYear = maxHeYear-10000;
+const maxIsoYear = maxHeYear - 10000;
 const u16MemSize = 1;
 
 /**
@@ -45,20 +45,20 @@ export class Year implements ISerializer {
 		return (this.#v[0] - 10000).toString();
 	}
 
-    /** Year ISO8601, zero padded if <1000, includes sign if >4 digits */
-    public toIsoString():string {
-        let v=this.#v[0]-10000;
-        let sign='';
-        if (v>9999) {
-            sign='+';
-        } else if (v<0) {
-            sign='-';
-            v=-v;
-        }
-        let r=v.toString();
-        if (r.length<4) r=('000'+r).substring(r.length-1);
-        return sign + r;
-    }
+	/** Year ISO8601, zero padded if <1000, includes sign if >4 digits */
+	public toIsoString(): string {
+		let v = this.#v[0] - 10000;
+		let sign = '';
+		if (v > 9999) {
+			sign = '+';
+		} else if (v < 0) {
+			sign = '-';
+			v = -v;
+		}
+		let r = v.toString();
+		if (r.length < 4) r = ('000' + r).substring(r.length - 1);
+		return sign + r;
+	}
 
 	/** Year in ISO8601 as an integer (0=1BC, -10000=10001BC, 2024=2024AD) */
 	public valueOf(): number {
@@ -135,49 +135,55 @@ export class Year implements ISerializer {
 		return new Year(storage);
 	}
 
-    /**
-     * Create a year from a string, accepts:
-     * 'now', an integer with sign, if strict: integer must be 4 digits, when >4 digits must have sign (even +)
-     * 
-     * Throws if:
-     * - Not a string, or $str is empty
-     * - There's no available $storage
-     * - The integer value of $str is out of range
-     * - The content of $str isn't valid
-     */
-    public static parse(str:string,storage?:Uint16Array,strict=false):Year {
-        const strVal=safe.string.nullEmpty(str);
-        if (strVal===undefined) throw new ContentError('require string content',str);
-        if (strVal.toLowerCase()==="now") return this.now(storage);
+	/**
+	 * Create a year from a string, accepts:
+	 * 'now', an integer with sign, if strict: integer must be 4 digits, when >4 digits must have sign (even +)
+	 *
+	 * Throws if:
+	 * - Not a string, or $str is empty
+	 * - There's no available $storage
+	 * - The integer value of $str is out of range
+	 * - The content of $str isn't valid
+	 */
+	public static parse(
+		str: string,
+		storage?: Uint16Array,
+		strict = false
+	): Year {
+		const strVal = safe.string.nullEmpty(str);
+		if (strVal === undefined)
+			throw new ContentError('require string content', str);
+		if (strVal.toLowerCase() === 'now') return this.now(storage);
 
 		//Only parse integers (no floating point/scientific notation)
-        // - if there's a sign it must be touching the digits
-        const r = strVal.match(/^\s*([+-])?(\d+)\s*$/);
-        if (r!==null) {
-            const hasSign=r[1]!=undefined;
-            let yearPart=r[2];
-            if (strict) {
-                if (yearPart.length>4 && !hasSign) throw new ContentError('expecting >4 digits to be signed',strVal);
-                if (yearPart.length<4) throw new ContentError('expecting 4 digit integer-string',strVal);
-            }
-            if (r[1]==="-") yearPart="-"+yearPart;
-            const intVal=parseInt(yearPart,10);
-            if (!isNaN(intVal)) return this.new(intVal,storage);
-        }
+		// - if there's a sign it must be touching the digits
+		const r = strVal.match(/^\s*([+-])?(\d+)\s*$/);
+		if (r !== null) {
+			const hasSign = r[1] != undefined;
+			let yearPart = r[2];
+			if (strict) {
+				if (yearPart.length > 4 && !hasSign)
+					throw new ContentError('expecting >4 digits to be signed', strVal);
+				if (yearPart.length < 4)
+					throw new ContentError('expecting 4 digit integer-string', strVal);
+			}
+			if (r[1] === '-') yearPart = '-' + yearPart;
+			const intVal = parseInt(yearPart, 10);
+			if (!isNaN(intVal)) return this.new(intVal, storage);
+		}
 
-
-        // //Only parse integers (no floating point/scientific notation)
-        // //There can be no space between sign and integer
-        // //if abs(year)<10000 must be zero padded to 4 digits
-        // //if integer is 5 digits or more, must be prefixed by positive/negative sign
-        // // RFC/ISO aren't specific, but + MAY prefix a 4 digit year
-        // if (/^\s*(-\d{4,}|\+?\d{4}|\+\d{5,})\s*$/.test(strVal)) {
-        // //([-+]?\d{4,})\s*$/.test(strVal)) {
-        //     const intVal=parseInt(strVal,10);
-        //     if (!isNaN(intVal)) return this.new(intVal,storage);
-        // }// else console.log(`test: ${strVal} got: ${/^\s*([-+]?\d{4,})\s*$/.test(strVal)}`);
-        throw new ContentError('expecting integer-string',strVal);
-    }
+		// //Only parse integers (no floating point/scientific notation)
+		// //There can be no space between sign and integer
+		// //if abs(year)<10000 must be zero padded to 4 digits
+		// //if integer is 5 digits or more, must be prefixed by positive/negative sign
+		// // RFC/ISO aren't specific, but + MAY prefix a 4 digit year
+		// if (/^\s*(-\d{4,}|\+?\d{4}|\+\d{5,})\s*$/.test(strVal)) {
+		// //([-+]?\d{4,})\s*$/.test(strVal)) {
+		//     const intVal=parseInt(strVal,10);
+		//     if (!isNaN(intVal)) return this.new(intVal,storage);
+		// }// else console.log(`test: ${strVal} got: ${/^\s*([-+]?\d{4,})\s*$/.test(strVal)}`);
+		throw new ContentError('expecting integer-string', strVal);
+	}
 
 	/** Create this year (local) */
 	public static now(storage?: Uint16Array): Year {

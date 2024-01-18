@@ -23,9 +23,9 @@ export class Day implements ISerializer {
 		return (this.#v[0] + 1).toString();
 	}
 	/** Day ISO8601, zero padded (01-31) */
-	public toIsoString():string {
-		const r='0'+(this.#v[0] + 1).toString();
-		return r.substring(r.length-2);
+	public toIsoString(): string {
+		const r = '0' + (this.#v[0] + 1).toString();
+		return r.substring(r.length - 2);
 	}
 
 	/** Day of the month ISO8601 as a number (1-31) */

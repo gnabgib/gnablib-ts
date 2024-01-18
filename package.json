@@ -217,10 +217,10 @@
 	},
 	"homepage": "https://github.com/gnabgib/gnablib-ts#readme",
 	"devDependencies": {
-		"@types/node": "^20.4.10",
-		"terser": "^5.19.2",
+		"@types/node": "^20.11.5",
+		"terser": "^5.27.0",
 		"tsm": "^2.3.0",
-		"typescript": "^5.1.6",
+		"typescript": "^5.3.3",
 		"uvu": "^0.5.6"
 	},
 	"optionalDevDependencies": {

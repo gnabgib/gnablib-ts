@@ -24,9 +24,9 @@ export class Month implements ISerializer {
 	}
 
 	/** Month ISO8601, zero padded (01-12) */
-	public toIsoString():string {
-		const r='0'+(this.#v[0] + 1).toString();
-		return r.substring(r.length-2);
+	public toIsoString(): string {
+		const r = '0' + (this.#v[0] + 1).toString();
+		return r.substring(r.length - 2);
 	}
 
 	/** Month ISO8601 as an integer (1=January, 12=December) */
@@ -105,10 +105,16 @@ export class Month implements ISerializer {
 			//r[2] - second group (number)
 			if (strict) {
 				if (r[1] != undefined || r[2].length != 2)
-					throw new ContentError('expecting 2 digit unsigned integer-string', strVal);
+					throw new ContentError(
+						'expecting 2 digit unsigned integer-string',
+						strVal
+					);
 			} else {
 				if (r[1] != undefined || r[2].length > 2)
-					throw new ContentError('expecting 1-2 digit unsigned integer-string', strVal);
+					throw new ContentError(
+						'expecting 1-2 digit unsigned integer-string',
+						strVal
+					);
 			}
 
 			const intVal = parseInt(r[2], 10);
