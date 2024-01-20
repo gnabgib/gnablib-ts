@@ -6,11 +6,12 @@ import { BitReader } from '../BitReader.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 import { ContentError } from '../error/ContentError.js';
 
-const byteMemSize = 1;
-
 /** Day of month */
 export class Day implements ISerializer {
-	static readonly serialBits = 5;
+	/**Number of bytes required to store this data */
+	static readonly storageBytes = 1;
+	/**Number of bits required to serialize this data */
+	static readonly serialBits = 5; //2^5=32
 	/** Note there's no zero day in a month, so we shift by one internally (0=1st, 30=31st, 31=invalid) */
 	readonly #v: Uint8Array;
 
@@ -24,8 +25,8 @@ export class Day implements ISerializer {
 	}
 	/** Day ISO8601, zero padded (01-31) */
 	public toIsoString(): string {
-		const r = '0' + (this.#v[0] + 1).toString();
-		return r.substring(r.length - 2);
+		const s = (this.#v[0] + 1).toString();
+		return ('00' + s).substring(s.length);
 	}
 
 	/** Day of the month ISO8601 as a number (1-31) */
@@ -48,16 +49,19 @@ export class Day implements ISerializer {
 		return this;
 	}
 
+	/** If storage empty, builds new, or vets it's the right size */
+	protected static setupStor(storage?: Uint8Array): Uint8Array {
+		if (!storage) return new Uint8Array(Day.storageBytes);
+		safe.lengthAtLeast(storage, Day.storageBytes);
+		return storage;
+	}
+
 	/** Create a new day of the month, range 1-31 */
 	public static new(day: number, storage?: Uint8Array): Day {
 		safe.int.inRangeInc(day, 1, 31);
-		if (!storage) {
-			storage = new Uint8Array(byteMemSize);
-		} else {
-			safe.lengthAtLeast(storage, byteMemSize);
-		}
-		storage[0] = day - 1;
-		return new Day(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = day - 1;
+		return new Day(stor);
 	}
 
 	/**
@@ -65,18 +69,14 @@ export class Day implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Day {
-		if (!storage) {
-			storage = new Uint8Array(byteMemSize);
-		} else {
-			safe.lengthAtLeast(storage, byteMemSize);
-		}
-		storage[0] = date.getDate() - 1;
-		return new Day(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = date.getDate() - 1;
+		return new Day(stor);
 	}
 
 	/**
 	 * Create a day from a string, accepts:
-	 * 'now', a 2 digit unsigned integer
+	 * 'now', a 1-2 digit unsigned integer
 	 *
 	 * Throws if:
 	 * - Not a string, or $str is empty
@@ -91,7 +91,7 @@ export class Day implements ISerializer {
 		if (strVal.toLowerCase() === 'now') return this.now(storage);
 
 		//Only parse integers (no floating point/scientific notation)
-		const r = strVal.match(/^\s*(\d+)\s*$/);
+		const r = strVal.match(/^\s*(\d\d?)\s*$/);
 		if (r !== null) {
 			if (strict) {
 				if (r[1].length != 2)
@@ -99,23 +99,22 @@ export class Day implements ISerializer {
 						'expecting 2 digit unsigned integer-string',
 						strVal
 					);
-			} else {
-				if (r[1].length > 2)
-					throw new ContentError(
-						'expecting 1-2 digit unsigned integer-string',
-						strVal
-					);
 			}
 			const intVal = parseInt(r[1], 10);
 			return this.new(intVal, storage);
 		}
-		throw new ContentError('expecting unsigned integer-string', strVal);
+		throw new ContentError(
+			'expecting 1-2 digit unsigned integer-string',
+			strVal
+		);
 	}
 
 	/** Create this day of the month (local) */
 	public static now(storage?: Uint8Array): Day {
 		return this.fromDate(new Date(), storage);
 	}
+
+	//nowUtc: While TZ may change a day value, it's more of a DateTime concern
 
 	/**
 	 * Deserialize next 5 bits into day of month.
@@ -128,12 +127,8 @@ export class Day implements ISerializer {
 	 * @returns
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Day {
-		if (!storage) {
-			storage = new Uint8Array(byteMemSize);
-		} else {
-			safe.lengthAtLeast(storage, byteMemSize);
-		}
-		storage[0] = source.readNumber(Day.serialBits);
-		return new Day(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = source.readNumber(Day.serialBits);
+		return new Day(stor);
 	}
 }

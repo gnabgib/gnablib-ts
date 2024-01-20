@@ -9,6 +9,9 @@ import { ISerializer } from '../interfaces/ISerializer.js';
 const u8MemSize = 1;
 
 export class UtcOrNot implements ISerializer {
+	/**Number of bytes required to store this data */
+	static readonly storageBytes = 1;
+	/**Number of bits required to serialize this data */
 	static readonly serialBits = 1;
 	readonly #v: Uint8Array;
 

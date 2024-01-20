@@ -8,6 +8,7 @@ import { BitReader } from '../../../src/primitive/BitReader';
 const tsts = suite('Hour');
 
 const serSet:[number,string][] = [
+    //Exhaustive
     [0,'00'],
     [1,'08'],
     [2,'10'],
@@ -92,7 +93,7 @@ tsts(`new`,()=>{
     assert.is(h.toString(),'11');
 });
 tsts(`new-provide storage`,()=>{
-    const stor=new Uint8Array(1);
+    const stor=new Uint8Array(Hour.storageBytes);
     const h=Hour.new(12,stor);
     assert.is(h.valueOf(),12);
 });
@@ -102,11 +103,15 @@ tsts(`fromDate`,()=>{
     const h=Hour.fromDate(dt);
     assert.is(h.valueOf(),dt.getHours());
 });
-tsts(`fromDate-provide storage`,()=>{
-    const stor=new Uint8Array(1);
-    const dt=new Date(2001,2,3,4,5,6);
-    const h=Hour.fromDate(dt,stor);
-    assert.is(h.valueOf(),dt.getHours());
+
+tsts(`fromSecondsSinceEpoch`, () => {
+	const h = Hour.fromSecondsSinceEpoch(1705734810);
+	assert.is(h.valueOf(), 7);
+});
+
+tsts(`fromMillisecondsSinceEpoch`, () => {
+	const h = Hour.fromMillisecondsSinceEpoch(1705734810543);
+	assert.is(h.valueOf(), 7);
 });
 
 tsts(`now`,()=>{
@@ -149,8 +154,7 @@ const parseSet:[string,number][]=[
 ];
 for (const [str,expect] of parseSet) {
     tsts(`parse(${str})`,()=>{
-        const stor=new Uint8Array(1);
-        const d=Hour.parse(str,stor);
+        const d=Hour.parse(str);
         assert.equal(d.valueOf(),expect);
     });
 }

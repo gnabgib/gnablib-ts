@@ -6,18 +6,18 @@ import { BitWriter } from '../BitWriter.js';
 import { Hour } from './Hour.js';
 import { Minute } from './Minute.js';
 import { Second } from './Second.js';
-import { Microsecond } from './Microsecond.js';
+import { Millisecond } from './Millisecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
 
 /**
- * Time of day in microsecond resolution (hh:mm:ss.uuuuuu)
- * Range 00:00:00.000000 - 23:59:59.999999 (no leap second support)
+ * Time of day in millisecond resolution (h:m:s.uuuuuu)
+ * Range 0:0:0.000 - 23:59:59.999 (no leap second support)
  */
-export class TimeOnly {
+export class TimeOnlyMs {
 	/**Number of bytes required to store this data */
-	static readonly storageBytes = 7; //1+ 1+ 1+ 3+ 1
+	static readonly storageBytes = 6; //1+ 1+ 1+ 2+ 1
 	/**Number of bits required to serialize this data */
-	static readonly serialBits = 38; //5+ 6+ 6+ 20+ 1
+	static readonly serialBits = 28; //5+ 6+ 6+ 10+ 1
 
 	private constructor(
 		/** Hours (0-23) */
@@ -26,15 +26,15 @@ export class TimeOnly {
 		readonly minute: Minute,
 		/** Seconds (0-59) */
 		readonly second: Second,
-		/** Microseconds (0-999999) */
-		readonly microsecond: Microsecond,
+		/** Milliseconds (0-999) */
+		readonly millisecond: Millisecond,
 		/** In UTC or not */
 		readonly isUtc: UtcOrNot
 	) {}
 
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
-	 * formatted time: hh:mm:ss.mmmmmm(z) (all zero padded)
+	 * formatted time: hh:mm:ss.mmm(z) (all zero padded)
 	 */
 	public toString(): string {
 		return (
@@ -44,33 +44,32 @@ export class TimeOnly {
 			':' +
 			this.second.toPadString() +
 			'.' +
-			this.microsecond.toPadString() +
+			this.millisecond.toPadString() +
 			this.isUtc.toIsoString()
 		);
 	}
 
 	/**
-	 * Numeric time, base 10 shifted: 000000000000 - 235959999999
-	 * 2^38 so safe in JS as a number
-	 * NOTE there are gaps in valid values 240000000000, 236000000000, etc
+	 * Numeric time, base 10 shifted: 000000000 - 235959999
+	 * NOTE there are gaps in valid values 240000000, 236000000, etc
 	 * But you can do <, >, = comparisons
 	 * NOTE: Utc indicator is not included in this value
 	 */
 	public valueOf(): number {
 		return (
-			this.hour.valueOf() * 10000000000 +
-			this.minute.valueOf() * 100000000 +
-			this.second.valueOf() * 1000000 +
-			this.microsecond.valueOf()
+			this.hour.valueOf() * 10000000 +
+			this.minute.valueOf() * 100000 +
+			this.second.valueOf() * 1000 +
+			this.millisecond.valueOf()
 		);
 	}
 
-	/** Serialize into target  - 38 bits*/
+	/** Serialize into target  - 28 bits*/
 	public serialize(target: BitWriter): void {
 		this.hour.serialize(target);
 		this.minute.serialize(target);
 		this.second.serialize(target);
-		this.microsecond.serialize(target);
+		this.millisecond.serialize(target);
 		this.isUtc.serialize(target);
 	}
 
@@ -79,11 +78,11 @@ export class TimeOnly {
 	 * You should call this after a deserialize unless you trust the source
 	 * @returns self (chainable)
 	 */
-	public validate(): TimeOnly {
+	public validate(): TimeOnlyMs {
 		this.hour.validate();
 		this.minute.validate();
 		this.second.validate();
-		this.microsecond.validate();
+		this.millisecond.validate();
 		return this;
 	}
 
@@ -99,37 +98,36 @@ export class TimeOnly {
 	 * @param hour 0-23
 	 * @param minute 0-59
 	 * @param second 0-59
-	 * @param microsecond 0-999999
+	 * @param millisecond 0-999
 	 */
 	public static new(
 		hour: number,
 		minute: number,
 		second: number,
-		microsecond: number,
-		isUtc = false,
+		millisecond: number,
+		isUtc: boolean,
 		storage?: Uint8Array
-	): TimeOnly {
+	): TimeOnlyMs {
 		//Keep the memory contiguous
 		const stor = this.setupStor(storage);
 
-		const h = Hour.new(hour, stor);
+		const h = Hour.new(hour, storage);
 		const m = Minute.new(minute, stor.subarray(1, 2));
 		const s = Second.new(second, stor.subarray(2, 3));
-		const us = Microsecond.new(microsecond, stor.subarray(3));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		const ms = Millisecond.new(millisecond, stor.subarray(3));
+		const utc = UtcOrNot.new(isUtc, stor.subarray(5));
+		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 
 	/**
 	 * Create a time from a js Date object
-	 * WARNING: Date only has millisecond accuracy, use .now() instead
 	 * @param date Value used as source
 	 */
 	public static fromDate(
 		date: Date,
 		isUtc = false,
 		storage?: Uint8Array
-	): TimeOnly {
+	): TimeOnlyMs {
 		//Keep the memory contiguous
 		const stor = this.setupStor(storage);
 
@@ -139,9 +137,9 @@ export class TimeOnly {
 		const h = Hour.fromDate(date, stor);
 		const m = Minute.fromDate(date, stor.subarray(1, 2));
 		const s = Second.fromDate(date, stor.subarray(2, 3));
-		const us = Microsecond.fromDate(date, stor.subarray(3));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		const ms = Millisecond.fromDate(date, stor.subarray(3));
+		const utc = UtcOrNot.new(isUtc, stor.subarray(5));
+		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 
 	/** Create a time from float seconds since UNIX epoch */
@@ -149,14 +147,15 @@ export class TimeOnly {
 		source: number,
 		isUtc = false,
 		storage?: Uint8Array
-	): TimeOnly {
+	): TimeOnlyMs {
 		const stor = this.setupStor(storage);
+
 		const h = Hour.fromSecondsSinceEpoch(source, stor);
 		const m = Minute.fromSecondsSinceEpoch(source, stor.subarray(1, 2));
 		const s = Second.fromSecondsSinceEpoch(source, stor.subarray(2, 3));
-		const us = Microsecond.fromSecondsSinceEpoch(source, stor.subarray(3));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		const ms = Millisecond.fromSecondsSinceEpoch(source, stor.subarray(3));
+		const utc = UtcOrNot.new(isUtc, stor.subarray(5));
+		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 
 	/** Create a time from float milliseconds since UNIX epoch */
@@ -164,18 +163,18 @@ export class TimeOnly {
 		source: number,
 		isUtc = false,
 		storage?: Uint8Array
-	): TimeOnly {
+	): TimeOnlyMs {
 		const stor = this.setupStor(storage);
 		const h = Hour.fromMillisecondsSinceEpoch(source, stor);
 		const m = Minute.fromMillisecondsSinceEpoch(source, stor.subarray(1, 2));
 		const s = Second.fromMillisecondsSinceEpoch(source, stor.subarray(2, 3));
-		const us = Microsecond.fromMillisecondsSinceEpoch(source, stor.subarray(3));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		const ms = Millisecond.fromMillisecondsSinceEpoch(source, stor.subarray(3));
+		const utc = UtcOrNot.new(isUtc, stor.subarray(5));
+		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 
 	/** Create time from this point in (local) time */
-	public static now(storage?: Uint8Array): TimeOnly {
+	public static now(storage?: Uint8Array): TimeOnlyMs {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		let now = performance.timeOrigin + performance.now();
@@ -186,7 +185,7 @@ export class TimeOnly {
 	}
 
 	/** Create time from this point in UTC time */
-	public static nowUtc(storage?: Uint8Array): TimeOnly {
+	public static nowUtc(storage?: Uint8Array): TimeOnlyMs {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const now = performance.timeOrigin + performance.now();
@@ -194,23 +193,26 @@ export class TimeOnly {
 	}
 
 	/**
-	 * Deserialize next 38 bits into time
+	 * Deserialize next 28 bits into time
 	 * Throws if:
-	 * - There's not 38 bits remaining in $source.buffer
+	 * - There's not 28 bits remaining in $source.buffer
 	 * - There's no available $storage
 	 * It's recommended you call .validate() after
 	 * @param source Source to read bits from
 	 * @param storage Storage location, if undefined will be built
 	 */
-	public static deserialize(source: BitReader, storage?: Uint8Array): TimeOnly {
+	public static deserialize(
+		source: BitReader,
+		storage?: Uint8Array
+	): TimeOnlyMs {
 		//Keep the memory contiguous
 		const stor = this.setupStor(storage);
 
 		const h = Hour.deserialize(source, stor);
 		const m = Minute.deserialize(source, stor.subarray(1, 2));
 		const s = Second.deserialize(source, stor.subarray(2, 3));
-		const us = Microsecond.deserialize(source, stor.subarray(3));
-		const utc = UtcOrNot.deserialize(source, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		const ms = Millisecond.deserialize(source, stor.subarray(3));
+		const utc = UtcOrNot.deserialize(source, stor.subarray(5));
+		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 }

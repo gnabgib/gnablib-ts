@@ -6,10 +6,16 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
-const u8MemSize = 1;
+const secsPerHour = 60 * 60;
+const msPerHour = secsPerHour * 1000;
+const secsPerDay = secsPerHour * 24;
+const msPerDay = secsPerDay * 1000;
 
 export class Hour implements ISerializer {
-	static readonly serialBits = 5;
+	/**Number of bytes required to store this data */
+	static readonly storageBytes = 1;
+	/**Number of bits required to serialize this data */
+	static readonly serialBits = 5; //2^5=32
 	readonly #v: Uint8Array;
 
 	private constructor(storage: Uint8Array) {
@@ -23,8 +29,8 @@ export class Hour implements ISerializer {
 
 	/** Hour, zero padded (01-23) */
 	public toIsoString(): string {
-		const r = '0' + this.#v[0].toString();
-		return r.substring(r.length - 2);
+		const s = this.#v[0].toString();
+		return ('00' + s).substring(s.length);
 	}
 
 	/** Hour as a number (0-23) */
@@ -47,16 +53,19 @@ export class Hour implements ISerializer {
 		return this;
 	}
 
+	/** If storage empty, builds new, or vets it's the right size */
+	protected static setupStor(storage?: Uint8Array): Uint8Array {
+		if (!storage) return new Uint8Array(Hour.storageBytes);
+		safe.lengthAtLeast(storage, Hour.storageBytes);
+		return storage;
+	}
+
 	/** Create a new hour, range 0-23 */
 	public static new(hour: number, storage?: Uint8Array): Hour {
 		safe.int.inRangeInc(hour, 0, 23);
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		storage[0] = hour;
-		return new Hour(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = hour;
+		return new Hour(stor);
 	}
 
 	/**
@@ -64,13 +73,29 @@ export class Hour implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Hour {
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		storage[0] = date.getHours();
-		return new Hour(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = date.getHours();
+		return new Hour(stor);
+	}
+
+	/** Create an hour from seconds since UNIX epoch */
+	public static fromSecondsSinceEpoch(
+		source: number,
+		storage?: Uint8Array
+	): Hour {
+		const stor = this.setupStor(storage);
+		stor[0] = (source % secsPerDay) / secsPerHour;
+		return new Hour(stor);
+	}
+
+	/** Create an hour from milliseconds since UNIX epoch */
+	public static fromMillisecondsSinceEpoch(
+		source: number,
+		storage?: Uint8Array
+	): Hour {
+		const stor = this.setupStor(storage);
+		stor[0] = (source % msPerDay) / msPerHour;
+		return new Hour(stor);
 	}
 
 	/**
@@ -139,12 +164,8 @@ export class Hour implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Hour {
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		storage[0] = source.readNumber(Hour.serialBits);
-		return new Hour(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = source.readNumber(Hour.serialBits);
+		return new Hour(stor);
 	}
 }

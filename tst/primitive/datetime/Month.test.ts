@@ -78,7 +78,7 @@ tsts(`new`,()=>{
     assert.is(m.toString(),'11');
 });
 tsts(`new-provide storage`,()=>{
-    const stor=new Uint8Array(1);
+    const stor=new Uint8Array(Month.storageBytes);
     const m=Month.new(12,stor);
     assert.is(m.valueOf(),12);
 });
@@ -86,12 +86,6 @@ tsts(`new-provide storage`,()=>{
 tsts(`fromDate`,()=>{
     var dt=new Date(2001,2,3,4,5,6);
     var m=Month.fromDate(dt);
-    assert.is(m.valueOf(),dt.getMonth()+1);//JS stores months 0 based
-});
-tsts(`fromDate-provide storage`,()=>{
-    const stor=new Uint8Array(1);
-    var dt=new Date(2001,2,3,4,5,6);
-    var m=Month.fromDate(dt,stor);
     assert.is(m.valueOf(),dt.getMonth()+1);//JS stores months 0 based
 });
 
@@ -164,8 +158,7 @@ const parseSet:[string,number][]=[
 ];
 for (const [str,expect] of parseSet) {
     tsts(`parse(${str})`,()=>{
-        const stor=new Uint8Array(1);
-        const m=Month.parse(str,stor);
+        const m=Month.parse(str);
         assert.equal(m.valueOf(),expect);
     });
 }

@@ -1,43 +1,58 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { superSafe } from '../../src/safe';
+import { somewhatSafe } from '../../src/safe';
 import { ILengther } from '../../src/primitive/interfaces/ILengther';
 
-const tsts = suite('superSafe');
+const tsts = suite('somewhatSafe');
 
+// safe.int.is doesn't throw (Only superSafe.int.is does)
 const isInt: [unknown, boolean][] = [
 	[0, true],
 	[1, true],
 
-	[true, false],
-	[1.1, false],
+	[true, true],
+	[1.1, true],
 ];
 for (const [test, isValid] of isInt) {
-	tsts(`safe.int.is(${test})`, () => {
+	tsts(`somewhatSafe.int.is(${test})`, () => {
 		if (isValid) {
-			assert.not.throws(() => superSafe.int.is(test));
+			assert.not.throws(() => somewhatSafe.int.is(test));
 		} else {
-			assert.throws(() => superSafe.int.is(test));
+			assert.throws(() => somewhatSafe.int.is(test));
 		}
 	});
 }
 
+const intCoerceSet: [unknown, number][] = [
+	['', 0],
+	['1', 1],
+	[1.9, 1],
+	[true, 1],
+	[123, 123],
+];
+for (const [input, expect] of intCoerceSet) {
+	tsts(`somewhatSafe.int.coerce(${input})`, () => {
+		assert.is(expect, somewhatSafe.int.coerce(input));
+	});
+}
+
+//safe.int.inRangeInc doesn't confirm integer-ness
 const intInRange1To5: [number, boolean][] = [
 	[0, false],
 	[1, true],
-	[2, true] /*! Copyright 2024 the gnablib contributors MPL-1.1 */,
+	[2, true],
 	[4, true],
 	[5, true],
 	[6, false],
 
-	[1.5, false],
+	[1.5, true],
 ];
 for (const [test, inRange] of intInRange1To5) {
-	tsts(`safe.int.inRangeInc(${test},1,5)`, () => {
+	tsts(`somewhatSafe.int.inRangeInc(${test},1,5)`, () => {
 		if (inRange) {
-			assert.not.throws(() => superSafe.int.inRangeInc(test, 1, 5));
+			assert.not.throws(() => somewhatSafe.int.inRangeInc(test, 1, 5));
 		} else {
-			assert.throws(() => superSafe.int.inRangeInc(test, 1, 5));
+			assert.throws(() => somewhatSafe.int.inRangeInc(test, 1, 5));
 		}
 	});
 }
@@ -46,28 +61,40 @@ const isFloat: [unknown, boolean][] = [
 	//no checks in somewhatSafe
 	[0, true],
 	[1, true],
+	[true, true],
 	[1.1, true],
-
-	[true, false],
-	['1.1', false],
+	['1.1', true],
 ];
 for (const [test, isValid] of isFloat) {
 	tsts(`somewhatSafe.float.is(${test})`, () => {
 		if (isValid) {
-			assert.not.throws(() => superSafe.float.is(test));
+			assert.not.throws(() => somewhatSafe.float.is(test));
 		} else {
-			assert.throws(() => superSafe.float.is(test));
+			assert.throws(() => somewhatSafe.float.is(test));
 		}
 	});
 }
 
+const floatCoerceSet: [unknown, number][] = [
+	['', 0],
+	['1', 1],
+	[1.9, 1.9],
+	[true, 1],
+	[123, 123],
+];
+for (const [input, expect] of floatCoerceSet) {
+	tsts(`somewhatSafe.float.coerce(${input})`, () => {
+		assert.is(expect, somewhatSafe.float.coerce(input));
+	});
+}
+
 const isString: [unknown, boolean][] = [
-	[undefined, false],
-	[null, false],
+	[undefined, true],
+	[null, true],
 	//[Symbol('nope'),false],
-	[true, false],
-	[0, false],
-	[1.1, false],
+	[true, true],
+	[0, true],
+	[1.1, true],
 
 	['yep', true],
 	['', true],
@@ -75,9 +102,9 @@ const isString: [unknown, boolean][] = [
 for (const [test, isValid] of isString) {
 	tsts(`safe.string.is(${test})`, () => {
 		if (isValid) {
-			assert.not.throws(() => superSafe.string.is(test));
+			assert.not.throws(() => somewhatSafe.string.is(test));
 		} else {
-			assert.throws(() => superSafe.string.is(test));
+			assert.throws(() => somewhatSafe.string.is(test));
 		}
 	});
 }
@@ -91,7 +118,7 @@ const nullEmpty: [unknown, string | undefined][] = [
 ];
 for (const [test, expect] of nullEmpty) {
 	tsts(`safe.string.nullEmpty(${test})`, () => {
-		assert.is(superSafe.string.nullEmpty(test), expect);
+		assert.is(somewhatSafe.string.nullEmpty(test), expect);
 	});
 }
 
@@ -107,9 +134,9 @@ const lengthAtLeast: [ILengther, number, boolean][] = [
 for (const [test, need, expect] of lengthAtLeast) {
 	tsts(`safe.string.lengthAtLeast(${test},${need})`, () => {
 		if (expect) {
-			assert.not.throws(() => superSafe.lengthAtLeast(test, need));
+			assert.not.throws(() => somewhatSafe.lengthAtLeast(test, need));
 		} else {
-			assert.throws(() => superSafe.lengthAtLeast(test, need));
+			assert.throws(() => somewhatSafe.lengthAtLeast(test, need));
 		}
 	});
 }

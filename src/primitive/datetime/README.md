@@ -113,39 +113,33 @@ NOTE: locale-dependent parsing (short/long name) should only be used when the lo
     - 1 digit unsigned integer (0-9) if strict=false (default)
     - 2 digit unsigned integer, possibly zero padded (00-59)
 
-### SecondMs
+### Millisecond
 
 - Uses 2 bytes of memory
-- Serializes into 16 bits
-- No support for leap seconds
-- Can represent 0-59999 (in ms) or 0-59.999 (in s)
+- Serializes into 10 bits
+- Can represent 0-999
 - Can be invalid (from an untrusted serialized source)
-    - There's 5535 extra values in base 2
+    - There's 24 extra values in base 2
 
-- Use .second for integer second component (eg 2)
-- Use .millisecond for integer millisecond component (eg 24)
-- Use .valueOf() for floating second+ms component (eg 2.024)
-- Use .valueMs() for integer second+ms component (eg 2024)
+- Use .valueOf() for integer milliseconds
 
 - .parse() accepts any of the following:
-    - "now" (use current second+ms in local time)
-    - 1 digit unsigned integer (0-9) representing seconds only, if strict=false (default)
-    - 2 digit unsigned integer (00-59) representing seconds only, if strict=false (default)
-    - 2-4 digit unsigned float representing seconds and some ms, if strict=false (default)
-    - 5 digit unsigned float representing seconds and ms (zero padded/trailed)
+    - "now" (use current milliseconds)
+    - 1-2 digit unsigned integer (0-99) if strict=false (default)
+    - 3 digit unsigned integer, possibly zero padded  (000-999)
 
 ### Microsecond
 
 - Uses 3 bytes of memory
 - Serializes into 20 bits
-- Can represent 0-999999 (in us) or 0.000000 - 0.999999 (in s)
+- Can represent 0-999999
 - Can be invalid (from an untrusted serialized source)
     - There's 48576 extra values in base 2
 
-- Use .valueOf() for integer us
+- Use .valueOf() for integer microseconds
 
 - .parse() accepts any of the following:
-    - "now" (use current us in local time)
+    - "now" (use current microseconds)
     - 1-5 digit unsigned integer (0-99999) if strict=false (default)
     - 6 digit unsigned integer, possibly zero padded (000000-999999)
 
@@ -177,4 +171,20 @@ NOTE: locale-dependent parsing (short/long name) should only be used when the lo
     - Minutes are always 2 digits (possibly zero prefixed)
     - Seconds are always 2 digits (possibly zero prefixed)
     - Microseconds are always 6 digits (possibly zero trailed)
+    - If UTC a "Z" will be appended
+
+### TimeOnlyMs
+
+- Uses 6 bytes of memory
+- Serializes to 28 bits
+- Can represent 0:0:0.000 - 23:59:59.999 
+- No support for leap seconds
+- Can be invalid (from untrusted serialized sources - see above)
+
+- Use .valueOf() to get as a 100 shifted integer (eg 11:41:06.012 is 114106012)
+- Use .toString() to get an RFC3339 (ISO8601) formatted string (eg "11:41:06.012Z")
+    - Hours are always 2 digits (possibly zero prefixed)
+    - Minutes are always 2 digits (possibly zero prefixed)
+    - Seconds are always 2 digits (possibly zero prefixed)
+    - Milliseconds are always 3 digits (possibly zero trailed)
     - If UTC a "Z" will be appended

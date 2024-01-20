@@ -6,11 +6,12 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
-const byteMemSize = 1;
-
 /** Month of year (gregorian, julian) */
 export class Month implements ISerializer {
-	static readonly serialBits = 4;
+	/**Number of bytes required to store this data */
+	static readonly storageBytes = 1;
+	/**Number of bits required to serialize this data */
+	static readonly serialBits = 4; //2^4=16
 	/** Note there's no zero month, so we shift by one internal (0=Jan, 11=Dec, 12=invalid) */
 	readonly #v: Uint8Array;
 
@@ -22,11 +23,10 @@ export class Month implements ISerializer {
 	public toString(): string {
 		return (this.#v[0] + 1).toString();
 	}
-
 	/** Month ISO8601, zero padded (01-12) */
 	public toIsoString(): string {
-		const r = '0' + (this.#v[0] + 1).toString();
-		return r.substring(r.length - 2);
+		const s = (this.#v[0] + 1).toString();
+		return ('00' + s).substring(s.length);
 	}
 
 	/** Month ISO8601 as an integer (1=January, 12=December) */
@@ -50,16 +50,19 @@ export class Month implements ISerializer {
 		return this;
 	}
 
+	/** If storage empty, builds new, or vets it's the right size */
+	protected static setupStor(storage?: Uint8Array): Uint8Array {
+		if (!storage) return new Uint8Array(Month.storageBytes);
+		safe.lengthAtLeast(storage, Month.storageBytes);
+		return storage;
+	}
+
 	/** Create a new month of the year, range 1-12 */
 	public static new(month: number, storage?: Uint8Array): Month {
 		safe.int.inRangeInc(month, 1, 12);
-		if (!storage) {
-			storage = new Uint8Array(byteMemSize);
-		} else {
-			safe.lengthAtLeast(storage, byteMemSize);
-		}
-		storage[0] = month - 1;
-		return new Month(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = month - 1;
+		return new Month(stor);
 	}
 
 	/**
@@ -67,13 +70,9 @@ export class Month implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Month {
-		if (!storage) {
-			storage = new Uint8Array(byteMemSize);
-		} else {
-			safe.lengthAtLeast(storage, byteMemSize);
-		}
-		storage[0] = date.getMonth(); //We store months 0 based too
-		return new Month(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = date.getMonth(); //We store months 0 based too (but we don't trouble the dev with that detail)
+		return new Month(stor);
 	}
 
 	/**
@@ -96,30 +95,29 @@ export class Month implements ISerializer {
 			throw new ContentError('require string content', str);
 		if (strVal.toLowerCase() === 'now') return this.now(storage);
 
-		//Only parse integers (no floating point/scientific notation)
-		const r = strVal.match(/^\s*([+-])?(\d+)\s*$/);
+		//Only parse integers (no floating point/scientific notation), but let's be linient
+		// in the match here to prevent Date.parse from making up an answer when it's
+		// a signed-int, or floating point
+		const r = strVal.match(/^\s*([+-])?(\d+)(\.\d+)?\s*$/);
 		if (r !== null) {
-			// We have to catch signed months because Date.parse later
-			//r[0]=original string
-			//r[1] - first group (sign)
-			//r[2] - second group (number)
+			const [, sign, int, float] = r;
 			if (strict) {
-				if (r[1] != undefined || r[2].length != 2)
+				if (sign != undefined || float != undefined || int.length != 2) {
 					throw new ContentError(
 						'expecting 2 digit unsigned integer-string',
 						strVal
 					);
+				}
 			} else {
-				if (r[1] != undefined || r[2].length > 2)
+				//Still have to catch sign, float, or large ints
+				if (sign != undefined || float != undefined || int.length > 2) {
 					throw new ContentError(
 						'expecting 1-2 digit unsigned integer-string',
 						strVal
 					);
+				}
 			}
-
-			const intVal = parseInt(r[2], 10);
-			//Don't see how this could turn into NaN
-			//if (!isNaN(intVal)) return this.new(intVal,storage);
+			const intVal = parseInt(int, 10);
 			return this.new(intVal, storage);
 		}
 
@@ -138,6 +136,8 @@ export class Month implements ISerializer {
 		return this.fromDate(new Date(), storage);
 	}
 
+	//nowUtc: While TZ may change a month value, it's more of a DateTime concern
+
 	/**
 	 * Deserialize next 4 bits into month of year
 	 * Throws if:
@@ -148,12 +148,8 @@ export class Month implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Month {
-		if (!storage) {
-			storage = new Uint8Array(byteMemSize);
-		} else {
-			safe.lengthAtLeast(storage, byteMemSize);
-		}
-		storage[0] = source.readNumber(Month.serialBits);
-		return new Month(storage);
+		const stor = this.setupStor(storage);
+		stor[0] = source.readNumber(Month.serialBits);
+		return new Month(stor);
 	}
 }

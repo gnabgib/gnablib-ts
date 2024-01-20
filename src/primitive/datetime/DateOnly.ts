@@ -57,7 +57,7 @@ export class DateOnly {
 		this.day.serialize(target);
 	}
 
-    /**
+	/**
 	 * Test internal state is valid, throws if it's not
 	 * You should call this after a deserialize unless you trust the source
 	 * @returns self (chainable)
