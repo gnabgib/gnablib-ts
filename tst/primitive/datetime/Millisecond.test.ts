@@ -50,7 +50,7 @@ tsts(`parse(56)`, () => {
 });
 
 tsts(`parse(now)`, () => {
-	const stor = new Uint8Array(3);
+	const stor = new Uint8Array(Millisecond.storageBytes);
 	const ms = Millisecond.parse('now', stor);
 	const mNum = +ms;
 	//Tricky to test this!

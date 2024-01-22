@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { AsconXofA } from '../../../src/crypto';
-import { IKat } from './IKat';
+import { AsconXofA } from '../../../src/crypto/xof';
+import { IKat } from '../hash/IKat';
 
 
 const tsts = suite('Ascon-XofA');

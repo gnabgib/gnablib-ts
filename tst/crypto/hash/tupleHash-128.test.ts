@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { TupleHash128 } from '../../../src/crypto';
+import { TupleHash128 } from '../../../src/crypto/hash';
 
 const tsts = suite('TupleHash128');
 

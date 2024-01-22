@@ -47,8 +47,10 @@ export interface ISafe {
 	int: ISafeInt;
 	float: ISafeFloat;
 	string: ISafeStr;
-	/** Make sure that $test is at least $need elements in size */
+	/** Make sure that $test is at least $need elements in size (Invalid length; need $need have $test.length) */
 	lengthAtLeast(test: ILengther, need: number): void;
+    /** Make sure that $test is at least $need elements in size (Invalid $name; need $need have $test.length) */
+    lengthAtLeast(name:string,test:ILengther,need:number):void;
 }
 
 /** Performs range checks, but not type checks */
@@ -82,9 +84,19 @@ export const somewhatSafe: ISafe = {
 			return str;
 		},
 	},
-	lengthAtLeast(test: ILengther, need: number) {
-		if (test.length < need) throw new LengthError(need, test.length);
+	lengthAtLeast(nameOrTest:string|ILengther,testOrNeed:ILengther|number,need?:number) {
+        if (need!==undefined) {
+            const len=(testOrNeed as ILengther).length;
+            if (len < need) throw new LengthError(need,''+nameOrTest,len);
+        } else {
+            const len=(nameOrTest as ILengther).length;
+            need=(testOrNeed as number);
+            if (len< need) throw new LengthError(need,len);
+        }
 	},
+    // lengthAtLeast2(name:string,test:ILengther,need:number) {
+    //     if (test.length<need) throw new LengthError(need,name,test.length);
+    // }
 };
 
 /** Performs range and type checks */

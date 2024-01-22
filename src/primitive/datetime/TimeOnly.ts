@@ -15,9 +15,19 @@ import { UtcOrNot } from './UtcOrNot.js';
  */
 export class TimeOnly {
 	/**Number of bytes required to store this data */
-	static readonly storageBytes = 7; //1+ 1+ 1+ 3+ 1
+	static readonly storageBytes =
+		Hour.storageBytes +
+		Minute.storageBytes +
+		Second.storageBytes +
+		Microsecond.storageBytes +
+		UtcOrNot.storageBytes; //7
 	/**Number of bits required to serialize this data */
-	static readonly serialBits = 38; //5+ 6+ 6+ 20+ 1
+	static readonly serialBits =
+		Hour.serialBits +
+		Minute.serialBits +
+		Second.serialBits +
+		Microsecond.serialBits +
+		UtcOrNot.serialBits; // 38
 
 	private constructor(
 		/** Hours (0-23) */
@@ -89,8 +99,8 @@ export class TimeOnly {
 
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(this.storageBytes);
-		safe.lengthAtLeast(storage, this.storageBytes);
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 
@@ -110,7 +120,7 @@ export class TimeOnly {
 		storage?: Uint8Array
 	): TimeOnly {
 		//Keep the memory contiguous
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 
 		const h = Hour.new(hour, stor);
 		const m = Minute.new(minute, stor.subarray(1, 2));
@@ -131,7 +141,7 @@ export class TimeOnly {
 		storage?: Uint8Array
 	): TimeOnly {
 		//Keep the memory contiguous
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 
 		//NOTE: We could see if date.getTimezoneOffset() is zero and auto detect isUtc
 		// but we want the dev to be explicit that this is a UTC number when it is
@@ -150,7 +160,7 @@ export class TimeOnly {
 		isUtc = false,
 		storage?: Uint8Array
 	): TimeOnly {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		const h = Hour.fromSecondsSinceEpoch(source, stor);
 		const m = Minute.fromSecondsSinceEpoch(source, stor.subarray(1, 2));
 		const s = Second.fromSecondsSinceEpoch(source, stor.subarray(2, 3));
@@ -165,7 +175,7 @@ export class TimeOnly {
 		isUtc = false,
 		storage?: Uint8Array
 	): TimeOnly {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		const h = Hour.fromMillisecondsSinceEpoch(source, stor);
 		const m = Minute.fromMillisecondsSinceEpoch(source, stor.subarray(1, 2));
 		const s = Second.fromMillisecondsSinceEpoch(source, stor.subarray(2, 3));
@@ -182,7 +192,7 @@ export class TimeOnly {
 		const dt = new Date(now);
 		//performance.now is in UTC, to make it local we need to read local offset
 		now -= dt.getTimezoneOffset() * 60 * 1000;
-		return this.fromMillisecondsSinceEpoch(now, false, storage);
+		return self.fromMillisecondsSinceEpoch(now, false, storage);
 	}
 
 	/** Create time from this point in UTC time */
@@ -190,7 +200,7 @@ export class TimeOnly {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const now = performance.timeOrigin + performance.now();
-		return this.fromMillisecondsSinceEpoch(now, true, storage);
+		return self.fromMillisecondsSinceEpoch(now, true, storage);
 	}
 
 	/**
@@ -204,7 +214,7 @@ export class TimeOnly {
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): TimeOnly {
 		//Keep the memory contiguous
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 
 		const h = Hour.deserialize(source, stor);
 		const m = Minute.deserialize(source, stor.subarray(1, 2));
@@ -214,3 +224,4 @@ export class TimeOnly {
 		return new TimeOnly(h, m, s, us, utc);
 	}
 }
+const self = TimeOnly;

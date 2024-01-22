@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Zero } from '../../../src/crypto';
+import { Zero } from '../../../src/crypto/pad';
 
 const tsts = suite('Padding-Zero/Pad1');
 

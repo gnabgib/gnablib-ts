@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { superSafe } from "../safe/index.js";
+import { somewhatSafe as safe } from "../safe/index.js";
 
 const mask=[0xFF,0x7f,0x3f,0x1f,0xf,0x7,0x3,0x1];
 
@@ -43,7 +43,7 @@ export class BitReader {
 	readNumber(bitCount: number): number {
 		//Make sure there's data in the buffer
 		const byteCountNeeded = (this.#bitPtr + bitCount + 7) >>> 3;
-		superSafe.lengthAtLeast(this.#buff, byteCountNeeded);
+		safe.lengthAtLeast('(internal)buffer',this.#buff, byteCountNeeded);
 
 		let byteBitSpace = 8 - this.bitPos;
 		let ptr = this.#bitPtr >>> 3;

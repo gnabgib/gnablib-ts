@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Iso7816_4,Iso9797_1 } from '../../../src/crypto';
+import { Iso7816_4,Iso9797_1 } from '../../../src/crypto/pad';
 
 const tsts = suite('Padding-ISO-7816-4/Pad2');
 

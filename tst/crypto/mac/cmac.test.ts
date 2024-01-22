@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Cmac } from '../../../src/crypto';
+import { Cmac } from '../../../src/crypto/mac';
 
 const tsts = suite('CMAC');
 

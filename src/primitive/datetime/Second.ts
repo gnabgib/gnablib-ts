@@ -12,7 +12,7 @@ export class Second extends Sexagesimal {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Second {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = date.getSeconds();
 		return new Second(stor);
 	}
@@ -22,7 +22,7 @@ export class Second extends Sexagesimal {
 		source: number,
 		storage?: Uint8Array
 	): Second {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = source % secsPerMin;
 		return new Second(stor);
 	}
@@ -32,14 +32,14 @@ export class Second extends Sexagesimal {
 		source: number,
 		storage?: Uint8Array
 	): Second {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = (source % milliPerMin) / milliPerSec;
 		return new Second(stor);
 	}
 
 	/** Create this second (local) */
 	public static now(storage?: Uint8Array): Second {
-		return this.fromDate(new Date(), storage);
+		return self.fromDate(new Date(), storage);
 	}
 
 	//nowUtc makes no sense: there's no TZ that's off by seconds
@@ -49,7 +49,8 @@ export class Second extends Sexagesimal {
 		strict: boolean,
 		storage?: Uint8Array
 	): Second {
-		if (str.toLowerCase() === 'now') return this.now(storage);
+		if (str.toLowerCase() === 'now') return self.now(storage);
 		return super.doParse(str, strict, storage);
 	}
 }
+const self = Second;

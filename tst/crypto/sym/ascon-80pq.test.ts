@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Ascon80pq } from '../../../src/crypto';
+import { Ascon80pq } from '../../../src/crypto/sym';
 import { IKat } from './IKat';
 
 

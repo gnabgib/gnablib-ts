@@ -2,7 +2,7 @@
 
 import { hex } from '../codec/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
-import { InvalidLengthError, NotEnoughSpaceError } from './ErrorExt.js';
+import { NotEnoughSpaceError } from './ErrorExt.js';
 import { safety } from './Safety.js';
 
 const maxU32 = 0xffffffff;

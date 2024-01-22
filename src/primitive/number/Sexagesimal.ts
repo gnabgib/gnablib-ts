@@ -50,39 +50,40 @@ export class Sexagesimal implements ISerializer {
 
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(Sexagesimal.storageBytes);
-		safe.lengthAtLeast(storage, Sexagesimal.storageBytes);
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 
 	/** Create a new sexagesimal number, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Sexagesimal {
 		safe.int.inRangeInc(v, 0, 59);
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = v;
 		return new Sexagesimal(stor);
 	}
 
 	//Partitioned to allow a subclass to override
 	protected static doParse(
-		str: string,
+		input: string,
 		strict: boolean,
 		storage?: Uint8Array
 	): Sexagesimal {
 		//Only parse integers (no floating point/scientific notation)
-		const r = str.match(/^\s*(\d{1,2})\s*$/);
+		const r = input.match(/^\s*(\d{1,2})\s*$/);
 		if (r !== null) {
 			if (strict) {
 				if (r[1].length != 2)
 					throw new ContentError(
 						'expecting 2 digit unsigned integer-string',
-						str
+						'input',
+						input
 					);
 			}
 			const iVal = parseInt(r[1], 10);
-			return this.new(iVal, storage);
+			return self.new(iVal, storage);
 		}
-		throw new ContentError('expecting unsigned integer-string', str);
+		throw new ContentError('expecting unsigned integer-string', 'input', input);
 	}
 
 	/**
@@ -96,13 +97,14 @@ export class Sexagesimal implements ISerializer {
 	 * - The content of $str isn't valid
 	 */
 	public static parse(
-		str: string,
+		input: string,
 		storage?: Uint8Array,
 		strict = false
 	): Sexagesimal {
-		const strVal = safe.string.nullEmpty(str);
+		const strVal = safe.string.nullEmpty(input);
 		if (strVal === undefined)
-			throw new ContentError('require string content', str);
+			throw new ContentError('require string content', 'input', input);
+		// deepcode ignore StaticAccessThis: Have to use this so children can override
 		return this.doParse(strVal, strict, storage);
 	}
 
@@ -119,8 +121,9 @@ export class Sexagesimal implements ISerializer {
 		source: BitReader,
 		storage?: Uint8Array
 	): Sexagesimal {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = source.readNumber(this.serialBits);
 		return new Sexagesimal(stor);
 	}
 }
+const self = Sexagesimal;

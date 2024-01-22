@@ -1,7 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { Carrier } from '../primitive/BitExt.js';
-import { ContentError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 
 export const bitConverter = {
 	fromBytes: function (
@@ -52,10 +52,10 @@ export const bitConverter = {
 					pad = true;
 					continue;
 				}
-				throw new ContentError('Character', 'unknown', char);
+				throw new ContentError('unknown', 'Character', char);
 			}
 			if (pad)
-				throw new ContentError('Character', 'Found data after padding', char);
+				throw new ContentError('Found data after padding', 'Character', char);
 			carrier.enqueue(idx);
 			if (carrier.canDequeue) {
 				output[outputPtr++] = carrier.dequeue();

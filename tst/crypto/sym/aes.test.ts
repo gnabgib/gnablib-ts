@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Aes } from '../../../src/crypto/';
+import { Aes } from '../../../src/crypto/sym';
 
 
 const tsts = suite('AES');

@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { CShake128 } from '../../../src/crypto';
+import { CShake128 } from '../../../src/crypto/xof';
 
 const tsts = suite('cShake (128)');
 

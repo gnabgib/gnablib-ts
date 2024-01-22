@@ -140,5 +140,9 @@ for (const [test, need, expect] of lengthAtLeast) {
 		}
 	});
 }
+// tsts(`general`,()=>{
+//     const myString='hello';
+//     somewhatSafe.lengthAtLeast(...nameValue({myString}),6);
+// })
 
 tsts.run();

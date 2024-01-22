@@ -1,7 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
 import { safety } from '../primitive/Safety.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 import { IUucodeEncodeOpts } from './interfaces/IUucodeEncodeOpts.js';
 /**
  * Support: (Uint8Array)
@@ -40,7 +40,7 @@ function mapUueCharToInt(char: string): number {
  * @returns
  */
 function mapLine(bytes: Uint8Array, charMap: (int: number) => string): string {
-	safety.lenInRangeInc(bytes,0,45,'bytes');
+	safety.lenInRangeInc(bytes, 0, 45, 'bytes');
 	//Start with size char
 	let ret = charMap(bytes.length);
 	let i = 0;
@@ -120,8 +120,8 @@ export const uucode = {
 			outPtr = byteStart + byteLen;
 			if (uuencoded[inPtr++] != '\n')
 				throw new ContentError(
-					'Uuencoded',
 					'Unknown char @ pos ' + inPtr,
+					'Uuencoded',
 					uuencoded[inPtr - 1]
 				);
 		}

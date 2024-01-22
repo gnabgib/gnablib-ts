@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { uri, utf8 } from '../../src/codec';
-import { ContentError } from '../../src/primitive';
+import { ContentError } from '../../src/primitive/error/ContentError';
 
 const tsts = suite('Uri/RFC 3986');
 
@@ -87,7 +87,7 @@ const invalidUEncode = [
 for (const invalid of invalidUEncode) {
 	assert.throws(
 		() => uri.toBytes(invalid),
-		(e) => e instanceof ContentError && e.noun == 'URI encoding',
+		(e) => e instanceof ContentError && e.key == 'URI encoding',
 		'Throws:' + invalid
 	);
 }

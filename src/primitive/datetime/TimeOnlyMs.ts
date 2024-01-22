@@ -89,7 +89,7 @@ export class TimeOnlyMs {
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(this.storageBytes);
-		safe.lengthAtLeast(storage, this.storageBytes);
+		safe.lengthAtLeast('storage', storage, this.storageBytes);
 		return storage;
 	}
 
@@ -109,7 +109,7 @@ export class TimeOnlyMs {
 		storage?: Uint8Array
 	): TimeOnlyMs {
 		//Keep the memory contiguous
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 
 		const h = Hour.new(hour, storage);
 		const m = Minute.new(minute, stor.subarray(1, 2));
@@ -129,7 +129,7 @@ export class TimeOnlyMs {
 		storage?: Uint8Array
 	): TimeOnlyMs {
 		//Keep the memory contiguous
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 
 		//NOTE: We could see if date.getTimezoneOffset() is zero and auto detect isUtc
 		// but we want the dev to be explicit that this is a UTC number when it is
@@ -148,7 +148,7 @@ export class TimeOnlyMs {
 		isUtc = false,
 		storage?: Uint8Array
 	): TimeOnlyMs {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 
 		const h = Hour.fromSecondsSinceEpoch(source, stor);
 		const m = Minute.fromSecondsSinceEpoch(source, stor.subarray(1, 2));
@@ -164,7 +164,7 @@ export class TimeOnlyMs {
 		isUtc = false,
 		storage?: Uint8Array
 	): TimeOnlyMs {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		const h = Hour.fromMillisecondsSinceEpoch(source, stor);
 		const m = Minute.fromMillisecondsSinceEpoch(source, stor.subarray(1, 2));
 		const s = Second.fromMillisecondsSinceEpoch(source, stor.subarray(2, 3));
@@ -181,7 +181,7 @@ export class TimeOnlyMs {
 		const dt = new Date(now);
 		//performance.now is in UTC, to make it local we need to read local offset
 		now -= dt.getTimezoneOffset() * 60 * 1000;
-		return this.fromMillisecondsSinceEpoch(now, false, storage);
+		return self.fromMillisecondsSinceEpoch(now, false, storage);
 	}
 
 	/** Create time from this point in UTC time */
@@ -189,7 +189,7 @@ export class TimeOnlyMs {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const now = performance.timeOrigin + performance.now();
-		return this.fromMillisecondsSinceEpoch(now, true, storage);
+		return self.fromMillisecondsSinceEpoch(now, true, storage);
 	}
 
 	/**
@@ -206,7 +206,7 @@ export class TimeOnlyMs {
 		storage?: Uint8Array
 	): TimeOnlyMs {
 		//Keep the memory contiguous
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 
 		const h = Hour.deserialize(source, stor);
 		const m = Minute.deserialize(source, stor.subarray(1, 2));
@@ -216,3 +216,4 @@ export class TimeOnlyMs {
 		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 }
+const self = TimeOnlyMs;

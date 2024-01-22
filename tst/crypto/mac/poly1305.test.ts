@@ -1,7 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Ascon128, ChaCha20, Poly1305 } from '../../../src/crypto';
+import { Ascon128, ChaCha20 } from '../../../src/crypto/sym';
+import { Poly1305 } from '../../../src/crypto/mac';
 
 const tsts = suite('Poly1305');
 

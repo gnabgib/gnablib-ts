@@ -1,7 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Hmac, Sha1 } from '../../../src/crypto';
+import { Sha1 } from '../../../src/crypto/hash';
+import { Hmac } from '../../../src/crypto/mac';
 
 const tsts = suite('HMAC/RFC 2104 (Sha1)');
 

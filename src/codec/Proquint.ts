@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 import { bitConverter } from './_bitConverter.js';
 
 const tbl_con = 'bdfghjklmnprstvz';
@@ -107,19 +107,19 @@ export const proquint = {
 				case 0:
 				case 2:
 					dec = conToInt(char);
-					if (dec < 0) throw new ContentError('Character', 'unknown', char);
+					if (dec < 0) throw new ContentError('unknown', 'Character', char);
 					carry = (carry << 4) | dec;
 					break;
 				case 1:
 				case 3:
 					dec = vowToInt(char);
-					if (dec < 0) throw new ContentError('Character', 'unknown', char);
+					if (dec < 0) throw new ContentError('unknown', 'Character', char);
 					carry = (carry << 2) | dec;
 					break;
 
 				case 4:
 					dec = conToInt(char);
-					if (dec < 0) throw new ContentError('Character', 'unknown', char);
+					if (dec < 0) throw new ContentError('unknown', 'Character', char);
 					carry = (carry << 4) | dec;
 
 					arr[outputPtr++] = (carry >> 8) & 0xff;
@@ -130,8 +130,8 @@ export const proquint = {
 		}
 		if (pos != 0)
 			throw new ContentError(
-				'Size',
 				'Should be a multiple of 5, have leftovers',
+				'Size',
 				pos
 			);
 		return arr;

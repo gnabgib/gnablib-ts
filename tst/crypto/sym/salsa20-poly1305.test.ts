@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Salsa20_Poly1305 } from '../../../src/crypto';
+import { Salsa20_Poly1305 } from '../../../src/crypto/sym';
 
 
 const tsts = suite('Salsa20-Poly1305');

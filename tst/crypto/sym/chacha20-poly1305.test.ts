@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { ChaCha20_Poly1305 } from '../../../src/crypto';
+import { ChaCha20_Poly1305 } from '../../../src/crypto/sym';
 
 
 const tsts = suite('ChaCha20-Poly1305/RFC 8439 (7539)');

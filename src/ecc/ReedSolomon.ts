@@ -1,11 +1,9 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../codec/Hex.js';
-import {
-	ContentError,
-	ZeroError,
-} from '../primitive/ErrorExt.js';
+import { ZeroError } from '../primitive/ErrorExt.js';
 import { safety } from '../primitive/Safety.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 
 //https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 //Some source from: https://github.com/zxing/zxing
@@ -136,7 +134,7 @@ class Gf8 implements Gf<Uint8Array> {
 	private readonly _logTable: Uint8Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safety.intInRangeInc(pow2Size,1,8,'pow2Size');
+		safety.intInRangeInc(pow2Size, 1, 8, 'pow2Size');
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -173,7 +171,7 @@ class Gf8 implements Gf<Uint8Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safety.intGte(degree,0,'degree');
+		safety.intGte(degree, 0, 'degree');
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -278,7 +276,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 
 	addOrSubtract(other: GfPoly8): GfPoly<Uint8Array> {
 		if (this._field !== other._field)
-			throw new ContentError('other', "fields don't match");
+			throw new ContentError("fields don't match");
 		if (this.isZero) return other;
 		if (other.isZero) return this;
 
@@ -300,7 +298,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 
 	mulPoly(other: GfPoly8): GfPoly<Uint8Array> {
 		if (this._field !== other._field)
-			throw new ContentError('other', "fields don't match");
+			throw new ContentError("fields don't match");
 		if (this.isZero || other.isZero) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -327,7 +325,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safety.intGte(degree,0,'degree');
+		safety.intGte(degree, 0, 'degree');
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -340,7 +338,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 
 	div(other: GfPoly8): DivideResponse<GfPoly<Uint8Array>> {
 		if (this._field !== other._field)
-			throw new ContentError('other', "fields don't match");
+			throw new ContentError("fields don't match");
 		if (other.isZero) throw new ZeroError('other');
 
 		let quotient = this._field.zero;
@@ -389,7 +387,7 @@ class Gf16 implements Gf<Uint16Array> {
 	private readonly _logTable: Uint16Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safety.intInRangeInc(pow2Size,1,16,'pow2Size');
+		safety.intInRangeInc(pow2Size, 1, 16, 'pow2Size');
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -426,7 +424,7 @@ class Gf16 implements Gf<Uint16Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safety.intGte(degree,0,'degree');
+		safety.intGte(degree, 0, 'degree');
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -549,7 +547,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 
 	addOrSubtract(other: GfPoly16): GfPoly<Uint16Array> {
 		if (this._field !== other._field)
-			throw new ContentError('other', "fields don't match");
+			throw new ContentError("fields don't match");
 		if (this.isZero) return other;
 		if (other.isZero) return this;
 
@@ -571,7 +569,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 
 	mulPoly(other: GfPoly16): GfPoly<Uint16Array> {
 		if (this._field !== other._field)
-			throw new ContentError('other', "fields don't match");
+			throw new ContentError("fields don't match");
 		if (this.isZero || other.isZero) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -598,7 +596,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safety.intGte(degree,0,'degree');
+		safety.intGte(degree, 0, 'degree');
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -611,7 +609,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 
 	div(other: GfPoly16): DivideResponse<GfPoly<Uint16Array>> {
 		if (this._field !== other._field)
-			throw new ContentError('other', "fields don't match");
+			throw new ContentError("fields don't match");
 		if (other.isZero) throw new ZeroError('other');
 
 		let quotient = this._field.zero;
@@ -727,7 +725,7 @@ export function maxicodeField(): Gf<Uint8Array> {
  */
 export class ReedSolomon<T extends UIntArray> {
 	private readonly _field: Gf<T>;
-	private readonly _cache:Array<GfPoly<T>> = [];
+	private readonly _cache: Array<GfPoly<T>> = [];
 
 	constructor(field: Gf<T>) {
 		this._field = field;
@@ -753,7 +751,7 @@ export class ReedSolomon<T extends UIntArray> {
 		if (ecLen === 0) throw new ZeroError('ecByteLen');
 
 		const dataLen = value.length - ecLen;
-		if (dataLen <= 0) throw new ContentError('dataBytes', 'Missing data bytes');
+		if (dataLen <= 0) throw new ContentError('Missing data bytes');
 
 		const gen = this._generator(ecLen);
 

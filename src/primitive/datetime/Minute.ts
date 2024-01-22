@@ -13,7 +13,7 @@ export class Minute extends Sexagesimal {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Minute {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = date.getMinutes();
 		return new Minute(stor);
 	}
@@ -23,7 +23,7 @@ export class Minute extends Sexagesimal {
 		source: number,
 		storage?: Uint8Array
 	): Minute {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = (source % secsPerHour) / secsPerMin;
 		return new Minute(stor);
 	}
@@ -33,14 +33,14 @@ export class Minute extends Sexagesimal {
 		source: number,
 		storage?: Uint8Array
 	): Minute {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = (source % msPerHour) / msPerMin;
 		return new Minute(stor);
 	}
 
 	/** Create this minute (local) */
 	public static now(storage?: Uint8Array): Minute {
-		return this.fromDate(new Date(), storage);
+		return self.fromDate(new Date(), storage);
 	}
 
 	/** Create this minute (UTC) */
@@ -53,7 +53,7 @@ export class Minute extends Sexagesimal {
 		// time.  Or UTC + timezone offset internally.. it's turtles all the way down
 		// minutes * secPerMin * msPerSec (valueOf is in ms)
 		const nUtc = new Date(n.valueOf() + n.getTimezoneOffset() * 60 * 1000);
-		return this.fromDate(nUtc, storage);
+		return self.fromDate(nUtc, storage);
 	}
 
 	protected static doParse(
@@ -61,7 +61,8 @@ export class Minute extends Sexagesimal {
 		strict: boolean,
 		storage?: Uint8Array
 	): Minute {
-		if (str.toLowerCase() === 'now') return this.now(storage);
+		if (str.toLowerCase() === 'now') return self.now(storage);
 		return super.doParse(str, strict, storage);
 	}
 }
+const self = Minute;

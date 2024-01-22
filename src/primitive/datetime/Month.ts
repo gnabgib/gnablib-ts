@@ -52,15 +52,15 @@ export class Month implements ISerializer {
 
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(Month.storageBytes);
-		safe.lengthAtLeast(storage, Month.storageBytes);
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 
 	/** Create a new month of the year, range 1-12 */
 	public static new(month: number, storage?: Uint8Array): Month {
 		safe.int.inRangeInc(month, 1, 12);
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = month - 1;
 		return new Month(stor);
 	}
@@ -70,7 +70,7 @@ export class Month implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Month {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = date.getMonth(); //We store months 0 based too (but we don't trouble the dev with that detail)
 		return new Month(stor);
 	}
@@ -80,20 +80,20 @@ export class Month implements ISerializer {
 	 * 'now', a 1-2 digit unsigned integer, short or long form month (based on local localization)
 	 *
 	 * Throws if:
-	 * - Not a string, or $str is empty
+	 * - Not a string, or $input is empty
 	 * - There's no available $storage
-	 * - The integer value of $str is out of range
-	 * - The content of $str isn't valid
+	 * - The integer value of $input is out of range
+	 * - The content of $input isn't valid
 	 */
 	public static parse(
-		str: string,
+		input: string,
 		storage?: Uint8Array,
 		strict = false
 	): Month {
-		const strVal = safe.string.nullEmpty(str);
+		const strVal = safe.string.nullEmpty(input);
 		if (strVal === undefined)
-			throw new ContentError('require string content', str);
-		if (strVal.toLowerCase() === 'now') return this.now(storage);
+			throw new ContentError('require string content', 'input', input);
+		if (strVal.toLowerCase() === 'now') return self.now(storage);
 
 		//Only parse integers (no floating point/scientific notation), but let's be linient
 		// in the match here to prevent Date.parse from making up an answer when it's
@@ -105,6 +105,7 @@ export class Month implements ISerializer {
 				if (sign != undefined || float != undefined || int.length != 2) {
 					throw new ContentError(
 						'expecting 2 digit unsigned integer-string',
+						'input',
 						strVal
 					);
 				}
@@ -113,27 +114,29 @@ export class Month implements ISerializer {
 				if (sign != undefined || float != undefined || int.length > 2) {
 					throw new ContentError(
 						'expecting 1-2 digit unsigned integer-string',
+						'input',
 						strVal
 					);
 				}
 			}
 			const intVal = parseInt(int, 10);
-			return this.new(intVal, storage);
+			return self.new(intVal, storage);
 		}
 
 		//Try and parse using Date and local settings (16th makes unambiguous day)
 		const tmp = Date.parse(strVal + ' 16, 2000');
-		if (!isNaN(tmp)) return this.fromDate(new Date(tmp), storage);
+		if (!Number.isNaN(tmp)) return self.fromDate(new Date(tmp), storage);
 
 		throw new ContentError(
 			'expecting unsigned integer-string, or short-form-month',
+			'input',
 			strVal
 		);
 	}
 
 	/** Create this month (local) */
 	public static now(storage?: Uint8Array): Month {
-		return this.fromDate(new Date(), storage);
+		return self.fromDate(new Date(), storage);
 	}
 
 	//nowUtc: While TZ may change a month value, it's more of a DateTime concern
@@ -148,8 +151,9 @@ export class Month implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Month {
-		const stor = this.setupStor(storage);
-		stor[0] = source.readNumber(Month.serialBits);
+		const stor = self.setupStor(storage);
+		stor[0] = source.readNumber(self.serialBits);
 		return new Month(stor);
 	}
 }
+const self = Month;

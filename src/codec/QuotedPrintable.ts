@@ -1,7 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
 import { safety } from '../primitive/Safety.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 import { hex } from './Hex.js';
 import { IQuotedPrintableEncodeOpts } from './interfaces/IQuotedPrintableEncodeOpts.js';
 
@@ -74,8 +74,8 @@ export const quotedPrintable = {
 				} catch (e) {
 					//Not a pair, invalid hex chars
 					throw new ContentError(
-						'Quoted printable',
 						'invalid escape',
+						'Quoted printable',
 						'=' + pair
 					);
 				}
@@ -84,8 +84,8 @@ export const quotedPrintable = {
 				if (ord <= 0xff) ret[outPtr++] = ord;
 				else
 					throw new ContentError(
-						'Quoted printable',
 						'invalid character',
+						'Quoted printable',
 						String.fromCodePoint(ord)
 					);
 			}

@@ -41,7 +41,7 @@ tsts(`deser without source data throws`,()=>{
     assert.throws(()=>Year.deserialize(br));
 });
 tsts(`deser without storage space throws`,()=>{
-    const stor=new Uint16Array(0);
+    const stor=new Uint8Array(0);
     const bytes=Uint8Array.of(0,0);
     const br=new BitReader(bytes);
     assert.throws(()=>Year.deserialize(br,stor));
@@ -75,44 +75,32 @@ tsts(`new`,()=>{
     assert.is(y.toString(),'2001');
 });
 tsts(`new-provide storage`,()=>{
-    const stor=new Uint16Array(1);
+    const stor=new Uint8Array(Year.storageBytes);
     const y=Year.new(2020,stor);
     assert.is(y.valueOf(),2020);
 });
 
-tsts(`newGregorian`,()=>{
-    const y=Year.newGregorian(2001);
-    assert.is(y.valueOf(),2001);
-    assert.is(y.toString(),'2001');
-});
-tsts(`newGregorian-provide storage`,()=>{
-    const stor=new Uint16Array(1);
-    //1BC = 0ISO8601
-    const y=Year.newGregorian(1,false,stor);
-    assert.is(y.valueOf(),0);
-});
+const gregSet:[number,boolean,number][]=[
+    [2001,true,2001],
+    [1,false,0],
+    [2,false,-1],
+];
+for(const [year,ad,expectValue] of gregSet) {
+    tsts(`newGregorian(${year},${ad})`,()=>{
+        const y=Year.newGregorian(year,ad);
+        assert.is(y.valueOf(),expectValue);
+    });
+}
 
 tsts(`newHolocene`,()=>{
     const y=Year.newHolocene(12001);
     assert.is(y.valueOf(),2001);
     assert.is(y.toString(),'2001');
 });
-tsts(`newHolocene-provide storage`,()=>{
-    const stor=new Uint16Array(1);
-    //1BC = 0ISO8601
-    const y=Year.newHolocene(2001,stor);
-    assert.is(y.valueOf(),-7999);
-});
 
 tsts(`fromDate`,()=>{
     const dt=new Date(2001,2,3,4,5,6);
     const y=Year.fromDate(dt);
-    assert.is(y.valueOf(),dt.getFullYear());
-});
-tsts(`fromDate-provide storage`,()=>{
-    const stor=new Uint16Array(1);
-    const dt=new Date(2001,2,3,4,5,6);
-    const y=Year.fromDate(dt,stor);
     assert.is(y.valueOf(),dt.getFullYear());
 });
 
@@ -163,8 +151,7 @@ const parseSet:[string,number][]=[
 ];
 for (const [str,expect] of parseSet) {
     tsts(`parse(${str})`,()=>{
-        const stor=new Uint16Array(1);
-        const y=Year.parse(str,stor);
+        const y=Year.parse(str);
         assert.equal(y.valueOf(),expect);
     });
 }

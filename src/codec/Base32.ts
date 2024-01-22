@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 import { IBase32 } from './interfaces/IBase32.js';
 /**
  * Support: (Uint8Array)
@@ -169,13 +169,13 @@ class Base32 implements IBase32 {
 			const dec = this.#decode[base32.charCodeAt(ptr)];
 			//If 0, invalid
 			if (dec === 0)
-				throw new ContentError(name, 'Unknown char', base32.charAt(ptr));
+				throw new ContentError('Unknown char', name, base32.charAt(ptr));
 			if (dec === 33) {
 				padCount++;
 				continue;
 			}
 			if (padCount > 0)
-				throw new ContentError(name, 'Found after padding', base32.charAt(ptr));
+				throw new ContentError('Found after padding', name, base32.charAt(ptr));
 			//Otherwise decoded char is off by 1
 			carry = (carry << 5) | (dec - 1);
 			carrySize += 5;
@@ -192,8 +192,8 @@ class Base32 implements IBase32 {
 				if (padCount === 0 && !requirePad) break;
 				if (padCount != 4)
 					throw new ContentError(
-						name,
 						'Bad padding, expecting 4 got',
+						name,
 						padCount
 					);
 				break;
@@ -201,8 +201,8 @@ class Base32 implements IBase32 {
 				if (padCount === 0 && !requirePad) break;
 				if (padCount != 1)
 					throw new ContentError(
-						name,
 						'Bad padding, expecting 1 got',
+						name,
 						padCount
 					);
 				break;
@@ -210,8 +210,8 @@ class Base32 implements IBase32 {
 				if (padCount === 0 && !requirePad) break;
 				if (padCount != 6)
 					throw new ContentError(
-						name,
 						'Bad padding, expecting 6 got',
+						name,
 						padCount
 					);
 				break;
@@ -219,8 +219,8 @@ class Base32 implements IBase32 {
 				if (padCount === 0 && !requirePad) break;
 				if (padCount != 3)
 					throw new ContentError(
-						name,
 						'Bad padding, expecting 3 got',
+						name,
 						padCount
 					);
 				break;
@@ -229,8 +229,8 @@ class Base32 implements IBase32 {
 				//Don't allow spurious padding
 				if (padCount > 0)
 					throw new ContentError(
-						name,
 						'Bad padding, expecting 0 got',
+						name,
 						padCount
 					);
 				break;
@@ -239,24 +239,24 @@ class Base32 implements IBase32 {
 			//case 6: //+6 char -3 byte, but this is invalid (should only be +5)
 			//case 5: //+1 char -0, but this is invalid (should be +2 -1)
 			default:
-				throw new ContentError(name, 'Incorrect character count', ptr);
+				throw new ContentError('Incorrect character count', name, ptr);
 		}
 
 		return ret.subarray(0, retPtr);
 	}
 }
 
-/** 
+/**
  * RFC 4648 base 32 (padding default on)
  */
-export const base32:IBase32 = new Base32('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', {
+export const base32: IBase32 = new Base32('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', {
 	requirePad: true,
 });
 
 /**
  * z-base-32 (padding default off)
  */
-export const zbase32:IBase32 = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
+export const zbase32: IBase32 = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
 	requirePad: false,
 	makeTblLower: true,
 });
@@ -264,14 +264,20 @@ export const zbase32:IBase32 = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
 /**
  * RFC 4648 base 32 hex, sortable, (padding default on)
  */
-export const base32hex:IBase32 = new Base32('0123456789ABCDEFGHIJKLMNOPQRSTUV', {
-	requirePad: true,
-});
+export const base32hex: IBase32 = new Base32(
+	'0123456789ABCDEFGHIJKLMNOPQRSTUV',
+	{
+		requirePad: true,
+	}
+);
 
 /**
  * Crockford's Base32
  */
-export const crockford32:IBase32 = new Base32('0123456789ABCDEFGHJKMNPQRSTVWXYZ', {
-	requirePad: false,
-	extraDecodes: { o: 0, O: 0, i: 1, I: 1, l: 1, L: 1 },
-});
+export const crockford32: IBase32 = new Base32(
+	'0123456789ABCDEFGHJKMNPQRSTVWXYZ',
+	{
+		requirePad: false,
+		extraDecodes: { o: 0, O: 0, i: 1, I: 1, l: 1, L: 1 },
+	}
+);

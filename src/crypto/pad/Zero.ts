@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { InvalidLengthError } from '../../primitive/ErrorExt.js';
+import { LengthError } from '../../primitive/error/LengthError.js';
 
 /**
  * [Zero padding](https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding)
@@ -34,8 +34,7 @@ export class Zero {
 	static pad(input: Uint8Array, len: number, pos = 0): Uint8Array {
 		const ret = new Uint8Array(len);
 		const need = len - (input.length - pos);
-		if (need < 0)
-			throw new InvalidLengthError('input', 'at most ' + len, `${len - need}`);
+		if (need < 0) throw LengthError.atMost(len,'input.length',len-need);
 		ret.set(input.subarray(pos));
 		return ret;
 	}

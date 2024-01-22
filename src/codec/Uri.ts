@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 import { hex } from './Hex.js';
 import { IUriDecodeOpts } from './interfaces/IUriDecodeOpts.js';
 import { utf8 } from './Utf8.js';
@@ -20,7 +20,6 @@ const tbl=[
 		'i','j','k','l','m','n','o','p','q','r',
 		's','t','u','v','w','x','y','z','','',
 		'','~'];
-
 
 export const uri = {
 	/**
@@ -55,8 +54,8 @@ export const uri = {
 
 		function throwInvalid(ord: number) {
 			throw new ContentError(
-				'URI encoding',
 				'invalid character',
+				'URI encoding',
 				String.fromCodePoint(ord)
 			);
 		}
@@ -83,7 +82,7 @@ export const uri = {
 					ret[outPtr++] = hex.toByte(pair);
 				} catch (e) {
 					//Not a pair, invalid hex chars
-					throw new ContentError('URI encoding', 'invalid escape', '%' + pair);
+					throw new ContentError('invalid escape', 'URI encoding', '%' + pair);
 				}
 				inPtr += 2;
 			} else {

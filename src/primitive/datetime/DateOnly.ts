@@ -7,11 +7,14 @@ import { Day } from './Day.js';
 import { Month } from './Month.js';
 import { Year } from './Year.js';
 
-const u8MemSize = 4;
-
 /** A year-month-day, in the range -10000-01-01 - +22767-12-31 */
 export class DateOnly {
-	static readonly serialBits = 24;
+	/**Number of bytes required to store this data */
+	static readonly storageBytes =
+		Year.storageBytes + Month.storageBytes + Day.storageBytes; //4
+	/**Number of bits required to serialize this data */
+	static readonly serialBits =
+		Year.serialBits + Month.serialBits + Day.serialBits; //24
 
 	private constructor(
 		/** Years (-10000 - +22767) ISO8601 */
@@ -69,6 +72,13 @@ export class DateOnly {
 		return this;
 	}
 
+	/** If storage empty, builds new, or vets it's the right size */
+	protected static setupStor(storage?: Uint8Array): Uint8Array {
+		if (storage === undefined) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
+		return storage;
+	}
+
 	/**
 	 * Create a new ISO8601 date
 	 * @param year range -10000 - +22767
@@ -82,15 +92,11 @@ export class DateOnly {
 		storage?: Uint8Array
 	): DateOnly {
 		//Keep the memory contiguous
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		const u16 = new Uint16Array(storage.buffer);
-		const y = Year.new(year, u16);
-		const m = Month.new(month, storage.subarray(2, 3));
-		const d = Day.new(day, storage.subarray(3, 4));
+		const stor = self.setupStor(storage);
+
+		const y = Year.new(year, stor);
+		const m = Month.new(month, stor.subarray(2, 3));
+		const d = Day.new(day, stor.subarray(3, 4));
 		return new DateOnly(y, m, d);
 	}
 
@@ -100,15 +106,11 @@ export class DateOnly {
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): DateOnly {
 		//Keep the memory contiguous
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		const u16 = new Uint16Array(storage.buffer);
-		const y = Year.new(date.getFullYear(), u16);
-		const m = Month.new(date.getMonth() + 1, storage.subarray(2, 3));
-		const d = Day.new(date.getDate(), storage.subarray(3, 4));
+		const stor = self.setupStor(storage);
+
+		const y = Year.new(date.getFullYear(), stor);
+		const m = Month.new(date.getMonth() + 1, stor.subarray(2, 3));
+		const d = Day.new(date.getDate(), stor.subarray(3, 4));
 		return new DateOnly(y, m, d);
 	}
 
@@ -120,7 +122,7 @@ export class DateOnly {
 		//Note we depend on JS Date here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const n = new Date();
-		return this.fromDate(n, storage);
+		return self.fromDate(n, storage);
 	}
 
 	/** Create this date (UTC) */
@@ -135,7 +137,7 @@ export class DateOnly {
 		// time.  Or UTC + timezone offset internally.. it's turtles all the way down
 		// minutes * secPerMin * msPerSec (valueOf is in ms)
 		const nUtc = new Date(n.valueOf() + n.getTimezoneOffset() * 60 * 1000);
-		return this.fromDate(nUtc, storage);
+		return self.fromDate(nUtc, storage);
 		// //The alternative would be not to reuse this.fromDate:
 		// const u16 = new Uint16Array(2);
 		// const u8 = new Uint8Array(u16.buffer);
@@ -147,15 +149,12 @@ export class DateOnly {
 
 	public static deserialize(source: BitReader, storage?: Uint8Array): DateOnly {
 		//Keep the memory contiguous
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		const u16 = new Uint16Array(storage.buffer);
-		const y = Year.deserialize(source, u16);
-		const m = Month.deserialize(source, storage.subarray(2, 3));
-		const d = Day.deserialize(source, storage.subarray(3, 4));
+		const stor = self.setupStor(storage);
+
+		const y = Year.deserialize(source, stor);
+		const m = Month.deserialize(source, stor.subarray(2, 3));
+		const d = Day.deserialize(source, stor.subarray(3, 4));
 		return new DateOnly(y, m, d);
 	}
 }
+const self = DateOnly;

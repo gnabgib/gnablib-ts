@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Keccak224 } from '../../../src/crypto';
+import { Keccak224 } from '../../../src/crypto/hash';
 
 const tsts = suite('Keccak (224)');
 const ascii224Pairs = [

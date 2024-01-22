@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import {Assert} from '../../../src/test/assert';
 import * as uAssert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Sha1 } from '../../../src/crypto';
+import { Sha1 } from '../../../src/crypto/hash';
 
 const tsts = suite('SHA1/RFC 3174');
 

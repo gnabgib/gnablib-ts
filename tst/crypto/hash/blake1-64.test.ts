@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Blake64 } from '../../../src/crypto';
+import { Blake64 } from '../../../src/crypto/hash';
 import { U64MutArray } from '../../../src/primitive';
 
 const tsts = suite('Blake1-64');

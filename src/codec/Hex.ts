@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 import type { IReadArray } from '../primitive/interfaces/IReadArray.js';
 import type { U64, U64MutArray } from '../primitive/U64.js';
 /*
@@ -28,7 +28,7 @@ const whitespace = '\t\n\f\r ';
 
 function mapCharToInt(char: string): number {
 	let ord = char.charCodeAt(0);
-	if (ord < ord_0) throw new ContentError('hex', 'unknown char', char);
+	if (ord < ord_0) throw new ContentError('unknown char', 'hex', char);
 	if (ord <= ord_9) return ord - ord_0;
 
 	//Fold lower over upper
@@ -36,7 +36,7 @@ function mapCharToInt(char: string): number {
 
 	// A-Z = 65-90
 	if (ord < ord_A || ord > ord_F)
-		throw new ContentError('hex', 'unknown char', char);
+		throw new ContentError('unknown char', 'hex', char);
 	return ord - ord_A + 10;
 }
 
@@ -59,7 +59,7 @@ export const hex = {
 	 */
 	toByte: function (hex: string): number {
 		if (hex.length !== 2)
-			throw new ContentError('hex', 'need pairs of (zero padded)', hex);
+			throw new ContentError('need pairs of (zero padded)', 'hex', hex);
 		return (mapCharToInt(hex[0]) << 4) | mapCharToInt(hex[1]);
 	},
 
@@ -115,7 +115,11 @@ export const hex = {
 	},
 
 	fromU16s: function (
-		u16s: Uint16Array | Int16Array | IReadArray<Uint16Array> | IReadArray<Int16Array>,
+		u16s:
+			| Uint16Array
+			| Int16Array
+			| IReadArray<Uint16Array>
+			| IReadArray<Int16Array>,
 		join = ''
 	): string {
 		let ret = '';
@@ -131,7 +135,11 @@ export const hex = {
 	},
 
 	fromU32s: function (
-		u32s: Uint32Array | Int32Array | IReadArray<Uint32Array> | IReadArray<Int32Array>,
+		u32s:
+			| Uint32Array
+			| Int32Array
+			| IReadArray<Uint32Array>
+			| IReadArray<Int32Array>,
 		join = ''
 	): string {
 		let ret = '';
@@ -216,8 +224,8 @@ export const hex = {
 		}
 		if (carrySize === 4)
 			throw new ContentError(
-				'hex',
 				'need pairs (zero padded) found extra',
+				'hex',
 				carry & 0xf
 			);
 		return arr.slice(0, arrPtr);

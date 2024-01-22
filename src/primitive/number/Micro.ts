@@ -56,39 +56,40 @@ export class Micro implements ISerializer {
 
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(Micro.storageBytes);
-		safe.lengthAtLeast(storage, Micro.storageBytes);
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 
 	/** Create a new micro/millionth, range 0-999999 */
 	public static new(v: number, storage?: Uint8Array): Micro {
 		safe.int.inRangeInc(v, 0, 999999);
-		const stor = this.setupStor(storage);
-		this.writeValue(stor, v);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, v);
 		return new Micro(stor);
 	}
 
 	//Partitioned to allow a subclass to override
 	protected static doParse(
-		str: string,
+		input: string,
 		strict: boolean,
 		storage?: Uint8Array
 	): Micro {
 		//Only parse integers (no floating point/scientific notation)
-		const r = str.match(/^\s*(\d{1,6})\s*$/);
+		const r = input.match(/^\s*(\d{1,6})\s*$/);
 		if (r !== null) {
 			if (strict) {
 				if (r[1].length != 6)
 					throw new ContentError(
 						'expecting 6 digit unsigned integer-string',
-						str
+						'input',
+						input
 					);
 			}
 			const iVal = parseInt(r[1], 10);
-			return this.new(iVal, storage);
+			return self.new(iVal, storage);
 		}
-		throw new ContentError('expecting unsigned integer-string', str);
+		throw new ContentError('expecting unsigned integer-string', 'input', input);
 	}
 
 	/**
@@ -96,19 +97,20 @@ export class Micro implements ISerializer {
 	 * 1-6 digit unsigned integer, must be 6 digits if strict
 	 *
 	 * Throws if:
-	 * - Not a string, or $str is empty
+	 * - Not a string, or $input is empty
 	 * - There's no available $storage
-	 * - The integer value of $str is out of range
-	 * - The content of $str isn't valid
+	 * - The integer value of $input is out of range
+	 * - The content of $input isn't valid
 	 */
 	public static parse(
-		str: string,
+		input: string,
 		storage?: Uint8Array,
 		strict = false
 	): Micro {
-		const strVal = safe.string.nullEmpty(str);
+		const strVal = safe.string.nullEmpty(input);
 		if (strVal === undefined)
-			throw new ContentError('require string content', str);
+			throw new ContentError('require string content', 'input', input);
+		// deepcode ignore StaticAccessThis: Have to use this so children can override
 		return this.doParse(strVal, strict, storage);
 	}
 
@@ -122,8 +124,10 @@ export class Micro implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Micro {
-		const stor = this.setupStor(storage);
-		this.writeValue(stor, source.readNumber(this.serialBits));
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, source.readNumber(self.serialBits));
 		return new Micro(stor);
 	}
 }
+//Shame TS/JS doesn't support self ()
+const self = Micro;

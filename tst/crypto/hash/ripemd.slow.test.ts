@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
 import {
 	RipeMd128, RipeMd160, RipeMd256, RipeMd320,
-} from '../../../src/crypto';
+} from '../../../src/crypto/hash';
 
 const tsts = suite('RipeMd - SLOW');
 

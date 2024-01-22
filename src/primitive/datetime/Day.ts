@@ -51,15 +51,15 @@ export class Day implements ISerializer {
 
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(Day.storageBytes);
-		safe.lengthAtLeast(storage, Day.storageBytes);
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 
 	/** Create a new day of the month, range 1-31 */
 	public static new(day: number, storage?: Uint8Array): Day {
 		safe.int.inRangeInc(day, 1, 31);
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = day - 1;
 		return new Day(stor);
 	}
@@ -69,7 +69,7 @@ export class Day implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Day {
-		const stor = this.setupStor(storage);
+		const stor = self.setupStor(storage);
 		stor[0] = date.getDate() - 1;
 		return new Day(stor);
 	}
@@ -79,16 +79,20 @@ export class Day implements ISerializer {
 	 * 'now', a 1-2 digit unsigned integer
 	 *
 	 * Throws if:
-	 * - Not a string, or $str is empty
+	 * - Not a string, or $input is empty
 	 * - There's no available $storage
-	 * - The integer value of $str is out of range
-	 * - The content of $str isn't valid
+	 * - The integer value of $input is out of range
+	 * - The content of $input isn't valid
 	 */
-	public static parse(str: string, storage?: Uint8Array, strict = false): Day {
-		const strVal = safe.string.nullEmpty(str);
+	public static parse(
+		input: string,
+		storage?: Uint8Array,
+		strict = false
+	): Day {
+		const strVal = safe.string.nullEmpty(input);
 		if (strVal === undefined)
-			throw new ContentError('require string content', str);
-		if (strVal.toLowerCase() === 'now') return this.now(storage);
+			throw new ContentError('require string content', 'input', input);
+		if (strVal.toLowerCase() === 'now') return self.now(storage);
 
 		//Only parse integers (no floating point/scientific notation)
 		const r = strVal.match(/^\s*(\d\d?)\s*$/);
@@ -97,21 +101,23 @@ export class Day implements ISerializer {
 				if (r[1].length != 2)
 					throw new ContentError(
 						'expecting 2 digit unsigned integer-string',
+						'input',
 						strVal
 					);
 			}
 			const intVal = parseInt(r[1], 10);
-			return this.new(intVal, storage);
+			return self.new(intVal, storage);
 		}
 		throw new ContentError(
 			'expecting 1-2 digit unsigned integer-string',
+			'input',
 			strVal
 		);
 	}
 
 	/** Create this day of the month (local) */
 	public static now(storage?: Uint8Array): Day {
-		return this.fromDate(new Date(), storage);
+		return self.fromDate(new Date(), storage);
 	}
 
 	//nowUtc: While TZ may change a day value, it's more of a DateTime concern
@@ -127,8 +133,9 @@ export class Day implements ISerializer {
 	 * @returns
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Day {
-		const stor = this.setupStor(storage);
-		stor[0] = source.readNumber(Day.serialBits);
+		const stor = self.setupStor(storage);
+		stor[0] = source.readNumber(self.serialBits);
 		return new Day(stor);
 	}
 }
+const self = Day;

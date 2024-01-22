@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { IBlockCrypt, IFullCrypt, IPad } from "../interfaces/index.js";
+import { IBlockCrypt, IFullCrypt, IPad } from "../index.js";
 
 /**
  * [Electronic codebook (ECB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_codebook_(ECB))

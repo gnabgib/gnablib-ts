@@ -1,9 +1,9 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { ParallelHashXof128 } from '../../../src/crypto';
+import { ParallelHashXof256 } from '../../../src/crypto/xof';
 
-const tsts = suite('ParallelHashXof128');
+const tsts = suite('ParallelHashXof256');
 
 type hashHex={
     data:Uint8Array,
@@ -18,29 +18,29 @@ const tests:hashHex[]=[
     {
         data:hex.toBytes('000102030405060710111213141516172021222324252627'),
         blockSize:8,
-        size:256/8,
-        expect:'FE47D661E49FFE5B7D999922C062356750CAF552985B8E8CE6667F2727C3C8D3'
+        size:512/8,
+        expect:'C10A052722614684144D28474850B410757E3CBA87651BA167A5CBDDFF7F466675FBF84BCAE7378AC444BE681D729499AFCA667FB879348BFDDA427863C82F1C'
     },
     {
         data:hex.toBytes('000102030405060710111213141516172021222324252627'),
         blockSize:8,
-        size:256/8,
+        size:512/8,
         customize:'Parallel Data',
-        expect:'EA2A793140820F7A128B8EB70A9439F93257C6E6E79B4A540D291D6DAE7098D7'
+        expect:'538E105F1A22F44ED2F5CC1674FBD40BE803D9C99BF5F8D90A2C8193F3FE6EA768E5C1A20987E2C9C65FEBED03887A51D35624ED12377594B5585541DC377EFC'
     },
     {
         data:hex.toBytes('000102030405060708090A0B101112131415161718191A1B202122232425262728292A2B303132333435363738393A3B404142434445464748494A4B505152535455565758595A5B'),
         blockSize:12,
-        size:256/8,
+        size:512/8,
         customize:'Parallel Data',
-        expect:'0127AD9772AB904691987FCC4A24888F341FA0DB2145E872D4EFD255376602F0'
+        expect:'6B3E790B330C889A204C2FBC728D809F19367328D852F4002DC829F73AFD6BCEFB7FE5B607B13A801C0BE5C1170BDB794E339458FDB0E62A6AF3D42558970249'
     },
 ];
 
 let count=0;
 for (const test of tests) {
     tsts('Test['+count+']:',()=>{
-        const hash=new ParallelHashXof128(test.blockSize,test.size,test.customize);
+        const hash=new ParallelHashXof256(test.blockSize,test.size,test.customize);
         hash.write(test.data);
         const md=hash.sum();
         assert.is(hex.fromBytes(md),test.expect);

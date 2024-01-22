@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { AnsiX9_23,Iso10126 } from '../../../src/crypto';
+import { AnsiX9_23,Iso10126 } from '../../../src/crypto/pad';
 
 const tsts = suite('Padding-ANSI X9.23');
 
@@ -22,7 +22,7 @@ for(const [start,egPad] of pad8Tests) {
     // start and count indicator's values (last byte)
     const padBytes=hex.toBytes(egPad);
     const padCount=padBytes[7];
-    tsts(`pad(${start})`,()=>{
+    tsts(`pad(${start},8)`,()=>{
         const bytes=hex.toBytes(start);
         const found=AnsiX9_23.pad(bytes,8);
         assert.is(found[7],padCount);

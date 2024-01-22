@@ -1,15 +1,15 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
 import { intExt } from '../primitive/IntExt.js';
 import { safety } from '../primitive/Safety.js';
 import { U32 } from '../primitive/U32.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 
 export class IpV4 {
 	readonly bytes: Uint8Array;
 
 	constructor(bytes: Uint8Array) {
-		safety.lenExactly(bytes,4,'bytes');
+		safety.lenExactly(bytes, 4, 'bytes');
 		this.bytes = bytes;
 	}
 
@@ -58,10 +58,10 @@ export class IpV4 {
 		part2: number,
 		part3: number
 	): IpV4 {
-		safety.intInRangeInc(part0,0,0xff,'part0');
-		safety.intInRangeInc(part1,0,0xff,'part1');
-		safety.intInRangeInc(part2,0,0xff,'part2');
-		safety.intInRangeInc(part3,0,0xff,'part3');
+		safety.intInRangeInc(part0, 0, 0xff, 'part0');
+		safety.intInRangeInc(part1, 0, 0xff, 'part1');
+		safety.intInRangeInc(part2, 0, 0xff, 'part2');
+		safety.intInRangeInc(part3, 0, 0xff, 'part3');
 		return new IpV4(Uint8Array.of(part0, part1, part2, part3));
 	}
 
@@ -76,37 +76,37 @@ export class IpV4 {
 	 */
 	static fromString(value: string): IpV4 {
 		const parts = value.split('.');
-		safety.lenExactly(parts,4,'part');
+		safety.lenExactly(parts, 4, 'part');
 
 		const p0 = intExt.strictParseDecUint(parts[0]);
 		if (p0 === undefined)
 			throw new ContentError(
-				'First part',
 				'looking for integer 0-255',
+				'First part',
 				parts[0]
 			);
 
 		const p1 = intExt.strictParseDecUint(parts[1]);
 		if (p1 === undefined)
 			throw new ContentError(
-				'Second part',
 				'looking for integer 0-255',
+				'Second part',
 				parts[1]
 			);
 
 		const p2 = intExt.strictParseDecUint(parts[2]);
 		if (p2 === undefined)
 			throw new ContentError(
-				'Third part',
 				'looking for integer 0-255',
+				'Third part',
 				parts[2]
 			);
 
 		const p3 = intExt.strictParseDecUint(parts[3]);
 		if (p3 === undefined)
 			throw new ContentError(
-				'Fourth part',
 				'looking for integer 0-255',
+				'Fourth part',
 				parts[3]
 			);
 

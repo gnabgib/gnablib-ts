@@ -8,8 +8,8 @@ export class Millisecond extends Milli {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Millisecond {
-		const stor = this.setupStor(storage);
-		this.writeValue(stor, date.getMilliseconds());
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, date.getMilliseconds());
 		return new Millisecond(stor);
 	}
 
@@ -18,8 +18,8 @@ export class Millisecond extends Milli {
 		source: number,
 		storage?: Uint8Array
 	): Millisecond {
-		const stor = this.setupStor(storage);
-		this.writeValue(stor, (source * 1000) % 1000);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, (source * 1000) % 1000);
 		return new Millisecond(stor);
 	}
 
@@ -28,15 +28,15 @@ export class Millisecond extends Milli {
 		source: number,
 		storage?: Uint8Array
 	): Millisecond {
-		const stor = this.setupStor(storage);
-		this.writeValue(stor, source % 1000);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, source % 1000);
 		return new Millisecond(stor);
 	}
 
 	/** Create this millisecond (local) */
 	public static now(storage?: Uint8Array): Millisecond {
 		const now = performance.timeOrigin + performance.now();
-		return this.fromMillisecondsSinceEpoch(now, storage);
+		return self.fromMillisecondsSinceEpoch(now, storage);
 	}
 
 	//nowUtc makes no sense: there's no TZ that's off by milliseconds
@@ -46,7 +46,8 @@ export class Millisecond extends Milli {
 		strict: boolean,
 		storage?: Uint8Array
 	): Millisecond {
-		if (str.toLowerCase() === 'now') return this.now(storage);
+		if (str.toLowerCase() === 'now') return self.now(storage);
 		return super.doParse(str, strict, storage);
 	}
 }
+const self=Millisecond;

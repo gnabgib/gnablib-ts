@@ -97,18 +97,6 @@ export class ZeroError extends RangeError {
 	}
 }
 
-export class InvalidLengthError extends RangeError {
-	/**
-	 * ${noun} needs ${need}, has ${problem}
-	 * @param noun 
-	 * @param need 
-	 * @param problem 
-	 */
-	constructor(readonly noun:string,readonly need:string,readonly problem:string) {
-		super(`${noun} needs ${need}, has ${problem}`);
-	}
-}
-
 export class NotEnoughSpaceError extends RangeError {
 	readonly noun: string;
 	readonly need: number;
@@ -147,18 +135,6 @@ export class EnforceTypeError extends TypeError {
 	 */
 	constructor(readonly expectedType: string, readonly value: unknown) {
 		super(`Expected ${expectedType}, got: ${typeof value}=${value}`);
-	}
-}
-
-export class ContentError extends SyntaxError {
-	/**
-	 * Invalid ${noun}; ${reason} (${value})
-	 * @param noun 
-	 * @param reason 
-	 * @param value 
-	 */
-	constructor(readonly noun: string, readonly reason: string, readonly value?: unknown) {
-		super(`Invalid ${noun}; ${reason} (${value??''})`);
 	}
 }
 

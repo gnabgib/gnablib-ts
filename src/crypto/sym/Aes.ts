@@ -1,8 +1,9 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
-import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
 import { U32 } from '../../primitive/U32.js';
+import { nameValue } from '../../primitive/nameValue.js';
+import { somewhatSafe as safe } from '../../safe/index.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 const blockSize = 16;
@@ -529,12 +530,7 @@ export class Aes implements IBlockCrypt {
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		if (block.length < byteStart + blockSize)
-			throw new NotEnoughSpaceError(
-				'block.length',
-				byteStart + blockSize,
-				block.length
-			);
+		safe.lengthAtLeast(...nameValue({block}),byteStart+blockSize);
 		this._decBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 
@@ -546,12 +542,7 @@ export class Aes implements IBlockCrypt {
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		if (block.length < byteStart + blockSize)
-			throw new NotEnoughSpaceError(
-				'block.length',
-				byteStart + blockSize,
-				block.length
-			);
+		safe.lengthAtLeast(...nameValue({block}),byteStart+blockSize);
 		this._encBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 }

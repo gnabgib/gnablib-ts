@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { KangarooTwelve } from '../../../src/crypto';
+import { KangarooTwelve } from '../../../src/crypto/xof';
 
 const tsts = suite('KangarooTwelve');
 

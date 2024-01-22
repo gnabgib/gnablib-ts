@@ -3,10 +3,9 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
-import { ContentError } from '../ErrorExt.js';
-import { ISerializer } from '../interfaces/ISerializer.js';
+import { ContentError } from '../error/ContentError.js';
 
-const u8MemSize = 1;
+import { ISerializer } from '../interfaces/ISerializer.js';
 
 export class UtcOrNot implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -40,7 +39,7 @@ export class UtcOrNot implements ISerializer {
 
 	/** Serialize into target  - 1 bit*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this.#v[0], UtcOrNot.serialBits);
+		target.writeNumber(this.#v[0], self.serialBits);
 	}
 
 	//No need to validate
@@ -55,14 +54,17 @@ export class UtcOrNot implements ISerializer {
 		}
 	}
 
+	/** If storage empty, builds new, or vets it's the right size */
+	protected static setupStor(storage?: Uint8Array): Uint8Array {
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
+		return storage;
+	}
+
 	public static new(isUtc: boolean, storage?: Uint8Array): UtcOrNot {
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		this.writeValue(storage, isUtc);
-		return new UtcOrNot(storage);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, isUtc);
+		return new UtcOrNot(stor);
 	}
 
 	//fromDate - makes no sense
@@ -76,17 +78,17 @@ export class UtcOrNot implements ISerializer {
 	 * - There's no available $storage
 	 * - The content of $str isn't valid
 	 */
-	public static parse(str: string, storage?: Uint8Array): UtcOrNot {
-		if (str === undefined || str === null)
-			throw new ContentError('require string content', str);
-		const strVal = ('' + str).trim();
+	public static parse(input: string, storage?: Uint8Array): UtcOrNot {
+		if (input === undefined || input === null)
+			throw new ContentError('require string content', 'input', input);
+		const strVal = ('' + input).trim();
 		if (strVal.length === 0) {
-			return this.new(false, storage);
+			return self.new(false, storage);
 		}
 		if (strVal.toUpperCase() === 'Z') {
-			return this.new(true, storage);
+			return self.new(true, storage);
 		}
-		throw new ContentError('expecting z or empty string', strVal);
+		throw new ContentError('expecting z or empty string', 'input', strVal);
 	}
 
 	//now - makes no sense
@@ -101,12 +103,9 @@ export class UtcOrNot implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): UtcOrNot {
-		if (!storage) {
-			storage = new Uint8Array(u8MemSize);
-		} else {
-			safe.lengthAtLeast(storage, u8MemSize);
-		}
-		this.writeValue(storage, source.readNumber(this.serialBits) === 1);
-		return new UtcOrNot(storage);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, source.readNumber(self.serialBits) === 1);
+		return new UtcOrNot(stor);
 	}
 }
+const self = UtcOrNot;

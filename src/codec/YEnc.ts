@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 import { IYEncDecodeOpts } from './interfaces/IYEncDecodeOpts.js';
 import { IYEncEncodeOpts } from './interfaces/IYEncEncodeOpts.js';
 const defLineLength = 128;
@@ -117,7 +117,7 @@ export const yEnc = {
 					//Ignore newlines
 					continue;
 				}
-				throw new ContentError('yEnc', 'Invalid sequence', char + next);
+				throw new ContentError('Invalid sequence', 'yEnc', char + next);
 			} else {
 				//Again, char[0] cannot be null, so coalesce to stop TS complaints
 				ret[outPtr++] = ((char.codePointAt(0) ?? 0) - offset) & 0xff;

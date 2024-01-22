@@ -1,6 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError, InvalidLengthError } from '../../primitive/ErrorExt.js';
+import { ContentError } from '../../primitive/error/ContentError.js';
+import { LengthError } from '../../primitive/error/LengthError.js';
+//import { somewhatSafe } from '../../safe/index.js';
 
 const Iso7816_4_marker = 0x80;
 
@@ -36,10 +38,9 @@ export class Iso7816_4 {
 	 */
 	static pad(input: Uint8Array, len: number, pos = 0): Uint8Array {
 		const ret = new Uint8Array(len);
+		//somewhatSafe.lengthAtLeast(input,len+pos);
 		const need = len - (input.length - pos);
-		if (need <= 0) {
-			throw new InvalidLengthError('input.length', '<' + len, `${len - need}`);
-		}
+		if (need <= 0) throw LengthError.atMost(len,'input.length',len-need);
 		ret.set(input.subarray(pos));
 		ret[len - need] = Iso7816_4_marker;
 		return ret;
@@ -64,8 +65,8 @@ export class Iso7816_4 {
 		while (pos >= 0 && input[pos] === 0) pos--;
 		if (pos < 0 || input[pos] !== Iso7816_4_marker)
 			throw new ContentError(
-				'input',
 				`expecting end-marker ${Iso7816_4_marker}`,
+				'input',
 				input[pos]
 			);
 		return input.subarray(0, pos);

@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Salsa20 } from '../../../src/crypto';
+import { Salsa20 } from '../../../src/crypto/sym';
 import { U64 } from '../../../src/primitive';
 
 

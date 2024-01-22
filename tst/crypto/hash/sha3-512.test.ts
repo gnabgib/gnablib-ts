@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import {Assert} from '../../../src/test/assert';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Sha3_512 } from '../../../src/crypto';
+import { Sha3_512 } from '../../../src/crypto/hash';
 
 
 const tsts = suite('SHA3/FIPS-202 (512)');

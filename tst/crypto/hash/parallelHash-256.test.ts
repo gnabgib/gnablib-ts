@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { ParallelHash256 } from '../../../src/crypto';
+import { ParallelHash256 } from '../../../src/crypto/hash';
 
 const tsts = suite('ParallelHash256');
 

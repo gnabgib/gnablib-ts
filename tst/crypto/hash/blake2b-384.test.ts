@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Blake2b_384 } from '../../../src/crypto';
+import { Blake2b_384 } from '../../../src/crypto/hash';
 
 const tsts = suite('Blake2/RFC 7693 (b384)');
 

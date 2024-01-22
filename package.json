@@ -24,7 +24,6 @@
 	},
 	"exports": {
 		"./abnf": {
-			"types": "./release/abnf/index.d.ts",
 			"default": "./release/abnf/index.js"
 		},
 		"./algo": {
@@ -38,6 +37,27 @@
 		},
 		"./crypto": {
 			"default": "./release/crypto/index.js"
+		},
+		"./crypto/block": {
+			"default": "./release/crypto/block/index.js"
+		},
+		"./crypto/hash": {
+			"default": "./release/crypto/hash/index.js"
+		},
+		"./crypto/kdf": {
+			"default": "./release/crypto/kdf/index.js"
+		},
+		"./crypto/mac": {
+			"default": "./release/crypto/mac/index.js"
+		},
+		"./crypto/pad": {
+			"default": "./release/crypto/pad/index.js"
+		},
+		"./crypto/sym": {
+			"default": "./release/crypto/sym/index.js"
+		},
+		"./crypto/xof": {
+			"default": "./release/crypto/xof/index.js"
 		},
 		"./cud": {
 			"default": "./release/cud/index.js"
@@ -56,6 +76,15 @@
 		},
 		"./primitive": {
 			"default": "./release/primitive/index.js"
+		},
+		"./primitive/datetime": {
+			"default":"./release/primitive/datetime/index.js"
+		},
+		"./primitive/error": {
+			"default":"./release/primitive/error/index.js"
+		},
+		"./primitive/number": {
+			"default":"./release/primitive/number/index.js"
 		},
 		"./regexp": {
 			"default": "./release/regexp/index.js"

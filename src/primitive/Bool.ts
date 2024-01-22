@@ -1,14 +1,14 @@
 import { superSafe as safe } from '../safe/index.js';
 import { BitReader } from './BitReader.js';
-import { BitWriter } from "./BitWriter.js";
+import { BitWriter } from './BitWriter.js';
 import { ContentError } from './error/ContentError.js';
-import { ISerializer } from "./interfaces/ISerializer.js";
+import { ISerializer } from './interfaces/ISerializer.js';
 
 export interface ParseSettings {
-    preventUndefined?:boolean,
-    allowYes?:boolean,
-    allowOn?:boolean,
-    pos?:number
+	preventUndefined?: boolean;
+	allowYes?: boolean;
+	allowOn?: boolean;
+	pos?: number;
 }
 
 //Not this actually only uses the last bit of storage, so it can be combined with
@@ -17,20 +17,20 @@ export class Bool implements ISerializer {
 	/**Number of bytes required to store this data */
 	static readonly storageBytes = 1;
 	/**Number of bits required to serialize this data */
-    static readonly serialBits = 1;
+	static readonly serialBits = 1;
 	readonly #v: Uint8Array;
-    readonly #mask:number;
-    readonly #shift:number;
+	readonly #mask: number;
+	readonly #shift: number;
 
-	private constructor(storage: Uint8Array,mask:number,shift:number) {
+	private constructor(storage: Uint8Array, mask: number, shift: number) {
 		this.#v = storage;
-        this.#mask=mask;
-        this.#shift=shift;
+		this.#mask = mask;
+		this.#shift = shift;
 	}
 
 	/** true/false */
 	public toString(): string {
-		return (this.#v[0] & this.#mask) === this.#mask ? 'true':'false';
+		return (this.#v[0] & this.#mask) === this.#mask ? 'true' : 'false';
 	}
 
 	/** Value as an int 1=true, 0=false */
@@ -44,79 +44,101 @@ export class Bool implements ISerializer {
 
 	/** Serialize into target  - 1 bit*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(((this.#v[0] & this.#mask) === this.#mask)?1:0, Bool.serialBits);
+		target.writeNumber(
+			(this.#v[0] & this.#mask) === this.#mask ? 1 : 0,
+			Bool.serialBits
+		);
 	}
 
 	//No need to validate
 
-	protected static writeValue(target: Uint8Array, v: boolean, mask:number): void {
+	protected static writeValue(
+		target: Uint8Array,
+		v: boolean,
+		mask: number
+	): void {
 		if (v) {
 			//Set the bit
 			target[0] |= mask;
 		} else {
 			//Unset the last bit
-			target[0] &= ~mask;//0xfe;
+			target[0] &= ~mask; //0xfe;
 		}
 	}
 
-    /** If storage empty, builds new, or vets it's the right size */
+	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(Bool.storageBytes);
-		safe.lengthAtLeast(storage, Bool.storageBytes);
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 
-	public static new(value: boolean, storage?: Uint8Array,pos=0): Bool {
-        const stor=this.setupStor(storage);
-        const mask=1<<pos;
-		this.writeValue(stor, value,mask);
-		return new Bool(stor,mask,pos);
+	public static new(value: boolean, storage?: Uint8Array, pos = 0): Bool {
+		const stor = self.setupStor(storage);
+		const mask = 1 << pos;
+		self.writeValue(stor, value, mask);
+		return new Bool(stor, mask, pos);
 	}
 
-    //Partitioned to allow a subclass to override
+	//Partitioned to allow a subclass to override
 	protected static doParse(
-		test: string,
-        yesVals:string[],
-        noVals:string[],
-        pos:number,
-        storage?: Uint8Array
+		input: string,
+		yesVals: string[],
+		noVals: string[],
+		pos: number,
+		storage?: Uint8Array
 	): Bool {
-        if (yesVals.indexOf(test)>=0) return this.new(true,storage,pos);
-        if (noVals.indexOf(test)>=0) return this.new(false,storage,pos);
-        throw new ContentError('expecting '+yesVals.join('/')+' or '+noVals.join('/'),test);
+		if (yesVals.indexOf(input) >= 0) return self.new(true, storage, pos);
+		if (noVals.indexOf(input) >= 0) return self.new(false, storage, pos);
+		throw new ContentError(
+			'expecting ' + yesVals.join('/') + ' or ' + noVals.join('/'),
+			'input',
+			input
+		);
 	}
 
 	/**
 	 * Create a boolean from a string accepts:
-     * 'true','false',0,1
-     * - If allowYes: 'yes' ,'no'
-     * - If allowOn: 'on','off'
+	 * 'true','false',0,1
+	 * - If allowYes: 'yes' ,'no'
+	 * - If allowOn: 'on','off'
 	 *
 	 * Throws if:
-     * - Undefined/null and settings.preventUndefined
+	 * - Undefined/null and settings.preventUndefined
 	 * - There's no available $storage
-	 * - The content of $str isn't valid
+	 * - The content of $input isn't valid
 	 */
-	public static parse(str: string, storage?: Uint8Array,settings?:ParseSettings): Bool {
-        if (str===undefined || str===null) {
-            if (settings?.preventUndefined===true)
-                throw new ContentError('require string content',str);
-            str='';
-        }
-        //coerce to string
-        str=''+str;
-        let yesVals=['true','1'];
-        let noVals=['false','0'];
-        if (settings?.allowYes===true) {
-            yesVals.push('yes');
-            noVals.push('no');
-        }
-        if (settings?.allowOn===true) {
-            yesVals.push('on');
-            noVals.push('off');
-        }
-        const pos=(settings?.pos as number)|0;
-        return this.doParse(str.trim().toLowerCase(),yesVals,noVals,pos,storage);
+	public static parse(
+		input: string,
+		storage?: Uint8Array,
+		settings?: ParseSettings
+	): Bool {
+		if (input === undefined || input === null) {
+			if (settings?.preventUndefined === true)
+				throw new ContentError('require string content', 'input', input);
+			input = '';
+		}
+		//coerce to string
+		input = '' + input;
+		let yesVals = ['true', '1'];
+		let noVals = ['false', '0'];
+		if (settings?.allowYes === true) {
+			yesVals.push('yes');
+			noVals.push('no');
+		}
+		if (settings?.allowOn === true) {
+			yesVals.push('on');
+			noVals.push('off');
+		}
+		const pos = (settings?.pos as number) | 0;
+		// deepcode ignore StaticAccessThis: Have to use this so children can override
+		return this.doParse(
+			input.trim().toLowerCase(),
+			yesVals,
+			noVals,
+			pos,
+			storage
+		);
 	}
 
 	/**
@@ -127,10 +149,15 @@ export class Bool implements ISerializer {
 	 * @param source Source to read bit from
 	 * @param storage Storage location, if undefined will be built
 	 */
-	public static deserialize(source: BitReader, storage?: Uint8Array,pos=0): Bool {
-        const stor = this.setupStor(storage);
-        const mask=1<<pos;
-		this.writeValue(stor, source.readNumber(this.serialBits) === 1,mask);
-		return new Bool(stor,mask,pos);
+	public static deserialize(
+		source: BitReader,
+		storage?: Uint8Array,
+		pos = 0
+	): Bool {
+		const stor = self.setupStor(storage);
+		const mask = 1 << pos;
+		self.writeValue(stor, source.readNumber(self.serialBits) === 1, mask);
+		return new Bool(stor, mask, pos);
 	}
 }
+const self = Bool;

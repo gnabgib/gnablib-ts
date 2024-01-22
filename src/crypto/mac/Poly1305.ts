@@ -1,7 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { IAeadCrypt, IHash, IFullCrypt  } from '../interfaces/index.js';
-import { ChaCha20, Salsa20, XChaCha20, XSalsa20 } from '../index.js';
+import { IAeadCrypt, IHash, IFullCrypt } from '../index.js';
+import { ChaCha20, Salsa20, XChaCha20, XSalsa20 } from '../sym/index.js';
 import { asLE } from '../../endian/platform.js';
 import { NotInRangeError } from '../../primitive/ErrorExt.js';
 import { safety } from '../../primitive/Safety.js';
@@ -425,7 +425,7 @@ class Poly1305Aead implements IAeadCrypt {
  * ```js
  * import { hex } from "gnablib/codec";
  * import { ChaCha20_Poly1305 } from "gnablib/crypto";
- * 
+ *
  * //From RFC7539-Section 2.8.2
  * const keyHex =
  *   "808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F";
@@ -436,19 +436,19 @@ class Poly1305Aead implements IAeadCrypt {
  *   "73206F66202739393A204966204920636F756C64206F6666657220796F75206F" +
  *   "6E6C79206F6E652074697020666F7220746865206675747572652C2073756E73" +
  *   "637265656E20776F756C642062652069742E";
- * 
+ *
  * const c = new ChaCha20_Poly1305(hex.toBytes(keyHex), hex.toBytes(nonceHex));
  * //Adding AAD is optional - you can skip this call if there's no data
  * c.writeAD(hex.toBytes(aadHex));
- * 
+ *
  * const plain = hex.toBytes(plainHex);
  * //You could use c.encryptSize(plain.length), but we know the cipher is
  * // the same size for this algo
  * const enc = new Uint8Array(plain.length);
- * 
+ *
  * c.encryptInto(enc, plain);
  * const tag = c.finalize();
- * 
+ *
  * console.log(`enc=${hex.fromBytes(enc)}`); // enc=D31A8D34648E60DB7B86AFBC53EF7E..
  * console.log(`tag=${hex.fromBytes(tag)}`); // tag=1AE10B594F09E26A7E902ECBD0600691
  * ```
@@ -520,19 +520,19 @@ export class Salsa20_Poly1305 extends Poly1305Aead {
  *   "73206F66202739393A204966204920636F756C64206F6666657220796F75206F" +
  *   "6E6C79206F6E652074697020666F7220746865206675747572652C2073756E73" +
  *   "637265656E20776F756C642062652069742E";
- * 
+ *
  * const c = new XChaCha20_Poly1305(hex.toBytes(keyHex), hex.toBytes(nonceHex));
  * //Adding AAD is optional - you can skip this call if there's no data
  * c.writeAD(hex.toBytes(aadHex));
- * 
+ *
  * const plain = hex.toBytes(plainHex);
  * //You could use c.encryptSize(plain.length), but we know the cipher is
  * // the same size for this algo
  * const enc = new Uint8Array(plain.length);
- * 
+ *
  * c.encryptInto(enc, plain);
  * const tag = c.finalize();
- * 
+ *
  * console.log(`enc=${hex.fromBytes(enc)}`); // enc=BD6D179D3E83D43B9576579493C0E9..
  * console.log(`tag=${hex.fromBytes(tag)}`); // tag=C0875924C1C7987947DEAFD8780ACF49
  * ```

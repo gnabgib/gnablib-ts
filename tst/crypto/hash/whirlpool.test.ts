@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Whirlpool } from '../../../src/crypto';
+import { Whirlpool } from '../../../src/crypto/hash';
 
 
 const tsts = suite('Whirlpool/ISO 10118-3:2004');

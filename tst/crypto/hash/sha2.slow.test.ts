@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Sha224, Sha256, Sha384, Sha512 } from '../../../src/crypto';
+import { Sha224, Sha256, Sha384, Sha512 } from '../../../src/crypto/hash';
 
 
 const tsts = suite('SHA2/RFC 6234 | FIPS 180-4 - SLOW');

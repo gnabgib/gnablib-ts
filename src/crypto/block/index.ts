@@ -1,5 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
-
+// Block modes barrel file
 export { Cbc } from './Cbc.js';
 export { Cfb } from './Cfb.js';
 export { Ctr } from './Ctr.js';

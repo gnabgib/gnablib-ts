@@ -1,6 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/ErrorExt.js';
+import { ContentError } from '../primitive/error/ContentError.js';
+
 /**
  * Support: (TextEncoded.encode, TextDecoder.decode)
  * Chrome, Android webview, ChromeM >=38
@@ -84,7 +85,7 @@ export const utf8 = {
 			];
 		}
 		//Unicode says we only have 21 bits of space
-		throw new ContentError('Unicode', 'Only 21 bits of space', codePoint);
+		throw new ContentError('Only 21 bits of space', 'Unicode', codePoint);
 	},
 
 	codePointFromBytes: function (bytes: number[]): number {

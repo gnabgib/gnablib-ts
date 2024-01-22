@@ -1,10 +1,10 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { intExt } from '../primitive/IntExt.js';
 import { bitExt } from '../primitive/BitExt.js';
 import { safety } from '../primitive/Safety.js';
-import { ContentError } from '../primitive/ErrorExt.js';
 import { IpV4 } from './Ip.js';
+import { ContentError } from '../primitive/error/ContentError.js';
 
 export class Cidr {
 	/**
@@ -96,11 +96,11 @@ export class Cidr {
 	 */
 	static fromString(value: string): Cidr {
 		const parts = value.split('/');
-		safety.lenExactly(parts,2,'part');
+		safety.lenExactly(parts, 2, 'part');
 		const ipv4 = IpV4.fromString(parts[0]);
 		const mask = intExt.strictParseDecUint(parts[1]);
 		if (mask === undefined)
-			throw new ContentError('Mask', 'Expecting integer 0-32', parts[1]);
+			throw new ContentError('Expecting integer 0-32', 'Mask', parts[1]);
 
 		return new this(ipv4, mask);
 	}

@@ -55,39 +55,40 @@ export class Milli implements ISerializer {
 
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(Milli.storageBytes);
-		safe.lengthAtLeast(storage, Milli.storageBytes);
+		if (!storage) return new Uint8Array(self.storageBytes);
+		safe.lengthAtLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 
 	/** Create a new milli/thousandth, range 0-999 */
 	public static new(v: number, storage?: Uint8Array): Milli {
 		safe.int.inRangeInc(v, 0, 999);
-		const stor = this.setupStor(storage);
-		this.writeValue(stor, v);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, v);
 		return new Milli(stor);
 	}
 
 	//Partitioned to allow a subclass to override
 	protected static doParse(
-		str: string,
+		input: string,
 		strict: boolean,
 		storage?: Uint8Array
 	): Milli {
 		//Only parse integers (no floating point/scientific notation)
-		const r = str.match(/^\s*(\d{1,3})\s*$/);
+		const r = input.match(/^\s*(\d{1,3})\s*$/);
 		if (r !== null) {
 			if (strict) {
 				if (r[1].length != 3)
 					throw new ContentError(
 						'expecting 3 digit unsigned integer-string',
-						str
+						'input',
+						input
 					);
 			}
 			const iVal = parseInt(r[1], 10);
-			return this.new(iVal, storage);
+			return self.new(iVal, storage);
 		}
-		throw new ContentError('expecting unsigned integer-string', str);
+		throw new ContentError('expecting unsigned integer-string', 'input', input);
 	}
 
 	/**
@@ -95,19 +96,20 @@ export class Milli implements ISerializer {
 	 * 1-3 digit unsigned integer, must be 3 digits if strict
 	 *
 	 * Throws if:
-	 * - Not a string, or $str is empty
+	 * - Not a string, or $input is empty
 	 * - There's no available $storage
-	 * - The integer value of $str is out of range
-	 * - The content of $str isn't valid
+	 * - The integer value of $input is out of range
+	 * - The content of $input isn't valid
 	 */
 	public static parse(
-		str: string,
+		input: string,
 		storage?: Uint8Array,
 		strict = false
 	): Milli {
-		const strVal = safe.string.nullEmpty(str);
+		const strVal = safe.string.nullEmpty(input);
 		if (strVal === undefined)
-			throw new ContentError('require string content', str);
+			throw new ContentError('require string content', 'input', input);
+		// deepcode ignore StaticAccessThis: Have to use this so children can override
 		return this.doParse(strVal, strict, storage);
 	}
 
@@ -121,8 +123,10 @@ export class Milli implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Milli {
-		const stor = this.setupStor(storage);
-		this.writeValue(stor, source.readNumber(this.serialBits));
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, source.readNumber(self.serialBits));
 		return new Milli(stor);
 	}
 }
+//Shame TS/JS doesn't support self ()
+const self = Milli;

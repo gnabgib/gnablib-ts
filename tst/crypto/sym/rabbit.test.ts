@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex, utf8 } from '../../../src/codec';
-import { Rabbit } from '../../../src/crypto/';
+import { hex } from '../../../src/codec';
+import { Rabbit } from '../../../src/crypto/sym';
 
 
 const tsts = suite('Rabbit/RFC 4503');

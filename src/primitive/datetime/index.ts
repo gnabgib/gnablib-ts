@@ -1,8 +1,7 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+// Date and Time barrel file
 
 //This is partitioned from primitive because duration likewise
 // defines some of these units (with different range constraints)
-
 //Dates
 export { Year } from './Year.js';
 export { Month } from './Month.js';

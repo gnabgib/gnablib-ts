@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Blowfish } from '../../../src/crypto';
+import { Blowfish } from '../../../src/crypto/sym';
 
 
 const tsts = suite('Blowfish');

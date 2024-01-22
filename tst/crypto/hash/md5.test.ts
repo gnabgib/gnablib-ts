@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import {Assert} from '../../../src/test/assert';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Md5 } from '../../../src/crypto';
+import { Md5 } from '../../../src/crypto/hash';
 
 const tsts = suite('MD5/RFC 1321');
 

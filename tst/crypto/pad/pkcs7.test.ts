@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Pkcs5,Pkcs7 } from '../../../src/crypto';
+import { Pkcs5,Pkcs7 } from '../../../src/crypto/pad';
 
 const tsts = suite('Padding-PKCS7');
 

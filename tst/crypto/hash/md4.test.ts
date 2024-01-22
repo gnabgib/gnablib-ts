@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import {Assert} from '../../../src/test/assert';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
-import { Md4 } from '../../../src/crypto';
+import { Md4 } from '../../../src/crypto/hash';
 
 const tsts = suite('MD4/RFC 1320');
 //Note RFC 6150 retires

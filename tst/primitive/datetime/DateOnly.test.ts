@@ -63,7 +63,7 @@ tsts(`new`,()=>{
     assert.is(d.valueOf(),20000102);
 });
 tsts(`new-provide storage`,()=>{
-    const stor=new Uint8Array(4);
+    const stor=new Uint8Array(DateOnly.storageBytes);
     const d=DateOnly.new(2000,1,2,stor);
     assert.is(d.toString(),'2000-01-02');
     assert.is(d.year.valueOf(),2000);
@@ -80,12 +80,6 @@ tsts(`fromDate`,()=>{
     assert.is(d.month.valueOf(),2);
     assert.is(d.day.valueOf(),3);
 
-    assert.is(d.valueOf(),20010203);
-});
-tsts(`fromDate-provide storage`,()=>{
-    const stor=new Uint8Array(4);
-    const dt=new Date(2001,1/*=2 for fucks sake JS*/,3,4,5,6);
-    const d=DateOnly.fromDate(dt,stor);
     assert.is(d.valueOf(),20010203);
 });
 
