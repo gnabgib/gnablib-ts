@@ -12,6 +12,7 @@
  * //name='myVariable', value='something'
  * ```
  * @param obj Variable wrapped in curly braces
+ * @typeParam T type of the value element
  * @returns Two element array [name, value]
  */
 export function nameValue<T>(obj:Record<string,T>):[string,T] {

@@ -17,85 +17,39 @@
 		"build": "tsc",
 		"compress": "compress",
 		"doc": "npx typedoc",
+		"doc:cover": "npx typedoc --plugin typedoc-plugin-coverage",
+		"doc:watch": "npx --watch",
 		"types": "tsc --outFile \"./dist/index.d.ts\" --emitDeclarationOnly true --isolatedModules false --declaration true"
 	},
 	"engines": {
 		"node": ">=15.3.0"
 	},
 	"exports": {
-		"./abnf": {
-			"default": "./release/abnf/index.js"
-		},
-		"./algo": {
-			"default": "./release/algo/index.js"
-		},
-		"./checksum": {
-			"default": "./release/checksum/index.js"
-		},
-		"./codec": {
-			"default": "./release/codec/index.js"
-		},
-		"./crypto": {
-			"default": "./release/crypto/index.js"
-		},
-		"./crypto/block": {
-			"default": "./release/crypto/block/index.js"
-		},
-		"./crypto/hash": {
-			"default": "./release/crypto/hash/index.js"
-		},
-		"./crypto/kdf": {
-			"default": "./release/crypto/kdf/index.js"
-		},
-		"./crypto/mac": {
-			"default": "./release/crypto/mac/index.js"
-		},
-		"./crypto/pad": {
-			"default": "./release/crypto/pad/index.js"
-		},
-		"./crypto/sym": {
-			"default": "./release/crypto/sym/index.js"
-		},
-		"./crypto/xof": {
-			"default": "./release/crypto/xof/index.js"
-		},
-		"./cud": {
-			"default": "./release/cud/index.js"
-		},
-		"./ecc": {
-			"default": "./release/ecc/index.js"
-		},
-		"./endian": {
-			"default": "./release/endian/index.js"
-		},
-		"./log": {
-			"default": "./release/log/index.js"
-		},
-		"./net": {
-			"default": "./release/net/index.js"
-		},
-		"./primitive": {
-			"default": "./release/primitive/index.js"
-		},
-		"./primitive/datetime": {
-			"default": "./release/primitive/datetime/index.js"
-		},
-		"./primitive/error": {
-			"default": "./release/primitive/error/index.js"
-		},
-		"./primitive/number": {
-			"default": "./release/primitive/number/index.js"
-		},
-		"./regexp": {
-			"default": "./release/regexp/index.js"
-		},
-		"./test": {
-			"default": "./release/test/index.js"
-		},
-		"./tty": {
-			"default": "./release/tty/index.js"
-		},
-		"./package.json": "./package.json"
+		"./abnf": "./release/abnf/index.js",
+		"./algo": "./release/algo/index.js",
+		"./checksum": "./release/checksum/index.js",
+		"./codec": "./release/codec/index.js",
+		"./crypto": "./release/crypto/index.js",
+		"./crypto/block": "./release/crypto/block/index.js",
+		"./crypto/hash": "./release/crypto/hash/index.js",
+		"./crypto/kdf": "./release/crypto/kdf/index.js",
+		"./crypto/mac": "./release/crypto/mac/index.js",
+		"./crypto/pad": "./release/crypto/pad/index.js",
+		"./crypto/sym": "./release/crypto/sym/index.js",
+		"./crypto/xof": "./release/crypto/xof/index.js",
+		"./cud": "./release/cud/index.js",
+		"./ecc": "./release/ecc/index.js",
+		"./endian": "./release/endian/index.js",
+		"./log": "./release/log/index.js",
+		"./primitive": "./release/primitive/index.js",
+		"./primitive/datetime":"./release/primitive/datetime/index.js",
+		"./primitive/error":"./release/primitive/error/index.js",
+		"./primitive/net": "./release/net/index.js",
+		"./primitive/number": "./release/primitive/number/index.js",
+		"./regexp": "./release/regexp/index.js",
+		"./rng": "./release/rnd/index.js",
+		"./test": "./release/test/index.js",
+		"./tty": "./release/tty/index.js"
 	},
 	"files": [
 		"release"

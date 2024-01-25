@@ -52,3 +52,7 @@ npm install <package>@<major#>
 eg: npm install c8@8
 - Find a package owner
 npm owner ls <pkgname>
+
+TypeDoc plug coverage:
+`npm install --save false typedoc-plugin-coverage`
+- Doesn't add it to package.json, you can't add it globally (the runtime doesn't find them)

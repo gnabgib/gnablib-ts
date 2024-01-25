@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { proquint } from '../../src/codec';
-import { IpV4 } from '../../src/net';
+import { IpV4 } from '../../src/primitive/net';
 import { U16, U32 } from '../../src/primitive';
 
 const tsts = suite('Proquint');

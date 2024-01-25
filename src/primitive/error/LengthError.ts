@@ -31,20 +31,25 @@ export class LengthError extends RangeError {
 		this.available = avail;
 	}
 
-    /** Invalid $name; need <=$need, have $available */
+	/** Invalid $name; need <=$need, have $available */
 	static atMost(need: number, name: string, available: number): LengthError {
 		return new this(need, name, available, '<=');
 	}
 
-    /** Invalid $name; need multiple of $need, have $available */
-    static mulOf(need: number, name: string, available: number): LengthError {
+	/** Invalid $name; need multiple of $need, have $available */
+	static mulOf(need: number, name: string, available: number): LengthError {
 		return new this(need, name, available, 'multiple of ');
 	}
 
 	/** Invalid $name; need one of ...$need, have $value*/
-	static oneOf(need:number[],name:string,value:number):LengthError {
-		let pre=need.slice(0,need.length-1).join(',');
-		if (pre.length>0) pre="one of "+pre+",";
-		return new this(need[need.length-1],name,value,pre);
+	static oneOf(need: number[], name: string, value: number): LengthError {
+		let pre = need.slice(0, need.length - 1).join(',');
+		if (pre.length > 0) pre = 'one of ' + pre + ',';
+		return new this(need[need.length - 1], name, value, pre);
+	}
+
+	/** @returns "LengthError" */
+	get name(): string {
+		return 'LengthError';
 	}
 }

@@ -59,3 +59,53 @@ export { Uint64 } from './Uint64.js';
 export { Urn } from './Uri.js';
 export { utf } from './Utf.js';
 export { WindowStr } from './WindowStr.js';
+export { nameValue } from './nameValue.js';
+//These are dupes of package.json-exports, and no one will want to import them this way
+// but typedoc doesn't pick them up otherwise
+/**
+ * # Error
+ *
+ * - {@link primitive.error.ContentError ContentError} Invalid content (eg for parsing or setting value)
+ * - {@link primitive.error.LengthError LengthError} Invalid length (strings, arrays, etc)
+ * - {@link primitive.error.InclusiveRangeError InclusiveRangeError} Value not in range
+ */
+export * as error from './error/index.js';
+/**
+ * # Date and time
+ *
+ * A series of classes to hold date and time information.  Partitioned from {@link primitive}
+ * because some of these units can be redefined (with different range constraints)
+ *
+ * ## Date
+ *
+ * - {@link primitive.datetime.Year Year} Range -10000 - +22767
+ * - {@link primitive.datetime.Month Month} Range 1 - 12
+ * - {@link primitive.datetime.Day Day} Range 1 - 31
+ *
+ * ## Time
+ *
+ * - {@link primitive.datetime.Hour Hour} Range 0 -23
+ * - {@link primitive.datetime.Minute Minute} Range 0 - 59
+ * - {@link primitive.datetime.Second Second} Range 0 - 59 (no leap seconds)
+ * - {@link primitive.datetime.Millisecond Millisecond} Range 0 - 999
+ * - {@link primitive.datetime.Microsecond Microsecond} Range 0 - 999999
+ * - {@link primitive.datetime.UtcOrNot UtcOrNot}
+ */
+export * as datetime from './datetime/index.js';
+/**
+ * # Number
+ *
+ * - {@link primitive.number.Micro Micro} Range 0 - 999999
+ * - {@link primitive.number.Milli Milli} Range 0 - 999
+ * - {@link primitive.number.Nano Nano} Range 0 - 999999999
+ * - {@link primitive.number.Sexagesimal Sexagesimal} Range 0 - 59
+ */
+export * as number from './number/index.js';
+/**
+ * # Net 
+ * 
+ * - {@link primitive.net.Cidr Cidr} Classless Inter-Domain Routing
+ * - {@link primitive.net.IpV4 IpV4} 
+ * - {@link primitive.net.IpTree IpTree}
+ */
+export * as net from './net/index.js';

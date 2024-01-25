@@ -40,6 +40,9 @@ const hexTests:[string,string][] = [
 		'FFBBCDEB38BDAB49CA307B9AC5A928398A418820',
 		'765432ZYXWVUTSRQPONMLKJIHGFEDCBA',
 	],
+	[
+		'CAFE','ZL7A===='
+	]
 ];
 
 for (const [strHex,enc] of hexTests) {

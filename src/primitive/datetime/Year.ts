@@ -98,7 +98,7 @@ export class Year implements ISerializer {
 	/**
 	 * Create a new year in Gregorian format, range 10001BC - 22676AD
 	 * @param year 1-22676 if AD, 1-10001 if BC (no zero year)
-	 * @param ad True=AD, False=BC
+	 * @param ad True=Anno Domini(AD)/Common Era(CE), False=Before Chris(BC)/Before common era (BCE)
 	 */
 	public static newGregorian(
 		year: number,

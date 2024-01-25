@@ -18,22 +18,27 @@ export class ContentError extends SyntaxError {
 		value?: unknown
 	) {
 		let key = '';
-		let keyPad='';
+		let keyPad = '';
 		let val = '';
-		if (value!==undefined) {
+		if (value !== undefined) {
 			if (keyOrValue) {
-				keyPad=' ';
-				key = ''+keyOrValue;
+				keyPad = ' ';
+				key = '' + keyOrValue;
 			}
 			val = ' (' + value + ')';
 		} else {
 			if (keyOrValue) {
 				val = ' (' + keyOrValue + ')';
-				value=keyOrValue;
+				value = keyOrValue;
 			}
 		}
 		super(`Invalid${keyPad}${key}; ${reason}${val}`);
 		this.key = key;
 		this.value = value;
+	}
+
+	/** @returns "ContentError" */
+	get name(): string {
+		return 'ContentError';
 	}
 }

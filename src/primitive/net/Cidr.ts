@@ -1,10 +1,10 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { intExt } from '../primitive/IntExt.js';
-import { bitExt } from '../primitive/BitExt.js';
-import { safety } from '../primitive/Safety.js';
+import { intExt } from '../IntExt.js';
+import { bitExt } from '../BitExt.js';
+import { safety } from '../Safety.js';
 import { IpV4 } from './Ip.js';
-import { ContentError } from '../primitive/error/ContentError.js';
+import { ContentError } from '../error/ContentError.js';
 
 export class Cidr {
 	/**

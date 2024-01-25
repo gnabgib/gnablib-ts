@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { msvcRand } from '../../src/rng/msvcRand';
+import { msvcRand } from '../../src/prng/msvcRand';
 
 const tsts = suite('msvcRand');
 tsts(`msvcRand`, () => {

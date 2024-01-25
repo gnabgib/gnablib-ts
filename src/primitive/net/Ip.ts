@@ -1,9 +1,9 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { intExt } from '../primitive/IntExt.js';
-import { safety } from '../primitive/Safety.js';
-import { U32 } from '../primitive/U32.js';
-import { ContentError } from '../primitive/error/ContentError.js';
+import { intExt } from '../IntExt.js';
+import { safety } from '../Safety.js';
+import { U32 } from '../U32.js';
+import { ContentError } from '../error/ContentError.js';
 
 export class IpV4 {
 	readonly bytes: Uint8Array;

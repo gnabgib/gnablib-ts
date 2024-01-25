@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { randu } from '../../src/rng/randu';
+import { randu } from '../../src/prng/randu';
 
 const tsts = suite('randu');
 tsts(`randu`, () => {

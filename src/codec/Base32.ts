@@ -1,21 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { ContentError } from '../primitive/error/ContentError.js';
-import { IBase32 } from './interfaces/IBase32.js';
-/**
- * Support: (Uint8Array)
- * Chrome, Android webview, ChromeM >=38
- * Edge >=12
- * Firefox, FirefoxM >=4
- * IE: 10
- * Opera: 11.6
- * OperaM: 12
- * Safari: >=5.1
- * SafariM: 4.2
- * Samsung: >=1.0
- * Node: >=1.0
- * Deno: >=0.10
- */
 
 // [Wiki: Base32](https://en.wikipedia.org/wiki/Base32)
 // [RFC-4648: The Base16, Base32, and Base64 Data Encodings](https://datatracker.ietf.org/doc/html/rfc4648)
@@ -42,7 +27,7 @@ interface options {
 	extraDecodes?: Record<string, number>;
 }
 
-class Base32 implements IBase32 {
+class Base32 {
 	readonly #decode: Uint8Array;
 	/**
 	 * Whether padding is required (when not specified on @see fromBytes @see toBytes)
@@ -247,37 +232,228 @@ class Base32 implements IBase32 {
 }
 
 /**
- * RFC 4648 base 32 (padding default on)
+ * # Base 32
+ *
+ * - [RFC 4648](https://datatracker.ietf.org/doc/html/rfc4648)
+ * - Padding default **on**
+ *
+ * Text will be composed of the characters:
+ * `ABCDEFGHIJKLMNOPQRSTUVWXYZ234567`
+ *
+ * Similar to {@link base32hex}, {@link crockford32}, {@link zBase32}
+ *
+ * @namespace
  */
-export const base32: IBase32 = new Base32('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', {
+export const base32: {
+	/**
+	 * Convert an array of bytes into encoded text.
+	 *
+	 * Text will be composed of the characters:
+	 * `ABCDEFGHIJKLMNOPQRSTUVWXYZ234567`
+	 *
+	 * @param src Bytes to encode
+	 * @param addPad Whether to include padding
+	 * @returns Encoded string
+	 *
+	 * @example
+	 * ```js
+	 * import { base32, hex } from 'gnablib/codec';
+	 *
+	 * base32.fromBytes(hex.toBytes('CAFE')); //ZL7A====
+	 * ```
+	 */
+	fromBytes(src: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Decode text into an array of bytes
+	 *
+	 * @param src Encoded data
+	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
+	 * @returns Decoded bytes
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Bad source character/Not enough characters
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Content after padding/Padding missing/Padding inadequate
+	 *
+	 * @example
+	 * ```js
+	 * import { base32, utf8 } from 'gnablib/codec';
+	 *
+	 * utf8.fromBytes(base32.toBytes('ZL7A====')); //CAFE
+	 * ```
+	 */
+	toBytes(src: string, requirePad?: boolean): Uint8Array;
+} = new Base32('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', {
 	requirePad: true,
 });
 
 /**
- * z-base-32 (padding default off)
+ * # z-Base 32
+ *
+ * - Padding default **off**
+ *
+ * Text will be composed of the characters:
+ * `YBNDRFG8EJKMCPQXOT1UWISZA345H769`
+ *
+ * Similar to {@link base32}, {@link base32hex}, {@link crockford32}
+ *
+ * @namespace
  */
-export const zbase32: IBase32 = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
+export const zBase32: {
+	/**
+	 * Convert an array of bytes into encoded text.
+	 *
+	 * Text will be composed of the characters:
+	 * `YBNDRFG8EJKMCPQXOT1UWISZA345H769`
+	 *
+	 * @param src Bytes to encode
+	 * @param addPad Whether to include padding
+	 * @returns Encoded string
+	 *
+	 * @example
+	 * ```js
+	 * import { zBase32, hex } from 'gnablib/codec';
+	 *
+	 * zBase32.fromBytes(hex.toBytes('CAFE')); // 3m9y
+	 * ```
+	 */
+	fromBytes(src: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Decode text into an array of bytes
+	 *
+	 * @param src Encoded data
+	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
+	 * @returns Decoded bytes
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Bad source character/Not enough characters
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Content after padding/Padding missing/Padding inadequate
+	 *
+	 * @example
+	 * ```js
+	 * import { zBase32, utf8 } from 'gnablib/codec';
+	 *
+	 * utf8.fromBytes(zBase32.toBytes('3m9y')); //CAFE
+	 * ```
+	 */
+	toBytes(src: string, requirePad?: boolean): Uint8Array;
+} = new Base32('YBNDRFG8EJKMCPQXOT1UWISZA345H769', {
 	requirePad: false,
 	makeTblLower: true,
 });
 
 /**
- * RFC 4648 base 32 hex, sortable, (padding default on)
+ * # Base 32 hex
+ *
+ * - Sortable
+ * - [RFC 4648](https://datatracker.ietf.org/doc/html/rfc4648)
+ * - Padding default **on**
+ *
+ * Text will be composed of the characters:
+ * `0123456789ABCDEFGHIJKLMNOPQRSTUV`
+ *
+ * Similar to {@link base32}, {@link crockford32}, {@link zBase32}
+ *
+ * @namespace
  */
-export const base32hex: IBase32 = new Base32(
-	'0123456789ABCDEFGHIJKLMNOPQRSTUV',
-	{
-		requirePad: true,
-	}
-);
+export const base32hex: {
+	/**
+	 * Convert an array of bytes into encoded text.
+	 *
+	 * Text will be composed of the characters:
+	 * `0123456789ABCDEFGHIJKLMNOPQRSTUV`
+	 *
+	 * @param src Bytes to encode
+	 * @param addPad Whether to include padding
+	 * @returns Encoded string
+	 *
+	 * @example
+	 * ```js
+	 * import { base32hex, hex } from 'gnablib/codec';
+	 *
+	 * base32hex.fromBytes(hex.toBytes('CAFE')); // PBV0====
+	 * ```
+	 */
+	fromBytes(src: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Decode text into an array of bytes
+	 *
+	 * @param src Encoded data
+	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
+	 * @returns Decoded bytes
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Bad source character/Not enough characters
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Content after padding/Padding missing/Padding inadequate
+	 *
+	 * @example
+	 * ```js
+	 * import { base32hex, utf8 } from 'gnablib/codec';
+	 *
+	 * utf8.fromBytes(base32hex.toBytes('PBV0====')); //CAFE
+	 * ```
+	 */
+	toBytes(src: string, requirePad?: boolean): Uint8Array;
+} = new Base32('0123456789ABCDEFGHIJKLMNOPQRSTUV', {
+	requirePad: true,
+});
 
 /**
- * Crockford's Base32
+ * # [Crockford's Base32](https://www.crockford.com/base32.html)
+ *
+ * Text will be composed of the characters:
+ * `0123456789ABCDEFGHJKMNPQRSTVWXYZ`
+ *
+ * Similar to {@link base32}, {@link base32hex}, {@link zBase32}
+ *
+ * @namespace
  */
-export const crockford32: IBase32 = new Base32(
-	'0123456789ABCDEFGHJKMNPQRSTVWXYZ',
-	{
-		requirePad: false,
-		extraDecodes: { o: 0, O: 0, i: 1, I: 1, l: 1, L: 1 },
-	}
-);
+export const crockford32: {
+	/**
+	 * Convert an array of bytes into encoded text.
+	 *
+	 * Text will be composed of the characters:
+	 * `0123456789ABCDEFGHJKMNPQRSTVWXYZ`
+	 *
+	 * @param src Bytes to encode
+	 * @param addPad Whether to include padding
+	 * @returns Encoded string
+	 *
+	 * @example
+	 * ```js
+	 * import { crockford32, hex } from 'gnablib/codec';
+	 *
+	 * crockford32.fromBytes(hex.toBytes('CAFE')); // SBZ0
+	 * ```
+	 */
+	fromBytes(src: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Decode text into an array of bytes
+	 *
+	 * @param src Encoded data
+	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
+	 * @returns Decoded bytes
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Bad source character/Not enough characters
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Content after padding/Padding missing/Padding inadequate
+	 *
+	 * @example
+	 * ```js
+	 * import { crockford32, utf8 } from 'gnablib/codec';
+	 *
+	 * utf8.fromBytes(crockford32.toBytes('SBZ0')); //CAFE
+	 * ```
+	 */
+	toBytes(src: string, requirePad?: boolean): Uint8Array;
+} = new Base32('0123456789ABCDEFGHJKMNPQRSTVWXYZ', {
+	requirePad: false,
+	extraDecodes: { o: 0, O: 0, i: 1, I: 1, l: 1, L: 1 },
+});

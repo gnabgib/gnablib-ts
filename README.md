@@ -241,6 +241,15 @@ Name|Capacities|Optional parameters
 - String
 - Uint8Array
 
+### Pseudorandom number generators (PRNG)
+
+- [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en) -
+  possible to calculate in your head
+- [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method) -
+  in practice flawed since the period is often short and will converge towards the same number or loop after repeated times
+- [MSVC](https://orlp.net/blog/when-random-isnt/)
+- [RANDU](https://en.wikipedia.org/wiki/RANDU) -
+  a famously bad PRNG
 
 ### RegExp
 

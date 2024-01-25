@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Cidr, IpV4 } from '../../src/net';
+import { Cidr, IpV4 } from '../../../src/primitive/net';
 
 const tsts = suite('CIDR');
 

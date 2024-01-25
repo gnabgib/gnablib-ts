@@ -1,15 +1,30 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
-
-export type {IAscii85EncodeOpts } from './interfaces/IAscii85EncodeOpts.js';
-export type {IBase64 } from './interfaces/IBase64.js';
-export type {IBase32 } from './interfaces/IBase32.js';
-export type {IQuotedPrintableEncodeOpts } from './interfaces/IQuotedPrintableEncodeOpts.js';
-export type {IUriDecodeOpts } from './interfaces/IUriDecodeOpts.js';
-export type {IUucodeEncodeOpts } from './interfaces/IUucodeEncodeOpts.js';
-export type {IUucodeFile } from './interfaces/IUucodeFile.js';
-export type {IYEncEncodeOpts } from './interfaces/IYEncEncodeOpts.js';
-export type {IYEncDecodeOpts } from './interfaces/IYEncDecodeOpts.js';
-
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/**
+ * # Codec
+ * 
+ * ## Base32
+ * 
+ * - {@link codec.base32 base32}
+ * - {@link codec.base32hex base32hex}
+ * - {@link codec.crockford32 crockford32}
+ * - {@link codec.zBase32 zBase32}
+ * 
+ * ## Base64
+ * 
+ * - {@link codec.base64 base64}
+ * - {@link codec.base64url base64url}
+ * - {@link codec.b64 b64}
+ * - {@link codec.sBase64 sBase64}
+ * 
+ * @module
+ */
+export type { IAscii85EncodeOpts } from './interfaces/IAscii85EncodeOpts.js';
+export type { IQuotedPrintableEncodeOpts } from './interfaces/IQuotedPrintableEncodeOpts.js';
+export type { IUriDecodeOpts } from './interfaces/IUriDecodeOpts.js';
+export type { IUucodeEncodeOpts } from './interfaces/IUucodeEncodeOpts.js';
+export type { IUucodeFile } from './interfaces/IUucodeFile.js';
+export type { IYEncEncodeOpts } from './interfaces/IYEncEncodeOpts.js';
+export type { IYEncDecodeOpts } from './interfaces/IYEncDecodeOpts.js';
 
 export {
 	ArrayBufferWindow,
@@ -17,8 +32,9 @@ export {
 } from './ArrayBufferWindow.js';
 export { ascii85 } from './Ascii85.js';
 //export type { EncodeOpts } from './Ascii85.js'
-export { base32, zbase32, base32hex, crockford32 } from './Base32.js';
+export { base32, zBase32, base32hex, crockford32 } from './Base32.js';
 export { base64, base64url, b64 } from './Base64.js';
+export * as sBase64 from './sBase64.js';
 export { bfloat16 } from './bfloat16.js';
 export {
 	fromDense2,

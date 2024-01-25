@@ -108,7 +108,7 @@
     "entryPointStrategy":"resolve",
     "titleLink":"https://www.gnabgib.com/lib-ts/",
     "hideGenerator":true,
-    "excludeExternals":true,
+    //"excludeExternals":true,
     // "excludeNotDocumented":true,
     "excludePrivate":true,
     "excludeProtected":true,
@@ -118,6 +118,9 @@
       "private": false,
       "protected": false,
       "@alpha":false
+    },
+    "navigationLinks": {
+      "NPM": "https://www.npmjs.com/package/gnablib"
     }
   }
 }

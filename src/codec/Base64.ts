@@ -1,49 +1,21 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
-
 import { ContentError } from '../primitive/error/ContentError.js';
-import { IBase64 } from './interfaces/IBase64.js';
-/**
- * Support: (Uint8Array)
- * Chrome, Android webview, ChromeM >=38
- * Edge >=12
- * Firefox, FirefoxM >=4
- * IE: 10
- * Opera: 11.6
- * OperaM: 12
- * Safari: >=5.1
- * SafariM: 4.2
- * Samsung: >=1.0
- * Node: >=1.0
- * Deno: >=0.10
- */
 
-//[Wiki: Base64](https://en.wikipedia.org/wiki/Base64)
-//[RFC-4648: The Base16, Base32, and Base64 Data Encodings](https://datatracker.ietf.org/doc/html/rfc4648)
 const pad = '=';
-/**
- * Mask for last 6 bits (when used with &)
- */
-const last6Bits = 0x3f; // 00111111
+const last6Bits = 0b111111;
 const byteEat = 3;
 
-/**
- * Base 64 encoder/decoder
- */
+/** Base 64 encoder/decoder using a table */
 class Base64 {
 	readonly #decode: Uint8Array;
 	constructor(
-		/**
-		 * Encoding table
-		 */
-		readonly tbl: string,
-		/**
-		 * Whether padding is required (when not specified on @see fromBytes, @see toBytes)
-		 */
-		readonly reqPad: boolean
+		/** Encoding table */
+		private readonly tbl: string,
+		/** Whether padding is required (when not specified explicity) @private */
+		private readonly reqPad: boolean
 	) {
 		this.#decode = this.buildDecode();
 	}
-
 	private buildDecode(): Uint8Array {
 		//We only need to set the first 127 places, since they're ASCII
 		// The first 32 aren't printable, but we'd have to branch to compensate, so let's waste a little memory
@@ -61,22 +33,14 @@ class Base64 {
 		// note this also exploits the rule that out of range access will also return o (eg code[4000]==0)
 		return code;
 	}
-
-	/**
-	 * Convert an array of bytes into encoded text
-	 * @remarks 24=6bits*4 = 8bits*3
-	 * @param bytes Bytes to encode
-	 * @param addPad Whether to include padding (default @see reqPad)
-	 * @returns encoded string
-	 */
-	fromBytes(bytes: Uint8Array, addPad?: boolean): string {
+	fromBytes(src: Uint8Array, addPad?: boolean): string {
 		if (addPad === undefined) addPad = this.reqPad;
 		let ret = '';
 		let pos = byteEat - 1;
 
 		//We can eat 3 bytes at a time (=4 base64 chars) = 24 bits
-		for (; pos < bytes.length; pos += byteEat) {
-			const u24 = (bytes[pos - 2] << 16) | (bytes[pos - 1] << 8) | bytes[pos];
+		for (; pos < src.length; pos += byteEat) {
+			const u24 = (src[pos - 2] << 16) | (src[pos - 1] << 8) | src[pos];
 			ret +=
 				this.tbl.charAt(u24 >>> 18) +
 				this.tbl.charAt((u24 >>> 12) & last6Bits) +
@@ -85,13 +49,13 @@ class Base64 {
 		}
 
 		//We can have 1 or 2 bytes not encoded at this point
-		switch (bytes.length - pos + byteEat - 1) {
+		switch (src.length - pos + byteEat - 1) {
 			case 1:
 				//NOTE `pos` is 2 after `bytes.length`, so `pos-1` `pos` are invalid
 				//8 bits = [aaaaaa][aa0000]==
 				ret +=
-					this.tbl.charAt(bytes[pos - 2] >>> 2) +
-					this.tbl.charAt((bytes[pos - 2] << 4) & last6Bits);
+					this.tbl.charAt(src[pos - 2] >>> 2) +
+					this.tbl.charAt((src[pos - 2] << 4) & last6Bits);
 				//Pad if requested
 				if (addPad) ret += pad + pad;
 				break;
@@ -100,43 +64,36 @@ class Base64 {
 				//NOTE `pos` is 1 after `bytes.length`, `pos` is invalid
 				//16 bits=[aaaaaa][aabbbb][bbbb00]=
 				ret +=
-					this.tbl.charAt(bytes[pos - 2] >>> 2) +
+					this.tbl.charAt(src[pos - 2] >>> 2) +
 					this.tbl.charAt(
-						((bytes[pos - 2] << 4) | (bytes[pos - 1] >>> 4)) & last6Bits
+						((src[pos - 2] << 4) | (src[pos - 1] >>> 4)) & last6Bits
 					) +
-					this.tbl.charAt((bytes[pos - 1] << 2) & last6Bits);
+					this.tbl.charAt((src[pos - 1] << 2) & last6Bits);
 				//Pad if requested
 				if (addPad) ret += pad;
 				break;
 		}
 		return ret;
 	}
-
-	/**
-	 * Convert encoded text into an array of bytes
-	 * @param base64 encoded data
-	 * @param requirePad Whether padding is required (default @see reqPad) - if required and missing, may throw
-	 * @throws {ContentError} Bad character|Content after padding|padding missing
-	 */
-	toBytes(base64: string, requirePad?: boolean): Uint8Array {
+	toBytes(src: string, requirePad?: boolean): Uint8Array {
 		const name = 'toBytes';
-		const ret = new Uint8Array(Math.ceil((base64.length * 3) / 4)); //Note it may be shorter if no pad, or ignored chars
+		const ret = new Uint8Array(Math.ceil((src.length * 3) / 4)); //Note it may be shorter if no pad, or ignored chars
 
 		let padCount = 0;
 		let retPtr = 0;
 		let carry = 0;
 		let carrySize = 0;
-		for (let i = 0; i < base64.length; i++) {
-			const dec = this.#decode[base64.charCodeAt(i)];
+		for (let i = 0; i < src.length; i++) {
+			const dec = this.#decode[src.charCodeAt(i)];
 			//If 0, invalid
 			if (dec === 0)
-				throw new ContentError('Unknown char', name, base64.charAt(i));
+				throw new ContentError('Unknown char', name, src.charAt(i));
 			if (dec === 65) {
 				padCount++;
 				continue;
 			}
 			if (padCount > 0)
-				throw new ContentError('Found after padding', name, base64.charAt(i));
+				throw new ContentError('Found after padding', name, src.charAt(i));
 			//Otherwise decoded char is off by 1
 			carry = (carry << 6) | (dec - 1);
 			carrySize += 6;
@@ -191,25 +148,166 @@ class Base64 {
 }
 
 /**
- * RFC 4648 base 64 (padding default on)
+ * # [Base 64](https://en.wikipedia.org/wiki/Base64)
+ *
+ * [RFC 4648](https://datatracker.ietf.org/doc/html/rfc4648), with padding default **on**
+ *
+ * Text will be composed of the characters:
+ * `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`
+ *
+ * @namespace
  */
-export const base64: IBase64 = new Base64(
+export const base64: {
+	/**
+	 * Convert an array of bytes into encoded text.
+	 *
+	 * Text will be composed of the characters:
+	 * `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`
+	 *
+	 * @param src Bytes to encode
+	 * @param addPad Whether to include padding
+	 * @returns Encoded string - at most `Ceil(src.length*4/3)` in length
+	 *
+	 * @example
+	 * ```js
+	 * import { base64, hex } from 'gnablib/codec';
+	 *
+	 * base64.fromBytes(hex.toBytes('DEADBEEF'));
+	 * ```
+	 */
+	fromBytes(src: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Decode text into an array of bytes
+	 *
+	 * @param src Encoded data
+	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
+	 * @returns Decoded bytes
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Bad source character/Not enough characters
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Content after padding/Padding missing/Padding inadequate
+	 *
+	 * @example
+	 * ```js
+	 * import { base64, utf8 } from 'gnablib/codec';
+	 *
+	 * utf8.fromBytes(base64.toBytes('SGVsbG8h'));
+	 * ```
+	 */
+	toBytes(src: string, requirePad?: boolean): Uint8Array;
+} = new Base64(
 	'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
 	true
 );
 
 /**
- * RFC 4648 URL/file safe base 64 (padding default off)
+ * # Base 64 Url
+ *
+ * [RFC 4648](https://datatracker.ietf.org/doc/html/rfc4648), with padding default **off**
+ *
+ * Text will be composed of the characters:
+ * `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_`
+ *
+ * @namespace
  */
-export const base64url: IBase64 = new Base64(
+export const base64url: {
+	/**
+	 * Convert an array of bytes into encoded text.
+	 *
+	 * Text will be composed of the characters:
+	 * `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_`
+	 *
+	 * @param src Bytes to encode
+	 * @param addPad Whether to include padding
+	 * @returns Encoded string - at most `Ceil(src.length*4/3)` in length
+	 *
+	 * @example
+	 * ```js
+	 * import { base64url, hex } from 'gnablib/codec';
+	 *
+	 * base64url.fromBytes(hex.toBytes('DEADBEEF'));
+	 * ```
+	 */
+	fromBytes(src: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Decode text into an array of bytes
+	 *
+	 * @param src Encoded data
+	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
+	 * @returns Decoded bytes
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Bad source character/Not enough characters
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Content after padding/Padding missing/Padding inadequate
+	 *
+	 * @example
+	 * ```js
+	 * import { base64url, utf8 } from 'gnablib/codec';
+	 *
+	 * utf8.fromBytes(base64url.toBytes('SGVsbG8h'));
+	 * ```
+	 */
+	toBytes(src: string, requirePad?: boolean): Uint8Array;
+} = new Base64(
 	'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
 	false
 );
 
 /**
- * Sortable base 64, (Unix-Crypt/GEDCOM) (padding default off)
+ * # Sortable base 64
+ *
+ * Unix-Crypt/GEDCOM, with default padding **off**
+ *
+ * Text will be composed of the characters:
+ * `./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
+ *
+ * @namespace
  */
-export const b64: IBase64 = new Base64(
+export const b64: {
+	/**
+	 * Convert an array of bytes into encoded text.
+	 *
+	 * Text will be composed of the characters:
+	 * `./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`
+	 *
+	 * @param src Bytes to encode
+	 * @param addPad Whether to include padding
+	 * @returns Encoded string - at most `Ceil(src.length*4/3)` in length
+	 *
+	 * @example
+	 * ```js
+	 * import { b64, hex } from 'gnablib/codec';
+	 *
+	 * b64.fromBytes(hex.toBytes('DEADBEEF'));
+	 * ```
+	 */
+	fromBytes(src: Uint8Array, addPad?: boolean): string;
+	/**
+	 * Decode text into an array of bytes
+	 *
+	 * @param src Encoded data
+	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
+	 * @returns Decoded bytes
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Bad source character/Not enough characters
+	 *
+	 * @throws {@link primitive.error.ContentError ContentError}
+	 * Content after padding/Padding missing/Padding inadequate
+	 *
+	 * @example
+	 * ```js
+	 * import { b64, utf8 } from 'gnablib/codec';
+	 *
+	 * utf8.fromBytes(b64.toBytes('SGVsbG8h'));
+	 * ```
+	 */
+	toBytes(src: string, requirePad?: boolean): Uint8Array;
+} = new Base64(
 	'./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
 	false
 );
