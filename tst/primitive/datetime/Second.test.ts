@@ -21,11 +21,19 @@ tsts(`fromMillisecondsSinceEpoch`, () => {
 });
 
 tsts(`now`, () => {
-	const dt = new Date();
-	const m = Second.now();
-	//This isn't a great test, but let's use a date object to compare
-	//(tiny chance of this test failing near midnight)
-	assert.is(m.valueOf(), dt.getSeconds());
+	const s = Second.now();
+	//Near the end of a seocnd, this test can fail, (but passes otherwise)
+	// so we've replaced with a more generic form (not super useful)
+	//const dt = new Date();
+	//assert.is(s.valueOf(), dt.getSeconds());
+
+	const sNum=s.valueOf();
+	assert.is(sNum >= 0 && sNum <= 59, true, 'In valid range');
+});
+tsts(`parse(now)`, () => {
+	const s = Second.parse('now');
+	const sNum=s.valueOf();
+	assert.is(sNum >= 0 && sNum <= 59, true, 'In valid range');
 });
 
 tsts(`parse(1)`, () => {
@@ -33,12 +41,5 @@ tsts(`parse(1)`, () => {
 	assert.equal(s.valueOf(), 1);
 });
 
-tsts(`parse(now)`, () => {
-	//Turns out setup of unit tests on the full suite is >second so this can't be part of a set
-	//Note: This could fail at the end of the year :|
-	const n = new Date();
-	const s = Second.parse('now');
-	assert.equal(s.valueOf(), n.getSeconds());
-});
 
 tsts.run();

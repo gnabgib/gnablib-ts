@@ -3,33 +3,66 @@
 
 Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runner /w [uvu/assert](https://github.com/lukeed/uvu/blob/master/docs/api.assert.md)
 
-```base
-npm test 
-```
 
-Content will be output into `/dist/**` and then compressed into `/release/**`
+### Test
+
+```bash
+npm run test 
+```
+Output is inline
+
+#### Coverage
+
+```bash
+npm run cover
+```
+Output is inline.  Coverage is configured by `.c8rc` which includes **all** files in `./src`, except
+interfaces (`interfaces/I*.ts`), and drops and reports of files with 100% coverage (reduce visual clutter)
+
+#### Coverage-Report
+```bash
+npm run cover:report
+```
+Artifacts will be output as HTML into `/_o/cover/**` (excluded from git)
+
+
+### Build
 
 ```bash
 npm run build
 ```
+JS will be output into `/_o/out/**` while type definitions wil lbe output to `/_o/type/**` (both excluded from git)
 
-Update version
+#### Full build
+
+```bash
+npm run build:full
+```
+
+This will generate a coverage report (`/_o/cover/index.html`), build documentation (`/_o/doc/index.html`),
+build from source (`/_o/out`) generate types (`/_o/type`) and compress the build (`/_o/dist`)
+
+**Update version**
+
 ```bash
 npm version patch -m "Upgrade to %s, <reason>"
 ```
 - The publish/provenance is done on github
 
-Review code coverage
+
+#### Compress
+
 ```bash
-npm run test:coverage
+npm run compress
 ```
+Content of `/_o/out/**` will be compressed into `/_o/dist/**` (excluded from git)
+
+
+### Maintenance
 
 Currently excluded from build (from package.json):
 - Since it's not complete, let's skip publishing Create-Update-Delete (CUD) features
-		"./cud":{
-			"default":"./release/cud/index.js"
-		},
-
+		"./cud":"./dist/cud/index.js"
 
 Resume after checkout
 ```bash
@@ -56,3 +89,8 @@ npm owner ls <pkgname>
 TypeDoc plug coverage:
 `npm install --save false typedoc-plugin-coverage`
 - Doesn't add it to package.json, you can't add it globally (the runtime doesn't find them)
+
+List globally installed packages:
+`npm ls -g`
+`pnpm ls -g`
+- Note the output can be different (they have different storage locations)

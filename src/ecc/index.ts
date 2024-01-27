@@ -10,4 +10,6 @@ export {
 	aztecData12,
 	maxicodeField,
 	ReedSolomon,
+	type IGf,
+	type UIntArray
 } from './ReedSolomon.js';

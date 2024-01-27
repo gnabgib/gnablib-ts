@@ -2,7 +2,7 @@
 
 import { IHash } from '../interfaces/IHash.js';
 import { safety } from '../../primitive/Safety.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
 import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
 

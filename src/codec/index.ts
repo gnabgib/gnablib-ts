@@ -29,6 +29,8 @@ export type { IYEncDecodeOpts } from './interfaces/IYEncDecodeOpts.js';
 export {
 	ArrayBufferWindow,
 	ArrayBufferWindow_es2021,
+	ArrayBufferWindowReader,
+	ArrayBufferWindowWriter
 } from './ArrayBufferWindow.js';
 export { ascii85 } from './Ascii85.js';
 //export type { EncodeOpts } from './Ascii85.js'
@@ -46,6 +48,7 @@ export {
 	toDense3,
 	push2DigitsToBytes,
 	push3DigitsToBytes,
+	type bcd
 } from './DenselyPackedDecimal.js';
 export { hex } from './Hex.js';
 export { fpb16, fpb32, fpb64 } from './ieee754-fpb.js';

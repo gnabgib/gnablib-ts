@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../src/codec';
 import { SpookyLong } from '../../src/checksum';
-import { U64 } from '../../src/primitive';
+import { U64 } from '../../src/primitive/number';
 
 const tsts = suite('Spooky');
 

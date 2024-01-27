@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { U32MutArray } from '../../src/primitive';
+import { U32MutArray } from '../../../src/primitive/number';
 
 const tsts = suite('U32MutArray');
 

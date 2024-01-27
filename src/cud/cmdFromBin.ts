@@ -8,7 +8,7 @@ import { Plane } from './types/Plane.js';
 import { ACmdData } from './CommandData.js';
 import type { ACmd } from './ACmd.js';
 import { ACmdCtrl } from './CommandCtrl.js';
-import { U64 } from '../primitive/U64.js';
+import { U64 } from '../primitive/number/U64.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)

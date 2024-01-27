@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/codec';
-import { U64,U64Mut, U64MutArray } from '../../src/primitive';
+import { hex } from '../../../src/codec';
+import { U64,U64Mut, U64MutArray } from '../../../src/primitive/number';
 
 const tsts = suite('U64MutArray');
 

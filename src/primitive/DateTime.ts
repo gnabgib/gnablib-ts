@@ -3,7 +3,7 @@
 import { FromBinResult } from './FromBinResult.js';
 import { intExt } from './IntExt.js';
 import { safety } from './Safety.js';
-import { U64 } from './U64.js';
+import { U64 } from './number/U64.js';
 
 const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const microPerSec = 1000000;

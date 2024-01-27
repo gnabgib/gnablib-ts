@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../src/codec';
-import { U32, U32Mut, U32ish } from '../../src/primitive';
-import { asBE, asLE } from '../../src/endian';
+import { hex } from '../../../src/codec';
+import { U32, U32Mut, U32ish } from '../../../src/primitive/number';
+import { asBE, asLE } from '../../../src/endian';
 
 const tsts = suite('Uint32Mut');
 

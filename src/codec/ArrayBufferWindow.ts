@@ -17,7 +17,7 @@ import type {
 import { isLE } from '../endian/platform.js';
 import { safety } from '../primitive/Safety.js';
 
-class ArrayBufferWindowReader {
+export class ArrayBufferWindowReader {
 	private readonly _view: DataView;
 	private readonly _isLittleEndian: boolean;
 	private _pos = 0;
@@ -317,7 +317,7 @@ class ArrayBufferWindowReader {
 	}
 }
 
-class ArrayBufferWindowWriter {
+export class ArrayBufferWindowWriter {
 	protected readonly _view: DataView;
 	protected readonly _isLittleEndian: boolean;
 	protected _pos = 0;

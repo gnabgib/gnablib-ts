@@ -5,7 +5,7 @@ import { ChaCha20, Salsa20, XChaCha20, XSalsa20 } from '../sym/index.js';
 import { asLE } from '../../endian/platform.js';
 import { NotInRangeError } from '../../primitive/ErrorExt.js';
 import { safety } from '../../primitive/Safety.js';
-import { U64, U64Mut } from '../../primitive/U64.js';
+import { U64, U64Mut } from '../../primitive/number/U64.js';
 
 const tagSize = 16;
 

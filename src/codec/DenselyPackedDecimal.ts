@@ -7,15 +7,13 @@ import { safety } from '../primitive/Safety.js';
 const last3bits = 7;
 const bit2and3 = 6;
 
-/**
- * Binary coded decimal, can hold two base10 digits per byte (4bits per digit)
- */
+/** Binary coded decimal, can hold two base10 digits per byte (4bits per digit) */
 export type bcd = number;
 
 /**
- * Decode dense2 encoded data (7bits, mask 0x7F) into two decimal digits, returned
+ * Decode dense2 encoded data (7 bits, mask `0x7F`) into two decimal digits, returned
  * as a single byte, 7-4 MSD, 3-0 LSD (binary coded decimal)
- * @param value number 0-0x7F (oversized will be ignored)
+ * @param value number [0 - 0x7F] (oversized will be ignored)
  * @returns Byte, upper 4 bits BCD MSD, lower 4 bits BCD LSD
  */
 export function fromDense2(value: number): bcd {
@@ -45,8 +43,8 @@ export function fromDense2(value: number): bcd {
 }
 
 /**
- * If you know d0, d1 are ints 0-9 then you can use this, otherwise use @see toDense2
- * @see toDense3 is recommended if you have >2 digits (better compression)
+ * If you know `$d0`, `$d1` are ints `0-9` then you can use this, otherwise use {@link toDense2}
+ * {@link toDense3} is recommended if you have >2 digits (better compression)
  *
  * @param d0 number 0-9
  * @param d1 number 0-9
@@ -91,28 +89,28 @@ export function toDense2Unsafe(d0: number, d1: number): number {
 }
 
 /**
- * Similar to @see toDense3 (DPD) this encodes 2 base10 digits (00-99) into 7*base2 bits
+ * Similar to {@link toDense3} (DPD) this encodes 2 base10 digits (00-99) into 7*base2 bits
  * 2^7=128, so we waste a bit, but still saves a bit over BCD (2*4=8 bits)
  *
  * This is not a standard (but can be useful over the wire if INTs are out).
- * @see toDense3 is recommended (2*dense3 is better than 3*dense2 20b vs 21b)
+ * {@link toDense3} is recommended (2*dense3 is better than 3*dense2 20b vs 21b)
  *
- * @param d0 number 0-9
- * @param d1 number 0-9
+ * @param d0 number [0 - 9]
+ * @param d1 number [0 - 9]
  * @throws EnforceTypeError Invalid int (d0,d1)
  * @throws OutOfRangeError Int isn't 0-9
  * @returns Packed form, 7 bits long (0x7F mask)
  */
 export function toDense2(d0: number, d1: number): number {
-	safety.intInRangeInc(d0,0,9,'d0');
-	safety.intInRangeInc(d1,0,9,'d1');
+	safety.intInRangeInc(d0, 0, 9, 'd0');
+	safety.intInRangeInc(d1, 0, 9, 'd1');
 	return toDense2Unsafe(d0, d1);
 }
 
 /**
  * Decode dense3 encoded data (10bits, mask 0x3FF) into three decimal digits
  *
- * You probably want @see fromDense3
+ * You probably want {@link fromDense3}
  *
  * @param value number 0-0x3FF (oversized will be ignored)
  * @returns Binary coded decimal MSD:d0,d1,d2 (3 nibbles=12 bits long)
@@ -187,17 +185,17 @@ export function fromDense3Unsafe(value: number): bcd {
  * @returns Binary coded decimal MSD:d0,d1,d2 (3 nibbles=12 bits long)
  */
 export function fromDense3(value: number): bcd {
-	safety.intInRangeInc(value,0,0x3ff,'value');
+	safety.intInRangeInc(value, 0, 0x3ff, 'value');
 	return fromDense3Unsafe(value);
 }
 
 /**
  * Encode 3 base10 digits as DPD3 (10bits 0x3FF mask), if you cannot be sure
- * d0-d2 are in range 0-9 you probably want to use @see toDense3
+ * d0-d2 are in range 0-9 you probably want to use {@link toDense3}
  *
- * @param d0 number 0-9 (>9 truncated (only last bit used))
- * @param d1 number 0-9 (>9 truncated (only last bit used))
- * @param d2 number 0-9 (>9 truncated (only last bit used))
+ * @param d0 integer [0 - 9] (>9 truncated (only last bit used))
+ * @param d1 integer [0 - 9] (>9 truncated (only last bit used))
+ * @param d2 integer [0 - 9] (>9 truncated (only last bit used))
  * @returns Packed form, 10 bits long (0x3FF mask)
  */
 export function toDense3Unsafe(d0: number, d1: number, d2: number): number {
@@ -332,23 +330,22 @@ export function toDense3Unsafe(d0: number, d1: number, d2: number): number {
  * The core of Densely packed decimal - fit 3 base10 digits (000-999) into 10*base2 bits
  * 2^10=1024, so we waste a small amount of space,but it's better than BCD (4bits/base10 digit)
  *
- * If you know @param d0, @param d1, @param d2 are in range, @see dense3Unsafe is faster
- * @param d0 number 0-9
- * @param d1 number 0-9
- * @param d2 number 0-9
+ * If you know `$d0`, `$d1`, `$d2` are in range, {@link toDense3Unsafe} is faster
+ * @param d0 integer [0 - 9]
+ * @param d1 integer [0 - 9]
+ * @param d2 integer [0 - 9]
  * @throws EnforceTypeError Invalid int (d0/d1/d2)
  * @throws OutOfRangeError Int isn't 0-9
  * @returns Packed form, 10 bits long (0x3FF mask)
  */
 export function toDense3(d0: number, d1: number, d2: number): number {
-	safety.intInRangeInc(d0,0,9,'d0');
-	safety.intInRangeInc(d1,0,9,'d1');
-	safety.intInRangeInc(d2,0,9,'d2');
+	safety.intInRangeInc(d0, 0, 9, 'd0');
+	safety.intInRangeInc(d1, 0, 9, 'd1');
+	safety.intInRangeInc(d2, 0, 9, 'd2');
 	return toDense3Unsafe(d0, d1, d2);
 }
 
 /**
- *
  * Uses 7 bits
  * @param value
  * @param bytes
@@ -359,7 +356,7 @@ export function push2DigitsToBytes(
 	bytes: Uint8Array,
 	bitPos: number
 ): number {
-	safety.intInRangeInc(value,0,99,'value');
+	safety.intInRangeInc(value, 0, 99, 'value');
 	const packBits = 7;
 	const startBitPos = bitPos & 0x7;
 	const bytePos = bitPos >> 3;
@@ -393,7 +390,7 @@ export function push3DigitsToBytes(
 	bytes: Uint8Array,
 	bitPos: number
 ): number {
-	safety.intInRangeInc(value,0,999,'value');
+	safety.intInRangeInc(value, 0, 999, 'value');
 	const packBits = 10;
 	const startBitPos = bitPos & 0x7;
 	const bytePos = bitPos >> 3;
@@ -413,7 +410,7 @@ export function push3DigitsToBytes(
 	//6 [xxxxxx__][________] s>>8,s<<2,s<<a [xxxxxxss][ssssssss]
 	//7 [xxxxxxx_][________] s>>9,s<<1,s<<9 [xxxxxxxs][ssssssss][s_______]
 
-	//When <0 Either shift doens't happen.. so we can OR two directions.. for speed
+	//When <0 Either shift doesn't happen.. so we can OR two directions.. for speed
 	bytes[bytePos] |= composed >> (startBitPos + 2);
 	bytes[bytePos + 1] = composed << (8 - startBitPos);
 	bytes[bytePos + 2] = composed << (16 - startBitPos);

@@ -1,8 +1,8 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../codec/Hex.js';
-import { asBE, asLE } from '../endian/platform.js';
-import { safety } from './Safety.js';
+import { hex } from '../../codec/Hex.js';
+import { asBE, asLE } from '../../endian/platform.js';
+import { safety } from '../Safety.js';
 
 const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
@@ -1029,7 +1029,7 @@ export class U64MutArray {
 	}
 
 	/**
-	 * XorEq @param b with this array.  Starting at @param startAt position in this array
+	 * XorEq `$b` with this array.  Starting at `$thisOffset` position in this array
 	 * and running until there's no more space (in this array) or the other array runs out
 	 * @param b
 	 * @param thisOffset

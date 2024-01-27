@@ -12,5 +12,5 @@ export { Float4, Float8 } from './Float.js';
 export { Id2, Id4, Id8 } from './Id.js';
 export { Int2, Int4, Int8 } from './Int.js';
 export { Plane } from './Plane.js';
-export { Ref2, Ref4, Ref8 } from './Ref.js';
+export { Ref2, Ref4, Ref8, type ARef } from './Ref.js';
 export { Utf81, Utf82, Utf83, Utf84ish } from './Utf8.js';

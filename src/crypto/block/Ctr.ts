@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
 import { LengthError } from '../../primitive/error/LengthError.js';
 import { IBlockCrypt, IFullCrypt } from '../index.js';

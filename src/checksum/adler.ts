@@ -1,9 +1,15 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 //https://datatracker.ietf.org/doc/html/rfc1950
 
+const mod = 65521; //0xfff1
+
 /**
- * Adler checksum algorithm per int16/word (2 bytes)
- * @param bytes
+ * # Adler32
+ * 
+ * - Specified in [RFC-1950]((https://datatracker.ietf.org/doc/html/rfc1950))
+ * - Generates a 32 bit checksum
+ * 
+ * @param bytes Data to checksum
  * @returns 32 bit checksum
  */
 export function adler32(bytes: Uint8Array): number {
@@ -11,7 +17,6 @@ export function adler32(bytes: Uint8Array): number {
 	// bytes beyond the end (and get back undefined, which coerces to zero)
 	let a = 1;
 	let b = 0;
-	const mod = 65521; //0xfff1
 	let ptr = 0;
 	while (ptr < bytes.length) {
 		//JS doesn't overflow until 53 bits we we've got lots of space here
@@ -20,8 +25,6 @@ export function adler32(bytes: Uint8Array): number {
 		for (; ptr < safeLen; ptr++) {
 			a += bytes[ptr];
 			b += a;
-			// a+=bigEndian.u16FromBytesUnsafe(bytes,ptr);
-			// b+=a;
 		}
 		//The mod operation (%) is in math(53bit max) not bit(32bit max)
 		a %= mod;

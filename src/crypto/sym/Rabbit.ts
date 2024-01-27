@@ -2,7 +2,7 @@
 
 import { asBE, asLE } from '../../endian/platform.js';
 import { safety } from '../../primitive/Safety.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import { IFullCrypt } from '../index.js';
 
 // Section 2.5 Counter System

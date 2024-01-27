@@ -68,15 +68,12 @@ typings/
 .env.*
 !.env.example
 
-# Nuxt.js build / generate output
-.nuxt
-
-# Stop the dist js/d.ts compilation
-dist
-# Stop the release (terse compressed compilation)
-release
-# Stop docs
-docs
+# Stop working artifiacts being included, drops the output of:
+# - `npm run build` (tsc compile)
+# - `npm run compress` (terse compress) 
+# - `npm run doc` (typedoc gen)
+# - `npm run cover` (code coverage)
+_o/
 
 # VS Code profiles
 *.cpuprofile

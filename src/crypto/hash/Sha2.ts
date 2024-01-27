@@ -1,9 +1,9 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { bigEndian } from '../../endian/index.js';
 import type { IHash } from '../interfaces/IHash.js';
 import { Uint64 } from '../../primitive/Uint64.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import { asBE } from '../../endian/platform.js';
 
 //[US Secure Hash Algorithms](https://datatracker.ietf.org/doc/html/rfc6234) (2011)

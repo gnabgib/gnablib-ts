@@ -4,7 +4,7 @@ import {
 	InvalidValueError,
 	NotEnoughSpaceError,
 } from '../../primitive/ErrorExt.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 const blockSize = 16;

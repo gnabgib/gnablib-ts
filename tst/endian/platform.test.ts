@@ -126,11 +126,102 @@ tsts('asB', () => {
 	const src = '0102';
 	const inv = '0201';
 	const s = hex.toBytes(src);
-	asE(!isLE).i16(s);
+	asE(!isLE).i16(s,0,2);
 	assert.is(hex.fromBytes(s), src);
-	asE(isLE).i16(s);
+	asE(isLE).i16(s,0,2);
 	assert.is(hex.fromBytes(s), inv);
 });
+
+const intMinBytesSet: [number, string, string][] = [
+	[-1000000000000, 'FF172B5AF000', '00F05A2B17FF'],
+	[-100000000000, 'E8B7891800', '001889B7E8'],
+	[-10000000000, 'FDABF41C00', '001CF4ABFD'],
+	[-2147483648, '80000000', '00000080'], //min int32
+	[-1000000000, 'C4653600', '003665C4'],
+	[-100000000, 'FA0A1F00', '001F0AFA'],
+	[-10000000, 'FF676980', '806967FF'],
+	[-1000000, 'F0BDC0', 'C0BDF0'],
+	[-100000, 'FE7960', '6079FE'],
+	[-32768, '8000', '0080'], //min int16
+	[-10000, 'D8F0', 'F0D8'],
+	[-1000, 'FC18', '18FC'],
+	[-128, '80', '80'], //min int8
+	[-100, '9C', '9C'],
+	[-10, 'F6', 'F6'],
+	[-1, 'FF', 'FF'],
+	[0, '00', '00'],
+	[1, '01', '01'],
+	[10, '0A', '0A'],
+	[100, '64', '64'],
+	[127, '7F', '7F'], //max int8
+	[255, '00FF', 'FF00'], //max uint8
+	[1000, '03E8', 'E803'],
+	[10000, '2710', '1027'],
+	[32767, '7FFF', 'FF7F'], //max int16
+	[65535, '00FFFF', 'FFFF00'], //max uint16, needs 0 pad
+	[100000, '0186A0', 'A08601'],
+	[1000000, '0F4240', '40420F'],
+	[10000000, '00989680', '80969800'],
+	[100000000, '05F5E100', '00E1F505'],
+	[1000000000, '3B9ACA00', '00CA9A3B'],
+	[2147483647, '7FFFFFFF', 'FFFFFF7F'], //max int32
+	[4294967295, '00FFFFFFFF', 'FFFFFFFF00'], //Max uint32, needs 0 pad
+	[4294967296, '0100000000', '0000000001'], //Max U64+1
+	[4294967297, '0100000001', '0100000001'], //Max U64+2
+	[10000000000, '02540BE400', '00E40B5402'],
+	[100000000000, '174876E800', '00E8764817'],
+	[1000000000000, '00E8D4A51000', '0010A5D4E800'],//needs 0 pad
+	[4503599627370495, '0FFFFFFFFFFFFF', 'FFFFFFFFFFFF0F'],
+	[8725724278030336, '1F000000000000', '0000000000001F'],
+	[9007199254740991, '1FFFFFFFFFFFFF', 'FFFFFFFFFFFF1F'],//max safe int
+];
+for (const [num, be, le] of intMinBytesSet) {
+	tsts(`asLE.intMinBytes(${num})`, () => {
+		const b = asLE.intMinBytes(num);
+		assert.is(hex.fromBytes(b), le);
+	});
+	tsts(`asBE.intMinBytes(${num})`, () => {
+		const b = asBE.intMinBytes(num);
+		assert.is(hex.fromBytes(b), be);
+	});
+}
+const uintMinBytesSet:[number,string,string][] = [
+	[0, '00', '00'],
+	[1, '01', '01'],
+	[10, '0A', '0A'],
+	[100, '64', '64'],
+	[127, '7F', '7F'], //max int8
+	[255, 'FF', 'FF'], //max uint8
+	[1000, '03E8', 'E803'],
+	[10000, '2710', '1027'],
+	[32767, '7FFF', 'FF7F'], //max int16
+	[65535, 'FFFF', 'FFFF'], //max uint16
+	[100000, '0186A0', 'A08601'],
+	[1000000, '0F4240', '40420F'],
+	[10000000, '989680', '809698'],
+	[100000000, '05F5E100', '00E1F505'],
+	[1000000000, '3B9ACA00', '00CA9A3B'],
+	[2147483647, '7FFFFFFF', 'FFFFFF7F'], //max int32
+	[4294967295, 'FFFFFFFF', 'FFFFFFFF'], //Max uint32
+	[4294967296, '0100000000', '0000000001'], //Max U64+1
+	[4294967297, '0100000001', '0100000001'], //Max U64+2
+	[10000000000, '02540BE400', '00E40B5402'],
+	[100000000000, '174876E800', '00E8764817'],
+	[1000000000000, 'E8D4A51000', '0010A5D4E8'],
+	[4503599627370495, '0FFFFFFFFFFFFF', 'FFFFFFFFFFFF0F'],
+	[8725724278030336, '1F000000000000', '0000000000001F'],
+	[9007199254740991, '1FFFFFFFFFFFFF', 'FFFFFFFFFFFF1F'],//max safe int
+];
+for(const [num,be,le] of uintMinBytesSet) {
+	tsts(`asLE.uintMinBytes(${num})`, () => {
+		const b = asLE.uintMinBytes(num);
+		assert.is(hex.fromBytes(b), le);
+	});
+	tsts(`asBE.uintMinBytes(${num})`, () => {
+		const b = asBE.uintMinBytes(num);
+		assert.is(hex.fromBytes(b), be);
+	});
+}
 
 // //We write in big endian
 // const u32Pairs = [

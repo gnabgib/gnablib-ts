@@ -118,7 +118,7 @@ tsts(`now`,()=>{
     const dt=new Date();
     const h=Hour.now();
     //This isn't a great test, but let's use a date object to compare 
-    //(tiny chance of this test failing near midnight)
+    //(tiny chance of this test failing at the end of an hour)
     assert.is(h.valueOf(),dt.getHours());
 });
 

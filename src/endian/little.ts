@@ -167,7 +167,7 @@ export function u32ToBytes(u32: number): Uint8Array {
  * Copy the content of an Uint32Array into @param targetBytes
  * - Only as much space as is available in Target will be copied
  * - Only as much source material as is available will be copied
- * @param sourceU64s Array to copy from
+ * @param sourceU32s Array to copy from
  * @param targetBytes Destination of data starting at @param targetPos
  * @param targetPos Starting position in @param targetBytes to start writing
  */

@@ -5,7 +5,7 @@ import type { IHash } from '../interfaces/IHash.js';
 import { Sha1, Sha256, Sha512 } from '../hash/index.js';
 import { Hmac } from '../mac/index.js';
 import { safety } from '../../primitive/Safety.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 
 //(PKCS #5: Password-Based Cryptography Specification Version 2.1)[https://www.rfc-editor.org/rfc/rfc8018] (2017)
 //(Wiki: PBKDF2)[https://en.wikipedia.org/wiki/PBKDF2]

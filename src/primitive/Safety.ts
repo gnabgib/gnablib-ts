@@ -118,7 +118,7 @@ export const safety = {
 	 * @param rules Rule set, true=pass, false=fail
 	 * @param message Message to report on failure (default=Unacceptable value)
 	 *
-	 * @throws {@link ./EnforceTypeError}
+	 * @throws {@link primitive.EnforceTypeError}
 	 * Expected [$noun as] integer, got: typeof($value)=$value
 	 *
 	 * @throws {RangeError}

@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { nextPow2 } from '../algo/nextPow2.js';
 import {
@@ -22,7 +22,6 @@ const CONCAT_SEP = ' ';
 const CONCAT_SEP_HEX = '.';
 const ALT_SEP = ' / ';
 
-
 function bnfCharArrToStr(asHex: boolean, set: BnfChar[]): string {
 	return asHex
 		? `%x${set.map((c) => c.chrHex).join(CONCAT_SEP_HEX)}`
@@ -31,9 +30,7 @@ function bnfCharArrToStr(asHex: boolean, set: BnfChar[]): string {
 
 // -- -- -- -- -- -- -- BNF Types -- -- -- -- -- -- --
 
-/**
- * Single character, can be non-printable
- */
+/** Single character, can be non-printable */
 export class BnfChar implements IBnf {
 	name: string | undefined = undefined;
 	readonly ord: number;
@@ -145,9 +142,7 @@ export class BnfChar implements IBnf {
 	}
 }
 
-/**
- * An inclusive range of alternative values
- */
+/** An inclusive range of alternative values */
 export class BnfRange implements IBnf, Iterable<BnfChar> {
 	name: string | undefined = undefined;
 	readonly start: BnfChar;
@@ -229,9 +224,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 	}
 }
 
-/**
- * Literal string text, case insensitive, can contain non-printable chars
- */
+/** Literal string text, case insensitive, can contain non-printable chars*/
 export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 	name: string | undefined = undefined;
 	private readonly _chars: BnfChar[];
@@ -361,10 +354,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 	}
 }
 
-/**
- * A concatenation of contiguous rules
- */
-
+/** A concatenation of contiguous rules */
 export class BnfConcat implements IBnf, Iterable<IBnf> {
 	name: string | undefined = undefined;
 	suppressComponents = false;
@@ -469,9 +459,7 @@ export class BnfConcat implements IBnf, Iterable<IBnf> {
 	}
 }
 
-/**
- * Alternative rules
- */
+/** Alternative rules */
 export class BnfAlt implements IBnf, Iterable<IBnf> {
 	name: string | undefined = undefined;
 	suppressComponents = false;
@@ -572,9 +560,7 @@ export class BnfAlt implements IBnf, Iterable<IBnf> {
 	}
 }
 
-/**
- * Variable/Specific repetition
- */
+/** Variable/Specific repetition */
 export class BnfRepeat implements IBnfRepeat {
 	name: string | undefined = undefined;
 	suppressComponents = false;
@@ -670,53 +656,31 @@ export class BnfRepeat implements IBnfRepeat {
 		return this[Symbol.toPrimitive]();
 	}
 
-	/**
-	 * Zero or more @param rule repeated
-	 * `*` suffix in RegEx
-	 */
+	/** Zero or more `$rule`s repeated, `*` suffix in RegEx */
 	static ZeroPlus(rule: IBnf, name?: string): BnfRepeat {
 		return new BnfRepeat(rule, 0, Number.MAX_SAFE_INTEGER, name);
 	}
 
-	/**
-	 * At least one @param rule repeated
-	 * `+` suffix in RegEx
-	 * @param rule
-	 * @returns
-	 */
+	/** At least one `$rule` repeated, `+` suffix in RegEx */
 	static OnePlus(rule: IBnf, name?: string): BnfRepeat {
 		return new BnfRepeat(rule, 1, Number.MAX_SAFE_INTEGER, name);
 	}
 
-	/**
-	 * Zero or one @param rule (aka optional)
-	 * `?` suffix in RegEx
-	 * @param rule
-	 * @returns
-	 */
+	/** Zero or one `$rule` (aka optional), `?` suffix in RegEx */
 	static Optional(rule: IBnf, name?: string): BnfRepeat {
 		return new BnfRepeat(rule, 0, 1, name);
 	}
 
-	/**
-	 * Between @see min and @see max repeats of @see rule
-	 * `{min,max}` suffix in RegEx
+	/** Between `$min` and `$max` repeats of `$rule`, `{min,max}` suffix in RegEx
 	 * @param min Integer, must be >=0
-	 * @param max Integer, must be >=@see min
-	 * @param rule
-	 * @param name
-	 * @returns
+	 * @param max Integer, must be >=$min
 	 */
 	static Between(min: number, max: number, rule: IBnf, name?: string): BnfRepeat {
 		return new BnfRepeat(rule, min, max, name);
 	}
 
-	/**
-	 * @param rule repeated @param value times
-	 * `{value}` suffix in RegEx
+	/** Repeat `$rule` `$count` times, `{value}` suffix in RegEx
 	 * @param count Integer, must be >=0 (probably >0)
-	 * @param rule
-	 * @returns
 	 */
 	static Exactly(count: number, rule: IBnf): BnfRepeat {
 		return new BnfRepeat(rule, count, count);

@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { XSalsa20 } from '../../../src/crypto/sym';
-import { U64 } from '../../../src/primitive';
+import { U64 } from '../../../src/primitive/number';
 
 
 const tsts = suite('XSalsa20');

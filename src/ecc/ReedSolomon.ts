@@ -9,12 +9,12 @@ import { ContentError } from '../primitive/error/ContentError.js';
 //Some source from: https://github.com/zxing/zxing
 //https://merricx.github.io/qrazybox/help/extension-tools/reed-solomon-decoder.html
 //https://downloads.bbc.co.uk/rd/pubs/whp/whp-pdf-files/WHP031.pdf
-let _qrCode: Gf<Uint8Array> | undefined;
-let _aztecData6: Gf<Uint8Array> | undefined;
-let _aztecData10: Gf<Uint16Array> | undefined;
-let _aztecData12: Gf<Uint16Array> | undefined;
-let _aztecParam: Gf<Uint8Array> | undefined;
-let _dataMatrix: Gf<Uint8Array> | undefined;
+let _qrCode: IGf<Uint8Array> | undefined;
+let _aztecData6: IGf<Uint8Array> | undefined;
+let _aztecData10: IGf<Uint16Array> | undefined;
+let _aztecData12: IGf<Uint16Array> | undefined;
+let _aztecParam: IGf<Uint8Array> | undefined;
+let _dataMatrix: IGf<Uint8Array> | undefined;
 
 interface EuclideanResponse<T> {
 	sigma: T;
@@ -32,12 +32,12 @@ export class ReedSolomonError extends Error {
 	}
 }
 
-type UIntArray = Uint8Array | Uint16Array | Uint32Array;
+export type UIntArray = Uint8Array | Uint16Array | Uint32Array;
 
 /**
  * Galois Field
  */
-interface Gf<T extends UIntArray> {
+export interface IGf<T extends UIntArray> {
 	get primitive(): number;
 	get base(): number;
 	get zero(): GfPoly<T>;
@@ -124,7 +124,7 @@ interface GfPoly<T extends UIntArray> {
 /**
  * Galois Fields Uint8
  */
-class Gf8 implements Gf<Uint8Array> {
+class Gf8 implements IGf<Uint8Array> {
 	readonly primitive: number;
 	readonly base: number;
 	readonly zero: GfPoly<Uint8Array>;
@@ -216,10 +216,10 @@ class Gf8 implements Gf<Uint8Array> {
  * Galois Field Polynomial Uint8
  */
 class GfPoly8 implements GfPoly<Uint8Array> {
-	private readonly _field: Gf<Uint8Array>;
+	private readonly _field: IGf<Uint8Array>;
 	readonly coefficients: Uint8Array;
 
-	constructor(field: Gf<Uint8Array>, coefficients: Uint8Array) {
+	constructor(field: IGf<Uint8Array>, coefficients: Uint8Array) {
 		if (coefficients.length === 0)
 			throw new ZeroError('Coefficients.length', '>');
 		this._field = field;
@@ -377,7 +377,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 /**
  * Galois Fields Uint16
  */
-class Gf16 implements Gf<Uint16Array> {
+class Gf16 implements IGf<Uint16Array> {
 	readonly primitive: number;
 	readonly base: number;
 	readonly zero: GfPoly<Uint16Array>;
@@ -487,7 +487,7 @@ class Gf16 implements Gf<Uint16Array> {
  * Galois Field Polynomial Uint16
  */
 class GfPoly16 implements GfPoly<Uint16Array> {
-	private readonly _field: Gf<Uint16Array>;
+	private readonly _field: IGf<Uint16Array>;
 	readonly coefficients: Uint16Array;
 
 	constructor(field: Gf16, coefficients: Uint16Array) {
@@ -648,7 +648,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 /**
  * Get the QR Code Galois Fields (x11d, 256, 0) (2^8)
  */
-export function qrCode(): Gf<Uint8Array> {
+export function qrCode(): IGf<Uint8Array> {
 	if (!_qrCode) {
 		_qrCode = new Gf8(0x11d, 8, 0);
 	}
@@ -659,7 +659,7 @@ export function qrCode(): Gf<Uint8Array> {
  * Get the Data Matrix (256) Galois Fields (x12d,256,1) (2^8)
  * @returns
  */
-export function dataMatrix(): Gf<Uint8Array> {
+export function dataMatrix(): IGf<Uint8Array> {
 	if (!_dataMatrix) {
 		_dataMatrix = new Gf8(0x012d, 8, 1);
 	}
@@ -669,7 +669,7 @@ export function dataMatrix(): Gf<Uint8Array> {
 /**
  * Get the Aztec Param Galois Fields (x13,16,1) (2^4)
  */
-export function aztecParam(): Gf<Uint8Array> {
+export function aztecParam(): IGf<Uint8Array> {
 	if (!_aztecParam) {
 		_aztecParam = new Gf8(0x13, 4, 1);
 	}
@@ -679,7 +679,7 @@ export function aztecParam(): Gf<Uint8Array> {
 /**
  * Get the Aztec Data 6 Galois Fields (x43,64,1) (2^6)
  */
-export function aztecData6(): Gf<Uint8Array> {
+export function aztecData6(): IGf<Uint8Array> {
 	if (!_aztecData6) {
 		_aztecData6 = new Gf8(0x43, 6, 1);
 	}
@@ -689,14 +689,14 @@ export function aztecData6(): Gf<Uint8Array> {
 /**
  * Get the Aztec Data 8 (same Matrix Field) Galois Fields (x12d,256,1) (2^8)
  */
-export function aztecData8(): Gf<Uint8Array> {
+export function aztecData8(): IGf<Uint8Array> {
 	return dataMatrix();
 }
 
 /**
  * Get the Aztec Data 10 Galois Fields (x409,1024,1) (2^10)
  */
-export function aztecData10(): Gf<Uint16Array> {
+export function aztecData10(): IGf<Uint16Array> {
 	if (!_aztecData10) {
 		_aztecData10 = new Gf16(0x409, 10, 1);
 	}
@@ -706,7 +706,7 @@ export function aztecData10(): Gf<Uint16Array> {
 /**
  * Get the Aztec Data 12 Galois Fields (x1069,4096,1) (2^14)
  */
-export function aztecData12(): Gf<Uint16Array> {
+export function aztecData12(): IGf<Uint16Array> {
 	if (!_aztecData12) {
 		_aztecData12 = new Gf16(0x1069, 12, 1);
 	}
@@ -716,7 +716,7 @@ export function aztecData12(): Gf<Uint16Array> {
 /**
  * Get the Maxicode Field (same as Aztec Data 6) Galois Fields (x43,64,1) (2^6)
  */
-export function maxicodeField(): Gf<Uint8Array> {
+export function maxicodeField(): IGf<Uint8Array> {
 	return aztecData6();
 }
 
@@ -724,10 +724,10 @@ export function maxicodeField(): Gf<Uint8Array> {
  * Reed Solomon encoder/decoder
  */
 export class ReedSolomon<T extends UIntArray> {
-	private readonly _field: Gf<T>;
+	private readonly _field: IGf<T>;
 	private readonly _cache: Array<GfPoly<T>> = [];
 
-	constructor(field: Gf<T>) {
+	constructor(field: IGf<T>) {
 		this._field = field;
 		this._cache.push(field.one); // new GenericGFPoly2(field, new Int32Array([1])));
 	}

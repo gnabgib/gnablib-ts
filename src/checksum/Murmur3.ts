@@ -1,7 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../crypto/interfaces/IHash.js';
-import { U32 } from '../primitive/U32.js';
+import { U32 } from '../primitive/number/U32.js';
 import { asBE, asLE } from '../endian/platform.js';
 
 const blockSize=4;

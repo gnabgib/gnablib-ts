@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-export type { ILengther } from './interfaces/ILengther.js';
+export * as interfaces from './interfaces/index.js';
 
 export { bitExt, Carrier } from './BitExt.js';
 export { DateTime } from './DateTime.js';
@@ -49,17 +49,16 @@ export {
 	ScalingFloat64Array,
 	ScalingUint8ClampedArray,
 } from './TypedArrayExt.js';
-export { U16 } from './U16.js';
-export { U32, U32Mut, U32MutArray } from './U32.js';
-export { U64, U64Mut, U64MutArray } from './U64.js';
 export { UInt, UIntMut } from './UInt.js';
 export { uint8ArrayExt } from './UInt8ArrayExt.js';
 //export { Uint64 } from './Uint64_es2020.js';
-export { Uint64 } from './Uint64.js';
+export { Uint64, type Uint64ish } from './Uint64.js';
 export { Urn } from './Uri.js';
 export { utf } from './Utf.js';
-export { WindowStr } from './WindowStr.js';
+export { WindowStr, type WindowStrish } from './WindowStr.js';
 export { nameValue } from './nameValue.js';
+export { BitReader } from './BitReader.js';
+export { BitWriter } from './BitWriter.js';
 //These are dupes of package.json-exports, and no one will want to import them this way
 // but typedoc doesn't pick them up otherwise
 /**
@@ -99,6 +98,11 @@ export * as datetime from './datetime/index.js';
  * - {@link primitive.number.Milli Milli} Range 0 - 999
  * - {@link primitive.number.Nano Nano} Range 0 - 999999999
  * - {@link primitive.number.Sexagesimal Sexagesimal} Range 0 - 59
+ * - {@link primitive.number.U16 U16} Range 0 - 65535
+ * - {@link primitive.number.U32 U32}, {@link primitive.number.U32Mut U32Mut} Range 0 - 4294967295
+ * - {@link primitive.number.U32MutArray U32MutArray} Array of U32 elements
+ * - {@link primitive.number.U64 U64}, {@link primitive.number.U64Mut U64Mut} Range 0 - 18446744073709551615
+ * - {@link primitive.number.U64MutArray U64MutArray} Array of U64 elements
  */
 export * as number from './number/index.js';
 /**

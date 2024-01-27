@@ -1,8 +1,8 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../endian/platform.js';
-import { U16 } from '../primitive/U16.js';
-import { U32 } from '../primitive/U32.js';
+import { U16 } from '../primitive/number/U16.js';
+import { U32 } from '../primitive/number/U32.js';
 
 //http://www.zlib.net/maxino06_fletcher-adler.pdf -> Lower cpu and Adler and mostly more effective (in their tests)
 //https://datatracker.ietf.org/doc/html/rfc1146 (Appendix I)

@@ -1,7 +1,7 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
-import { U64Mut, U64MutArray } from '../../primitive/U64.js';
+import { U64Mut, U64MutArray } from '../../primitive/number/U64.js';
 import type { IHash } from '../interfaces/IHash.js';
 
 //[Wikipedia: Whirlpool (hash function)](https://en.wikipedia.org/wiki/Whirlpool_(hash_function))

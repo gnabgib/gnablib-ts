@@ -49,7 +49,7 @@
     // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
     "sourceMap": false,                                   /* Create source map files for emitted JavaScript files. */
     // "outFile": "./dist/index.d.ts",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
-    "outDir": "./dist",                                  /* Specify an output folder for all emitted files. */
+    "outDir": "./_o/out",                                  /* Specify an output folder for all emitted files. */
     "removeComments": true,                              /* Disable emitting comments. */
     "noEmit": false,                                   /* Disable emitting files from a compilation. */
     // "importHelpers": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */
@@ -65,7 +65,7 @@
     // "noEmitHelpers": true,                            /* Disable generating custom helper functions like '__extends' in compiled output. */
     // "noEmitOnError": true,                            /* Disable emitting files if any type checking errors are reported. */
     // "preserveConstEnums": true,                       /* Disable erasing 'const enum' declarations in generated code. */
-    // "declarationDir": "./",                           /* Specify the output directory for generated declaration files. */
+    "declarationDir": "./_o/type",                           /* Specify the output directory for generated declaration files. */
     // "preserveValueImports": true,                     /* Preserve unused imported values in the JavaScript output that would otherwise be removed. */
 
     /* Interop Constraints */
@@ -101,15 +101,17 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts"],
-  "exclude": ["./dist/", "./node_modules"],
+  "exclude": ["./node_modules"],
   "typedocOptions":{
-    "out":"docs",
+    "out":"_o/doc",
     "entryPoints":"./src/*",
     "entryPointStrategy":"resolve",
     "titleLink":"https://www.gnabgib.com/lib-ts/",
     "hideGenerator":true,
     //"excludeExternals":true,
-    // "excludeNotDocumented":true,
+    // Interfaces don't need docs
+    //"excludeNotDocumented":true,
+    //"excludeNotDocumentedKinds": ["Property", "Interface", "TypeAlias"]
     "excludePrivate":true,
     "excludeProtected":true,
     "githubPages":false,
@@ -119,6 +121,7 @@
       "protected": false,
       "@alpha":false
     },
+    "coverageLabel":"doc-cover",
     "navigationLinks": {
       "NPM": "https://www.npmjs.com/package/gnablib"
     }

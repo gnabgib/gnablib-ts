@@ -1,8 +1,8 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { asBE, asLE } from '../endian/platform.js';
-import { U32 } from '../primitive/U32.js';
-import { U64, U64Mut, U64MutArray } from '../primitive/U64.js';
+import { U32 } from '../primitive/number/U32.js';
+import { U64, U64Mut, U64MutArray } from '../primitive/number/U64.js';
 import type { IHash } from '../crypto/interfaces/IHash.js';
 
 //[xxHash](https://cyan4973.github.io/xxHash/)

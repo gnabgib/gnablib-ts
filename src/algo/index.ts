@@ -1,6 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 export type { IMatcher } from './interfaces/IMatcher.js';
+export type { INode } from './interfaces/INode.js';
+export type { IRandSrc } from './interfaces/IRandSrc.js';
 
 export { nextPow2 } from './nextPow2.js';
 export { Nfa } from './nfa/Nfa.js';

@@ -2,7 +2,7 @@
 
 import { intExt } from '../IntExt.js';
 import { safety } from '../Safety.js';
-import { U32 } from '../U32.js';
+import { U32 } from '../number/U32.js';
 import { ContentError } from '../error/ContentError.js';
 
 export class IpV4 {

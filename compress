@@ -1,19 +1,17 @@
 #!/bin/bash
 
-# Detect if clean flag pushed
-clean=false
-if [ "$#" -eq "1" ] && [ "$1" = "-clean" ]; then
-        clean=true
-fi
-
 start=$(date +%s%N)
 
 txtCyan='\e[0;36m'
 txtGreen='\033[1;32m'
 txtGrey='\033[1;30m'
+txtRed='\e[0;31m'
 txtReset='\033[0m'
+src="out"
+dest="dist"
+
 InitIndicator() {
-        echo $1
+        #echo $1
         echo -n "["
         for (( i=0; i<$1; i++)); do
                 echo -n ' '
@@ -35,17 +33,25 @@ WriteSection() {
         echo -e "${color}${1}${txtReset}"
 }
 
+# If there's one argument, it's $src, if there's two the second is $dest, after that.. knock yourself out (mamma said)
+if [ $# -gt 0 ]; then src=$(FixSlash $1); fi
+if [ $# -gt 1 ]; then dest=$(FixSlash $2); fi
+
+# Make sure src exists, otherwise the rest is screaming into the wind
+if [ ! -d "$src" ]; then
+        echo -e "${txtRed}Source not found: ${src}${txtReset}"
+        exit
+fi
+echo -e "Compress $txtCyan$src$txtReset to $txtCyan$dest$txtReset"
 
 # Create min directories
-readarray dirs <<< $(find dist -type d)
+readarray dirs <<< $(find $src -type d)
 WriteSection "Build/clear folders"
 InitIndicator ${#dirs[@]}
 for d in ${dirs[@]}; do
-        MK=$(echo $d | sed -e 's/^dist/release/')
-        if [ ! -d "$MK" ]; then
-                mkdir $MK
-        elif $clean; then
-                rm $MK/*.*
+        mk="${d/${src}\//${dest}\/}"
+        if [ ! -d "$mk" ]; then
+                mkdir $mk -p
         fi
         #sleep .1
         UpdateIndicator
@@ -53,28 +59,28 @@ done
 CloseIndicator
 
 # Compress the js files
-readarray jsFiles <<< $(find dist -type f -name "*.js")
+readarray jsFiles <<< $(find $src -type f -name "*.js")
 WriteSection "Minify JS"
 InitIndicator ${#jsFiles[@]}
 for j in ${jsFiles[@]}; do
-        MK=$(echo $j | sed -e 's/^dist/release/')
-        if [ ! -f "$MK" ]; then
-                npx terser $j --compress --mangle --ecma 2016 --module -o $MK
+        mk="${j/${src}\//${dest}\/}}"
+        if [ ! -f "$mk" ]; then
+                npx terser $j --compress --mangle --ecma 2016 --module -o $mk
         fi
         UpdateIndicator
 done
 CloseIndicator
 
-readarray typeFiles <<< $(find dist -type f -name "*.d.ts")
-WriteSection "Copy types"
-InitIndicator ${#typeFiles[@]}
-for t in ${typeFiles[@]}; do
-        MK=$(echo $t | sed -e 's/^dist/release/')
-        if [ ! -f "$MK" ]; then
-                cp $t $MK
-        fi
-        UpdateIndicator
-done
-CloseIndicator
+#readarray typeFiles <<< $(find dist -type f -name "*.d.ts")
+#WriteSection "Copy types"
+#InitIndicator ${#typeFiles[@]}
+#for t in ${typeFiles[@]}; do
+#        MK=$(echo $t | sed -e 's/^dist/release/')
+#        if [ ! -f "$MK" ]; then
+#                cp $t $MK
+#        fi
+#        UpdateIndicator
+#done
+#CloseIndicator
 
 WriteSection "Done" $txtGreen

@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import * as bigEndian from '../endian/big.js';
+import { asLE } from '../endian/platform.js';
 
 // - https://en.wikipedia.org/wiki/Cksum
 // - https://pubs.opengroup.org/onlinepubs/009695399/utilities/cksum.html
@@ -78,7 +78,7 @@ export function cksum(bytes: Uint8Array): number {
 	for (const byte of bytes) {
 		crc = (crc << 8) ^ crcTab[(crc >>> 24) ^ byte];
 	}
-	const lenBytes = bigEndian.uintToMinBytes(bytes.length);
+	const lenBytes = asLE.uintMinBytes(bytes.length);
 	for (const byte of lenBytes) {
 		crc = (crc << 8) ^ crcTab[(crc >>> 24) ^ byte];
 	}

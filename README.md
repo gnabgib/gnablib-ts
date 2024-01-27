@@ -4,10 +4,11 @@ Cryptography and verification, encoding and extended types. The tools you need f
 Zero dependencies, provenance signing, TypeScript typing.  Build applications for the web, Node or Deno.
 
 [![CI](https://github.com/gnabgib/gnablib-ts/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gnabgib/gnablib-ts/actions)
-[![NPM Version](https://img.shields.io/npm/v/gnablib?color=33cd56&logo=npm)](https://www.npmjs.com/package/gnablib)
+[![NPM ver](https://img.shields.io/npm/v/gnablib?color=33cd56&logo=npm)](https://www.npmjs.com/package/gnablib)
 [![install size](https://packagephobia.com/badge?p=gnablib)](https://packagephobia.com/result?p=gnablib)
-![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/gnablib)
-![Lines of code](https://tokei.rs/b1/github/gnabgib/gnablib-ts)
+[![deps](https://img.shields.io/librariesio/release/npm/gnablib)](https://libraries.io/npm/gnablib)
+![LoC](https://tokei.rs/b1/github/gnabgib/gnablib-ts)
+![](coverage.svg)
 
 <!-- 
 Too new:

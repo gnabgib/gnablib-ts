@@ -47,5 +47,6 @@ class Log {
 }
 /**
  * Log oracle (singleton)
+ * @namespace
  */
 export const log = new Log();

@@ -1,8 +1,8 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../codec/Hex.js';
-import { asBE, asLE } from '../endian/platform.js';
-import { safety } from './Safety.js';
+import { hex } from '../../codec/Hex.js';
+import { asBE, asLE } from '../../endian/platform.js';
+import { safety } from '../Safety.js';
 
 const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
@@ -49,11 +49,6 @@ export class U32 {
 	protected _setValue(v: U32): void {
 		this.arr[this.pos] = v.arr[v.pos];
 	}
-	/**
-	 * Multiply by another U32 (U32Mut requires this to see inside @param b32)
-	 * @param u32
-	 * @returns
-	 */
 	protected static _mulEq(a: Uint32Array, aPos: number, b32: U32): number {
 		const b0 = b32.arr[b32.pos] & maxU16;
 		const b1 = b32.arr[b32.pos] >>> 16;
@@ -141,22 +136,22 @@ export class U32 {
 	}
 
 	/**
-	 * @see value - @param u32
+	 * `$value` - `$u32`
 	 * @param u32
-	 * @returns @see value - @param u32
+	 * @returns Subtraction
 	 */
 	sub(u32: U32): U32 {
 		return new U32(Uint32Array.of(this.arr[this.pos] - u32.arr[u32.pos]));
 	}
 
 	/**
-	 * @see value * @param uint32
+	 * `$value` *  `$n`
 	 * Multiply without going int o floating point (possible if large numbers)
-	 * @param u32
-	 * @returns @see value * @param uint32
+	 * @param n
+	 * @returns Product (may overflow)
 	 */
-	mul(u32: U32): U32 {
-		return new U32(Uint32Array.of(U32._mulEq(this.arr, this.pos, u32)));
+	mul(n: U32): U32 {
+		return new U32(Uint32Array.of(U32._mulEq(this.arr, this.pos, n)));
 	}
 
 	/**
@@ -331,12 +326,12 @@ export class U32 {
 	}
 
 	/**
-	 * Treat a32, b32 as signed/unsigned 32bit numbers, and multiply without
+	 * Treat `$a32`, `$b32` as signed/unsigned 32bit numbers, and multiply without
 	 * going into floating point.
 	 * NOTE: JS will sign the result, (fix by `>>>0`)
 	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
 	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @returns @param a32 * @param b32, NOTE you may wish to `>>>0`
+	 * @returns `$a32` * `$b32`, NOTE you may wish to `>>>0`
 	 */
 	static mul(a32: number, b32: number): number {
 		const b0 = b32 & maxU16;

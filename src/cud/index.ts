@@ -1,11 +1,12 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-export type { IMysqlType } from './interfaces/IMysqlType.js'
-export type { IPostgresType } from './interfaces/IPostgresType.js'
-export type { ISqliteType } from './interfaces/ISqliteType.js'
-export type { IValid } from './interfaces/IValid.js'
+export type { IMysqlType } from './interfaces/IMysqlType.js';
+export type { IPostgresType } from './interfaces/IPostgresType.js';
+export type { ISqliteType } from './interfaces/ISqliteType.js';
+export type { IValid } from './interfaces/IValid.js';
 
 //This module is @alpha
+export { ACmd } from './ACmd.js';
 export { cmdFromBin } from './cmdFromBin.js';
 export { ColName } from './ColName.js';
 export { ColValue } from './ColValue.js';

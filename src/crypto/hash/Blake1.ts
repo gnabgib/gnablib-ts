@@ -2,8 +2,8 @@
 
 import { asBE } from '../../endian/platform.js';
 import { safety } from '../../primitive/Safety.js';
-import { U32 } from '../../primitive/U32.js';
-import { U64Mut, U64MutArray } from '../../primitive/U64.js';
+import { U32 } from '../../primitive/number/U32.js';
+import { U64Mut, U64MutArray } from '../../primitive/number/U64.js';
 
 import type { IHash } from '../interfaces/IHash.js';
 

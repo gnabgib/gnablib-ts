@@ -4,14 +4,16 @@ import { safety } from "../primitive/Safety.js";
 import { fpb32 } from "./ieee754-fpb.js";
 
 /**
- * [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
+ * # [bfloat16](https://en.wikipedia.org/wiki/Bfloat16_floating-point_format)
  * 
  * A 16 bit floating point number, this format is a truncated version of the 
- * {@link ./ieee754-fpb.fpb32 | 32-bit IEEE 754 binary floating point}, using the
+ * {@link codec.fpb32 | 32-bit IEEE 754 binary floating point}, using the
  * same number of exponent bits (8) but only an 8 bit precision.
  * 
  * **Note** This format is unsuitable for integer calculations, but it's intended 
  * to be used in machine learning.
+ * 
+ * @namespace
  */
 export const bfloat16 = {
     /**

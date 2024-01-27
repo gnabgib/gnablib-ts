@@ -17,7 +17,7 @@ import { safety } from '../../primitive/Safety.js';
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = new Int64(0, 0);
 
-abstract class ARef extends ACudColType implements IValid<number | Int64> {
+export abstract class ARef extends ACudColType implements IValid<number | Int64> {
 	protected abstract get _maxByteLen(): number;
 	protected abstract get _max64(): Int64;
 	protected abstract get _cudPrefix(): string;

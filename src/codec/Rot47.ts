@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { safety } from '../primitive/Safety.js';
 
@@ -6,27 +6,31 @@ const ord_low = 33; //!
 const ord_high = 126; //~
 
 /**
- * Rotates a-zA-Z by @see distA (default 13) and 0-9 by @see distD (default 5),
- *  extended UTF8 chars are untouched (ROT13.5, ROT13+5)
- * @param bytes
- * @param distA number=13, -25 <= distA <= -25 (Positive distance 13 a->n, 11 a->l)
- * @param distD number=5, -9 <= distD <=9 (Positive distance 5 1->6, 3 1->4)
- * @returns
+ * # ROT47
+ *
+ * *Rotate by 47 places*, a simple letter substitution cipher, a form of the
+ * [caesar cipher](https://en.wikipedia.org/wiki/Caesar_cipher) shifts all
+ * printable characters by `$diff` places. Range includes [`!` - `~`].  Extended
+ * UTF8 chars are untouched.
+ *
+ * @param input Source data (in bytes, use {@link codec.utf8.toBytes utf8.toBytes} to convert)
+ * @param diff Amount to shift by, integer=47 [-93, 93]
+ * @returns Encoded data
  */
-export function shift(bytes: Uint8Array, dist = 47): Uint8Array {
-	safety.intInRangeInc(dist, -93, 93,'dist');
-	const ret = new Uint8Array(bytes.length);
+export function shift(input: Uint8Array, diff = 47): Uint8Array {
+	safety.intInRangeInc(diff, -93, 93, 'dist');
+	const ret = new Uint8Array(input.length);
 	//1000001 = x41 = 65 = A
 	//1100001 = x61 = 97 = a
-	for (let i = 0; i < bytes.length; i++) {
+	for (let i = 0; i < input.length; i++) {
 		//Case fold up->low
-		const byte = bytes[i];
+		const byte = input[i];
 		let shift = 0;
 		if (byte >= ord_low && byte <= ord_high) {
-			const diff = byte - ord_low;
-			shift = ((94 + diff + dist) % 94) - diff;
+			const base = byte - ord_low;
+			shift = ((94 + base + diff) % 94) - base;
 		}
-		ret[i] = bytes[i] + shift;
+		ret[i] = input[i] + shift;
 	}
 	return ret;
 }

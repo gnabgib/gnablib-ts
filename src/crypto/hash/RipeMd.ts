@@ -1,7 +1,7 @@
 /*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import type { IHash } from '../interfaces/IHash.js';
 
 //[Wikipedia: RipeMD](https://en.wikipedia.org/wiki/RIPEMD) (1992)

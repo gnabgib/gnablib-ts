@@ -1,8 +1,8 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Cidr } from './Cidr.js';
-import { ICidrValue } from './interfaces/ICidrValue.js';
-import { IValueMerge } from './interfaces/IValueMerge.js';
+import { ICidrValue } from '../interfaces/ICidrValue.js';
+import { IValueMerge } from '../interfaces/IValueMerge.js';
 import { IpV4 } from './Ip.js';
 
 interface ITreeNode<T> {

@@ -2,7 +2,7 @@
 
 import type { IHash } from '../crypto/interfaces/IHash.js';
 import { asLE } from '../endian/platform.js';
-import { U64, U64Mut, U64MutArray } from '../primitive/U64.js';
+import { U64, U64Mut, U64MutArray } from '../primitive/number/U64.js';
 
 //[Wikipedia: Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function)
 //[SpookyHash: a 128-bit non-cryptographic hash](http://burtleburtle.net/bob/hash/spooky.html)

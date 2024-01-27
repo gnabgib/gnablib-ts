@@ -1,4 +1,10 @@
 param (
+    [Parameter(HelpMessage="Source directory")]
+    [string]$src = "out",
+
+    [Parameter(HelpMessage="Target directory")]
+    [string]$dest = "dist",
+
     [Parameter(HelpMessage="Clean release directory first")]
     [Switch]$clean = $false
 )
@@ -26,15 +32,33 @@ function Write-Section {
     Write-host $title -fore $fore
 }
 
+function Strip-TrailSlash {
+    param ($fold)
+    if ($fold -match '[\\/]$') {
+        return $fold.substring(0,$fold.length-1)
+    }
+    return $fold
+}
 
 ## -- MAIN --
 $sw = [Diagnostics.Stopwatch]::StartNew()
 
-$dirs = get-childitem dist -directory -recurse
+## Clean up any trailing slashes
+$src=Strip-TrailSlash $src
+$dest=Strip-TrailSlash $dest
+
+if (-not (Test-Path -path "$src\*")) {
+    Write-Host -fore Red "Source not found: $src"
+    exit
+}
+
+Write-Host -for DarkGray "Compress $src to $dest"
+
+$dirs = get-childitem -path $src -directory -recurse
 Write-Section -sw $sw -title "Build/clear folders"
 Initialize-Indicator -size $dirs.Count
 for ($i=0; $i -lt $dirs.Count; $i++) {
-    $mk = $dirs[$i].FullName.Replace('\dist\','\release\')
+    $mk = $dirs[$i].FullName.Replace('\'+$src+'\','\'+$dest+'\')
     if ( -not (Test-Path $mk) ) {
         mkdir $mk >$null
     } elseif ($clean) {
@@ -44,32 +68,33 @@ for ($i=0; $i -lt $dirs.Count; $i++) {
 }
 Close-Indicator
 
-$jsFiles = ls dist -r *.js
+$jsFiles = ls $src -r *.js
 Write-Section -sw $sw -title "Minifying JS"
 Initialize-Indicator -size $jsFiles.Count
 # Do the work
 for ($i=0; $i -lt $jsFiles.Count; $i++) {
-    $src = $jsFiles[$i].FullName
-    $min = $src.Replace('\dist\','\release\')
+    $jsFile = $jsFiles[$i].FullName
+    $min = $jsFile.Replace('\'+$src+'\','\'+$dest+'\')
     if ( -not (Test-Path $min) ) {
-        npx terser $src --compress --mangle --ecma 2016 --module -o $min
+        npx terser $jsFile --compress --mangle --ecma 2016 --module -o $min
     }
     Update-Indicator
 }
 Close-Indicator
 
-$typeFiles = ls dist -r *.d.ts
-Write-Section -sw $sw -title "Copying types"
-Initialize-Indicator -size $typeFiles.Count
-# Do the work
-for ($i=0; $i -lt $typeFiles.Count; $i++) {
-    $src = $typeFiles[$i].FullName
-    $min = $src.Replace('\dist\','\release\')
-    if ( -not (Test-Path $min) ) {
-        Copy-Item $src $min
-    }
-    Update-Indicator
-}
-Close-Indicator
+# With types in their own folder, this isn't needed
+# $typeFiles = ls $src -r *.d.ts
+# Write-Section -sw $sw -title "Copying types"
+# Initialize-Indicator -size $typeFiles.Count
+# # Do the work
+# for ($i=0; $i -lt $typeFiles.Count; $i++) {
+#     $tFile = $typeFiles[$i].FullName
+#     $min = $tFile.Replace('\'+$src+'\','\'+$dest+'\')
+#     if ( -not (Test-Path $min) ) {
+#         Copy-Item $tFile $min
+#     }
+#     Update-Indicator
+# }
+# Close-Indicator
 
 Write-Section -sw $sw -fore Green -title "Done"

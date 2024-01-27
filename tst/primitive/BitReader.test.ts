@@ -15,18 +15,18 @@ const deser:[string,number[],number[]][] = [
     ['AAAA',[3,3,5,5],[5,2,21,10]],//101 010 10101 01010
 
     ['5555',[1,3,5,7],[0,5,10,85]],//0 101 01010 1010101
-    ['5555',[1,1,7,7],[0,1,85,85]],//0 1 0101010 1010101
+    ['5555',[1,1,7,7],[0,1,42,85]],//0 1 0101010 1010101
     ['5555',[3,3,3,7],[2,5,2,85]],//010 101 010 1010101
     ['5555',[3,3,5,5],[2,5,10,21]],//010 101 01010 10101
 ];
 
 for(const [ser,bits,vals] of deser) {
-    tsts(`deser(${ser})`,()=>{
+    tsts(`deser(${ser},${bits})`,()=>{
         var bytes=hex.toBytes(ser);
         const br=new BitReader(bytes);
-        for(let i=0;i>bits.length;i++) {
+        for(let i=0;i<bits.length;i++) {
             const v=br.readNumber(bits[i]);
-            assert.is(v,vals[i]);
+            assert.is(v,vals[i],`bit ${i}`);
         }
     });
 }

@@ -2,7 +2,7 @@
 
 import { ContentError } from '../primitive/error/ContentError.js';
 import type { IReadArray } from '../primitive/interfaces/IReadArray.js';
-import type { U64, U64MutArray } from '../primitive/U64.js';
+import type { U64, U64MutArray } from '../primitive/number/U64.js';
 /*
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38

@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import { nameValue } from '../../primitive/nameValue.js';
 import { somewhatSafe as safe } from '../../safe/index.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';

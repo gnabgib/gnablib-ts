@@ -26,7 +26,7 @@ export class WindowStr {
 	 * @throws OutOfRangeError idx invalid value
 	 * @param source
 	 * @param start Integer 0 < source.length (default 0)
-	 * @param end Integer 0 < (source.length-start) (default source.length-start)
+	 * @param length Integer 0 < (source.length-start) (default source.length-start)
 	 */
 	constructor(source: string | WindowStr, start = 0, length?: number) {
 		safe.int.inRangeInc(start,0,source.length);

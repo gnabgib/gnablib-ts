@@ -5,9 +5,9 @@ import { intExt } from '../primitive/IntExt.js';
 import { utf8 } from '../codec/Utf8.js';
 import { fpb64 } from '../codec/ieee754-fpb.js';
 import { Uint64 } from '../primitive/Uint64.js';
-import { intToMinBytes, uintToMinBytes } from '../endian/big.js';
 import { Int64 } from '../primitive/Int64.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
+import { asBE } from '../endian/platform.js';
 
 /**
  * @alpha
@@ -26,7 +26,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 		ret[1] = value ? 1 : 0;
 	} else if (typeof value === 'number') {
 		if (Number.isInteger(value)) {
-			const n = intToMinBytes(value);
+			const n = asBE.intMinBytes(value);
 			ret = new Uint8Array(1 + n.length);
 			ret[0] = n.length;
 			ret.set(n, 1);
@@ -50,7 +50,8 @@ export function unknownToBin(value: unknown): Uint8Array {
 		ret[0] = i.length;
 		ret.set(i, 1);
 	} else if (value instanceof Uint64) {
-		const u = uintToMinBytes(value);
+		const u = asBE.minBytes(value.toBytes());
+		//uintToMinBytes(value);
 		ret = new Uint8Array(1 + u.length);
 		ret[0] = u.length;
 		ret.set(u, 1);

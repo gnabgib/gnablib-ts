@@ -1,7 +1,7 @@
 /*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/U32.js';
+import { U32 } from '../../primitive/number/U32.js';
 import type { IHash } from '../interfaces/IHash.js';
 
 //[US Secure Hash Algorithm 1 (SHA1)](https://datatracker.ietf.org/doc/html/rfc3174) (2001)

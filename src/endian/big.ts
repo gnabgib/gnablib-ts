@@ -91,7 +91,7 @@ export function u32FromBytesUnsafe(
  * 256-65535: 2 bytes
  * 65536-16777215: 3 bytes
  * 16777216-4294967295: 4 bytes
- * @param u32
+ * @param uint
  * @returns Uint8Array[1-4]
  */
 export function uintToMinBytes(uint: number | Uint64): Uint8Array {
