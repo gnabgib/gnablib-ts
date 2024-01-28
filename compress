@@ -7,8 +7,8 @@ txtGreen='\033[1;32m'
 txtGrey='\033[1;30m'
 txtRed='\e[0;31m'
 txtReset='\033[0m'
-src="_o\\out"
-dest="_o\\dist"
+src="_o/out"
+dest="_o/dist"
 
 InitIndicator() {
         #echo $1
