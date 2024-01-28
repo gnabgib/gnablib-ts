@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.3.8",
+	"version": "0.4.0",
 	"description": "A zero dependency library, with provenance, TypeScript/JavaScript applications.",
 	"type": "module",
 	"scripts": {
@@ -14,7 +14,7 @@
 		"cover:report": "npx c8 report --reporter=html --reporter=json-summary",
 		"prebuild": "rm -rf _o\\out",
 		"build": "tsc",
-		"build:full":"npm run cover & npm run cover:report & npm run doc:cover & npm run build & npm run compress",
+		"build:full": "npm run cover & npm run cover:report & npm run doc:cover & npm run build & npm run compress",
 		"compress": "compress _o\\out _o\\dist",
 		"doc": "npx typedoc",
 		"doc:cover": "npx typedoc --plugin typedoc-plugin-coverage --validation.notDocumented --skipErrorChecking",
@@ -26,108 +26,109 @@
 	},
 	"exports": {
 		"./abnf": {
-			"types":"./_o/type/abnf/index.js",
-			"default":"./_o/dist/abnf/index.js"
+			"types": "./_o/type/abnf/index.js",
+			"default": "./_o/dist/abnf/index.js"
 		},
 		"./algo": {
-			"types":"./_o/type/algo/index.js",
-			"default":"./_o/dist/algo/index.js"
+			"types": "./_o/type/algo/index.js",
+			"default": "./_o/dist/algo/index.js"
 		},
 		"./checksum": {
-			"types":"./_o/type/checksum/index.js",
-			"default":"./_o/dist/checksum/index.js"
+			"types": "./_o/type/checksum/index.js",
+			"default": "./_o/dist/checksum/index.js"
 		},
-		"./codec":  {
-			"types":"./_o/type/codec/index.js",
-			"default":"./_o/dist/codec/index.js"
+		"./codec": {
+			"types": "./_o/type/codec/index.js",
+			"default": "./_o/dist/codec/index.js"
 		},
-		"./crypto":  {
-			"types":"./_o/type/crypto/index.js",
-			"default":"./_o/dist/crypto/index.js"
+		"./crypto": {
+			"types": "./_o/type/crypto/index.js",
+			"default": "./_o/dist/crypto/index.js"
 		},
 		"./crypto/block": {
-			"types":"./_o/type/crypto/block/index.js",
-			"default":"./_o/dist/crypto/block/index.js"
+			"types": "./_o/type/crypto/block/index.js",
+			"default": "./_o/dist/crypto/block/index.js"
 		},
 		"./crypto/hash": {
-			"types":"./_o/type/crypto/hash/index.js",
-			"default":"./_o/dist/crypto/hash/index.js"
+			"types": "./_o/type/crypto/hash/index.js",
+			"default": "./_o/dist/crypto/hash/index.js"
 		},
 		"./crypto/kdf": {
-			"types":"./_o/type/crypto/kdf/index.js",
-			"default":"./_o/dist/crypto/kdf/index.js"
+			"types": "./_o/type/crypto/kdf/index.js",
+			"default": "./_o/dist/crypto/kdf/index.js"
 		},
 		"./crypto/mac": {
-			"types":"./_o/type/crypto/mac/index.js",
-			"default":"./_o/dist/crypto/mac/index.js"
+			"types": "./_o/type/crypto/mac/index.js",
+			"default": "./_o/dist/crypto/mac/index.js"
 		},
 		"./crypto/pad": {
-			"types":"./_o/type/crypto/pad/index.js",
-			"default":"./_o/dist/crypto/pad/index.js"
+			"types": "./_o/type/crypto/pad/index.js",
+			"default": "./_o/dist/crypto/pad/index.js"
 		},
 		"./crypto/sym": {
-			"types":"./_o/type/crypto/sym/index.js",
-			"default":"./_o/dist/crypto/sym/index.js"
+			"types": "./_o/type/crypto/sym/index.js",
+			"default": "./_o/dist/crypto/sym/index.js"
 		},
 		"./crypto/xof": {
-			"types":"./_o/type/crypto/xof/index.js",
-			"default":"./_o/dist/crypto/xof/index.js"
+			"types": "./_o/type/crypto/xof/index.js",
+			"default": "./_o/dist/crypto/xof/index.js"
 		},
 		"./cud": {
-			"types":"./_o/type/cud/index.js",
-			"default":"./_o/dist/cud/index.js"
+			"types": "./_o/type/cud/index.js",
+			"default": "./_o/dist/cud/index.js"
 		},
 		"./ecc": {
-			"types":"./_o/type/ecc/index.js",
-			"default":"./_o/dist/ecc/index.js"
+			"types": "./_o/type/ecc/index.js",
+			"default": "./_o/dist/ecc/index.js"
 		},
 		"./endian": {
-			"types":"./_o/type/endian/index.js",
-			"default":"./_o/dist/endian/index.js"
+			"types": "./_o/type/endian/index.js",
+			"default": "./_o/dist/endian/index.js"
 		},
 		"./log": {
-			"types":"./_o/type/log/index.js",
-			"default":"./_o/dist/log/index.js"
+			"types": "./_o/type/log/index.js",
+			"default": "./_o/dist/log/index.js"
 		},
 		"./primitive": {
-			"types":"./_o/type/primitive/index.js",
-			"default":"./_o/dist/primitive/index.js"
+			"types": "./_o/type/primitive/index.js",
+			"default": "./_o/dist/primitive/index.js"
 		},
-		"./primitive/datetime":{
-			"types":"./_o/type/primitive/datetime/index.js",
-			"default":"./_o/dist/primitive/datetime/index.js"
+		"./primitive/datetime": {
+			"types": "./_o/type/primitive/datetime/index.js",
+			"default": "./_o/dist/primitive/datetime/index.js"
 		},
-		"./primitive/error":{
-			"types":"./_o/type/primitive/error/index.js",
-			"default":"./_o/dist/primitive/error/index.js"
+		"./primitive/error": {
+			"types": "./_o/type/primitive/error/index.js",
+			"default": "./_o/dist/primitive/error/index.js"
 		},
 		"./primitive/net": {
-			"types":"./_o/type/primitive/net/index.js",
-			"default":"./_o/dist/primitive/net/index.js"
+			"types": "./_o/type/primitive/net/index.js",
+			"default": "./_o/dist/primitive/net/index.js"
 		},
 		"./primitive/number": {
-			"types":"./_o/type/primitive/number/index.js",
-			"default":"./_o/dist/primitive/number/index.js"
+			"types": "./_o/type/primitive/number/index.js",
+			"default": "./_o/dist/primitive/number/index.js"
 		},
 		"./regexp": {
-			"types":"./_o/type/regexp/index.js",
-			"default":"./_o/dist/regexp/index.js"
+			"types": "./_o/type/regexp/index.js",
+			"default": "./_o/dist/regexp/index.js"
 		},
 		"./prng": {
-			"types":"./_o/type/prnd/index.js",
-			"default":"./_o/dist/prnd/index.js"
+			"types": "./_o/type/prnd/index.js",
+			"default": "./_o/dist/prnd/index.js"
 		},
 		"./test": {
-			"types":"./_o/type/test/index.js",
-			"default":"./_o/dist/test/index.js"
+			"types": "./_o/type/test/index.js",
+			"default": "./_o/dist/test/index.js"
 		},
 		"./tty": {
-			"types":"./_o/type/tty/index.js",
-			"default":"./_o/dist/tty/index.js"
+			"types": "./_o/type/tty/index.js",
+			"default": "./_o/dist/tty/index.js"
 		}
 	},
 	"files": [
-		"_o/dist","_o/type"
+		"_o/dist",
+		"_o/type"
 	],
 	"repository": {
 		"type": "git",
@@ -288,6 +289,6 @@
 		"eslint": "^8.43.0",
 		"eslint-plugin-import": "^2.27.5",
 		"typedoc": "^0.24.8",
-		"typedoc-plugin-coverage":"^2.2.0"
+		"typedoc-plugin-coverage": "^2.2.0"
 	}
 }
