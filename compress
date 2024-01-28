@@ -32,6 +32,11 @@ WriteSection() {
         echo -n -e "${txtGrey}${dts}ms${txtReset} "
         echo -e "${color}${1}${txtReset}"
 }
+FixSlash() {
+        #Convert \ (windows default) into / (so much easier in linux)
+        #Capture this with $() if you want the results
+        echo "${1/\\/\/}"
+}
 
 # If there's one argument, it's $src, if there's two the second is $dest, after that.. knock yourself out (mamma said)
 if [ $# -gt 0 ]; then src=$(FixSlash $1); fi
@@ -40,7 +45,7 @@ if [ $# -gt 1 ]; then dest=$(FixSlash $2); fi
 # Make sure src exists, otherwise the rest is screaming into the wind
 if [ ! -d "$src" ]; then
         echo -e "${txtRed}Source not found: ${src}${txtReset}"
-        exit
+        exit 1
 fi
 echo -e "Compress $txtCyan$src$txtReset to $txtCyan$dest$txtReset"
 
