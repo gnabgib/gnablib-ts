@@ -1,36 +1,8 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+name: NPM Publish
 
-name: CI
-
-on:
-  create
+on: [create, workflow_dispatch]
 
 jobs:
-  test:
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci --omit=optional
-      - run: npm test
-
-  doc:
-    #Build documentation (using TypeDoc) into _o/doc
-    if: false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci --omit=optional
-      - run: npm install --save false typedoc typedoc-plugin-coverage
-      - run: npm doc:cover
-
   publish-npm:
     runs-on: ubuntu-latest
     permissions:
