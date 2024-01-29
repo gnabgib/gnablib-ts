@@ -12,14 +12,14 @@
 		"test:deep": "uvu -r tsm -i .log$ tst",
 		"cover": "npx c8 npm test",
 		"cover:report": "npx c8 report --reporter=html --reporter=json-summary",
+		"doc": "npx typedoc",
+		"doc:cover": "npx typedoc --plugin typedoc-plugin-coverage --validation.notDocumented --skipErrorChecking",
+		"doc:watch": "npx typedoc --watch",
 		"prebuild": "rm -rf _o\\out",
 		"build": "tsc",
 		"build:full": "npm run cover & npm run cover:report & npm run doc:cover & npm run build & npm run compress",
 		"compress": "compress _o\\out _o\\dist",
-		"doc": "npx typedoc",
-		"doc:cover": "npx typedoc --plugin typedoc-plugin-coverage --validation.notDocumented --skipErrorChecking",
-		"doc:watch": "npx typedoc --watch",
-		"types": "tsc --outFile \"./dist/index.d.ts\" --emitDeclarationOnly true --isolatedModules false --declaration true"
+		"packgen": "node script/packageGen.js"
 	},
 	"engines": {
 		"node": ">=15.3.0"
@@ -270,6 +270,7 @@
 		"rabbit-cipher"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
+	"contributors": ["gnabgib (https://www.gnabgib.com)","r3m (https://www.r3m.ca)"],
 	"license": "MPL-1.1",
 	"bugs": {
 		"url": "https://github.com/gnabgib/gnablib-ts/issues"
@@ -290,5 +291,27 @@
 		"eslint-plugin-import": "^2.27.5",
 		"typedoc": "^0.24.8",
 		"typedoc-plugin-coverage": "^2.2.0"
+	},
+	"publishConfig": {
+		"devDependencies":{
+			"terser":null
+		},
+		"optionalDevDependencies":null,
+		"keywords":null,
+		"scripts":{
+			"preversion":null,
+			"version":null,
+			"postversion":null,
+			"test:deep":null,
+			"cover":null,
+			"cover:report":null,
+			"doc":null,
+			"doc:cover":null,
+			"doc:watch":null,
+			"prebuild":null,
+			"build:full":null,
+			"compress":null,
+			"packgen":null
+		}
 	}
 }
