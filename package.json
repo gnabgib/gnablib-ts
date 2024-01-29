@@ -18,7 +18,7 @@
 		"prebuild": "rm -rf _o\\out",
 		"build": "tsc",
 		"build:full": "npm run cover & npm run cover:report & npm run doc:cover & npm run build & npm run compress",
-		"compress": "compress _o\\out _o\\dist",
+		"compress": "compress _o/out _o/dist",
 		"packgen": "node script/packageGen.js"
 	},
 	"engines": {
