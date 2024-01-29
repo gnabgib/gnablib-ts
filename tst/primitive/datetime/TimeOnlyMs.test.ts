@@ -38,7 +38,7 @@ for (const [hr, mi, se, ms, utc, str, ser] of serSet) {
 		assert.is(t.second.valueOf(), se, 'second');
 		assert.is(t.millisecond.valueOf(), ms, 'millisecond');
         assert.is(t.isUtc.valueBool(),utc,'isUtc');
-		assert.is(t.toString(), str);
+		assert.is(t.toString(), str,'toString');
 	});
 }
 

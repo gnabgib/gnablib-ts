@@ -18,34 +18,34 @@ export class Bool implements ISerializer {
 	static readonly storageBytes = 1;
 	/**Number of bits required to serialize this data */
 	static readonly serialBits = 1;
-	readonly #v: Uint8Array;
-	readonly #mask: number;
+	protected readonly _v: Uint8Array;
+	protected readonly _mask: number;
 	readonly #shift: number;
 
-	private constructor(storage: Uint8Array, mask: number, shift: number) {
-		this.#v = storage;
-		this.#mask = mask;
+	protected constructor(storage: Uint8Array, mask: number, shift: number) {
+		this._v = storage;
+		this._mask = mask;
 		this.#shift = shift;
 	}
 
 	/** true/false */
 	public toString(): string {
-		return (this.#v[0] & this.#mask) === this.#mask ? 'true' : 'false';
+		return (this._v[0] & this._mask) === this._mask ? 'true' : 'false';
 	}
 
 	/** Value as an int 1=true, 0=false */
 	public valueOf(): number {
-		return (this.#v[0] & this.#mask) >> this.#shift;
+		return (this._v[0] & this._mask) >> this.#shift;
 	}
 	/** Value as a boolean */
 	public valueBool(): boolean {
-		return (this.#v[0] & this.#mask) === this.#mask;
+		return (this._v[0] & this._mask) === this._mask;
 	}
 
 	/** Serialize into target  - 1 bit*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(
-			(this.#v[0] & this.#mask) === this.#mask ? 1 : 0,
+			(this._v[0] & this._mask) === this._mask ? 1 : 0,
 			Bool.serialBits
 		);
 	}
