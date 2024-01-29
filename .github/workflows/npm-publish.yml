@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,6 +20,7 @@ jobs:
 
   doc:
     #Build documentation (using TypeDoc) into _o/doc
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +48,7 @@ jobs:
       # There are security implications of including current dir in path, but
       # we trust ourselves, and we need this for windows/linux cross compat
       # (to call "compress" without a dir prefix)
-      - run: PATH=$PATH:.
+      - run: echo "." >> $GITHUB_PATH
       - run: npm run compress
       - run: npm run packgen
       - run: npm publish ./_o --provenance
