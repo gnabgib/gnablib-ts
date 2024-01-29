@@ -75,6 +75,7 @@ tsts(`new-provide storage`,()=>{
 });
 
 tsts(`fromDate`,()=>{
+    // deepcode ignore DateMonthIndex/test: yes, we know
     const dt=new Date(2001,1/*=2 for fucks sake JS*/,3,4,5,6,789);
     const t=TimeOnly.fromDate(dt);
     assert.is(t.hour.valueOf(),dt.getHours(),'hour');

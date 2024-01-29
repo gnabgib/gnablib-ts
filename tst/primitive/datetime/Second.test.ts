@@ -22,7 +22,7 @@ tsts(`fromMillisecondsSinceEpoch`, () => {
 
 tsts(`now`, () => {
 	const s = Second.now();
-	//Near the end of a seocnd, this test can fail, (but passes otherwise)
+	//Near the end of a second, this test can fail, (but passes otherwise)
 	// so we've replaced with a more generic form (not super useful)
 	//const dt = new Date();
 	//assert.is(s.valueOf(), dt.getSeconds());

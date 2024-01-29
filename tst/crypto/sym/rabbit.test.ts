@@ -3,6 +3,7 @@ import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { Rabbit } from '../../../src/crypto/sym';
 
+// file deepcode ignore HardcodedNonCryptoSecret/test: The point of this file is testing encryption
 
 const tsts = suite('Rabbit/RFC 4503');
 
@@ -39,7 +40,7 @@ const tests:{descr:string,key:string,iv?:string,plain:string,enc:string}[]=[
     },
     {
         descr:"RC4503 A.2 #1",
-        key:'00000000000000000000000000000000',
+        key:'00000000000000000000000000000000',        
         iv:'0000000000000000',
         plain:'000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
         enc:'C6A7275EF85495D87CCD5D376705B7ED5F29A6AC04F5EFD47B8F293270DC4A8D2ADE822B29DE6C1EE52BDB8A47BF8F66'

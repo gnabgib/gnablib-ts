@@ -48,6 +48,7 @@ jobs:
       # (to call "compress" without a dir prefix)
       - run: PATH=$PATH:.
       - run: npm run compress
-      - run: npm publish --provenance
+      - run: npm run packgen
+      - run: npm publish ./_o --provenance
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}

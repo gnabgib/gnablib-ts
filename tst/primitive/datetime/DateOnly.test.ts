@@ -74,6 +74,7 @@ tsts(`new-provide storage`,()=>{
 });
 
 tsts(`fromDate`,()=>{
+    // deepcode ignore DateMonthIndex/test: yes, we know
     const dt=new Date(2001,1/*=2 for fucks sake JS*/,3,4,5,6);
     const d=DateOnly.fromDate(dt);
     assert.is(d.year.valueOf(),2001);

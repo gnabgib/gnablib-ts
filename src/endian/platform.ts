@@ -126,7 +126,8 @@ const leave = {
 
 /** n must be <=4294967295, returns updated pos  */
 function p32Bytes(n: number, pos: number, u: Uint8Array): number {
-	while (n > 0) {
+	// deepcode ignore BitwiseOperationSignChecked: this is fine we already know the number is positive and U32 max
+ 	while (n > 0) {
 		u[pos++] = n;
 		n >>>= 8;
 	}

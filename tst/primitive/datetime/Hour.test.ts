@@ -126,7 +126,7 @@ tsts(`nowUtc`,()=>{
     const dt=new Date();
     const h=Hour.nowUtc();
     //This isn't a great test, but let's use a date object to compare 
-    //(tiny chance of this test failing near midnight UTC)
+    //(tiny chance of this test failing at the end of an hour)
     assert.is(h.valueOf(),dt.getUTCHours());
 });
 
@@ -147,8 +147,6 @@ const parseSet:[string,number][]=[
     //Doesn't have to be zero padded
     ['2',2],
 
-    //Note: This could fail at the end of the year :|
-    ['now',new Date().getHours()],
     //@ts-ignore - Note parse casts to string, so this is inefficient, but works
     [10,10],
 ];
@@ -158,6 +156,13 @@ for (const [str,expect] of parseSet) {
         assert.equal(d.valueOf(),expect);
     });
 }
+tsts(`parse(now)`, () => {
+	const h = Hour.parse('now');
+    const dt=new Date();
+    //This isn't a great test, but let's use a date object to compare 
+    //(tiny chance of this test failing at the end of an hour)
+    assert.is(h.valueOf(),dt.getHours());
+});
 
 const badParseStrict:string[]=[
     //Should be zero padded

@@ -11,12 +11,11 @@ Zero dependencies, provenance signing, TypeScript typing.  Build applications fo
 ![](coverage.svg)
 
 <!-- 
-Too new:
+Too new (npms.io seems to be abandoned):
 ![npms.io (maintenance)](https://img.shields.io/npms-io/final-score/gnablib) 
 Says zero.. probably always will?
-![Snyk Vulnerabilities for GitHub Repo](https://img.shields.io/snyk/vulnerabilities/github/gnabgib/gnablib-ts)
-Renders 0 deps as red/not found (portrays alarm)
 ![Depfu](https://img.shields.io/depfu/dependencies/github/gnabgib/gnablib-ts)
+Says not found in red.. like that's bad
 -->
 
 
