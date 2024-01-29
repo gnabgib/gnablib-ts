@@ -94,6 +94,7 @@ export class TimeOnly {
 		this.minute.validate();
 		this.second.validate();
 		this.microsecond.validate();
+		//no validate for isUtc
 		return this;
 	}
 

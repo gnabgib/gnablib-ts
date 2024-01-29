@@ -108,10 +108,30 @@ export class DateOnly {
 		//Keep the memory contiguous
 		const stor = self.setupStor(storage);
 
-		const y = Year.new(date.getFullYear(), stor);
-		const m = Month.new(date.getMonth() + 1, stor.subarray(2, 3));
-		const d = Day.new(date.getDate(), stor.subarray(3, 4));
+		const y = Year.fromDate(date, stor);
+		const m = Month.fromDate(date, stor.subarray(2, 3));
+		const d = Day.fromDate(date, stor.subarray(3, 4));
 		return new DateOnly(y, m, d);
+	}
+
+	 /** Create a date from float seconds since UNIX epoch */
+	 public static fromSecondsSinceEpoch(
+		source: number,
+		storage?: Uint8Array
+	): DateOnly {
+		//No need to reinvent the wheel, use Date's built in converter
+		const date=new Date(source*1000);
+		return self.fromDate(date,storage);
+	}
+
+	/** Create a date from float milliseconds since UNIX epoch */
+	public static fromMillisecondsSinceEpoch(
+		source: number,
+		storage?: Uint8Array
+	): DateOnly {
+		//No need to reinvent the wheel, use Date's built in converter
+		const date=new Date(source);
+		return self.fromDate(date,storage);
 	}
 
 	//
@@ -131,7 +151,7 @@ export class DateOnly {
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const n = new Date();
 		//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/valueOf
-		//This is hackey - Date keeps UTC internally, but interprets value into local on output
+		//This is hacky - Date keeps UTC internally, but interprets value into local on output
 		//(getters) ie. getFulLYear/getMonth/getDate are in local.
 		//SO! If we add getTimezoneOffset (which is minutes) to the current time, we get the "UTC"
 		// time.  Or UTC + timezone offset internally.. it's turtles all the way down
