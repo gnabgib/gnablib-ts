@@ -1,5 +1,5 @@
 name: NPM Publish
-
+run-name: Publish to NPM from ${{ github.sha }} by ${{ github.triggering_actor }}
 on: [create, workflow_dispatch]
 
 jobs:

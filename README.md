@@ -21,7 +21,7 @@ Says not found in red.. like that's bad
 
 ## Installation
 
-This module is available through [NPM](https://www.npmjs.com/). There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)
+This module is available through [NPM](https://www.npmjs.com/package/gnablib). There are no install scripts, decrease your risk by explicitly preventing (`--ignore-scripts`)
 
 ```bash
 (pnpm|npm) install gnablib --ignore-scripts

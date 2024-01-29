@@ -68,7 +68,7 @@ readarray jsFiles <<< $(find $src -type f -name "*.js")
 WriteSection "Minify JS"
 InitIndicator ${#jsFiles[@]}
 for j in ${jsFiles[@]}; do
-        mk="${j/${src}\//${dest}\/}}"
+        mk="${j/${src}\//${dest}\/}"
         if [ ! -f "$mk" ]; then
                 npx terser $j --compress --mangle --ecma 2016 --module -o $mk
         fi
