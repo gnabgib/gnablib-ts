@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.4.4",
+	"version": "0.4.5",
 	"description": "A zero dependency library, with provenance, TypeScript/JavaScript applications.",
 	"type": "module",
 	"scripts": {
@@ -270,7 +270,10 @@
 		"rabbit-cipher"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
-	"contributors": ["gnabgib (https://www.gnabgib.com)","r3m (https://www.r3m.ca)"],
+	"contributors": [
+		"gnabgib (https://www.gnabgib.com)",
+		"r3m (https://www.r3m.ca)"
+	],
 	"license": "MPL-1.1",
 	"bugs": {
 		"url": "https://github.com/gnabgib/gnablib-ts/issues"
@@ -293,25 +296,25 @@
 		"typedoc-plugin-coverage": "^2.2.0"
 	},
 	"publishConfig": {
-		"devDependencies":{
-			"terser":null
+		"devDependencies": {
+			"terser": null
 		},
-		"optionalDevDependencies":null,
-		"keywords":null,
-		"scripts":{
-			"preversion":null,
-			"version":null,
-			"postversion":null,
-			"test:deep":null,
-			"cover":null,
-			"cover:report":null,
-			"doc":null,
-			"doc:cover":null,
-			"doc:watch":null,
-			"prebuild":null,
-			"build:full":null,
-			"compress":null,
-			"packgen":null
+		"optionalDevDependencies": null,
+		"keywords": null,
+		"scripts": {
+			"preversion": null,
+			"version": null,
+			"postversion": null,
+			"test:deep": null,
+			"cover": null,
+			"cover:report": null,
+			"doc": null,
+			"doc:cover": null,
+			"doc:watch": null,
+			"prebuild": null,
+			"build:full": null,
+			"compress": null,
+			"packgen": null
 		}
 	}
 }
