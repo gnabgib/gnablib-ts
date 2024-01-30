@@ -20,7 +20,8 @@ module.exports = {
     '@typescript-eslint/ban-ts-comment': [
       'error',
       {
-        'ts-expect-error': 'allow-with-description'
+        'ts-expect-error': 'allow-with-description',
+        'ts-ignore':'allow-with-description'
       }
     ]
     //'@typescript-eslint/ts-expect-error': 'allow-with-description' 

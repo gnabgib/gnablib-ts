@@ -104,13 +104,13 @@ tsts(`fromDate`,()=>{
     assert.is(h.valueOf(),dt.getHours());
 });
 
-tsts(`fromSecondsSinceEpoch`, () => {
-	const h = Hour.fromSecondsSinceEpoch(1705734810);
+tsts(`fromUnixTime`, () => {
+	const h = Hour.fromUnixTime(1705734810);
 	assert.is(h.valueOf(), 7);
 });
 
-tsts(`fromMillisecondsSinceEpoch`, () => {
-	const h = Hour.fromMillisecondsSinceEpoch(1705734810543);
+tsts(`fromUnixTimeMs`, () => {
+	const h = Hour.fromUnixTimeMs(1705734810543);
 	assert.is(h.valueOf(), 7);
 });
 

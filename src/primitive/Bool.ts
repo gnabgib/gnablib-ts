@@ -120,8 +120,8 @@ export class Bool implements ISerializer {
 		}
 		//coerce to string
 		input = '' + input;
-		let yesVals = ['true', '1'];
-		let noVals = ['false', '0'];
+		const yesVals = ['true', '1'];
+		const noVals = ['false', '0'];
 		if (settings?.allowYes === true) {
 			yesVals.push('yes');
 			noVals.push('no');

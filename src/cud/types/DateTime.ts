@@ -1,13 +1,13 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { NullError } from '../../primitive/ErrorExt.js';
-import { DateTime } from '../../primitive/DateTime.js';
+import { OldDateTime } from '../../primitive/DateTime.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 
-export class DateTimeCol extends ACudColType implements IValid<DateTime> {
+export class DateTimeCol extends ACudColType implements IValid<OldDateTime> {
 	/*MySQL supports microsecond res, but only for years 1000-9999 which is smaller than -4713-294276 (doh)*/
 	readonly mysqlType = 'BIGINT';
 	/*SQLite supports second resolution (int) or milliseconds in some formats (which can be dropped) 
@@ -21,16 +21,16 @@ export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 		super(nullable);
 	}
 
-	cudByteSize(_input: DateTime): number {
+	cudByteSize(_input: OldDateTime): number {
 		return 8;
 	}
 
-	valid(input: DateTime | undefined): Error | undefined {
+	valid(input: OldDateTime | undefined): Error | undefined {
 		if (input === undefined || input === null) {
 			if (!this.nullable) return new NullError('DateTime');
 		}
 	}
-	unknownBin(value: DateTime | undefined): Uint8Array {
+	unknownBin(value: OldDateTime | undefined): Uint8Array {
 		if (!value) {
 			if (!this.nullable) throw new NullError('DateTime');
 			return new Uint8Array([0]);
@@ -45,7 +45,7 @@ export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 	binUnknown(
 		bin: Uint8Array,
 		pos: number
-	): FromBinResult<DateTime | undefined> {
+	): FromBinResult<OldDateTime | undefined> {
 		if (pos + 1 > bin.length)
 			return new FromBinResult(
 				0,
@@ -79,7 +79,7 @@ export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 				'DateTimeCol.binUnknown missing data'
 			);
 
-		const dFrom = DateTime.fromBin(bin, pos);
+		const dFrom = OldDateTime.fromBin(bin, pos);
 		if (!dFrom.success)
 			return new FromBinResult(
 				0,

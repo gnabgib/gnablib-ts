@@ -114,24 +114,27 @@ export class DateOnly {
 		return new DateOnly(y, m, d);
 	}
 
-	 /** Create a date from float seconds since UNIX epoch */
-	 public static fromSecondsSinceEpoch(
+	/** Create a date from float seconds since UNIX epoch aka unix time */
+	public static fromUnixTime(
 		source: number,
 		storage?: Uint8Array
 	): DateOnly {
 		//No need to reinvent the wheel, use Date's built in converter
-		const date=new Date(source*1000);
-		return self.fromDate(date,storage);
+		const date = new Date(source * 1000);
+		return self.fromDate(date, storage);
 	}
 
-	/** Create a date from float milliseconds since UNIX epoch */
-	public static fromMillisecondsSinceEpoch(
+	/** Create a date from float milliseconds since UNIX epoch aka unixtime
+	 * 
+	 * **Note** also the numeric content of the js `Date` object
+	 */
+	public static fromUnixTimeMs(
 		source: number,
 		storage?: Uint8Array
 	): DateOnly {
 		//No need to reinvent the wheel, use Date's built in converter
-		const date=new Date(source);
-		return self.fromDate(date,storage);
+		const date = new Date(source);
+		return self.fromDate(date, storage);
 	}
 
 	//

@@ -18,7 +18,7 @@ const maxYear = 294276;
 /**
  * A date and time (with microsecond resolution).  ALWAYS in UTC
  */
-export class DateTime {
+export class OldDateTime {
 	private _year: number;
 	private _month: number;
 	private _day: number;
@@ -40,7 +40,7 @@ export class DateTime {
 		this._year = year;
 		safety.intInRangeInc(month,1,12,'month');
 		this._month = month;
-		safety.intInRangeInc(day,1,daysInMonth[month - 1] + (month === 2 && DateTime._isLeap(year) ? 1 : 0),'day');
+		safety.intInRangeInc(day,1,daysInMonth[month - 1] + (month === 2 && OldDateTime._isLeap(year) ? 1 : 0),'day');
 		this._day = day;
 		safety.intInRangeInc(hour,0,23,'hour');
 		this._hour = hour;
@@ -77,7 +77,7 @@ export class DateTime {
 		return this._micro;
 	}
 	get isLeap(): boolean {
-		return DateTime._isLeap(this._year);
+		return OldDateTime._isLeap(this._year);
 	}
 
 	private static _isLeap(year: number): boolean {
@@ -86,8 +86,8 @@ export class DateTime {
 		return year % 25 !== 0;
 	}
 
-	clone(): DateTime {
-		return new DateTime(
+	clone(): OldDateTime {
+		return new OldDateTime(
 			this._year,
 			this._month,
 			this._day,
@@ -98,7 +98,7 @@ export class DateTime {
 		);
 	}
 
-	equals(other: DateTime): boolean {
+	equals(other: OldDateTime): boolean {
 		return (
 			this._year === other._year &&
 			this._month === other._month &&
@@ -136,12 +136,12 @@ export class DateTime {
 		return this.serialize().toBytesBE();
 	}
 
-	static deserialize(ser: U64): DateTime {
+	static deserialize(ser: U64): OldDateTime {
 		const ymd = ser.high >>> 5;
 		let d = (ymd % 366) + 1;
 		const y = Math.floor(ymd / 366) + minYear;
 		let m = 0;
-		if (DateTime._isLeap(y)) {
+		if (OldDateTime._isLeap(y)) {
 			if (d === 60) {
 				//Leap day (feb 29th)
 				m = 1; //Will +1 below
@@ -171,17 +171,17 @@ export class DateTime {
 		const i = hms % minPerHour;
 		const h = Math.floor(hms / minPerHour);
 
-		return new DateTime(y, m, d, h, i, s, u);
+		return new OldDateTime(y, m, d, h, i, s, u);
 	}
-	static fromBin(bin: Uint8Array, pos = 0): FromBinResult<DateTime> {
+	static fromBin(bin: Uint8Array, pos = 0): FromBinResult<OldDateTime> {
 		const u=U64.fromBytesBE(bin,pos);
 		//const u = Uint64.fromBytes(bin, pos);
 		try {
-			const dt = DateTime.deserialize(u);
+			const dt = OldDateTime.deserialize(u);
 			return new FromBinResult(8, dt);
 		} catch (e) {
 			const reason = (e as Error)?.message ?? 'unknown';
-			return new FromBinResult<DateTime>(
+			return new FromBinResult<OldDateTime>(
 				0,
 				undefined,
 				'DateTime.fromBin ' + reason
@@ -218,8 +218,8 @@ export class DateTime {
 	 * @param us Further microseconds to add (to milliseconds)
 	 * @returns
 	 */
-	public static fromDate(dt: Date, us = 0): DateTime {
-		return new DateTime(
+	public static fromDate(dt: Date, us = 0): OldDateTime {
+		return new OldDateTime(
 			dt.getUTCFullYear(),
 			dt.getUTCMonth() + 1, //Quelle stupid
 			dt.getUTCDate(), //Date not day, lots of naming sense
@@ -230,19 +230,19 @@ export class DateTime {
 		);
 	}
 
-	public static fromEpochMilliseconds(epochMillis: number): DateTime {
+	public static fromEpochMilliseconds(epochMillis: number): OldDateTime {
 		const milliOnly = Math.floor(epochMillis);
 		const dt = new Date(milliOnly);
 		const us = Math.round((epochMillis - milliOnly) * 1000);
-		return DateTime.fromDate(dt, us);
+		return OldDateTime.fromDate(dt, us);
 	}
 
-	public static now(): DateTime {
+	public static now(): OldDateTime {
 		const now = performance.timeOrigin + performance.now(); //EPOCH Millis + extra res, can go into nanoseconds?
 		const nowMs = Math.floor(now);
 		const dt = new Date(nowMs);
 		const us = Math.round((now - nowMs) * 1000);
-		return DateTime.fromDate(dt, us);
+		return OldDateTime.fromDate(dt, us);
 	}
 	//@todo: add support for Temporal once it's valid
 }

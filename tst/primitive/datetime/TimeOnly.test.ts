@@ -87,26 +87,26 @@ tsts(`fromDate`,()=>{
 
 const secondsEpochSet: [number, string][] = [
     //2024-01-20 07:13:30
-	[1705734810, '07:13:30.000000'],
+	[1705734810, '07:13:30.000000Z'],
     //2024-01-20 07:13:30.534
-	[1705734810.534, '07:13:30.534000'],
+	[1705734810.534, '07:13:30.534000Z'],
 ];
 for (const [epoch, expect] of secondsEpochSet) {
 	tsts(`fromSecondsSinceEpoch(${epoch})`, () => {
-		const e = TimeOnly.fromSecondsSinceEpoch(epoch);
+		const e = TimeOnly.fromUnixTime(epoch,true);
 		assert.is(e.toString(), expect);
 	});
 }
 
 const millisEpochSet: [number, string][] = [
     //2024-01-20 07:13:30.542
-	[1705734810542, '07:13:30.542000'],
+	[1705734810542, '07:13:30.542000Z'],
     //2024-01-20 07:13:30.542789
-	[1705734810542.789, '07:13:30.542789'],
+	[1705734810542.789, '07:13:30.542789Z'],
 ];
 for (const [epoch, expect] of millisEpochSet) {
 	tsts(`fromMillisecondsSinceEpoch(${epoch})`, () => {
-		const e = TimeOnly.fromMillisecondsSinceEpoch(epoch);
+		const e = TimeOnly.fromUnixTimeMs(epoch,true);
 		assert.is(e.toString(), expect);
 	});
 }
@@ -134,5 +134,15 @@ tsts(`nowUtc`,()=>{
     assert.is(t.isUtc.valueBool(),true);
     //unsafe to test microsecond
 });
+
+// tsts(`norp`,()=>{
+//     const timeLocal=TimeOnly.fromUnixTime(1706563448);
+//     const timeUtc=TimeOnly.fromUnixTime(1706563448,true);
+//     console.log(`es  local=${timeLocal.toString()}, utc=${timeUtc.toString()}`);
+
+//     const timeLocalM=TimeOnly.fromUnixTimeMs(1706563565855);
+//     const timeUtcM=TimeOnly.fromUnixTimeMs(1706563565855,true);
+//     console.log(`ems local=${timeLocalM.toString()}, utc=${timeUtcM.toString()}`);
+// });
 
 tsts.run();

@@ -11,9 +11,9 @@
 		"test": "uvu -r tsm -i \"(.slow.test.ts|.log)$\" tst",
 		"test:deep": "uvu -r tsm -i .log$ tst",
 		"cover": "npx c8 npm test",
-		"cover:report": "npx c8 report --reporter=html --reporter=json-summary",
+		"cover:report": "npx c8 report --reporter=html --reporter=json-summary --reporter=json",
 		"doc": "npx typedoc",
-		"doc:cover": "npx typedoc --plugin typedoc-plugin-coverage --validation.notDocumented --skipErrorChecking",
+		"doc:cover": "npx typedoc --plugin typedoc-plugin-coverage --coverageLabel \"doc-cover\" --validation.notDocumented --skipErrorChecking",
 		"doc:watch": "npx typedoc --watch",
 		"prebuild": "rm -rf _o\\out",
 		"build": "tsc",
@@ -26,104 +26,108 @@
 	},
 	"exports": {
 		"./abnf": {
-			"types": "./_o/type/abnf/index.js",
+			"types": "./_o/type/abnf/index.d.ts",
 			"default": "./_o/dist/abnf/index.js"
 		},
 		"./algo": {
-			"types": "./_o/type/algo/index.js",
+			"types": "./_o/type/algo/index.d.ts",
 			"default": "./_o/dist/algo/index.js"
 		},
 		"./checksum": {
-			"types": "./_o/type/checksum/index.js",
+			"types": "./_o/type/checksum/index.d.ts",
 			"default": "./_o/dist/checksum/index.js"
 		},
 		"./codec": {
-			"types": "./_o/type/codec/index.js",
+			"types": "./_o/type/codec/index.d.ts",
 			"default": "./_o/dist/codec/index.js"
 		},
 		"./crypto": {
-			"types": "./_o/type/crypto/index.js",
+			"types": "./_o/type/crypto/index.d.ts",
 			"default": "./_o/dist/crypto/index.js"
 		},
 		"./crypto/block": {
-			"types": "./_o/type/crypto/block/index.js",
+			"types": "./_o/type/crypto/block/index.d.ts",
 			"default": "./_o/dist/crypto/block/index.js"
 		},
 		"./crypto/hash": {
-			"types": "./_o/type/crypto/hash/index.js",
+			"types": "./_o/type/crypto/hash/index.d.ts",
 			"default": "./_o/dist/crypto/hash/index.js"
 		},
 		"./crypto/kdf": {
-			"types": "./_o/type/crypto/kdf/index.js",
+			"types": "./_o/type/crypto/kdf/index.d.ts",
 			"default": "./_o/dist/crypto/kdf/index.js"
 		},
 		"./crypto/mac": {
-			"types": "./_o/type/crypto/mac/index.js",
+			"types": "./_o/type/crypto/mac/index.d.ts",
 			"default": "./_o/dist/crypto/mac/index.js"
 		},
 		"./crypto/pad": {
-			"types": "./_o/type/crypto/pad/index.js",
+			"types": "./_o/type/crypto/pad/index.d.ts",
 			"default": "./_o/dist/crypto/pad/index.js"
 		},
 		"./crypto/sym": {
-			"types": "./_o/type/crypto/sym/index.js",
+			"types": "./_o/type/crypto/sym/index.d.ts",
 			"default": "./_o/dist/crypto/sym/index.js"
 		},
 		"./crypto/xof": {
-			"types": "./_o/type/crypto/xof/index.js",
+			"types": "./_o/type/crypto/xof/index.d.ts",
 			"default": "./_o/dist/crypto/xof/index.js"
 		},
 		"./cud": {
-			"types": "./_o/type/cud/index.js",
+			"types": "./_o/type/cud/index.d.ts",
 			"default": "./_o/dist/cud/index.js"
 		},
 		"./ecc": {
-			"types": "./_o/type/ecc/index.js",
+			"types": "./_o/type/ecc/index.d.ts",
 			"default": "./_o/dist/ecc/index.js"
 		},
 		"./endian": {
-			"types": "./_o/type/endian/index.js",
+			"types": "./_o/type/endian/index.d.ts",
 			"default": "./_o/dist/endian/index.js"
 		},
 		"./log": {
-			"types": "./_o/type/log/index.js",
+			"types": "./_o/type/log/index.d.ts",
 			"default": "./_o/dist/log/index.js"
 		},
 		"./primitive": {
-			"types": "./_o/type/primitive/index.js",
+			"types": "./_o/type/primitive/index.d.ts",
 			"default": "./_o/dist/primitive/index.js"
 		},
 		"./primitive/datetime": {
-			"types": "./_o/type/primitive/datetime/index.js",
+			"types": "./_o/type/primitive/datetime/index.d.ts",
 			"default": "./_o/dist/primitive/datetime/index.js"
 		},
 		"./primitive/error": {
-			"types": "./_o/type/primitive/error/index.js",
+			"types": "./_o/type/primitive/error/index.d.ts",
 			"default": "./_o/dist/primitive/error/index.js"
 		},
 		"./primitive/net": {
-			"types": "./_o/type/primitive/net/index.js",
+			"types": "./_o/type/primitive/net/index.d.ts",
 			"default": "./_o/dist/primitive/net/index.js"
 		},
 		"./primitive/number": {
-			"types": "./_o/type/primitive/number/index.js",
+			"types": "./_o/type/primitive/number/index.d.ts",
 			"default": "./_o/dist/primitive/number/index.js"
 		},
 		"./regexp": {
-			"types": "./_o/type/regexp/index.js",
+			"types": "./_o/type/regexp/index.d.ts",
 			"default": "./_o/dist/regexp/index.js"
 		},
 		"./prng": {
-			"types": "./_o/type/prnd/index.js",
+			"types": "./_o/type/prnd/index.d.ts",
 			"default": "./_o/dist/prnd/index.js"
 		},
 		"./test": {
-			"types": "./_o/type/test/index.js",
+			"types": "./_o/type/test/index.d.ts",
 			"default": "./_o/dist/test/index.js"
 		},
 		"./tty": {
-			"types": "./_o/type/tty/index.js",
+			"types": "./_o/type/tty/index.d.ts",
 			"default": "./_o/dist/tty/index.js"
+		},
+		"./nb/*":{
+			"types": "./_o/type/*.d.ts",
+			"default": "./_o/dist/*.js"
 		}
 	},
 	"files": [
@@ -297,6 +301,7 @@
 	},
 	"publishConfig": {
 		"devDependencies": {
+			"@types/node":null,
 			"terser": null
 		},
 		"optDevDependencies": null,

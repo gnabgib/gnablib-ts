@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { DateTime } from '../primitive/DateTime.js';
+import { OldDateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { intExt } from '../primitive/IntExt.js';
 import { TableName } from './TableName.js';
@@ -12,12 +12,12 @@ import { U64 } from '../primitive/number/U64.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)
-	let s: DateTime;
+	let s: OldDateTime;
 	let ptr = pos;
 	try {
 		//Bytes->u64 will work, but DateTime may through if byte values
 		// are invalid.. leap seconds, and some other holes in the ranges
-		s = DateTime.deserialize(U64.fromBytesBE(bin, ptr));
+		s = OldDateTime.deserialize(U64.fromBytesBE(bin, ptr));
 	} catch {
 		return new FromBinResult<ACmd>(
 			0,

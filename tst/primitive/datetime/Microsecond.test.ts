@@ -10,41 +10,32 @@ tsts(`fromDate`, () => {
 	assert.is(m.valueOf(), dt.getMilliseconds() * 1000);
 });
 
-const secondsEpochSet: [number, number][] = [
+const fromUnixTimeSet: [number, number][] = [
     //2024-01-20 07:13:30
 	[1705734810, 0],
     //2024-01-20 07:13:30.534
 	[1705734810.534, 534000],
 ];
-for (const [epoch, expect] of secondsEpochSet) {
-	tsts(`fromSecondsSinceEpoch(${epoch})`, () => {
-		const e = Microsecond.fromSecondsSinceEpoch(epoch);
+for (const [epoch, expect] of fromUnixTimeSet) {
+	tsts(`fromUnixTime(${epoch})`, () => {
+		const e = Microsecond.fromUnixTime(epoch);
 		assert.is(e.valueOf(), expect);
 	});
 }
 
-const millisEpochSet: [number, number][] = [
+const fromUnixTimeMsSet: [number, number][] = [
     //2024-01-20 07:13:30.542
 	[1705734810542, 542000],
     //2024-01-20 07:13:30.542789
 	[1705734810542.789, 542789],
+	[1705734810543,543000]
 ];
-for (const [epoch, expect] of millisEpochSet) {
-	tsts(`fromMillisecondsSinceEpoch(${epoch})`, () => {
-		const e = Microsecond.fromMillisecondsSinceEpoch(epoch);
+for (const [epoch, expect] of fromUnixTimeMsSet) {
+	tsts(`fromUnixTimeMs(${epoch})`, () => {
+		const e = Microsecond.fromUnixTimeMs(epoch);
 		assert.is(e.valueOf(), expect);
 	});
 }
-
-tsts(`fromSecondsSinceEpoch`, () => {
-	const e = Microsecond.fromSecondsSinceEpoch(1705734810);
-	assert.is(e.valueOf(), 0);
-});
-
-tsts(`fromMillisecondsSinceEpoch`, () => {
-	const e = Microsecond.fromMillisecondsSinceEpoch(1705734810543);
-	assert.is(e.valueOf(), 543000);
-});
 
 tsts(`now`, () => {
 	const m = Microsecond.now();

@@ -72,15 +72,15 @@ export class Poly1305 implements IHash {
 		{
 			// h += m[i]
 			this.#a[0] +=   this.#b16[0]                                 & 0x1fff;
-    		this.#a[1] += ((this.#b16[0] >>> 13) | (this.#b16[1] <<  3)) & 0x1fff;
-    		this.#a[2] += ((this.#b16[1] >>> 10) | (this.#b16[2] <<  6)) & 0x1fff;
-    		this.#a[3] += ((this.#b16[2] >>>  7) | (this.#b16[3] <<  9)) & 0x1fff;
-    		this.#a[4] += ((this.#b16[3] >>>  4) | (this.#b16[4] << 12)) & 0x1fff;
-    		this.#a[5] +=  (this.#b16[4] >>>  1)                         & 0x1fff;
-    		this.#a[6] += ((this.#b16[4] >>> 14) | (this.#b16[5] <<  2)) & 0x1fff;
-    		this.#a[7] += ((this.#b16[5] >>> 11) | (this.#b16[6] <<  5)) & 0x1fff;
-    		this.#a[8] += ((this.#b16[6] >>>  8) | (this.#b16[7] <<  8)) & 0x1fff;
-    		this.#a[9] +=  (this.#b16[7] >>>  5)                         | highBit;
+			this.#a[1] += ((this.#b16[0] >>> 13) | (this.#b16[1] <<  3)) & 0x1fff;
+			this.#a[2] += ((this.#b16[1] >>> 10) | (this.#b16[2] <<  6)) & 0x1fff;
+			this.#a[3] += ((this.#b16[2] >>>  7) | (this.#b16[3] <<  9)) & 0x1fff;
+			this.#a[4] += ((this.#b16[3] >>>  4) | (this.#b16[4] << 12)) & 0x1fff;
+			this.#a[5] +=  (this.#b16[4] >>>  1)                         & 0x1fff;
+			this.#a[6] += ((this.#b16[4] >>> 14) | (this.#b16[5] <<  2)) & 0x1fff;
+			this.#a[7] += ((this.#b16[5] >>> 11) | (this.#b16[6] <<  5)) & 0x1fff;
+			this.#a[8] += ((this.#b16[6] >>>  8) | (this.#b16[7] <<  8)) & 0x1fff;
+			this.#a[9] +=  (this.#b16[7] >>>  5)                         | highBit;
 		}
 
 		// h *= r, (partial) h %= p

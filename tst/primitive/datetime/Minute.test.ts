@@ -11,12 +11,12 @@ tsts(`fromDate`, () => {
 });
 
 tsts(`fromSecondsSinceEpoch`,()=>{
-    const m = Minute.fromSecondsSinceEpoch(1705734810);
+    const m = Minute.fromUnixTime(1705734810);
     assert.is(m.valueOf(),13);
 });
 
 tsts(`fromMillisecondsSinceEpoch`,()=>{
-    const m = Minute.fromMillisecondsSinceEpoch(1705734810543);
+    const m = Minute.fromUnixTimeMs(1705734810543);
     assert.is(m.valueOf(),13);
 });
 
@@ -42,8 +42,6 @@ tsts(`nowUtc`, () => {
 const parseSet: [string, number][] = [
     ['01', 1],
 	['13', 13],
-	//Note: This could fail at the end of the year :|
-	['now', new Date().getMinutes()],
 ];
 for (const [str, expect] of parseSet) {
 	tsts(`parse(${str})`, () => {

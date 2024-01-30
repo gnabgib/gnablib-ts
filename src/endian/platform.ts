@@ -15,7 +15,7 @@ const bit8 = 0b10000000;
 
 /**
  * Whether the runtime platform is little endian (`true`) or not.
- * 
+ *
  * Most platforms **are** *little endian*
  */
 export const isLE = (() => {
@@ -127,7 +127,7 @@ const leave = {
 /** n must be <=4294967295, returns updated pos  */
 function p32Bytes(n: number, pos: number, u: Uint8Array): number {
 	// deepcode ignore BitwiseOperationSignChecked: this is fine we already know the number is positive and U32 max
- 	while (n > 0) {
+	while (n > 0) {
 		u[pos++] = n;
 		n >>>= 8;
 	}
@@ -227,13 +227,13 @@ const beSpec = {
 	},
 };
 
-/** 
+/**
  * # [Little Endian](https://en.wikipedia.org/wiki/Endianness)
- * 
+ *
  * In little-endian (LE), the least-significant byte is stored at the smallest address.
  * LE is the dominant ordering for modern processor architectures (x86, most ARM, RISC-V).
  * @namespace
- * 
+ *
  * @example
  * The number twelve is written `21` in LE, `2*1 + 1*10`
  */
@@ -309,7 +309,7 @@ export let asLE: {
 	 */
 	minBytes(b: Uint8Array): Uint8Array;
 	/**
-	 * Present `$n` in as few bytes as possible, no trailing 
+	 * Present `$n` in as few bytes as possible, no trailing
 	 * `0x00` bytes.
 	 *
 	 * NOTE: `0` generates a one byte result
@@ -319,26 +319,26 @@ export let asLE: {
 	 */
 	uintMinBytes(n: number): Uint8Array;
 	/**
-	 * Present `$n` in as few bytes as possible, as few trailing 
+	 * Present `$n` in as few bytes as possible, as few trailing
 	 * `0x00` or `0xFF` bytes as possible.
-	 * 
+	 *
 	 * NOTE: `0` generates a one byte result
-	 * 
+	 *
 	 * @param n Integer [-9007199254740991 - 9007199254740991]
 	 * @returns `$n` in minimal form, 1-7 bytes long
 	 */
 	intMinBytes(n: number): Uint8Array;
 };
 
-/** 
+/**
  * # [Big Endian](https://en.wikipedia.org/wiki/Endianness)
- * 
- * In big-endian (BE), the most significant byte is stored at the smallest memory address. 
- * Big-endian is thus closer to the way the digits of numbers are written left-to-right in 
+ *
+ * In big-endian (BE), the most significant byte is stored at the smallest memory address.
+ * Big-endian is thus closer to the way the digits of numbers are written left-to-right in
  * English, comparing digits to bytes.
  * @namespace
- * 
- * @example 
+ *
+ * @example
  * The number twelve is written `12` in BE, `1*10 + 2*1`
  */
 export let asBE: {
@@ -413,7 +413,7 @@ export let asBE: {
 	 */
 	minBytes(b: Uint8Array): Uint8Array;
 	/**
-	 * Present `$n` in as few bytes as possible, no leading 
+	 * Present `$n` in as few bytes as possible, no leading
 	 * `0x00` bytes.
 	 *
 	 * NOTE: `0` generates a one byte result
@@ -423,17 +423,17 @@ export let asBE: {
 	 */
 	uintMinBytes(n: number): Uint8Array;
 	/**
-	 * Present `$n` in as few bytes as possible, as few leading 
+	 * Present `$n` in as few bytes as possible, as few leading
 	 * `0x00` or `0xFF` bytes as possible. (Preserving a leading `1`
 	 * bit when negative, and `0` bit when positive)
-	 * 
+	 *
 	 * NOTE: `0` generates a one byte result
-	 * 
+	 *
 	 * @param n Integer [-9007199254740991 - 9007199254740991]
 	 * @returns `$n` in minimal form, 1-7 bytes long
 	 */
 	intMinBytes(n: number): Uint8Array;
-};;
+};
 
 if (isLE) {
 	asLE = { ...leave, ...leSpec } as const;

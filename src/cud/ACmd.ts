@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import type { DateTime } from '../primitive/DateTime.js';
+import type { OldDateTime } from '../primitive/DateTime.js';
 import { intExt } from '../primitive/IntExt.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
@@ -10,7 +10,7 @@ import type { Plane } from './types/Plane.js';
  * @alpha
  */
 export abstract class ACmd {
-	readonly started: DateTime;
+	readonly started: OldDateTime;
 	readonly plane: Plane;
 	readonly cmd: Command;
 	readonly userId: number;
@@ -18,7 +18,7 @@ export abstract class ACmd {
 
 	constructor(
 		userId: number,
-		started: DateTime,
+		started: OldDateTime,
 		table: TableName,
 		plane: Plane,
 		cmd: Command

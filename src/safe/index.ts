@@ -18,7 +18,7 @@ import { InclusiveRangeError } from '../primitive/error/InclusiveRangeError.js';
 import { LengthError } from '../primitive/error/LengthError.js';
 import { ILengther } from '../primitive/interfaces/ILengther.js';
 
-function noTest(test: unknown) {}
+function noTest() {}
 
 /** Integer safety checks */
 export interface ISafeInt {

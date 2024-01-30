@@ -36,7 +36,7 @@ import { Int64 } from '../../primitive/Int64.js';
 import { Uint64 } from '../../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../ieee754-fpb.js';
 import { utf8 } from '../Utf8.js';
-import { DateTime } from '../../primitive/DateTime.js';
+import { OldDateTime } from '../../primitive/DateTime.js';
 import { BinResult, FromBinResult } from '../../primitive/FromBinResult.js';
 import type {
 	/*ReadonlyBigInt64Array,*/ ReadonlyInt16Array,
@@ -635,7 +635,7 @@ export function encode(value: unknown): Uint8Array {
 	if (value instanceof Int64) {
 		return encodeInt(value);
 	}
-	if (value instanceof DateTime) {
+	if (value instanceof OldDateTime) {
 		const d = value.toBin();
 		const ret = new Uint8Array(d.length + 1);
 		ret[0] = Type.DateTime;
@@ -690,7 +690,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 	const type = bin[ptr++];
 	let len: number | string;
 	let need: string | undefined;
-	let dFrom: FromBinResult<DateTime>;
+	let dFrom: FromBinResult<OldDateTime>;
 	switch (type) {
 		// UInt_Var, //1-8B 0 - 72057594037927935 (2^56 - 1) 72 peta
 		// UInt_1, //1B 0 - 255 (2^8 - 1) aka Byte
@@ -742,7 +742,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			return new BinResult(1, false);
 		case Type.DateTime:
 			if (pos + 8 > bin.length) return 'decode missing data';
-			dFrom = DateTime.fromBin(bin, pos);
+			dFrom = OldDateTime.fromBin(bin, pos);
 			if (!dFrom.success) return 'decode failed DateTime ' + dFrom.reason;
 			return new BinResult(1 + 8, dFrom.value);
 		case Type.Utf8_0:

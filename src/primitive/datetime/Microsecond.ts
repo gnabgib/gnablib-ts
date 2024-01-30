@@ -15,7 +15,7 @@ export class Microsecond extends Micro {
 	}
 
 	/** Create a microsecond from float seconds since UNIX epoch */
-	public static fromSecondsSinceEpoch(
+	public static fromUnixTime(
 		source: number,
 		storage?: Uint8Array
 	): Microsecond {
@@ -25,7 +25,7 @@ export class Microsecond extends Micro {
 	}
 
 	/** Create a microsecond from milliseconds since UNIX epoch */
-	public static fromMillisecondsSinceEpoch(
+	public static fromUnixTimeMs(
 		source: number,
 		storage?: Uint8Array
 	): Microsecond {
@@ -38,7 +38,7 @@ export class Microsecond extends Micro {
 	/** Create this microsecond (local) */
 	public static now(storage?: Uint8Array): Microsecond {
 		const now = performance.timeOrigin + performance.now();
-		return self.fromMillisecondsSinceEpoch(now, storage);
+		return self.fromUnixTimeMs(now, storage);
 	}
 
 	//nowUtc makes no sense: there's no TZ that's off by microseconds

@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { DateTime } from '../primitive/DateTime.js';
+import { OldDateTime } from '../primitive/DateTime.js';
 import { intExt } from '../primitive/IntExt.js';
 import { utf8 } from '../codec/Utf8.js';
 import { fpb64 } from '../codec/ieee754-fpb.js';
@@ -39,7 +39,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 	} else if (value === undefined || value === null) {
 		ret = new Uint8Array(1);
 		//ret[0]=0;
-	} else if (value instanceof DateTime) {
+	} else if (value instanceof OldDateTime) {
 		const d = value.serialize().toBytesBE();
 		ret = new Uint8Array(1 + d.length);
 		ret[0] = d.length;

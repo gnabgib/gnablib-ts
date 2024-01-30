@@ -19,7 +19,7 @@ export class Minute extends Sexagesimal {
 	}
 
 	/** Create a minute from seconds since UNIX epoch */
-	public static fromSecondsSinceEpoch(
+	public static fromUnixTime(
 		source: number,
 		storage?: Uint8Array
 	): Minute {
@@ -29,7 +29,7 @@ export class Minute extends Sexagesimal {
 	}
 
 	/** Create a minute from milliseconds since UNIX epoch */
-	public static fromMillisecondsSinceEpoch(
+	public static fromUnixTimeMs(
 		source: number,
 		storage?: Uint8Array
 	): Minute {

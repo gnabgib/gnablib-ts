@@ -10,13 +10,13 @@ tsts(`fromDate`, () => {
 	assert.is(m.valueOf(), dt.getSeconds());
 });
 
-tsts(`fromSecondsSinceEpoch`, () => {
-	const m = Second.fromSecondsSinceEpoch(1705734810);
+tsts(`fromUnixTime`, () => {
+	const m = Second.fromUnixTime(1705734810);
 	assert.is(m.valueOf(), 30);
 });
 
-tsts(`fromMillisecondsSinceEpoch`, () => {
-	const m = Second.fromMillisecondsSinceEpoch(1705734810543);
+tsts(`fromUnixTimeMs`, () => {
+	const m = Second.fromUnixTimeMs(1705734810543);
 	assert.is(m.valueOf(), 30);
 });
 

@@ -84,6 +84,32 @@ tsts(`fromDate`,()=>{
     assert.is(d.valueOf(),20010203);
 });
 
+const fromUnixTimeSet: [number, string][] = [
+    //2024-01-20 07:13:30
+	[1705734810, '2024-01-20'],
+    //2024-01-20 07:13:30.534
+	[1705734810.534, '2024-01-20'],
+];
+for (const [epoch, expect] of fromUnixTimeSet) {
+	tsts(`fromUnixTime(${epoch})`, () => {
+		const e = DateOnly.fromUnixTime(epoch);
+		assert.is(e.toString(), expect);
+	});
+}
+
+const fromUnixTimeMsSet: [number, string][] = [
+    //2024-01-20 07:13:30.542
+	[1705734810542, '2024-01-20'],
+    //2024-01-20 07:13:30.542789
+	[1705734810542.789, '2024-01-20'],
+];
+for (const [epoch, expect] of fromUnixTimeMsSet) {
+	tsts(`fromUnixTimeMs(${epoch})`, () => {
+		const e = DateOnly.fromUnixTimeMs(epoch);
+		assert.is(e.toString(), expect);
+	});
+}
+
 tsts(`now`,()=>{
     const dt=new Date();
     const d=DateOnly.now();

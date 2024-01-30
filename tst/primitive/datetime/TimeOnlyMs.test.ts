@@ -86,28 +86,28 @@ tsts(`fromDate`,()=>{
     assert.is(t.isUtc.valueBool(),false,'isUtc');
 });
 
-const secondsEpochSet: [number, string][] = [
+const fromUnixTimeSet: [number, string][] = [
     //2024-01-20 07:13:30
 	[1705734810, '07:13:30.000'],
     //2024-01-20 07:13:30.534
 	[1705734810.534, '07:13:30.534'],
 ];
-for (const [epoch, expect] of secondsEpochSet) {
-	tsts(`fromSecondsSinceEpoch(${epoch})`, () => {
-		const e = TimeOnlyMs.fromSecondsSinceEpoch(epoch);
+for (const [epoch, expect] of fromUnixTimeSet) {
+	tsts(`fromUnixTime(${epoch})`, () => {
+		const e = TimeOnlyMs.fromUnixTime(epoch);
 		assert.is(e.toString(), expect);
 	});
 }
 
-const millisEpochSet: [number, string][] = [
+const fromUnixTimeMsSet: [number, string][] = [
     //2024-01-20 07:13:30.542
 	[1705734810542, '07:13:30.542'],
     //2024-01-20 07:13:30.542789
 	[1705734810542.789, '07:13:30.542'],
 ];
-for (const [epoch, expect] of millisEpochSet) {
-	tsts(`fromMillisecondsSinceEpoch(${epoch})`, () => {
-		const e = TimeOnlyMs.fromMillisecondsSinceEpoch(epoch);
+for (const [epoch, expect] of fromUnixTimeMsSet) {
+	tsts(`fromUnixTimeMs(${epoch})`, () => {
+		const e = TimeOnlyMs.fromUnixTimeMs(epoch);
 		assert.is(e.toString(), expect);
 	});
 }

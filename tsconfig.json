@@ -104,7 +104,7 @@
   "exclude": ["./node_modules"],
   "typedocOptions":{
     "out":"_o/doc",
-    "entryPoints":"./src/*",
+    "entryPoints":["./src/*"],
     "entryPointStrategy":"resolve",
     "titleLink":"https://www.gnabgib.com/lib-ts/",
     "hideGenerator":true,
@@ -121,7 +121,6 @@
       "protected": false,
       "@alpha":false
     },
-    "coverageLabel":"doc-cover",
     "navigationLinks": {
       "NPM": "https://www.npmjs.com/package/gnablib"
     }

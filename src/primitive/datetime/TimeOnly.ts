@@ -155,32 +155,45 @@ export class TimeOnly {
 		return new TimeOnly(h, m, s, us, utc);
 	}
 
-	/** Create a time from float seconds since UNIX epoch */
-	public static fromSecondsSinceEpoch(
+	/** Create a time from float seconds since UNIX epoch aka unix time */
+	public static fromUnixTime(
 		source: number,
 		isUtc = false,
 		storage?: Uint8Array
 	): TimeOnly {
 		const stor = self.setupStor(storage);
-		const h = Hour.fromSecondsSinceEpoch(source, stor);
-		const m = Minute.fromSecondsSinceEpoch(source, stor.subarray(1, 2));
-		const s = Second.fromSecondsSinceEpoch(source, stor.subarray(2, 3));
-		const us = Microsecond.fromSecondsSinceEpoch(source, stor.subarray(3));
+		//Correct into local time if !isUtc
+		if (!isUtc) {
+			const n=new Date();
+			source -= n.getTimezoneOffset()*60;
+		}
+		const h = Hour.fromUnixTime(source, stor);
+		const m = Minute.fromUnixTime(source, stor.subarray(1, 2));
+		const s = Second.fromUnixTime(source, stor.subarray(2, 3));
+		const us = Microsecond.fromUnixTime(source, stor.subarray(3));
 		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
 		return new TimeOnly(h, m, s, us, utc);
 	}
 
-	/** Create a time from float milliseconds since UNIX epoch */
-	public static fromMillisecondsSinceEpoch(
+	/** Create a time from float milliseconds since UNIX epoch aka unixtime
+	 * 
+	 * **Note** also the numeric content of the js `Date` object
+	 */
+	public static fromUnixTimeMs(
 		source: number,
 		isUtc = false,
 		storage?: Uint8Array
 	): TimeOnly {
 		const stor = self.setupStor(storage);
-		const h = Hour.fromMillisecondsSinceEpoch(source, stor);
-		const m = Minute.fromMillisecondsSinceEpoch(source, stor.subarray(1, 2));
-		const s = Second.fromMillisecondsSinceEpoch(source, stor.subarray(2, 3));
-		const us = Microsecond.fromMillisecondsSinceEpoch(source, stor.subarray(3));
+		//Correct into local time if !isUtc
+		if (!isUtc) {
+			const n=new Date();
+			source -= n.getTimezoneOffset()*60*1000;
+		}
+		const h = Hour.fromUnixTimeMs(source, stor);
+		const m = Minute.fromUnixTimeMs(source, stor.subarray(1, 2));
+		const s = Second.fromUnixTimeMs(source, stor.subarray(2, 3));
+		const us = Microsecond.fromUnixTimeMs(source, stor.subarray(3));
 		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
 		return new TimeOnly(h, m, s, us, utc);
 	}
@@ -189,11 +202,8 @@ export class TimeOnly {
 	public static now(storage?: Uint8Array): TimeOnly {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		let now = performance.timeOrigin + performance.now();
-		const dt = new Date(now);
-		//performance.now is in UTC, to make it local we need to read local offset
-		now -= dt.getTimezoneOffset() * 60 * 1000;
-		return self.fromMillisecondsSinceEpoch(now, false, storage);
+		const now = performance.timeOrigin + performance.now();
+		return self.fromUnixTimeMs(now, false, storage);
 	}
 
 	/** Create time from this point in UTC time */
@@ -201,7 +211,7 @@ export class TimeOnly {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const now = performance.timeOrigin + performance.now();
-		return self.fromMillisecondsSinceEpoch(now, true, storage);
+		return self.fromUnixTimeMs(now, true, storage);
 	}
 
 	/**

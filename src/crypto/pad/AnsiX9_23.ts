@@ -2,7 +2,6 @@
 
 import { getRandomValues } from 'crypto';
 import { ContentError } from '../../primitive/error/ContentError.js';
-import { somewhatSafe } from '../../safe/index.js';
 import { LengthError } from '../../primitive/error/LengthError.js';
 
 /**

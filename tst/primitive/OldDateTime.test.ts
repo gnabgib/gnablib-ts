@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { DateTime } from '../../src/primitive';
+import { OldDateTime } from '../../src/primitive';
 import { U64 } from '../../src/primitive/number';
 import { hex } from '../../src/codec';
 
@@ -37,7 +37,7 @@ const creates=[
 
 for (const create of creates) {
 	tsts('Create:' + create.str, () => {
-		const dt = new DateTime(
+		const dt = new OldDateTime(
 			create.y,
 			create.m,
 			create.d,
@@ -61,7 +61,7 @@ for (const create of creates) {
 	tsts('Ser/deser:' + create.str, () => {
 		const b = hex.toBytes(create.ser);
 		const ser = U64.fromBytesBE(b);
-		const dt = new DateTime(
+		const dt = new OldDateTime(
 			create.y,
 			create.m,
 			create.d,
@@ -71,7 +71,7 @@ for (const create of creates) {
 			create.u
 		);
 		assert.equal(dt.serialize(), ser,'ser');
-		const dt2 = DateTime.deserialize(ser);
+		const dt2 = OldDateTime.deserialize(ser);
 
 		// console.log(dt);
 		// console.log(dt2);
@@ -81,14 +81,14 @@ for (const create of creates) {
 }
 
 tsts('now', () => {
-	const now = DateTime.now();
+	const now = OldDateTime.now();
 	//Bit hard to write a test for this
 	assert.equal(now.toString().length > 0, true);
 	//console.log(now.toString());
 });
 
 tsts('Create from epochMillis /w Fraction', () => {
-	const dt = DateTime.fromEpochMilliseconds(1656972775676.071);
+	const dt = OldDateTime.fromEpochMilliseconds(1656972775676.071);
 	assert.equal(dt.toString(), '2022-07-04T22:12:55.676071Z');
 	assert.equal(2022, dt.year);
 	assert.equal(7, dt.month);
@@ -100,7 +100,7 @@ tsts('Create from epochMillis /w Fraction', () => {
 });
 
 tsts('Create from whole epochMillis', () => {
-	const dt = DateTime.fromEpochMilliseconds(1656972775676);
+	const dt = OldDateTime.fromEpochMilliseconds(1656972775676);
 	assert.equal(dt.toString(), '2022-07-04T22:12:55.676000Z');
 	assert.equal(2022, dt.year);
 	assert.equal(7, dt.month);

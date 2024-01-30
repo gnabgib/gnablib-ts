@@ -57,7 +57,8 @@ export class UtcOrNot extends Bool {
 	): UtcOrNot {
 		const stor = self.setupStor(storage);
 		const mask = 1 << pos;
-		self.writeValue(stor, source.readNumber(self.serialBits) === 1, mask);
+		const deser=source.readNumber(self.serialBits);
+		self.writeValue(stor, deser === 1, mask);
 		return new UtcOrNot(stor, mask, pos);
 	}
 }

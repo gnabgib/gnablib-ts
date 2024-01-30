@@ -79,7 +79,7 @@ export class Hour implements ISerializer {
 	}
 
 	/** Create an hour from seconds since UNIX epoch */
-	public static fromSecondsSinceEpoch(
+	public static fromUnixTime(
 		source: number,
 		storage?: Uint8Array
 	): Hour {
@@ -89,7 +89,7 @@ export class Hour implements ISerializer {
 	}
 
 	/** Create an hour from milliseconds since UNIX epoch */
-	public static fromMillisecondsSinceEpoch(
+	public static fromUnixTimeMs(
 		source: number,
 		storage?: Uint8Array
 	): Hour {

@@ -50,7 +50,6 @@ export class UInt {
 		if (this.size < b.size) {
 			throw new NotEnoughSpaceError('size', b.size, this.size);
 		}
-		let i = 0;
 		for (let i = 0; i < b.size; i++) {
 			this.arr[this.pos + i] = b.arr[b.pos + i];
 		}
@@ -69,7 +68,7 @@ export class UInt {
 	}
 	protected _andEq(b: UInt): void {
 		//and 0 sets to zero, so we have to be careful of size-mismatch
-		let n = this.size;
+		const n = this.size;
 		let i = 0;
 		if (b.size < n) {
 			for (; i < b.size; i++) this.arr[this.pos + i] &= b.arr[b.pos + i];
@@ -88,7 +87,7 @@ export class UInt {
 		let n = this.size;
 		if (b.size < n) n = b.size;
 		for (let i = 0; i < n; i++) {
-			let add = this.arr[this.pos + i] + b.arr[b.pos + i] + carry;
+			const add = this.arr[this.pos + i] + b.arr[b.pos + i] + carry;
 			//Carry can only be 0/1
 			carry = add > maxU32 ? 1 : 0;
 			//Add will get truncated to 32 bits
