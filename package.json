@@ -284,7 +284,7 @@
 	},
 	"homepage": "https://github.com/gnabgib/gnablib-ts#readme",
 	"devDependencies": {
-		"@types/node": "^20.11.5",
+		"@types/node": "^20.11.10",
 		"terser": "^5.27.0",
 		"tsm": "^2.3.0",
 		"typescript": "^5.3.3",
