@@ -52,7 +52,7 @@ export {
 } from './DenselyPackedDecimal.js';
 export { hex } from './Hex.js';
 export { fpb16, fpb32, fpb64 } from './ieee754-fpb.js';
-export { proquint } from './Proquint.js';
+export * as proquint from './proquint.js';
 export { quotedPrintable } from './QuotedPrintable.js';
 export { shift as rot13 } from './Rot13.js';
 export { shift as rot13_5 } from './Rot13_5.js';

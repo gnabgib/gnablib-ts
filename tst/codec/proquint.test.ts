@@ -22,14 +22,14 @@ const ipSet = [
 ];
 //https://arxiv.org/html/0901.4016
 
-for (const pair of ipSet) {
-	const i = IpV4.fromString(pair[0]);
-	tsts('Encode quad:' + pair[0], () => {
-		assert.is(proquint.fromBytes(i.bytes), pair[1]);
+for (const [ip,pq] of ipSet) {
+	const i = IpV4.fromString(ip);
+	tsts('Encode quad:' + ip, () => {
+		assert.is(proquint.fromBytes(i.bytes), pq);
 	});
 
-	tsts('Decode quad:' + pair[0], () => {
-		assert.is(new IpV4(proquint.toBytes(pair[1])).toString(), pair[0]);
+	tsts(`toBytes(${pq})`, () => {
+		assert.is(new IpV4(proquint.toBytes(pq)).toString(), ip);
 	});
 }
 
@@ -85,5 +85,16 @@ for (const pair of numSet) {
 	});
 }
 
-//todo:undo
+const badSizeSet:string[]=[
+	'baba',
+	'bab',
+	'ba',
+	'b'
+];
+for(const test of badSizeSet) {
+	tsts(`decode(${test}) throws`,()=>{
+		assert.throws(()=>proquint.toBytes(test));
+	});
+}
+
 tsts.run();
