@@ -17,12 +17,12 @@ import {
 	TableName,
 	cmdFromBin,
 } from '../../src/cud';
-import { DateTime } from '../../src/primitive';
+import { OldDateTime } from '../../src/primitive';
 import { Ref2 } from '../../src/cud/types';
 
 const tsts = suite('Cud');
 
-const when = DateTime.fromBin(hex.toBytes('04B3B5AEEAA7987D')).value;
+const when = OldDateTime.fromBin(hex.toBytes('04B3B5AEEAA7987D')).value;
 
 const r = new Ref2(TableName.fromStr('people'), ColName.fromStr('ssn'));
 console.log(hex.fromBytes(r.toBin()));
