@@ -1,8 +1,8 @@
 {
     "src":["src"],
     "all":true,
-    "include":["src/**"],
-    "exclude":["interfaces/I*.ts"],
+    "include":["src/**/*.ts"],
+    "exclude":["src/**/interfaces/I*.ts"],
     "report-dir":"./_o/cover",
     "skip-full":true
 }

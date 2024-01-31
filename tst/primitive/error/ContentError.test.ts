@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { ContentError } from '../../../src/primitive/error/ContentError';
+import util from 'util';
 
 const tsts = suite('ContentError');
 //While these are rigid we need to make sure the error message is reasonable
@@ -56,4 +57,16 @@ for (const [reason, key, value, expect] of arg3Set) {
 		assert.is(c.value, value, 'value');
 	});
 }
+
+tsts('name', () => {
+    const o=new ContentError("You stink Strawberry!");
+	assert.is(o.name, 'ContentError');
+});
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=new ContentError("You stink Strawberry!");
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('ContentError') > 0, true);
+});
+
 tsts.run();

@@ -44,6 +44,8 @@ import type {
 	ReadonlyInt8Array,
 } from '../../primitive/ReadonlyTypedArray.js';
 import { safety } from '../../primitive/Safety.js';
+import { DateTime } from '../../primitive/datetime/DateTime.js';
+import { BitWriter } from '../../primitive/BitWriter.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -641,6 +643,12 @@ export function encode(value: unknown): Uint8Array {
 		ret[0] = Type.DateTime;
 		ret.set(d, 1);
 		return ret;
+	}
+	if (value instanceof DateTime) {
+		const br=new BitWriter(9);
+		br.writeNumber(Type.DateTime,8);
+		value.serialize(br);
+		return br.getBytes();
 	}
 	if (value instanceof Uint8Array) {
 		return encodeBin(value);

@@ -4,10 +4,10 @@ import { DateTime } from '../../../src/primitive/datetime/DateTime';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('DateTime');
 
-const stor = new Uint8Array(DateTime.storageBytes);
 const emptyBytes = new Uint8Array(0);
 
 interface dtParts {
@@ -185,5 +185,23 @@ tsts(`nowUtc`,()=>{
     assert.is(usNum >= 0 && usNum <= 999999, true, 'In valid range');
     assert.is(d.isUtc.valueBool(),true);
 });
+
+tsts('[Symbol.toStringTag]', () => {
+    const dt=DateTime.now();
+	const str = Object.prototype.toString.call(dt);
+	assert.is(str.indexOf('DateTime') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const dt=DateTime.now();
+    const u=util.inspect(dt);
+    assert.is(u.startsWith('DateTime('),true);
+});
+
+// tsts('general',()=>{
+//     const dt=DateTime.now();
+//     console.log(dt);
+//     console.log(Object.prototype.toString.call(dt));
+// });
 
 tsts.run();

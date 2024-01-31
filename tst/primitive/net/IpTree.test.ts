@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Cidr, ICidrValue, IpTree, IpV4 } from '../../../src/primitive/net';
+import util from 'util';
 
 const tsts = suite('IpTree');
 
@@ -122,5 +123,28 @@ tsts('merge, ip+range+cidr', () => {
 		{ cidr: Cidr.fromString('192.168.1.0/24'), value: {} },
 	]);
 });
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=new IpTree();
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('IpTree') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=new IpTree();
+    const u=util.inspect(o);
+    assert.is(u.startsWith('IpTree('),true);
+});
+
+// tsts(`emptyTree`,()=>{
+// 	const o=new IpTree();
+// 	assert.is(o.value,undefined);
+// });
+
+// tsts('general',()=>{
+//     const o=new IpTree();
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 tsts.run();

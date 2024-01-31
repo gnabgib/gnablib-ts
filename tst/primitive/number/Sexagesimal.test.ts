@@ -4,6 +4,7 @@ import { Sexagesimal } from '../../../src/primitive/number/Sexagesimal';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Sexagesimal');
 
@@ -148,5 +149,23 @@ for (const unk of badParse) {
         assert.throws(()=>Sexagesimal.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Sexagesimal.new(13);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('Sexagesimal') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Sexagesimal.new(13);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('Sexagesimal('),true);
+});
+
+// tsts('general',()=>{
+//     const o=Sexagesimal.new(13);
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 tsts.run();

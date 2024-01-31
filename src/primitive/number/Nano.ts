@@ -6,6 +6,9 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'Nano';
+
 /** Nano/Billionths (0-999999999 range) */
 export class Nano implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -33,6 +36,16 @@ export class Nano implements ISerializer {
 		return (
 			(this.#v[0] << 24) | (this.#v[1] << 16) | (this.#v[2] << 8) | this.#v[3]
 		);
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** Serialize into target  - 30 bits*/

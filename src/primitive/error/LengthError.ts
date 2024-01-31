@@ -1,5 +1,7 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+const DBG_RPT = 'LengthError';
+
 export class LengthError extends RangeError {
 	readonly available: number;
 	readonly key: string;
@@ -48,8 +50,13 @@ export class LengthError extends RangeError {
 		return new this(need[need.length - 1], name, value, pre);
 	}
 
-	/** @returns "LengthError" */
+	/** @hidden */
 	get name(): string {
-		return 'LengthError';
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
 	}
 }

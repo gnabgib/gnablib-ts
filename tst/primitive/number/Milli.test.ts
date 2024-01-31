@@ -4,6 +4,7 @@ import { Milli } from '../../../src/primitive/number/Milli';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Milli');
 
@@ -141,6 +142,24 @@ for (const unk of badParse) {
         assert.throws(()=>Milli.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Milli.new(13);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('Milli') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Milli.new(13);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('Milli('),true);
+});
+
+// tsts('general',()=>{
+//     const o=Micro.new(13);
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 
 tsts.run();

@@ -72,6 +72,17 @@ for (const [needs, name, available, expect] of oneOfSet) {
 	});
 }
 
+tsts('name', () => {
+    const o=new LengthError(3,1);
+	assert.is(o.name, 'LengthError');
+});
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=new LengthError(3,1);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('LengthError') > 0, true);
+});
+
 // const arg3Set: [string, string, unknown, string][] = [
 // 	[
 // 		'$${reason}',

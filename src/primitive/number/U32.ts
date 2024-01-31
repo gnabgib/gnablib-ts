@@ -4,6 +4,10 @@ import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
 import { safety } from '../Safety.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT_U32 = 'U32';
+const DBG_RPT_U32Mut = 'U32Mut';
+const DBG_RPT_U32MutArray = 'U32MutArray';
 const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
 const sizeBytes = 4;
@@ -174,7 +178,7 @@ export class U32 {
 	 * @returns
 	 */
 	toString(): string {
-		return 'u32{' + hex.fromI32(this.arr[this.pos]) + '}';
+		return hex.fromI32(this.arr[this.pos]);
 	}
 
 	/**
@@ -210,6 +214,16 @@ export class U32 {
 		return (this.arr[this.pos] >>> idx) & 0xff;
 	}
 
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT_U32;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT_U32}(${this.toString()})`;
+	}
+
 	/**
 	 * Build a Uint32 from an integer - there's no range check (JS default) so:
 	 * - Oversized numbers will be truncated
@@ -243,7 +257,7 @@ export class U32 {
 		return new U32(source, pos);
 	}
 
-    /**
+	/**
 	 * Create a view into an `ArrayBuffer`.  Note this relies on platform endian (likely little endian)
 	 * **NOTE** Memory is shared (like @see fromArray)
 	 * **NOTE** Subject to the same JS limitation that `bytePos` must be a multiple of element-size (4)
@@ -251,9 +265,9 @@ export class U32 {
 	 * @param bytePos
 	 * @returns
 	 */
-    static fromBuffer(src: ArrayBuffer, bytePos = 0): U32 {
-        return new U32(new Uint32Array(src, bytePos, 1));
-    }
+	static fromBuffer(src: ArrayBuffer, bytePos = 0): U32 {
+		return new U32(new Uint32Array(src, bytePos, 1));
+	}
 
 	/**
 	 * A new Uint32 with value 4294967295 (the maximum uint32)
@@ -346,10 +360,10 @@ export class U32 {
 	 * Compare two numbers for equality in constant time
 	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
 	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @returns 
+	 * @returns
 	 */
-	static ctEq(a32:number,b32:number):boolean {
-		return (a32^b32)===0;
+	static ctEq(a32: number, b32: number): boolean {
+		return (a32 ^ b32) === 0;
 	}
 
 	/**
@@ -357,18 +371,12 @@ export class U32 {
 	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
 	 * @param a32 uint32, if larger than 32 bits it'll be truncated
 	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns 
+	 * @returns
 	 */
-	static ctLte(a32:number,b32:number):boolean {
-		const l = (
-			(a32 & maxU16) - 
-			(b32 & maxU16) - 
-			1) >>> 31;
-		const h = (
-			((a32 >>> 16) & maxU16) -
-			((b32 >>> 16) & maxU16) -
-			1) >>> 31;		
-		return (l&h)===1;
+	static ctLte(a32: number, b32: number): boolean {
+		const l = ((a32 & maxU16) - (b32 & maxU16) - 1) >>> 31;
+		const h = (((a32 >>> 16) & maxU16) - ((b32 >>> 16) & maxU16) - 1) >>> 31;
+		return (l & h) === 1;
 	}
 
 	/**
@@ -376,18 +384,12 @@ export class U32 {
 	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
 	 * @param a32 uint32, if larger than 32 bits it'll be truncated
 	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns 
+	 * @returns
 	 */
-	static ctGte(a32:number,b32:number):boolean {
-		const l = (
-			(b32 & maxU16) - 
-			(a32 & maxU16) - 
-			1) >>> 31;
-		const h = (
-			((b32 >>> 16) & maxU16) -
-			((a32 >>> 16) & maxU16) -
-			1) >>> 31;		
-		return (l&h)===1;
+	static ctGte(a32: number, b32: number): boolean {
+		const l = ((b32 & maxU16) - (a32 & maxU16) - 1) >>> 31;
+		const h = (((b32 >>> 16) & maxU16) - ((a32 >>> 16) & maxU16) - 1) >>> 31;
+		return (l & h) === 1;
 	}
 
 	/**
@@ -395,18 +397,12 @@ export class U32 {
 	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
 	 * @param a32 uint32, if larger than 32 bits it'll be truncated
 	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns 
+	 * @returns
 	 */
-	static ctGt(a32:number,b32:number):boolean {
-		const l = (
-			(a32 & maxU16) - 
-			(b32 & maxU16) - 
-			1) >>> 31;
-		const h = (
-			((a32 >>> 16) & maxU16) -
-			((b32 >>> 16) & maxU16) -
-			1) >>> 31;		
-		return (l&h)===0;
+	static ctGt(a32: number, b32: number): boolean {
+		const l = ((a32 & maxU16) - (b32 & maxU16) - 1) >>> 31;
+		const h = (((a32 >>> 16) & maxU16) - ((b32 >>> 16) & maxU16) - 1) >>> 31;
+		return (l & h) === 0;
 	}
 
 	/**
@@ -414,18 +410,12 @@ export class U32 {
 	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
 	 * @param a32 uint32, if larger than 32 bits it'll be truncated
 	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns 
+	 * @returns
 	 */
-	static ctLt(a32:number,b32:number):boolean {
-		const l = (
-			(b32 & maxU16) - 
-			(a32 & maxU16) - 
-			1) >>> 31;
-		const h = (
-			((b32 >>> 16) & maxU16) -
-			((a32 >>> 16) & maxU16) -
-			1) >>> 31;		
-		return (l&h)===0;
+	static ctLt(a32: number, b32: number): boolean {
+		const l = ((b32 & maxU16) - (a32 & maxU16) - 1) >>> 31;
+		const h = (((b32 >>> 16) & maxU16) - ((a32 >>> 16) & maxU16) - 1) >>> 31;
+		return (l & h) === 0;
 	}
 
 	/**
@@ -439,7 +429,7 @@ export class U32 {
 	static ctSelect(a32: number, b32: number, first: boolean): number {
 		// @ts-expect-error: We're casting bool->number on purpose
 		const fNum = (first | 0) - 1; //-1 or 0
-		return ((~fNum)&a32) | (fNum&b32);
+		return (~fNum & a32) | (fNum & b32);
 	}
 
 	/**
@@ -447,11 +437,11 @@ export class U32 {
 	 * @param i64a int32, if larger than 32 bits it'll be truncated 0-2147483647
 	 * @param i64b int32, if larger than 32 bits it'll be truncated 0-2147483647
 	 */
-	static sameSign(i64a:number,i64b:number):boolean {
+	static sameSign(i64a: number, i64b: number): boolean {
 		//The MSBit is 1 if it's negative, 0 if not.. so if both or neither are ^=0
-		// If only one is, then ^=1.  Since MSbit=1 is <0 we can xor the two, and 
+		// If only one is, then ^=1.  Since MSbit=1 is <0 we can xor the two, and
 		// see if it's positive to confirm they're the same sign
-		return (i64a^i64b)>=0;
+		return (i64a ^ i64b) >= 0;
 	}
 
 	/**
@@ -459,9 +449,9 @@ export class U32 {
 	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
 	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
 	 */
-	static average(a32:number,b32:number):number {
+	static average(a32: number, b32: number): number {
 		//Either works
-		return (a32|b32) - ((a32^b32)>>>1);
+		return (a32 | b32) - ((a32 ^ b32) >>> 1);
 		//return ((a32^b32)>>1) + (a32&b32)
 	}
 
@@ -504,14 +494,13 @@ export class U32 {
 		return ret;
 	}
 
-    static toBytesLE(src:number):Uint8Array {
-        return Uint8Array.of(src,src>>8,src>>16,src>>>24);
-    }
+	static toBytesLE(src: number): Uint8Array {
+		return Uint8Array.of(src, src >> 8, src >> 16, src >>> 24);
+	}
 
-    static toBytesBE(src:number):Uint8Array {
-        return Uint8Array.of(src>>>24,src>>16,src>>8,src);
-    }
-
+	static toBytesBE(src: number): Uint8Array {
+		return Uint8Array.of(src >>> 24, src >> 16, src >> 8, src);
+	}
 }
 const zero = U32.fromIntUnsafe(0);
 const max = U32.fromIntUnsafe(0xffffffff);
@@ -639,6 +628,16 @@ export class U32Mut extends U32 {
 		return new U32Mut(this.arr.slice(this.pos, this.pos + 1));
 	}
 
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT_U32Mut;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT_U32Mut}(${this.toString()})`;
+	}
+
 	/**
 	 * Build a U32Mut from an integer - there's no range check (JS default) so:
 	 * - Oversized numbers will be truncated
@@ -743,13 +742,16 @@ export class U32MutArray {
 	}
 
 	/**
-     * Set from `src` starting at `srcOffset` into this array starting at `thisOffset`
+	 * Set from `src` starting at `srcOffset` into this array starting at `thisOffset`
 	 * @param src
 	 * @param thisOffset Called `targetOffset` in TypedArray (default 0)
-     * @param srcOffset (default 0)
+	 * @param srcOffset (default 0)
 	 */
-	set(src: U32MutArray, thisOffset = 0,srcOffset=0): void {
-		this.buf.set(src.buf.subarray(src.bufPos + srcOffset), this.bufPos+thisOffset);
+	set(src: U32MutArray, thisOffset = 0, srcOffset = 0): void {
+		this.buf.set(
+			src.buf.subarray(src.bufPos + srcOffset),
+			this.bufPos + thisOffset
+		);
 	}
 
 	xorEq(b: U32MutArray, thisOffset = 0): void {
@@ -770,11 +772,23 @@ export class U32MutArray {
 	}
 
 	clone(): U32MutArray {
-		return new U32MutArray(this.buf.slice(this.bufPos, this.bufPos + this.length));
+		return new U32MutArray(
+			this.buf.slice(this.bufPos, this.bufPos + this.length)
+		);
 	}
 
 	toString(): string {
-		return 'u32array{len=' + this.length + '}';
+		return 'len=' + this.length;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT_U32MutArray;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT_U32MutArray}(${this.toString()})`;
 	}
 
 	static fromLen(len: number): U32MutArray {

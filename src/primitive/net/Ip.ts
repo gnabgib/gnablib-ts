@@ -5,6 +5,9 @@ import { safety } from '../Safety.js';
 import { U32 } from '../number/U32.js';
 import { ContentError } from '../error/ContentError.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'IpV4';
+
 export class IpV4 {
 	readonly bytes: Uint8Array;
 
@@ -17,12 +20,12 @@ export class IpV4 {
 	 * Get the address as a dotted decimal string (the normal format)
 	 * @returns
 	 */
-	toString(): string {
+	public toString(): string {
 		return this.bytes.join('.');
 	}
 
-	toInt(): number {
-		//>>>0 overrides the sign problems of 32bits
+	/** Value as an integer */
+	public valueOf(): number {
 		return (
 			((this.bytes[0] << 24) |
 				(this.bytes[1] << 16) |
@@ -33,13 +36,17 @@ export class IpV4 {
 	}
 
 	equals(other: IpV4): boolean {
-		safety.notNull(other, 'ip.V4.equals(other)');
-		return (
-			this.bytes[0] === other.bytes[0] &&
-			this.bytes[1] === other.bytes[1] &&
-			this.bytes[2] === other.bytes[2] &&
-			this.bytes[3] === other.bytes[3]
-		);
+		return other.valueOf() == this.valueOf();
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/**

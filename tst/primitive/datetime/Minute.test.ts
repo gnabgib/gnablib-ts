@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Minute } from '../../../src/primitive/datetime/Minute';
+import util from 'util';
 
 const tsts = suite('Minute');
 
@@ -58,5 +59,23 @@ tsts(`parse(now)`, () => {
 	const mNum=m.valueOf();
 	assert.is(mNum >= 0 && mNum <= 59, true, 'In valid range');
 });
+
+tsts('[Symbol.toStringTag]', () => {
+    const dt=Minute.now();
+	const str = Object.prototype.toString.call(dt);
+	assert.is(str.indexOf('Minute') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const dt=Minute.now();
+    const u=util.inspect(dt);
+    assert.is(u.startsWith('Minute('),true);
+});
+
+// tsts('general',()=>{
+//     const dt=Day.now();
+//     console.log(dt);
+//     console.log(Object.prototype.toString.call(dt));
+// });
 
 tsts.run();

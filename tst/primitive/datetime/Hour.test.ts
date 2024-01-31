@@ -4,6 +4,7 @@ import {Hour} from '../../../src/primitive/datetime/Hour';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Hour');
 
@@ -199,5 +200,23 @@ for (const unk of badParse) {
         assert.throws(()=>Hour.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Hour.now();
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('HourOfDay') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Hour.now();
+    const u=util.inspect(o);
+    assert.is(u.startsWith('HourOfDay('),true);
+});
+
+// tsts('general',()=>{
+//     const dt=Hour.now();
+//     console.log(dt);
+//     console.log(Object.prototype.toString.call(dt));
+// });
 
 tsts.run();

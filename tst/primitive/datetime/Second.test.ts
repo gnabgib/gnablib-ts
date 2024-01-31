@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Second } from '../../../src/primitive/datetime/Second';
+import util from 'util';
 
 const tsts = suite('Second');
 
@@ -41,5 +42,22 @@ tsts(`parse(1)`, () => {
 	assert.equal(s.valueOf(), 1);
 });
 
+tsts('[Symbol.toStringTag]', () => {
+    const dt=Second.now();
+	const str = Object.prototype.toString.call(dt);
+	assert.is(str.indexOf('Second') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const dt=Second.now();
+    const u=util.inspect(dt);
+    assert.is(u.startsWith('Second('),true);
+});
+
+// tsts('general',()=>{
+//     const dt=Day.now();
+//     console.log(dt);
+//     console.log(Object.prototype.toString.call(dt));
+// });
 
 tsts.run();

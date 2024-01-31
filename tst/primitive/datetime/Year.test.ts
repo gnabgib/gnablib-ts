@@ -4,6 +4,7 @@ import {Year} from '../../../src/primitive/datetime/Year';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Year');
 
@@ -199,5 +200,17 @@ for (const unk of badParse) {
         assert.throws(()=>Year.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Year.now();
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('Year') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Year.now();
+    const u=util.inspect(o);
+    assert.is(u.startsWith('Year('),true);
+});
 
 tsts.run();

@@ -4,6 +4,7 @@ import { Micro } from '../../../src/primitive/number/Micro';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Micro');
 
@@ -149,6 +150,24 @@ for (const unk of badParse) {
         assert.throws(()=>Micro.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Micro.new(13);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('Micro') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Micro.new(13);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('Micro('),true);
+});
+
+// tsts('general',()=>{
+//     const o=Micro.new(13);
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 
 tsts.run();

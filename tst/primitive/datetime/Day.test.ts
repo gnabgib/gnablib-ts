@@ -4,6 +4,7 @@ import {Day} from '../../../src/primitive/datetime/Day';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Day');
 
@@ -185,5 +186,23 @@ for (const unk of badParse) {
         assert.throws(()=>Day.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const dt=Day.now();
+	const str = Object.prototype.toString.call(dt);
+	assert.is(str.indexOf('DayOfMonth') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const dt=Day.now();
+    const u=util.inspect(dt);
+    assert.is(u.startsWith('DayOfMonth('),true);
+});
+
+// tsts('general',()=>{
+//     const dt=Day.now();
+//     console.log(dt);
+//     console.log(Object.prototype.toString.call(dt));
+// });
 
 tsts.run();

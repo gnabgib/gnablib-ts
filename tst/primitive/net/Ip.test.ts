@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { IpV4 } from '../../../src/primitive/net';
+import util from 'util';
 
 const tsts = suite('IP/v4');
 
@@ -44,9 +45,9 @@ for (const [parts,iVal,str] of partsIntsStrings) {
 		const ipAddr = IpV4.fromInt(iVal);
 		assert.is(ipAddr.toString(), str);
 	});
-	tsts('toInt: ' + str, () => {
+	tsts('valueOf: ' + str, () => {
 		const ipAddr = new IpV4(new Uint8Array(parts));
-		assert.is(ipAddr.toInt(), iVal);
+		assert.is(ipAddr.valueOf(), iVal);
 	});
 }
 
@@ -79,10 +80,17 @@ for (const part of badParts) {
 
 const badStringParse:string[] = [
 	'0', //Not enough parts
+	'0.0',
+	'0.0.0',
 	'0.0.0.0.0', //Too many parts
 	'1.2.3.1000', //One part a bad size (>255)
 	'hello', //Well.. that's not a number
-	'...', //There are 4 parts, but empty strings aren't numbers
+	'.',
+	'..',
+	'...',
+	'1...',
+	'1.1..',
+	'1.1.1.',
 	'0x1.0x2.0x3.0x4', //Hex not allowed
 	'0o1.0o2.0o3.0o4', //Oct not allowed
 	'+1.1.1.1', //Sign not allowed
@@ -110,5 +118,35 @@ for (const [start,expect] of extStringParse) {
 		assert.is(ipAddr.toString(), expect);
 	});
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=IpV4.fromString('10.11.12.13');
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('IpV4') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=IpV4.fromString('10.11.12.13');
+    const u=util.inspect(o);
+    assert.is(u.startsWith('IpV4('),true);
+});
+
+const equalsSet:[string,string,boolean][]=[
+	['1.1.1.2','1.1.1.2',true],
+];
+for(const [l,r,expect] of equalsSet) {
+	tsts('${l}==${r}', () => {
+		const iL=IpV4.fromString(l);
+		const iR=IpV4.fromString(r);
+
+		assert.equal(iL.equals(iR),expect);
+	});
+}
+
+// tsts('general',()=>{
+//     const o=IpV4.fromString('10.11.12.13');
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 tsts.run();

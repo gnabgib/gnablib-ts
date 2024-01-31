@@ -94,3 +94,16 @@ List globally installed packages:
 `npm ls -g`
 `pnpm ls -g`
 - Note the output can be different (they have different storage locations)
+
+### Values
+
+`get [Symbol.toStringTag](): string`
+The result of which is included in `Object.prototype.toString.call(obj)`, you'll also
+see it embedded in console logs by default toStringTag returns "Object" on an object, and the output starts "object"
+you've probably seen `object Object`
+
+```ts
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+[consoleDebugSymbol](/*depth, options, inspect*/):string {}
+```
+The result of which is included in `console.log(obj)` (in Node) or `util.inspect(obj)`

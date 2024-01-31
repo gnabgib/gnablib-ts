@@ -1,5 +1,7 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+const DBG_RPT = 'ContentError';
+
 export class ContentError extends SyntaxError {
 	readonly key: string;
 	readonly value: unknown;
@@ -37,8 +39,13 @@ export class ContentError extends SyntaxError {
 		this.value = value;
 	}
 
-	/** @returns "ContentError" */
+	/** @hidden */
 	get name(): string {
-		return 'ContentError';
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
 	}
 }

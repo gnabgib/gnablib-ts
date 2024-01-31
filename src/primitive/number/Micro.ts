@@ -6,6 +6,9 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'Micro';
+
 /** Micro/Millionths (0-999999 range) */
 export class Micro implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -47,6 +50,16 @@ export class Micro implements ISerializer {
 		safe.int.inRangeInc(this.valueOf(), 0, 999999);
 		return this;
 	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
+	}	
 
 	protected static writeValue(target: Uint8Array, v: number): void {
 		target[0] = v >> 16;

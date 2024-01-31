@@ -6,6 +6,9 @@ import { safety } from '../Safety.js';
 import { IpV4 } from './Ip.js';
 import { ContentError } from '../error/ContentError.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'Cidr';
+
 export class Cidr {
 	/**
 	 * Starting IP (first/lowest)
@@ -17,7 +20,7 @@ export class Cidr {
 
 	constructor(ipv4: IpV4, mask: number) {
 		safety.intInRangeInc(mask, 0, 32, 'mask');
-		const ipv4Int = ipv4.toInt();
+		const ipv4Int = ipv4.valueOf();
 		this.bitMask = bitExt.lsbs(32 - mask);
 		const startInt = (ipv4Int & ~this.bitMask) >>> 0;
 		this.dist = ipv4Int - startInt;
@@ -48,7 +51,7 @@ export class Cidr {
 	 * End IP (last/highest)
 	 */
 	get endIp(): IpV4 {
-		return IpV4.fromInt(this.startIp.toInt() | this.bitMask);
+		return IpV4.fromInt(this.startIp.valueOf() | this.bitMask);
 	}
 
 	/**
@@ -56,7 +59,7 @@ export class Cidr {
 	 * @param ipv4
 	 */
 	containsIp(ipv4: IpV4): boolean {
-		return (ipv4.toInt() & ~this.bitMask) === this.startIp.toInt();
+		return (ipv4.valueOf() & ~this.bitMask) === this.startIp.valueOf();
 	}
 
 	//Is this needed?  Superset, subset (this) and overlap might all be considered
@@ -71,7 +74,7 @@ export class Cidr {
 		//We only consider normal form (so 10.10.10.10/24===10.10.10.0/24)
 		safety.notNull(other, 'Cidr.equals(other)');
 		return (
-			this.mask === other.mask && this.startIp.toInt() === other.startIp.toInt()
+			this.mask === other.mask && this.startIp.valueOf() === other.startIp.valueOf()
 		);
 	}
 
@@ -81,6 +84,16 @@ export class Cidr {
 	 */
 	toString(): string {
 		return this.startIp.toString() + '/' + this.mask;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/**

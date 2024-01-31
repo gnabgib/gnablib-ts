@@ -4,6 +4,7 @@ import { Nano } from '../../../src/primitive/number/Nano';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Nano');
 
@@ -150,6 +151,24 @@ for (const unk of badParse) {
         assert.throws(()=>Nano.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Nano.new(13);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('Nano') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Nano.new(13);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('Nano('),true);
+});
+
+// tsts('general',()=>{
+//     const o=Nano.new(13);
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 
 tsts.run();

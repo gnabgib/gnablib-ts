@@ -4,6 +4,7 @@ import {DateOnly} from '../../../src/primitive/datetime/DateOnly';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('DateOnly');
 
@@ -129,5 +130,18 @@ tsts(`nowUtc`,()=>{
     assert.is(d.month.valueOf(),dt.getUTCMonth()+1);//JS stores months off by 1 (0=Jan)
     assert.is(d.day.valueOf(),dt.getUTCDate());//Not a great name, JS
 });
+
+tsts('[Symbol.toStringTag]', () => {
+    const dt=DateOnly.now();
+	const str = Object.prototype.toString.call(dt);
+	assert.is(str.indexOf('DateOnly') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const dt=DateOnly.now();
+    const u=util.inspect(dt);
+    assert.is(u.startsWith('DateOnly('),true);
+});
+
 
 tsts.run();

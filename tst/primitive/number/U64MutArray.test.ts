@@ -2,6 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { U64,U64Mut, U64MutArray } from '../../../src/primitive/number';
+import util from 'util';
 
 const tsts = suite('U64MutArray');
 
@@ -12,7 +13,7 @@ tsts('fromLen',()=>{
     assert.is(a.length,len);
     for(let i=0;i<len;i++) assert.is(a.at(i).eq(U64.zero),true,'=0');
 
-    assert.is(a.toString(),'u64array{len=3}')
+    assert.is(a.toString(),'len=3')
 
     a.at(0).addEq(U64Mut.coerce(11));
     a.at(1).addEq(U64Mut.coerce(13));
@@ -123,5 +124,23 @@ for (const [a,b,startAt,expect] of xorTest) {
 		assert.is(hex.fromBytes(aArr.toBytesBE()), expect);
 	});
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=U64MutArray.fromLen(2);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('U64MutArray') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=U64MutArray.fromLen(2);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('U64MutArray('),true);
+});
+
+// tsts('general',()=>{
+//     const o=U64MutArray.fromLen(2);
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 tsts.run();

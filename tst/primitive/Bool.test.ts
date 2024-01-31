@@ -4,6 +4,7 @@ import {Bool} from '../../src/primitive/Bool';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('Bool');
 
@@ -160,5 +161,18 @@ for (const unk of badParse) {
         assert.throws(()=>Bool.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Bool.new(true);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('Bool') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Bool.new(false);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('Bool('),true);
+});
+
 
 tsts.run();

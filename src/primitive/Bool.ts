@@ -4,6 +4,9 @@ import { BitWriter } from './BitWriter.js';
 import { ContentError } from './error/ContentError.js';
 import { ISerializer } from './interfaces/ISerializer.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'Bool';
+
 export interface ParseSettings {
 	preventUndefined?: boolean;
 	allowYes?: boolean;
@@ -51,6 +54,16 @@ export class Bool implements ISerializer {
 	}
 
 	//No need to validate
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
+	}
 
 	protected static writeValue(
 		target: Uint8Array,

@@ -3,6 +3,7 @@ import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { U32, U32Mut, U32ish } from '../../../src/primitive/number';
 import { asBE, asLE } from '../../../src/endian';
+import util from 'util';
 
 const tsts = suite('Uint32Mut');
 
@@ -383,8 +384,8 @@ tsts('clone',()=>{
 });
 
 tsts('toString',()=>{
-    const u=U32Mut.fromInt(0x12345678);
-    assert.is(u.toString(),'u32{12345678}')
+    const u=U32Mut.fromInt(0x123456);
+    assert.is(u.toString(),'00123456')
 });
 
 tsts('toBytesLE',()=> {
@@ -506,5 +507,23 @@ for(const test of coerces) {
         }
     });
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=U32Mut.fromInt(13);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('U32Mut') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=U32Mut.fromInt(13);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('U32Mut('),true);
+});
+
+// tsts('general',()=>{
+//     const o=U32Mut.fromInt(13);
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 tsts.run();

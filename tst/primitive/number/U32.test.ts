@@ -3,8 +3,9 @@ import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { asLE } from '../../../src/endian';
 import { U32, U32Mut } from '../../../src/primitive/number';
+import util from 'util';
 
-const tsts = suite('Uint32');
+const tsts = suite('U32');
 
 const xor = [
 	// A^0=A: Anything xor zero is anything
@@ -372,7 +373,7 @@ for (const [a, b, result] of mul) {
 tsts('toString', () => {
 	const u = U32.fromInt(0x12345678);
 	//endian isn't relevant
-	assert.is(u.toString(), 'u32{12345678}');
+	assert.is(u.toString(), '12345678');
 });
 
 tsts('toBytesLE', () => {
@@ -740,4 +741,21 @@ for (const [a, b, match] of sameSignTests) {
 	});
 }
 
+tsts('[Symbol.toStringTag]', () => {
+    const o=U32.fromInt(13);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('U32') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=U32.fromInt(13);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('U32('),true);
+});
+
+// tsts('general',()=>{
+//     const o=U32.fromInt(13);
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 tsts.run();

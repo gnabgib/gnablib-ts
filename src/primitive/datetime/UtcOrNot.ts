@@ -4,6 +4,9 @@ import { BitReader } from '../BitReader.js';
 import { Bool } from '../Bool.js';
 import { ContentError } from '../error/ContentError.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'UtcOrNot';
+
 export class UtcOrNot extends Bool {
 	/** UTC indicator (Z) or ? */
 	public toString(): string {
@@ -15,6 +18,16 @@ export class UtcOrNot extends Bool {
 		return (this._v[0] & this._mask) === this._mask ? 'Z' : '';
 	}
 
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
+	}
+
 	public static new(value: boolean, storage?: Uint8Array, pos = 0): UtcOrNot {
 		const stor = self.setupStor(storage);
 		const mask = 1 << pos;
@@ -22,24 +35,17 @@ export class UtcOrNot extends Bool {
 		return new UtcOrNot(stor, mask, pos);
 	}
 
-	public static parse(
-		input: string,
-		storage?: Uint8Array
-	): UtcOrNot {
+	public static parse(input: string, storage?: Uint8Array): UtcOrNot {
 		if (input === undefined || input === null) {
 			throw new ContentError('require string content', 'input', input);
 		}
-		input=input.trim().toLowerCase();
-		if (input=='z') {
-			return self.new(true,storage);
-		} else if (input =='') {
-			return self.new(false,storage);
+		input = input.trim().toLowerCase();
+		if (input == 'z') {
+			return self.new(true, storage);
+		} else if (input == '') {
+			return self.new(false, storage);
 		}
-		throw new ContentError(
-			'expecting z or empty string',
-			'input',
-			input
-		);
+		throw new ContentError('expecting z or empty string', 'input', input);
 	}
 
 	/**
@@ -57,7 +63,7 @@ export class UtcOrNot extends Bool {
 	): UtcOrNot {
 		const stor = self.setupStor(storage);
 		const mask = 1 << pos;
-		const deser=source.readNumber(self.serialBits);
+		const deser = source.readNumber(self.serialBits);
 		self.writeValue(stor, deser === 1, mask);
 		return new UtcOrNot(stor, mask, pos);
 	}

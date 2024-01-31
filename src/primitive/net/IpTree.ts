@@ -5,6 +5,9 @@ import { ICidrValue } from '../interfaces/ICidrValue.js';
 import { IValueMerge } from '../interfaces/IValueMerge.js';
 import { IpV4 } from './Ip.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'IpTree';
+
 interface ITreeNode<T> {
 	readonly value: T | undefined;
 	contains(val: number, bit: number): boolean;
@@ -55,7 +58,7 @@ class NoneNode<T> implements ITreeNode<T> {
 	contains(val: number, bit: number): boolean {
 		return false;
 	}
-	
+
 	output(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		position: number,
@@ -164,7 +167,7 @@ export class IpTree<T> {
 	addIp(ipv4: IpV4, value: T): void {
 		this._root = TreeNode.add(
 			this._root,
-			ipv4.toInt(),
+			ipv4.valueOf(),
 			31,
 			-1,
 			value,
@@ -173,8 +176,8 @@ export class IpTree<T> {
 	}
 
 	addRange(start: IpV4, end: IpV4, value: T): void {
-		let startInt = start.toInt();
-		const endInt = end.toInt();
+		let startInt = start.valueOf();
+		const endInt = end.valueOf();
 		while (startInt <= endInt) {
 			let m = (startInt - 1) & ~startInt;
 			while (startInt + m > endInt) {
@@ -201,7 +204,7 @@ export class IpTree<T> {
 	addCidr(cidr: Cidr, value: T): void {
 		this._root = TreeNode.add(
 			this._root,
-			cidr.startIp.toInt(),
+			cidr.startIp.valueOf(),
 			31,
 			31 - cidr.mask,
 			value,
@@ -210,7 +213,7 @@ export class IpTree<T> {
 	}
 
 	contains(ipv4: IpV4): boolean {
-		return this._root.contains(ipv4.toInt(), 31);
+		return this._root.contains(ipv4.valueOf(), 31);
 	}
 
 	listCidr(): ICidrValue<T>[] {
@@ -219,5 +222,15 @@ export class IpTree<T> {
 			ret.push({ cidr: new Cidr(IpV4.fromInt(p), b), value: v })
 		);
 		return ret;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 }

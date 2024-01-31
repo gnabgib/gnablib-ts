@@ -4,6 +4,10 @@ import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
 import { safety } from '../Safety.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT_U64 = 'U64';
+const DBG_RPT_U64Mut = 'U64Mut';
+const DBG_RPT_U64MutArray = 'U64MutArray';
 const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
 const maxU32Plus1 = 0x100000000;
@@ -103,10 +107,10 @@ export class U64 {
 		a.arr[a.pos] = ~a.arr[a.pos];
 		a.arr[a.pos + 1] = ~a.arr[a.pos + 1];
 
-		a.arr[a.pos]+=1;
+		a.arr[a.pos] += 1;
 		//If overflow add to next block
-		if (a.arr[a.pos]==0) {
-			a.arr[a.pos+1]+=1;
+		if (a.arr[a.pos] == 0) {
+			a.arr[a.pos + 1] += 1;
 		}
 	}
 	protected _subEq(a: Uint32Array, aPos: number, b: U64) {
@@ -552,7 +556,7 @@ export class U64 {
 	 * @returns
 	 */
 	toString(): string {
-		return 'u64{' + hex.fromBytes(this.toBytesBE()) + '}';
+		return hex.fromBytes(this.toBytesBE());
 	}
 
 	/**
@@ -624,6 +628,16 @@ export class U64 {
 		//Limit IDX to 0-3 (&3) and then switch to bits (<<3)
 		idx = (idx & 3) << 3;
 		return (this.arr[this.pos + shift] >>> idx) & 0xff;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT_U64;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT_U64}(${this.toString()})`;
 	}
 
 	/**
@@ -889,6 +903,16 @@ export class U64Mut extends U64 {
 		this.arr.fill(0, this.pos, this.pos + 2);
 	}
 
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT_U64Mut;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT_U64Mut}(${this.toString()})`;
+	}
+
 	/**
 	 * Build from an integer - note JS can only support up to 51bit ints
 	 * @param uint51
@@ -1115,7 +1139,17 @@ export class U64MutArray {
 	}
 
 	toString(): string {
-		return 'u64array{len=' + this.length + '}';
+		return 'len=' + this.length;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT_U64MutArray;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT_U64MutArray}(${this.toString()})`;
 	}
 
 	static fromLen(len: number): U64MutArray {

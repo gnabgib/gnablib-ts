@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Cidr, IpV4 } from '../../../src/primitive/net';
+import util from 'util';
 
 const tsts = suite('CIDR');
 
@@ -114,5 +115,23 @@ for (const [start, expect] of contains) {
 		assert.equal(c.containsIp(ipv4), expect);
 	});
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=Cidr.fromString('10.10.10.0/24');
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('Cidr') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=Cidr.fromString('10.10.10.0/24');
+    const u=util.inspect(o);
+    assert.is(u.startsWith('Cidr('),true);
+});
+
+// tsts('general',()=>{
+//     const o=Cidr.fromString('10.10.10.0/24');
+//     console.log(o);
+//     console.log(Object.prototype.toString.call(o));
+// });
 
 tsts.run();

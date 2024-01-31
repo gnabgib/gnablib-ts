@@ -6,6 +6,9 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'Sexagesimal';
+
 /** Sexagesimal (0-59 range) */
 export class Sexagesimal implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -46,6 +49,16 @@ export class Sexagesimal implements ISerializer {
 	public validate(): Sexagesimal {
 		safe.int.inRangeInc(this.valueOf(), 0, 59);
 		return this;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	protected [consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */

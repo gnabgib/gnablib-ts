@@ -4,6 +4,7 @@ import {UtcOrNot} from '../../../src/primitive/datetime/UtcOrNot';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('UtcOrNot');
 
@@ -102,5 +103,17 @@ for (const unk of badParse) {
         assert.throws(()=>UtcOrNot.parse(unk));
     })
 }
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=UtcOrNot.new(true);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('UtcOrNot') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=UtcOrNot.new(false);
+    const u=util.inspect(o);
+    assert.is(u.startsWith('UtcOrNot('),true);
+});
 
 tsts.run();

@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Microsecond } from '../../../src/primitive/datetime/Microsecond';
+import util from 'util';
 
 const tsts = suite('Microsecond');
 
@@ -57,5 +58,23 @@ tsts(`parse(now)`, () => {
 	//Tricky to test this!
 	assert.is(mNum >= 0 && mNum <= 999999, true, 'In valid range');
 });
+
+tsts('[Symbol.toStringTag]', () => {
+    const dt=Microsecond.now();
+	const str = Object.prototype.toString.call(dt);
+	assert.is(str.indexOf('Microsecond') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const dt=Microsecond.now();
+    const u=util.inspect(dt);
+    assert.is(u.startsWith('Microsecond('),true);
+});
+
+// tsts('general',()=>{
+//     const dt=Day.now();
+//     console.log(dt);
+//     console.log(Object.prototype.toString.call(dt));
+// });
 
 tsts.run();
