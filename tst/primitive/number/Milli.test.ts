@@ -60,22 +60,26 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Milli.deserialize(br,stor).validate());
 });
 
-const toStrSet:[number,string,string][]=[
-    [0,'0','000'],//min
-    [1,'1','001'],
-    [2,'2','002'],
-    [10,'10','010'],
-    [100,'100','100'],
-    [99,'99','099'],
-    [999,'999','999'],//max
+const toStrSet:[number,string,string,string][]=[
+    [0,'0','000','0'],//min
+    [1,'1','001','1'],
+    [2,'2','002','2'],
+    [10,'10','010','10'],
+    [100,'100','100','100'],
+    [99,'99','099','99'],
+    [999,'999','999','999'],//max
 ];
-for (const [se,str,isoStr] of toStrSet) {
+for (const [se,str,isoStr,jsonStr] of toStrSet) {
     const s = Milli.new(se);
     tsts(`toString(${se})`,()=>{        
         assert.equal(s.toString(),str);
     });
     tsts(`toIsoString(${se})`,()=>{        
         assert.equal(s.toPadString(),isoStr);
+    });
+    tsts(`toJSON(${se})`,()=>{        
+        const json=JSON.stringify(s);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -153,6 +157,12 @@ tsts('util.inspect',()=>{
     const o=Milli.new(13);
     const u=util.inspect(o);
     assert.is(u.startsWith('Milli('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Milli.new(13);
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{

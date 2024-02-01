@@ -11,6 +11,14 @@ tsts(`fromDate`, () => {
 	assert.is(m.valueOf(), dt.getMinutes());
 });
 
+tsts(`fromDateUtc`,()=>{
+    //2024-01-20 07:13:30
+    const dt=new Date(1705734810);
+    const h=Minute.fromDateUtc(dt);
+    assert.is(h.valueOf(),dt.getUTCMinutes());
+});
+
+
 tsts(`fromSecondsSinceEpoch`,()=>{
     const m = Minute.fromUnixTime(1705734810);
     assert.is(m.valueOf(),13);

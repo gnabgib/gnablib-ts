@@ -6,6 +6,8 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'HourOfDay';
 const secsPerHour = 60 * 60;
 const msPerHour = secsPerHour * 1000;
 const secsPerDay = secsPerHour * 24;
@@ -34,6 +36,11 @@ export class Hour implements ISerializer {
 	}
 
 	/** Hour as a number (0-23) */
+	toJSON(): number {
+		return this.#v[0];
+	}
+
+	/** Hour as a number (0-23) */
 	public valueOf(): number {
 		return this.#v[0];
 	}
@@ -41,6 +48,11 @@ export class Hour implements ISerializer {
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(this.#v[0], self.serialBits);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
 	}
 
 	/**
@@ -51,6 +63,16 @@ export class Hour implements ISerializer {
 	public validate(): Hour {
 		safe.int.inRangeInc(this.#v[0], 0, 23);
 		return this;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -78,21 +100,25 @@ export class Hour implements ISerializer {
 		return new Hour(stor);
 	}
 
+	/**
+	 * Create an hour from a js Date object in UTC
+	 * @param date Value used as source
+	 */
+	public static fromDateUtc(date: Date, storage?: Uint8Array): Hour {
+		const stor = self.setupStor(storage);
+		stor[0] = date.getUTCHours();
+		return new Hour(stor);
+	}
+
 	/** Create an hour from seconds since UNIX epoch */
-	public static fromUnixTime(
-		source: number,
-		storage?: Uint8Array
-	): Hour {
+	public static fromUnixTime(source: number, storage?: Uint8Array): Hour {
 		const stor = self.setupStor(storage);
 		stor[0] = (source % secsPerDay) / secsPerHour;
 		return new Hour(stor);
 	}
 
 	/** Create an hour from milliseconds since UNIX epoch */
-	public static fromUnixTimeMs(
-		source: number,
-		storage?: Uint8Array
-	): Hour {
+	public static fromUnixTimeMs(source: number, storage?: Uint8Array): Hour {
 		const stor = self.setupStor(storage);
 		stor[0] = (source % msPerDay) / msPerHour;
 		return new Hour(stor);

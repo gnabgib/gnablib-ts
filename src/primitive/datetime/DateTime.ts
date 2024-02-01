@@ -3,6 +3,7 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { ISerializer } from '../interfaces/ISerializer.js';
 import { Year } from './Year.js';
 import { Month } from './Month.js';
 import { Day } from './Day.js';
@@ -12,12 +13,16 @@ import { Second } from './Second.js';
 import { Microsecond } from './Microsecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'DateTime';
+
 /**
- * Date and time in microsecond resolution
+ * Date and time down to microsecond resolution
+ * Range: -10000-01-01 00:00:00.000000 - +22767-12-31 23:59:59.999999 (no leap second support)
  *
- * Range: -10000-01-01 00:00:00.000000 - +22767-12-31 23:59:59.999999
+ * *Note*: This is higher resolution than [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)
  */
-export class DateTime {
+export class DateTime implements ISerializer {
 	/**Number of bytes required to store this data */
 	static readonly storageBytes =
 		Year.storageBytes +
@@ -60,7 +65,7 @@ export class DateTime {
 
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
-	 * formatted datetime: yyyy-mm-ddThh:mm:ss.mmmmmm(z)
+	 * formatted date-time: yyyy-mm-ddThh:mm:ss.mmmmmm(z)
 	 */
 	public toString(dateTimeSep = 'T'): string {
 		return (
@@ -79,6 +84,18 @@ export class DateTime {
 			this.microsecond.toPadString() +
 			this.isUtc.toIsoString()
 		);
+	}
+
+	/**
+	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
+	 * formatted date-time: yyyy-mm-ddThh:mm:ss.mmmmmm(z)
+	 */
+	toJSON(): string {
+		//JSON is supposed to be human readable, but it's often used as a data-transport between machines only.
+		// Using a number (like valueOf), or encoded serialized bytes, would decrease the JSON
+		// size but is no longer *human readable*.  This mistake is made in some libraries
+		// serializing date and time in unix-time
+		return this.toString();
 	}
 
 	/**
@@ -110,6 +127,11 @@ export class DateTime {
 		this.isUtc.serialize(target);
 	}
 
+	/** Number of bits required to serialize */
+	get serialSizeBits():number {
+		return self.serialBits;
+	}
+
 	/**
 	 * Test internal state is valid, throws if it's not
 	 * You should call this after a deserialize unless you trust the source
@@ -125,6 +147,16 @@ export class DateTime {
 		this.microsecond.validate();
 		//no validate for isUtc
 		return this;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -174,7 +206,8 @@ export class DateTime {
 
 	/**
 	 * Create a time from a js Date object
-	 * WARNING: Date only has millisecond accuracy, use {@link now} instead
+	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
+	 * {@link fromUnixTime}/{@link fromUnixTimeMs} with a high resolution (floating point) source
 	 * @param date Value used as source
 	 */
 	public static fromDate(
@@ -199,84 +232,109 @@ export class DateTime {
 		return new DateTime(y, m, d, h, i, s, us, utc);
 	}
 
-	/** Create a dateTime from float seconds since UNIX epoch */
+	/**
+	 * Create a time from a js Date object in UTC
+	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
+	 * {@link fromUnixTime}/{@link fromUnixTimeMs} with a high resolution (floating point) source
+	 * @param date Value used as source
+	 */
+	public static fromDateUtc(date: Date, storage?: Uint8Array): DateTime {
+		//Keep the memory contiguous
+		const stor = self.setupStor(storage);
+
+		const y = Year.fromDateUtc(date, stor);
+		const m = Month.fromDateUtc(date, stor.subarray(2, 3));
+		const d = Day.fromDateUtc(date, stor.subarray(3, 4));
+		//NOTE: We could see if date.getTimezoneOffset() is zero and auto detect isUtc
+		// but we want the dev to be explicit that this is a UTC number when it is
+		// and not just conveniently running in the UTC timezone
+		const h = Hour.fromDateUtc(date, stor.subarray(4, 5));
+		const i = Minute.fromDateUtc(date, stor.subarray(5, 6));
+		const s = Second.fromDateUtc(date, stor.subarray(6, 7));
+		const us = Microsecond.fromDateUtc(date, stor.subarray(7));
+		const utc = UtcOrNot.new(true, stor.subarray(10));
+		return new DateTime(y, m, d, h, i, s, us, utc);
+	}
+
+	/**
+	 * Create a date-time from float seconds since UNIX epoch aka unix time
+	 *
+	 * @param source Unix time at second accuracy, may include floating point (for higher resolution)
+	 * @param [isUtc=true] Unix time is always UTC, however you may wish to override this marker
+	 * if you've adjusted for local
+	 */
 	public static fromUnixTime(
 		source: number,
-		isUtc = false,
+		isUtc = true,
 		storage?: Uint8Array
 	): DateTime {
 		const stor = self.setupStor(storage);
-		//Use Date's builtin to convert ymd part
-		let tzOffset = 0;
-		if (isUtc) {
-			//This is hacky - Date keeps UTC internally, but interprets value into local on output
-			//(getters) ie. getFulLYear/getMonth/getDate are in local.
-			//SO! If we add getTimezoneOffset (which is minutes) to the current time, we get the "UTC"
-			// time.
-			const n = new Date();
-			tzOffset = n.getTimezoneOffset() * 60 * 1000;
-		}
-		const date = new Date(source * 1000 + tzOffset);
 
-		const y = Year.fromDate(date, stor);
-		const m = Month.fromDate(date, stor.subarray(2, 3));
-		const d = Day.fromDate(date, stor.subarray(3, 4));
-		//Pull hour/minute from date since it's UTC aware
-		const h = Hour.fromDate(date, stor.subarray(4, 5));
-		const i = Minute.fromDate(date, stor.subarray(5, 6));
-        //The rest can come from internal fromSecondsSinceEpoch
+		//Use Date's builtin to convert ymd part
+		const date = new Date(source * 1000);
+		const y = Year.fromDateUtc(date, stor);
+		const m = Month.fromDateUtc(date, stor.subarray(2, 3));
+		const d = Day.fromDateUtc(date, stor.subarray(3, 4));
+
+		//The rest can come from fromUnixTime
+		const h = Hour.fromUnixTime(source, stor.subarray(4, 5));
+		const i = Minute.fromUnixTime(source, stor.subarray(5, 6));
 		const s = Second.fromUnixTime(source, stor.subarray(6, 7));
 		const us = Microsecond.fromUnixTime(source, stor.subarray(7));
 		const utc = UtcOrNot.new(isUtc, stor.subarray(10));
 		return new DateTime(y, m, d, h, i, s, us, utc);
 	}
 
-	/** Create a time from float milliseconds since UNIX epoch */
+	/**
+	 * Create a date-time from float milliseconds since UNIX epoch aka unix time
+	 *
+	 * @param source Unix time at millisecond accuracy, may include floating point (for higher resolution)
+	 * @param [isUtc=true] Unix time is always UTC, however you may wish to override this marker
+	 * if you've adjusted for local
+	 */
 	public static fromUnixTimeMs(
 		source: number,
-		isUtc = false,
+		isUtc = true,
 		storage?: Uint8Array
 	): DateTime {
 		const stor = self.setupStor(storage);
-        //Use Date's builtin to convert ymd part
-		let tzOffset = 0;
-		if (isUtc) {
-			//This is hacky - Date keeps UTC internally, but interprets value into local on output
-			//(getters) ie. getFulLYear/getMonth/getDate are in local.
-			//SO! If we add getTimezoneOffset (which is minutes) to the current time, we get the "UTC"
-			// time.
-			const n = new Date();
-			tzOffset = n.getTimezoneOffset() * 60 * 1000;
-		}
-		const date = new Date(source + tzOffset);
 
-        const y = Year.fromDate(date, stor);
-		const m = Month.fromDate(date, stor.subarray(2, 3));
-		const d = Day.fromDate(date, stor.subarray(3, 4));
-		//Pull hour/minute from date since it's UTC aware
-		const h = Hour.fromDate(date, stor.subarray(4, 5));
-		const i = Minute.fromDate(date, stor.subarray(5, 6));
-        //The rest can come from internal fromSecondsSinceEpoch
+		//Use Date's builtin to convert ymd part, note we generate from source so
+		// the timezone offset *at that point in time* is used (if we construct without params we'll
+		// get today's date which may have a different offset due to DST/rule changes etc)
+		const date = new Date(source);
+		const y = Year.fromDateUtc(date, stor);
+		const m = Month.fromDateUtc(date, stor.subarray(2, 3));
+		const d = Day.fromDateUtc(date, stor.subarray(3, 4));
+
+		//The rest can come from fromUnixTime
+		const h = Hour.fromUnixTimeMs(source, stor.subarray(4, 5));
+		const i = Minute.fromUnixTimeMs(source, stor.subarray(5, 6));
 		const s = Second.fromUnixTimeMs(source, stor.subarray(6, 7));
 		const us = Microsecond.fromUnixTimeMs(source, stor.subarray(7));
 		const utc = UtcOrNot.new(isUtc, stor.subarray(10));
 		return new DateTime(y, m, d, h, i, s, us, utc);
 	}
 
-	/** Create this datetime (local) */
+	/** Create this date-time (local) */
 	public static now(storage?: Uint8Array): DateTime {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		const now = performance.timeOrigin + performance.now();
-        return self.fromUnixTimeMs(now,false,storage);
+		const utcNow = performance.timeOrigin + performance.now();
+		//Calculate the offset to get it in local time
+		const utcDt = new Date(utcNow);
+		const offset = utcDt.getTimezoneOffset() * 60 * 1000;
+		//We've double-created date objects (once for utcDate and again in fromUnixTimeMs), but
+		// we need that safety for using .now at the end of the year in a timezone that isn't UTC
+		return self.fromUnixTimeMs(utcNow - offset, false, storage);
 	}
 
-	/** Create this date (UTC) */
+	/** Create this date-time (UTC) */
 	public static nowUtc(storage?: Uint8Array): DateTime {
-        //Note we depend on JS performance here to catch a point in time
+		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		const now = performance.timeOrigin + performance.now();
-        return self.fromUnixTimeMs(now,true,storage);
+		const utcNow = performance.timeOrigin + performance.now();
+		return self.fromUnixTimeMs(utcNow, true, storage);
 	}
 
 	public static deserialize(source: BitReader, storage?: Uint8Array): DateTime {
@@ -287,7 +345,7 @@ export class DateTime {
 		const m = Month.deserialize(source, stor.subarray(2, 3));
 		const d = Day.deserialize(source, stor.subarray(3, 4));
 
-        const h = Hour.deserialize(source, stor.subarray(4,5));
+		const h = Hour.deserialize(source, stor.subarray(4, 5));
 		const i = Minute.deserialize(source, stor.subarray(5, 6));
 		const s = Second.deserialize(source, stor.subarray(6, 7));
 		const us = Microsecond.deserialize(source, stor.subarray(7));

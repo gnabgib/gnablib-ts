@@ -42,14 +42,18 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Bool.deserialize(br,stor));
 });
 
-const toStrSet:[boolean,string][]=[
-    [false,'false'],
-    [true,'true']
+const toStrSet:[boolean,string,string][]=[
+    [false,'false','false'],
+    [true,'true','true']
 ];
-for (const [v,str] of toStrSet) {
+for (const [v,expectStr,expectJson] of toStrSet) {
     const u = Bool.new(v);
     tsts(`toString(${v})`,()=>{        
-        assert.equal(u.toString(),str);
+        assert.equal(u.toString(),expectStr);
+    });
+    tsts(`toJSON(${u})`,()=>{        
+        const json=JSON.stringify(u);
+        assert.equal(json,expectJson);
     });
 }
 
@@ -172,6 +176,12 @@ tsts('util.inspect',()=>{
     const o=Bool.new(false);
     const u=util.inspect(o);
     assert.is(u.startsWith('Bool('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Bool.new(false);
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<2,true);
 });
 
 

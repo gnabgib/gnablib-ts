@@ -32,6 +32,13 @@ export class Nano implements ISerializer {
 	}
 
 	/** Value as an integer (0-999999999) */
+	toJSON(): number {
+		return (
+			(this.#v[0] << 24) | (this.#v[1] << 16) | (this.#v[2] << 8) | this.#v[3]
+		);
+	}
+
+	/** Value as an integer (0-999999999) */
 	public valueOf(): number {
 		return (
 			(this.#v[0] << 24) | (this.#v[1] << 16) | (this.#v[2] << 8) | this.#v[3]
@@ -51,6 +58,11 @@ export class Nano implements ISerializer {
 	/** Serialize into target  - 30 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(this.valueOf(), self.serialBits);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
 	}
 
 	/**

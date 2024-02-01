@@ -36,6 +36,11 @@ export class Bool implements ISerializer {
 		return (this._v[0] & this._mask) === this._mask ? 'true' : 'false';
 	}
 
+	/** Value as a boolean */
+	toJSON(): boolean {
+		return (this._v[0] & this._mask) === this._mask;
+	}
+
 	/** Value as an int 1=true, 0=false */
 	public valueOf(): number {
 		return (this._v[0] & this._mask) >> this.#shift;
@@ -51,6 +56,11 @@ export class Bool implements ISerializer {
 			(this._v[0] & this._mask) === this._mask ? 1 : 0,
 			Bool.serialBits
 		);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
 	}
 
 	//No need to validate

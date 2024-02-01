@@ -62,25 +62,29 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Nano.deserialize(br,stor).validate());
 });
 
-const toStrSet:[number,string,string][]=[
-    [0,'0','000000000'],//min
-    [1,'1','000000001'],
-    [2,'2','000000002'],
-    [10,'10','000000010'],
-    [100,'100','000000100'],
-    [1000,'1000','000001000'],
-    [10000,'10000','000010000'],
-    [100000,'100000','000100000'],
-    [999999,'999999','000999999'],
-    [999999999,'999999999','999999999']//max
+const toStrSet:[number,string,string,string][]=[
+    [0,'0','000000000','0'],//min
+    [1,'1','000000001','1'],
+    [2,'2','000000002','2'],
+    [10,'10','000000010','10'],
+    [100,'100','000000100','100'],
+    [1000,'1000','000001000','1000'],
+    [10000,'10000','000010000','10000'],
+    [100000,'100000','000100000','100000'],
+    [999999,'999999','000999999','999999'],
+    [999999999,'999999999','999999999','999999999']//max
 ];
-for (const [se,str,isoStr] of toStrSet) {
+for (const [se,str,isoStr,jsonStr] of toStrSet) {
     const s = Nano.new(se);
     tsts(`toString(${se})`,()=>{        
         assert.equal(s.toString(),str);
     });
     tsts(`toPadString(${se})`,()=>{        
         assert.equal(s.toPadString(),isoStr);
+    });
+    tsts(`toJSON(${se})`,()=>{        
+        const json=JSON.stringify(s);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -162,6 +166,12 @@ tsts('util.inspect',()=>{
     const o=Nano.new(13);
     const u=util.inspect(o);
     assert.is(u.startsWith('Nano('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Nano.new(13);
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{

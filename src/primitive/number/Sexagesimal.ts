@@ -32,6 +32,11 @@ export class Sexagesimal implements ISerializer {
 	}
 
 	/** Value as an integer (0-59) */
+	toJSON(): number {
+		return this.#v[0];
+	}
+
+	/** Value as an integer (0-59) */
 	public valueOf(): number {
 		return this.#v[0];
 	}
@@ -39,6 +44,11 @@ export class Sexagesimal implements ISerializer {
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(this.#v[0], Sexagesimal.serialBits);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
 	}
 
 	/**

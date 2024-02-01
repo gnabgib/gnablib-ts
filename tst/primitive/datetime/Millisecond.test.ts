@@ -11,6 +11,13 @@ tsts(`fromDate`, () => {
 	assert.is(m.valueOf(), dt.getMilliseconds());
 });
 
+tsts(`fromDateUtc`,()=>{
+    //2024-01-20 07:13:30
+    const dt=new Date(1705734810);
+    const h=Millisecond.fromDateUtc(dt);
+    assert.is(h.valueOf(),dt.getUTCMilliseconds());
+});
+
 const fromUnixTimeSet: [number, number][] = [
     //2024-01-20 07:13:30
 	[1705734810, 0],

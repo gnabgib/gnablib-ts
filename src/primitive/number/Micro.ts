@@ -32,6 +32,11 @@ export class Micro implements ISerializer {
 	}
 
 	/** Value as an integer (0-999999) */
+	toJSON(): number {
+		return (this.#v[0] << 16) | (this.#v[1] << 8) | this.#v[2];
+	}
+
+	/** Value as an integer (0-999999) */
 	public valueOf(): number {
 		return (this.#v[0] << 16) | (this.#v[1] << 8) | this.#v[2];
 	}
@@ -39,6 +44,11 @@ export class Micro implements ISerializer {
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(this.valueOf(), Micro.serialBits);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
 	}
 
 	/**
@@ -59,7 +69,7 @@ export class Micro implements ISerializer {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		return `${DBG_RPT}(${this.toString()})`;
-	}	
+	}
 
 	protected static writeValue(target: Uint8Array, v: number): void {
 		target[0] = v >> 16;

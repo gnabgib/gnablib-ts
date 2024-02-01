@@ -6,6 +6,9 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'Month';
+
 /** Month of year (gregorian, julian) */
 export class Month implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -30,6 +33,11 @@ export class Month implements ISerializer {
 	}
 
 	/** Month ISO8601 as an integer (1=January, 12=December) */
+	toJSON(): number {
+		return this.#v[0] + 1;
+	}
+
+	/** Month ISO8601 as an integer (1=January, 12=December) */
 	public valueOf(): number {
 		return this.#v[0] + 1;
 	}
@@ -37,6 +45,11 @@ export class Month implements ISerializer {
 	/** Serialize into target  - 4 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(this.#v[0], Month.serialBits);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
 	}
 
 	/**
@@ -48,6 +61,16 @@ export class Month implements ISerializer {
 	public validate(): Month {
 		safe.int.inRangeInc(this.#v[0], 0, 11);
 		return this;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -72,6 +95,16 @@ export class Month implements ISerializer {
 	public static fromDate(date: Date, storage?: Uint8Array): Month {
 		const stor = self.setupStor(storage);
 		stor[0] = date.getMonth(); //We store months 0 based too (but we don't trouble the dev with that detail)
+		return new Month(stor);
+	}
+
+	/**
+	 * Create a month from a js Date object in UTC
+	 * @param date Value used as source
+	 */
+	public static fromDateUtc(date: Date, storage?: Uint8Array): Month {
+		const stor = self.setupStor(storage);
+		stor[0] = date.getUTCMonth(); //We store months 0 based too (but we don't trouble the dev with that detail)
 		return new Month(stor);
 	}
 

@@ -11,6 +11,12 @@ tsts(`fromDate`, () => {
 	assert.is(m.valueOf(), dt.getSeconds());
 });
 
+tsts(`fromDateUtc`, () => {
+	const dt=new Date(1705734810);
+	const m = Second.fromDateUtc(dt);
+	assert.is(m.valueOf(), dt.getUTCSeconds());
+});
+
 tsts(`fromUnixTime`, () => {
 	const m = Second.fromUnixTime(1705734810);
 	assert.is(m.valueOf(), 30);

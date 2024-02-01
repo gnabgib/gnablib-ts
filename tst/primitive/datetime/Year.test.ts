@@ -48,25 +48,29 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Year.deserialize(br,stor));
 });
 
-const toStrSet:[number,string,string][]=[
-    [-3333,'-3333','-3333'],
-    [-333,'-333','-0333'],
-    [-33,'-33','-0033'],
-    [-3,'-3','-0003'],
-    [0,'0','0000'],
-    [2,'2','0002'],
-    [20,'20','0020'],
-    [200,'200','0200'],
-    [2000,'2000','2000'],
-    [20000,'20000','+20000'],
+const toStrSet:[number,string,string,string][]=[
+    [-3333,'-3333','-3333','-3333'],
+    [-333,'-333','-0333','-333'],
+    [-33,'-33','-0033','-33'],
+    [-3,'-3','-0003','-3'],
+    [0,'0','0000','0'],
+    [2,'2','0002','2'],
+    [20,'20','0020','20'],
+    [200,'200','0200','200'],
+    [2000,'2000','2000','2000'],
+    [20000,'20000','+20000','20000'],
 ];
-for (const [yr,str,isoStr] of toStrSet) {
+for (const [yr,str,isoStr,jsonStr] of toStrSet) {
     const y=Year.new(yr);
     tsts(`toString(${yr})`,()=>{        
         assert.equal(y.toString(),str);
     });
     tsts(`toIsoString(${yr})`,()=>{        
         assert.equal(y.toIsoString(),isoStr);
+    });
+    tsts(`toJSON(${yr})`,()=>{        
+        const json=JSON.stringify(y);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -211,6 +215,12 @@ tsts('util.inspect',()=>{
     const o=Year.now();
     const u=util.inspect(o);
     assert.is(u.startsWith('Year('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Year.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 tsts.run();

@@ -8,12 +8,16 @@ import { Minute } from './Minute.js';
 import { Second } from './Second.js';
 import { Millisecond } from './Millisecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
+import { ISerializer } from '../interfaces/ISerializer.js';
+
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'TimeOnlyMs';
 
 /**
  * Time of day in millisecond resolution (h:m:s.uuuuuu)
  * Range 0:0:0.000 - 23:59:59.999 (no leap second support)
  */
-export class TimeOnlyMs {
+export class TimeOnlyMs implements ISerializer {
 	/**Number of bytes required to store this data */
 	static readonly storageBytes = 6; //1+ 1+ 1+ 2+ 1
 	/**Number of bits required to serialize this data */
@@ -50,6 +54,18 @@ export class TimeOnlyMs {
 	}
 
 	/**
+	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
+	 * formatted time: hh:mm:ss.mmm(z) (all zero padded)
+	 */
+	toJSON(): string {
+		//JSON is supposed to be human readable, but it's often used as a data-transport between machines only.
+		// Using a number (like valueOf), or encoded serialized bytes, would decrease the JSON
+		// size but is no longer *human readable*.  This mistake is made in some libraries
+		// serializing date and time in unix-time
+		return this.toString();
+	}
+
+	/**
 	 * Numeric time, base 10 shifted: 000000000 - 235959999
 	 * NOTE there are gaps in valid values 240000000, 236000000, etc
 	 * But you can do <, >, = comparisons
@@ -73,6 +89,11 @@ export class TimeOnlyMs {
 		this.isUtc.serialize(target);
 	}
 
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
+	}
+
 	/**
 	 * Test internal state is valid, throws if it's not
 	 * You should call this after a deserialize unless you trust the source
@@ -84,6 +105,16 @@ export class TimeOnlyMs {
 		this.second.validate();
 		this.millisecond.validate();
 		return this;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -142,14 +173,35 @@ export class TimeOnlyMs {
 		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 
-	/** Create a time from float seconds since UNIX epoch */
+	/**
+	 * Create a time from a js Date object in UTC
+	 * @param date Value used as source
+	 */
+	public static fromDateUtc(date: Date, storage?: Uint8Array): TimeOnlyMs {
+		//Keep the memory contiguous
+		const stor = self.setupStor(storage);
+
+		const h = Hour.fromDateUtc(date, stor);
+		const m = Minute.fromDateUtc(date, stor.subarray(1, 2));
+		const s = Second.fromDateUtc(date, stor.subarray(2, 3));
+		const ms = Millisecond.fromDateUtc(date, stor.subarray(3));
+		const utc = UtcOrNot.new(true, stor.subarray(5));
+		return new TimeOnlyMs(h, m, s, ms, utc);
+	}
+
+	/**
+	 * Create a time from float seconds since UNIX epoch aka unix time
+	 *
+	 * @param source Unix time at second accuracy, may include floating point (for higher resolution)
+	 * @param [isUtc=true] Unix time is always UTC, however you may wish to override this marker
+	 * if you've adjusted for local
+	 */
 	public static fromUnixTime(
 		source: number,
-		isUtc = false,
+		isUtc = true,
 		storage?: Uint8Array
 	): TimeOnlyMs {
 		const stor = self.setupStor(storage);
-
 		const h = Hour.fromUnixTime(source, stor);
 		const m = Minute.fromUnixTime(source, stor.subarray(1, 2));
 		const s = Second.fromUnixTime(source, stor.subarray(2, 3));
@@ -158,10 +210,16 @@ export class TimeOnlyMs {
 		return new TimeOnlyMs(h, m, s, ms, utc);
 	}
 
-	/** Create a time from float milliseconds since UNIX epoch */
+	/**
+	 * Create a time from float milliseconds since UNIX epoch aka unix time
+	 *
+	 * @param source Unix time at millisecond accuracy, may include floating point (for higher resolution)
+	 * @param [isUtc=true] Unix time is always UTC, however you may wish to override this marker
+	 * if you've adjusted for local
+	 */
 	public static fromUnixTimeMs(
 		source: number,
-		isUtc = false,
+		isUtc = true,
 		storage?: Uint8Array
 	): TimeOnlyMs {
 		const stor = self.setupStor(storage);
@@ -177,11 +235,11 @@ export class TimeOnlyMs {
 	public static now(storage?: Uint8Array): TimeOnlyMs {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		let now = performance.timeOrigin + performance.now();
-		const dt = new Date(now);
-		//performance.now is in UTC, to make it local we need to read local offset
-		now -= dt.getTimezoneOffset() * 60 * 1000;
-		return self.fromUnixTimeMs(now, false, storage);
+		let utcNow = performance.timeOrigin + performance.now();
+		//Calculate the offset to get it in local time
+		const utcDt = new Date(utcNow);
+		const offset = utcDt.getTimezoneOffset() * 60 * 1000;
+		return self.fromUnixTimeMs(utcNow - offset, false, storage);
 	}
 
 	/** Create time from this point in UTC time */

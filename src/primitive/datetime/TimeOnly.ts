@@ -8,12 +8,18 @@ import { Minute } from './Minute.js';
 import { Second } from './Second.js';
 import { Microsecond } from './Microsecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
+import { ISerializer } from '../interfaces/ISerializer.js';
+
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'TimeOnly';
 
 /**
  * Time of day in microsecond resolution (hh:mm:ss.uuuuuu)
  * Range 00:00:00.000000 - 23:59:59.999999 (no leap second support)
+ *
+ * *Note*: This is higher resolution than [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)
  */
-export class TimeOnly {
+export class TimeOnly implements ISerializer {
 	/**Number of bytes required to store this data */
 	static readonly storageBytes =
 		Hour.storageBytes +
@@ -60,6 +66,18 @@ export class TimeOnly {
 	}
 
 	/**
+	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
+	 * formatted time: hh:mm:ss.mmmmmm(z) (all zero padded)
+	 */
+	toJSON(): string {
+		//JSON is supposed to be human readable, but it's often used as a data-transport between machines only.
+		// Using a number (like valueOf), or encoded serialized bytes, would decrease the JSON
+		// size but is no longer *human readable*.  This mistake is made in some libraries
+		// serializing date and time in unix-time
+		return this.toString();
+	}
+
+	/**
 	 * Numeric time, base 10 shifted: 000000000000 - 235959999999
 	 * 2^38 so safe in JS as a number
 	 * NOTE there are gaps in valid values 240000000000, 236000000000, etc
@@ -84,6 +102,11 @@ export class TimeOnly {
 		this.isUtc.serialize(target);
 	}
 
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
+	}
+
 	/**
 	 * Test internal state is valid, throws if it's not
 	 * You should call this after a deserialize unless you trust the source
@@ -96,6 +119,16 @@ export class TimeOnly {
 		this.microsecond.validate();
 		//no validate for isUtc
 		return this;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -133,7 +166,8 @@ export class TimeOnly {
 
 	/**
 	 * Create a time from a js Date object
-	 * WARNING: Date only has millisecond accuracy, use .now() instead
+	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
+	 * {@link fromUnixTime}/{@link fromUnixTimeMs} with a high resolution (floating point) source
 	 * @param date Value used as source
 	 */
 	public static fromDate(
@@ -146,7 +180,7 @@ export class TimeOnly {
 
 		//NOTE: We could see if date.getTimezoneOffset() is zero and auto detect isUtc
 		// but we want the dev to be explicit that this is a UTC number when it is
-		// and not just conveniently running in the UTC timezone
+		// and not just conveniently running in the UTC timezone (or use fromUtcDate)
 		const h = Hour.fromDate(date, stor);
 		const m = Minute.fromDate(date, stor.subarray(1, 2));
 		const s = Second.fromDate(date, stor.subarray(2, 3));
@@ -155,18 +189,37 @@ export class TimeOnly {
 		return new TimeOnly(h, m, s, us, utc);
 	}
 
-	/** Create a time from float seconds since UNIX epoch aka unix time */
+	/**
+	 * Create a time from a js Date object in UTC
+	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
+	 * {@link fromUnixTime}/{@link fromUnixTimeMs} with a high resolution (floating point) source
+	 * @param date Value used as source
+	 */
+	public static fromDateUtc(date: Date, storage?: Uint8Array): TimeOnly {
+		//Keep the memory contiguous
+		const stor = self.setupStor(storage);
+
+		const h = Hour.fromDateUtc(date, stor);
+		const m = Minute.fromDateUtc(date, stor.subarray(1, 2));
+		const s = Second.fromDateUtc(date, stor.subarray(2, 3));
+		const us = Microsecond.fromDateUtc(date, stor.subarray(3));
+		const utc = UtcOrNot.new(true, stor.subarray(6));
+		return new TimeOnly(h, m, s, us, utc);
+	}
+
+	/**
+	 * Create a time from float seconds since UNIX epoch aka unix time
+	 *
+	 * @param source Unix time at second accuracy, may include floating point (for higher resolution)
+	 * @param [isUtc=true] Unix time is always UTC, however you may wish to override this marker
+	 * if you've adjusted for local
+	 */
 	public static fromUnixTime(
 		source: number,
-		isUtc = false,
+		isUtc = true,
 		storage?: Uint8Array
 	): TimeOnly {
 		const stor = self.setupStor(storage);
-		//Correct into local time if !isUtc
-		if (!isUtc) {
-			const n=new Date();
-			source -= n.getTimezoneOffset()*60;
-		}
 		const h = Hour.fromUnixTime(source, stor);
 		const m = Minute.fromUnixTime(source, stor.subarray(1, 2));
 		const s = Second.fromUnixTime(source, stor.subarray(2, 3));
@@ -175,21 +228,19 @@ export class TimeOnly {
 		return new TimeOnly(h, m, s, us, utc);
 	}
 
-	/** Create a time from float milliseconds since UNIX epoch aka unixtime
-	 * 
-	 * **Note** also the numeric content of the js `Date` object
+	/**
+	 * Create a time from float milliseconds since UNIX epoch aka unix time
+	 *
+	 * @param source Unix time at millisecond accuracy, may include floating point (for higher resolution)
+	 * @param [isUtc=true] Unix time is always UTC, however you may wish to override this marker
+	 * if you've adjusted for local
 	 */
 	public static fromUnixTimeMs(
 		source: number,
-		isUtc = false,
+		isUtc = true,
 		storage?: Uint8Array
 	): TimeOnly {
 		const stor = self.setupStor(storage);
-		//Correct into local time if !isUtc
-		if (!isUtc) {
-			const n=new Date();
-			source -= n.getTimezoneOffset()*60*1000;
-		}
 		const h = Hour.fromUnixTimeMs(source, stor);
 		const m = Minute.fromUnixTimeMs(source, stor.subarray(1, 2));
 		const s = Second.fromUnixTimeMs(source, stor.subarray(2, 3));
@@ -202,8 +253,11 @@ export class TimeOnly {
 	public static now(storage?: Uint8Array): TimeOnly {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		const now = performance.timeOrigin + performance.now();
-		return self.fromUnixTimeMs(now, false, storage);
+		const utcNow = performance.timeOrigin + performance.now();
+		//Calculate the offset to get it in local time
+		const utcDt = new Date(utcNow);
+		const offset = utcDt.getTimezoneOffset() * 60 * 1000;
+		return self.fromUnixTimeMs(utcNow - offset, false, storage);
 	}
 
 	/** Create time from this point in UTC time */

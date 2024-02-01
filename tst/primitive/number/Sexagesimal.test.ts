@@ -58,19 +58,23 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Sexagesimal.deserialize(br,stor).validate());
 });
 
-const toStrSet:[number,string,string][]=[
-    [1,'1','01'],
-    [2,'2','02'],
-    [12,'12','12'],
-    [59,'59','59'],
+const toStrSet:[number,string,string,string][]=[
+    [1,'1','01','1'],
+    [2,'2','02','2'],
+    [12,'12','12','12'],
+    [59,'59','59','59'],
 ];
-for (const [se,str,isoStr] of toStrSet) {
+for (const [se,str,isoStr,jsonStr] of toStrSet) {
     const s = Sexagesimal.new(se);
     tsts(`toString(${se})`,()=>{        
         assert.equal(s.toString(),str);
     });
     tsts(`toIsoString(${se})`,()=>{        
         assert.equal(s.toPadString(),isoStr);
+    });
+    tsts(`toJSON(${se})`,()=>{        
+        const json=JSON.stringify(s);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -160,6 +164,12 @@ tsts('util.inspect',()=>{
     const o=Sexagesimal.new(13);
     const u=util.inspect(o);
     assert.is(u.startsWith('Sexagesimal('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Sexagesimal.new(13);
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{

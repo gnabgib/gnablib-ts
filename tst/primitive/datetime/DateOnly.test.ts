@@ -8,13 +8,13 @@ import util from 'util';
 
 const tsts = suite('DateOnly');
 
-const serSet:[number,number,number,string,string][] = [
-    [-10000,1,1,'-10000-01-01','000000'],//Yep, the null date, also min
-    [1952,12,31,'1952-12-31','5D617E'],//010111010110000 1011 11110
-    [2024,1,14,'2024-01-14','5DF00D'],//010111011111000 0000 01101
-    [22767,12,31,'+22767-12-31','FFFF7E']//max
+const serSet:[number,number,number,string,string,string][] = [
+    [-10000,1,1,'-10000-01-01','000000','"-10000-01-01"'],//Yep, the null date, also min
+    [1952,12,31,'1952-12-31','5D617E','"1952-12-31"'],//010111010110000 1011 11110
+    [2024,1,14,'2024-01-14','5DF00D','"2024-01-14"'],//010111011111000 0000 01101
+    [22767,12,31,'+22767-12-31','FFFF7E','"+22767-12-31"']//max
 ];
-for (const [yr,mo,da,str,ser] of serSet) {
+for (const [yr,mo,da,str,serStr,jsonStr] of serSet) {
     tsts(`ser(${yr} ${mo} ${da})`,()=>{
         var d=DateOnly.new(yr,mo,da);
         
@@ -22,17 +22,23 @@ for (const [yr,mo,da,str,ser] of serSet) {
 
         var bw=new BitWriter(Math.ceil(DateOnly.serialBits/8));
         d.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bw.getBytes()),serStr);
     });
 
-    tsts(`deser(${ser})`,()=>{
-        const bytes=hex.toBytes(ser);
+    tsts(`deser(${serStr})`,()=>{
+        const bytes=hex.toBytes(serStr);
         const br=new BitReader(bytes);
         const d=DateOnly.deserialize(br).validate();
         assert.is(d.year.valueOf(),yr,'year');
         assert.is(d.month.valueOf(),mo,'month');
         assert.is(d.day.valueOf(),da,'day');
         assert.is(d.toString(),str);
+    });
+    
+    tsts(`toJSON(${yr} ${mo} ${da})`,()=>{    
+        var d=DateOnly.new(yr,mo,da);    
+        const json=JSON.stringify(d);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -132,15 +138,21 @@ tsts(`nowUtc`,()=>{
 });
 
 tsts('[Symbol.toStringTag]', () => {
-    const dt=DateOnly.now();
-	const str = Object.prototype.toString.call(dt);
+    const o=DateOnly.now();
+	const str = Object.prototype.toString.call(o);
 	assert.is(str.indexOf('DateOnly') > 0, true);
 });
 
 tsts('util.inspect',()=>{
-    const dt=DateOnly.now();
-    const u=util.inspect(dt);
+    const o=DateOnly.now();
+    const u=util.inspect(o);
     assert.is(u.startsWith('DateOnly('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=DateOnly.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 

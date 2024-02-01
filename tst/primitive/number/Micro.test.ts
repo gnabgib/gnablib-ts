@@ -62,24 +62,28 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Micro.deserialize(br,stor).validate());
 });
 
-const toStrSet:[number,string,string][]=[
-    [0,'0','000000'],//min
-    [1,'1','000001'],
-    [2,'2','000002'],
-    [10,'10','000010'],
-    [100,'100','000100'],
-    [1000,'1000','001000'],
-    [10000,'10000','010000'],
-    [100000,'100000','100000'],
-    [999999,'999999','999999'],//max
+const toStrSet:[number,string,string,string][]=[
+    [0,'0','000000','0'],//min
+    [1,'1','000001','1'],
+    [2,'2','000002','2'],
+    [10,'10','000010','10'],
+    [100,'100','000100','100'],
+    [1000,'1000','001000','1000'],
+    [10000,'10000','010000','10000'],
+    [100000,'100000','100000','100000'],
+    [999999,'999999','999999','999999'],//max
 ];
-for (const [se,str,isoStr] of toStrSet) {
+for (const [se,str,isoStr,jsonStr] of toStrSet) {
     const s = Micro.new(se);
     tsts(`toString(${se})`,()=>{        
         assert.equal(s.toString(),str);
     });
     tsts(`toIsoString(${se})`,()=>{        
         assert.equal(s.toPadString(),isoStr);
+    });
+    tsts(`toJSON(${se})`,()=>{        
+        const json=JSON.stringify(s);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -161,6 +165,12 @@ tsts('util.inspect',()=>{
     const o=Micro.new(13);
     const u=util.inspect(o);
     assert.is(u.startsWith('Micro('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Micro.new(13);
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{

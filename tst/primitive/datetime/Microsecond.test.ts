@@ -11,6 +11,13 @@ tsts(`fromDate`, () => {
 	assert.is(m.valueOf(), dt.getMilliseconds() * 1000);
 });
 
+tsts(`fromDateUtc`,()=>{
+    //2024-01-20 07:13:30
+    const dt=new Date(1705734810);
+    const h=Microsecond.fromDateUtc(dt);
+    assert.is(h.valueOf(),dt.getUTCMilliseconds()*1000);
+});
+
 const fromUnixTimeSet: [number, number][] = [
     //2024-01-20 07:13:30
 	[1705734810, 0],
@@ -60,15 +67,21 @@ tsts(`parse(now)`, () => {
 });
 
 tsts('[Symbol.toStringTag]', () => {
-    const dt=Microsecond.now();
-	const str = Object.prototype.toString.call(dt);
+    const o=Microsecond.now();
+	const str = Object.prototype.toString.call(o);
 	assert.is(str.indexOf('Microsecond') > 0, true);
 });
 
 tsts('util.inspect',()=>{
-    const dt=Microsecond.now();
-    const u=util.inspect(dt);
+    const o=Microsecond.now();
+    const u=util.inspect(o);
     assert.is(u.startsWith('Microsecond('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Microsecond.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{

@@ -79,19 +79,23 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Day.deserialize(br,stor).validate());
 });
 
-const toStrSet:[number,string,string][]=[
-    [1,'1','01'],
-    [2,'2','02'],
-    [12,'12','12'],
-    [31,'31','31'],
+const toStrSet:[number,string,string,string][]=[
+    [1,'1','01','1'],
+    [2,'2','02','2'],
+    [12,'12','12','12'],
+    [31,'31','31','31'],
 ];
-for (const [da,str,isoStr] of toStrSet) {
+for (const [da,str,isoStr,jsonStr] of toStrSet) {
     const d = Day.new(da);
     tsts(`toString(${da})`,()=>{        
         assert.equal(d.toString(),str);
     });
     tsts(`toIsoString(${da})`,()=>{        
         assert.equal(d.toIsoString(),isoStr);
+    });
+    tsts(`toJSON(${da})`,()=>{    
+        const json=JSON.stringify(d);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -188,15 +192,21 @@ for (const unk of badParse) {
 }
 
 tsts('[Symbol.toStringTag]', () => {
-    const dt=Day.now();
-	const str = Object.prototype.toString.call(dt);
+    const o=Day.now();
+	const str = Object.prototype.toString.call(o);
 	assert.is(str.indexOf('DayOfMonth') > 0, true);
 });
 
 tsts('util.inspect',()=>{
-    const dt=Day.now();
-    const u=util.inspect(dt);
+    const o=Day.now();
+    const u=util.inspect(o);
     assert.is(u.startsWith('DayOfMonth('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Day.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{

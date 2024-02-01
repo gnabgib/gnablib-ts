@@ -72,19 +72,23 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Hour.deserialize(br,stor).validate());
 });
 
-const toStrSet:[number,string,string][]=[
-    [1,'1','01'],
-    [2,'2','02'],
-    [12,'12','12'],
-    [23,'23','23'],
+const toStrSet:[number,string,string,string][]=[
+    [1,'1','01','1'],
+    [2,'2','02','2'],
+    [12,'12','12','12'],
+    [23,'23','23','23'],
 ];
-for (const [hr,str,isoStr] of toStrSet) {
+for (const [hr,str,isoStr,jsonStr] of toStrSet) {
     const h = Hour.new(hr);
     tsts(`toString(${hr})`,()=>{        
         assert.equal(h.toString(),str);
     });
     tsts(`toIsoString(${hr})`,()=>{        
         assert.equal(h.toIsoString(),isoStr);
+    });
+    tsts(`toJSON(${hr})`,()=>{    
+        const json=JSON.stringify(h);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -104,6 +108,14 @@ tsts(`fromDate`,()=>{
     const h=Hour.fromDate(dt);
     assert.is(h.valueOf(),dt.getHours());
 });
+
+tsts(`fromDateUtc`,()=>{
+    //2024-01-20 07:13:30
+    const dt=new Date(1705734810);
+    const h=Hour.fromDateUtc(dt);
+    assert.is(h.valueOf(),dt.getUTCHours());
+});
+
 
 tsts(`fromUnixTime`, () => {
 	const h = Hour.fromUnixTime(1705734810);
@@ -212,6 +224,13 @@ tsts('util.inspect',()=>{
     const u=util.inspect(o);
     assert.is(u.startsWith('HourOfDay('),true);
 });
+
+tsts('serialSizeBits',()=>{
+    const o=Hour.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
+});
+
 
 // tsts('general',()=>{
 //     const dt=Hour.now();

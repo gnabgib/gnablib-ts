@@ -7,7 +7,8 @@ import { BitWriter } from '../BitWriter.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
-// Year + Month + Day: Ser in 24 bits, d=5, m=4, leaving 15 bits [32768] for year
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'Year';
 const maxHeYear = 32767; //0x7fff
 const maxIsoYear = maxHeYear - 10000;
 
@@ -64,6 +65,11 @@ export class Year implements ISerializer {
 	}
 
 	/** Year in ISO8601 as an integer (0=1BC, -10000=10001BC, 2024=2024AD) */
+	toJSON(): number {
+		return ((this.#v[0] << 8) | this.#v[1]) - 10000;
+	}
+
+	/** Year in ISO8601 as an integer (0=1BC, -10000=10001BC, 2024=2024AD) */
 	public valueOf(): number {
 		return ((this.#v[0] << 8) | this.#v[1]) - 10000;
 	}
@@ -71,6 +77,21 @@ export class Year implements ISerializer {
 	/** Serialize into target  - 15 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber((this.#v[0] << 8) | this.#v[1], Year.serialBits);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	protected static writeValue(target: Uint8Array, v: number): void {
@@ -131,6 +152,16 @@ export class Year implements ISerializer {
 	public static fromDate(date: Date, storage?: Uint8Array): Year {
 		const stor = self.setupStor(storage);
 		self.writeValue(stor, date.getFullYear() + 10000);
+		return new Year(stor);
+	}
+
+	/**
+	 * Create a year from a js Date object in UTC
+	 * @param date Value used as source
+	 */
+	public static fromDateUtc(date: Date, storage?: Uint8Array): Year {
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, date.getUTCFullYear() + 10000);
 		return new Year(stor);
 	}
 

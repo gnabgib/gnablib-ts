@@ -3,12 +3,20 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { ISerializer } from '../interfaces/ISerializer.js';
 import { Day } from './Day.js';
 import { Month } from './Month.js';
 import { Year } from './Year.js';
 
-/** A year-month-day, in the range -10000-01-01 - +22767-12-31 */
-export class DateOnly {
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const DBG_RPT = 'DateOnly';
+
+/**
+ * Date down to day resolution (no time component)
+ *
+ * Range: -10000-01-01 - +22767-12-31
+ */
+export class DateOnly implements ISerializer {
 	/**Number of bytes required to store this data */
 	static readonly storageBytes =
 		Year.storageBytes + Month.storageBytes + Day.storageBytes; //4
@@ -40,6 +48,18 @@ export class DateOnly {
 	}
 
 	/**
+	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
+	 * formatted date-time: yyyy-mm-ddThh:mm:ss.mmmmmm(z)
+	 */
+	toJSON(): string {
+		//JSON is supposed to be human readable, but it's often used as a data-transport between machines only.
+		// Using a number (like valueOf), or encoded serialized bytes, would decrease the JSON
+		// size but is no longer *human readable*.  This mistake is made in some libraries
+		// serializing date and time in unix-time
+		return this.toString();
+	}
+
+	/**
 	 * Numeric date base 10 shifted -100000101 - +227671231
 	 * So today (2024-01-15) would be: 20240115
 	 * Note there are gaps in valid values: 20241301, 20240132, 20240230 aren't valid, but
@@ -60,6 +80,11 @@ export class DateOnly {
 		this.day.serialize(target);
 	}
 
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
+	}
+
 	/**
 	 * Test internal state is valid, throws if it's not
 	 * You should call this after a deserialize unless you trust the source
@@ -70,6 +95,16 @@ export class DateOnly {
 		this.month.validate();
 		this.day.validate();
 		return this;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT}(${this.toString()})`;
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -114,30 +149,40 @@ export class DateOnly {
 		return new DateOnly(y, m, d);
 	}
 
-	/** Create a date from float seconds since UNIX epoch aka unix time */
-	public static fromUnixTime(
-		source: number,
-		storage?: Uint8Array
-	): DateOnly {
+	/**
+	 * Create a date from a js Date object in UTC
+	 * @param date Value used as source
+	 */
+	public static fromDateUtc(date: Date, storage?: Uint8Array): DateOnly {
+		//Keep the memory contiguous
+		const stor = self.setupStor(storage);
+
+		const y = Year.fromDateUtc(date, stor);
+		const m = Month.fromDateUtc(date, stor.subarray(2, 3));
+		const d = Day.fromDateUtc(date, stor.subarray(3, 4));
+		return new DateOnly(y, m, d);
+	}
+
+	/**
+	 * Create a date from float seconds since UNIX epoch aka unix time
+	 * *NOTE*: Unix time is always in UTC, depending on your timezone this may differ from local
+	 * */
+	public static fromUnixTime(source: number, storage?: Uint8Array): DateOnly {
 		//No need to reinvent the wheel, use Date's built in converter
 		const date = new Date(source * 1000);
-		return self.fromDate(date, storage);
+		return self.fromDateUtc(date, storage);
 	}
 
-	/** Create a date from float milliseconds since UNIX epoch aka unixtime
-	 * 
-	 * **Note** also the numeric content of the js `Date` object
+	/**
+	 * Create a date from float milliseconds since UNIX epoch aka unix time
+	 * *NOTE*: Unix time is always in UTC, depending on your timezone this may differ from local
 	 */
-	public static fromUnixTimeMs(
-		source: number,
-		storage?: Uint8Array
-	): DateOnly {
+	public static fromUnixTimeMs(source: number, storage?: Uint8Array): DateOnly {
 		//No need to reinvent the wheel, use Date's built in converter
 		const date = new Date(source);
-		return self.fromDate(date, storage);
+		return self.fromDateUtc(date, storage);
 	}
 
-	//
 	//public static parse(str: string, storage?: Uint8Array): DateOnly {}
 
 	/** Create this date (local) */
@@ -153,21 +198,7 @@ export class DateOnly {
 		//Note we depend on JS Date here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const n = new Date();
-		//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/valueOf
-		//This is hacky - Date keeps UTC internally, but interprets value into local on output
-		//(getters) ie. getFulLYear/getMonth/getDate are in local.
-		//SO! If we add getTimezoneOffset (which is minutes) to the current time, we get the "UTC"
-		// time.  Or UTC + timezone offset internally.. it's turtles all the way down
-		// minutes * secPerMin * msPerSec (valueOf is in ms)
-		const nUtc = new Date(n.valueOf() + n.getTimezoneOffset() * 60 * 1000);
-		return self.fromDate(nUtc, storage);
-		// //The alternative would be not to reuse this.fromDate:
-		// const u16 = new Uint16Array(2);
-		// const u8 = new Uint8Array(u16.buffer);
-		// const y = Year.new(n.getUTCFullYear(), u16);
-		// const m = Month.new(n.getUTCMonth() + 1, u8.subarray(2, 3));
-		// const d = Day.new(n.getUTCDate(), u8.subarray(3, 4));
-		// return new DateOnly(y, m, d);
+		return self.fromDateUtc(n, storage);
 	}
 
 	public static deserialize(source: BitReader, storage?: Uint8Array): DateOnly {

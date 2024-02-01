@@ -32,6 +32,11 @@ export class Milli implements ISerializer {
 	}
 
 	/** Value as an integer (0-999) */
+	toJSON(): number {
+		return (this.#v[0] << 8) | this.#v[1];
+	}
+
+	/** Value as an integer (0-999) */
 	public valueOf(): number {
 		return (this.#v[0] << 8) | this.#v[1];
 	}
@@ -39,6 +44,11 @@ export class Milli implements ISerializer {
 	/** Serialize into target  - 10 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber((this.#v[0] << 8) | this.#v[1], Milli.serialBits);
+	}
+
+	/** Number of bits required to serialize */
+	get serialSizeBits(): number {
+		return self.serialBits;
 	}
 
 	/**
@@ -59,7 +69,7 @@ export class Milli implements ISerializer {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		return `${DBG_RPT}(${this.toString()})`;
-	}	
+	}
 
 	protected static writeValue(target: Uint8Array, v: number): void {
 		target[0] = v >> 8;

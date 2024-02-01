@@ -58,18 +58,22 @@ tsts(`deser without storage space throws`,()=>{
     assert.throws(()=>Month.deserialize(br,stor).validate());
 });
 
-const toStrSet:[number,string,string][]=[
-    [1,'1','01'],
-    [2,'2','02'],
-    [12,'12','12'],
+const toStrSet:[number,string,string,string][]=[
+    [1,'1','01','1'],
+    [2,'2','02','2'],
+    [12,'12','12','12'],
 ];
-for (const [mo,str,isoStr] of toStrSet) {
+for (const [mo,str,isoStr,jsonStr] of toStrSet) {
     const m = Month.new(mo);
     tsts(`toString(${mo})`,()=>{        
         assert.equal(m.toString(),str);
     });
     tsts(`toIsoString(${mo})`,()=>{        
         assert.equal(m.toIsoString(),isoStr);
+    });
+    tsts(`toJSON(${mo})`,()=>{    
+        const json=JSON.stringify(m);
+        assert.equal(json,jsonStr);
     });
 }
 
@@ -205,15 +209,21 @@ for (const unk of badParse) {
 }
 
 tsts('[Symbol.toStringTag]', () => {
-    const dt=Month.now();
-	const str = Object.prototype.toString.call(dt);
+    const o=Month.now();
+	const str = Object.prototype.toString.call(o);
 	assert.is(str.indexOf('Month') > 0, true);
 });
 
 tsts('util.inspect',()=>{
-    const dt=Month.now();
-    const u=util.inspect(dt);
+    const o=Month.now();
+    const u=util.inspect(o);
     assert.is(u.startsWith('Month('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=Month.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{

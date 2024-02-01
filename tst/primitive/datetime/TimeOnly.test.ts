@@ -4,6 +4,7 @@ import { TimeOnly } from '../../../src/primitive/datetime/TimeOnly';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('TimeOnly');
 
@@ -85,16 +86,26 @@ tsts(`fromDate`,()=>{
     assert.is(t.isUtc.valueBool(),false,'isUtc');
 });
 
-const secondsEpochSet: [number, string][] = [
+tsts(`fromDateUtc`,()=>{
+    const dt=new Date();
+    const t=TimeOnly.fromDateUtc(dt);
+    assert.is(t.hour.valueOf(),dt.getUTCHours(),'hour');
+    assert.is(t.minute.valueOf(), dt.getUTCMinutes(), 'minute');
+    assert.is(t.second.valueOf(), dt.getUTCSeconds(), 'second');
+    assert.is(t.isUtc.valueBool(),true);
+});
+
+const secondsEpochSet: [number, string,string][] = [
     //2024-01-20 07:13:30
-	[1705734810, '07:13:30.000000Z'],
+	[1705734810, '07:13:30.000000Z', '07:13:30.000000Z'],
     //2024-01-20 07:13:30.534
-	[1705734810.534, '07:13:30.534000Z'],
+	[1705734810.534, '07:13:30.534000Z', '07:13:30.534000Z'],
 ];
-for (const [epoch, expect] of secondsEpochSet) {
+for (const [epoch, expectStr, expectJson] of secondsEpochSet) {
 	tsts(`fromSecondsSinceEpoch(${epoch})`, () => {
-		const e = TimeOnly.fromUnixTime(epoch,true);
-		assert.is(e.toString(), expect);
+		const e = TimeOnly.fromUnixTime(epoch);
+		assert.is(e.toString(), expectStr);
+        assert.is(e.toJSON(),expectJson);
 	});
 }
 
@@ -106,7 +117,7 @@ const millisEpochSet: [number, string][] = [
 ];
 for (const [epoch, expect] of millisEpochSet) {
 	tsts(`fromMillisecondsSinceEpoch(${epoch})`, () => {
-		const e = TimeOnly.fromUnixTimeMs(epoch,true);
+		const e = TimeOnly.fromUnixTimeMs(epoch);
 		assert.is(e.toString(), expect);
 	});
 }
@@ -134,6 +145,30 @@ tsts(`nowUtc`,()=>{
     assert.is(t.isUtc.valueBool(),true);
     //unsafe to test microsecond
 });
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=TimeOnly.fromUnixTime(1705734810542);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('TimeOnly') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=TimeOnly.now();
+    const u=util.inspect(o);
+    assert.is(u.startsWith('TimeOnly('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=TimeOnly.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
+});
+
+// tsts('general',()=>{
+//     const dt=Day.now();
+//     console.log(dt);
+//     console.log(Object.prototype.toString.call(dt));
+// });
 
 // tsts(`norp`,()=>{
 //     const timeLocal=TimeOnly.fromUnixTime(1706563448);

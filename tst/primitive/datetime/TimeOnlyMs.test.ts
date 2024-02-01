@@ -4,6 +4,7 @@ import { TimeOnlyMs } from '../../../src/primitive/datetime/TimeOnlyMs';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
+import util from 'util';
 
 const tsts = suite('TimeOnlyMs');
 
@@ -86,24 +87,35 @@ tsts(`fromDate`,()=>{
     assert.is(t.isUtc.valueBool(),false,'isUtc');
 });
 
-const fromUnixTimeSet: [number, string][] = [
+tsts(`fromDateUtc`,()=>{
+    const dt=new Date();
+    const t=TimeOnlyMs.fromDateUtc(dt);
+    assert.is(t.hour.valueOf(),dt.getUTCHours(),'hour');
+    assert.is(t.minute.valueOf(), dt.getUTCMinutes(), 'minute');
+    assert.is(t.second.valueOf(), dt.getUTCSeconds(), 'second');
+    assert.is(t.millisecond.valueOf(), dt.getMilliseconds(), 'millisecond');
+    assert.is(t.isUtc.valueBool(),true);
+});
+
+const fromUnixTimeSet: [number, string, string][] = [
     //2024-01-20 07:13:30
-	[1705734810, '07:13:30.000'],
+	[1705734810, '07:13:30.000Z', '07:13:30.000Z'],
     //2024-01-20 07:13:30.534
-	[1705734810.534, '07:13:30.534'],
+	[1705734810.534, '07:13:30.534Z', '07:13:30.534Z'],
 ];
-for (const [epoch, expect] of fromUnixTimeSet) {
+for (const [epoch, expectStr, expectJson] of fromUnixTimeSet) {
 	tsts(`fromUnixTime(${epoch})`, () => {
 		const e = TimeOnlyMs.fromUnixTime(epoch);
-		assert.is(e.toString(), expect);
-	});
+		assert.is(e.toString(), expectStr);
+        assert.is(e.toJSON(),expectJson);
+    });
 }
 
 const fromUnixTimeMsSet: [number, string][] = [
     //2024-01-20 07:13:30.542
-	[1705734810542, '07:13:30.542'],
+	[1705734810542, '07:13:30.542Z'],
     //2024-01-20 07:13:30.542789
-	[1705734810542.789, '07:13:30.542'],
+	[1705734810542.789, '07:13:30.542Z'],
 ];
 for (const [epoch, expect] of fromUnixTimeMsSet) {
 	tsts(`fromUnixTimeMs(${epoch})`, () => {
@@ -135,5 +147,24 @@ tsts(`nowUtc`,()=>{
     assert.is(t.isUtc.valueBool(),true);
     //unsafe to test microsecond
 });
+
+tsts('[Symbol.toStringTag]', () => {
+    const o=TimeOnlyMs.fromUnixTime(1705734810542);
+	const str = Object.prototype.toString.call(o);
+	assert.is(str.indexOf('TimeOnlyMs') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const o=TimeOnlyMs.now();
+    const u=util.inspect(o);
+    assert.is(u.startsWith('TimeOnlyMs('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=TimeOnlyMs.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
+});
+
 
 tsts.run();

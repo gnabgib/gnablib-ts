@@ -21,38 +21,43 @@ interface dtParts {
 	isUtc: boolean;
 }
 
-const serSet: [dtParts, string, string][] = [
+const serSet: [dtParts, string, string,string][] = [
 	[
 		//min
 		{ y: -10000, m: 1, d: 1, h: 0, i: 0, s: 0, us: 0, isUtc: false },
 		'-10000-01-01T00:00:00.000000',
 		'0000000000000000',
+        '"-10000-01-01T00:00:00.000000"'
 	],
 	[
 		//min UTC
 		{ y: -10000, m: 1, d: 1, h: 0, i: 0, s: 0, us: 0, isUtc: true },
 		'-10000-01-01T00:00:00.000000Z',
 		'0000000000000004',
+        '"-10000-01-01T00:00:00.000000Z"'
 	],
     [
 		{ y: 2024, m: 1, d: 14, h: 11, i: 41, s: 7, us: 543271, isUtc: false },
 		'2024-01-14T11:41:07.543271',
 		'5DF00D5D23C25138',
+        '"2024-01-14T11:41:07.543271"'
     ],
     [
 		//max
 		{ y: 22767, m: 12, d: 31, h: 23, i: 59, s: 59, us: 999999, isUtc: false },
 		'+22767-12-31T23:59:59.999999',
 		'FFFF7EBF7DFA11F8',
+        '"+22767-12-31T23:59:59.999999"'
 	],
     [
 		//max UTC
 		{ y: 22767, m: 12, d: 31, h: 23, i: 59, s: 59, us: 999999, isUtc: true },
 		'+22767-12-31T23:59:59.999999Z',
 		'FFFF7EBF7DFA11FC',
+        '"+22767-12-31T23:59:59.999999Z"'
 	],
 ];
-for (const [o, str, ser] of serSet) {
+for (const [o, str, serStr, jsonStr] of serSet) {
     //Note! Because DateOnly fits in 24bits, DateTime.ser = DateOnly.ser + TimeOnly.ser
     // we could use sub types inside DateTime, but then the individual components would
     // be nested (eg You can access `DateTime.Year`, vs `DateTime.Date.Year`)
@@ -63,14 +68,18 @@ for (const [o, str, ser] of serSet) {
 	tsts(`ser(${str})`, () => {
 		var bw = new BitWriter(Math.ceil(DateTime.serialBits / 8));
 		d.serialize(bw);
-		assert.is(hex.fromBytes(bw.getBytes()), ser);
+		assert.is(hex.fromBytes(bw.getBytes()), serStr);
 	});
-	tsts(`deser(${ser})`, () => {
-		const bytes = hex.toBytes(ser);
+	tsts(`deser(${serStr})`, () => {
+		const bytes = hex.toBytes(serStr);
 		const br = new BitReader(bytes);
 		const deser = DateTime.deserialize(br).validate();
 		assert.is(deser.toString(), str);
 	});
+    tsts(`toJSON(${str})`,()=>{        
+        const json=JSON.stringify(d);
+        assert.equal(json,jsonStr);
+    });
 }
 
 tsts(`deser with invalid source value (FFFFFFFFFFFFFFFFFF) throws`, () => {
@@ -112,6 +121,21 @@ tsts(`fromDate`,()=>{
     assert.is(d.second.valueOf(), dt.getSeconds(), 'second');
     assert.is(d.microsecond.valueOf(), dt.getMilliseconds()*1000, 'microsecond');
     assert.is(d.isUtc.valueBool(),false,'isUtc');
+});
+
+tsts(`fromDateUtc`,()=>{
+    // deepcode ignore DateMonthIndex/test: yes, we know
+    const epoch=1705734810542;
+    const dt=new Date(epoch);
+    const d=DateTime.fromDateUtc(dt);
+    assert.is(d.year.valueOf(),dt.getUTCFullYear(),'year');
+    assert.is(d.month.valueOf(),dt.getUTCMonth()+1,'month');//JS stores months off by 1 (0=Jan)
+    assert.is(d.day.valueOf(),dt.getUTCDate(),'day');
+    assert.is(d.hour.valueOf(),dt.getUTCHours(),'hour');
+    assert.is(d.minute.valueOf(), dt.getUTCMinutes(), 'minute');
+    assert.is(d.second.valueOf(), dt.getUTCSeconds(), 'second');
+    assert.is(d.microsecond.valueOf(), dt.getUTCMilliseconds()*1000, 'microsecond');
+    assert.is(d.isUtc.valueBool(),true,'isUtc');
 });
 
 const fromUnixTimeSet: [number, string][] = [
@@ -187,21 +211,28 @@ tsts(`nowUtc`,()=>{
 });
 
 tsts('[Symbol.toStringTag]', () => {
-    const dt=DateTime.now();
-	const str = Object.prototype.toString.call(dt);
+    const o=DateTime.now();
+	const str = Object.prototype.toString.call(o);
 	assert.is(str.indexOf('DateTime') > 0, true);
 });
 
 tsts('util.inspect',()=>{
-    const dt=DateTime.now();
-    const u=util.inspect(dt);
+    const o=DateTime.now();
+    const u=util.inspect(o);
     assert.is(u.startsWith('DateTime('),true);
+});
+
+tsts('serialSizeBits',()=>{
+    const o=DateTime.now();
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
 // tsts('general',()=>{
 //     const dt=DateTime.now();
 //     console.log(dt);
 //     console.log(Object.prototype.toString.call(dt));
+//     console.log(JSON.stringify(dt));
 // });
 
 tsts.run();
