@@ -34,7 +34,7 @@ for (const [yr,mo,da,str,serStr,jsonStr] of serSet) {
         assert.is(d.day.valueOf(),da,'day');
         assert.is(d.toString(),str);
     });
-    
+
     tsts(`toJSON(${yr} ${mo} ${da})`,()=>{    
         var d=DateOnly.new(yr,mo,da);    
         const json=JSON.stringify(d);
@@ -91,17 +91,51 @@ tsts(`fromDate`,()=>{
     assert.is(d.valueOf(),20010203);
 });
 
+tsts(`toDate`,()=>{
+    //Note you have to use a truncated epoch (h/m/s all zero)
+    const epochMs=981158400000;
+    const o=DateOnly.fromUnixTimeMs(epochMs);
+    assert.is(o.toDate().valueOf(),epochMs)
+})
+
 const fromUnixTimeSet: [number, string][] = [
     //2024-01-20 07:13:30
 	[1705734810, '2024-01-20'],
     //2024-01-20 07:13:30.534
 	[1705734810.534, '2024-01-20'],
 ];
-for (const [epoch, expect] of fromUnixTimeSet) {
+for (const [epoch, str] of fromUnixTimeSet) {
+    const e = DateOnly.fromUnixTime(epoch);
 	tsts(`fromUnixTime(${epoch})`, () => {
-		const e = DateOnly.fromUnixTime(epoch);
-		assert.is(e.toString(), expect);
+		assert.is(e.toString(), str);
 	});
+}
+
+//Because `fromUnixTime` ignores lower units (smaller than day) we can't
+// roundtrip from unix->DateOnly->unix (unless h/m/s are zeroed)
+const toUnixTimeSet: [number,number,number,string,number,number][]=[
+    [2001,2,3,'2001-02-03',981158400,981158400000],
+    [2024,1,20,'2024-01-20',1705708800,1705708800000],
+    [2024,2,1,'2024-02-01',1706745600,1706745600000],
+];
+for(const [y,m,d,str,epoch,epochMs] of toUnixTimeSet) {
+    const dt=DateOnly.new(y,m,d);
+    tsts(`toUnixTime(${str})`,()=>{
+        assert.is(dt.toString(),str);
+        assert.is(dt.toUnixTime(),epoch);
+    });
+    tsts(`toUnixTimeMs(${str})`,()=>{
+        assert.is(dt.toUnixTimeMs(),epochMs);
+    })
+    //We can back convert epoch to date with these zeroed values
+    tsts(`fromUnixTime(${epoch})`,()=>{
+        const fr=DateOnly.fromUnixTime(epoch);
+        assert.is(fr.toString(),str);
+    })
+    tsts(`fromUnixTimeMs(${epochMs})`,()=>{
+        const fr=DateOnly.fromUnixTimeMs(epochMs);
+        assert.is(fr.toString(),str);
+    })
 }
 
 const fromUnixTimeMsSet: [number, string][] = [

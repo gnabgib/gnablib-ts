@@ -58,6 +58,26 @@ export class DateOnly implements ISerializer {
 		// serializing date and time in unix-time
 		return this.toString();
 	}
+	
+	/**
+	 * Output as a JS `Date` object (in UTC, hour and smaller units zeroed)
+	 * 
+	 * Because JS Date includes a time element, there can be some unexpected side effects with
+	 * date-math. (eg when crossing daylight savings time boundaries). 
+	 */
+	toDate():Date {
+		return new Date(Date.UTC(this.year.valueOf(),this.month.valueOf()-1,this.day.valueOf()));
+	}
+
+	/** Seconds since the Unix epoch aka unix time (hour and smaller units zeroed) */
+	toUnixTime():number {
+		return Date.UTC(this.year.valueOf(),this.month.valueOf()-1,this.day.valueOf())/1000;
+	}
+
+	/** Milliseconds since the Unix epoch aka unix time (hour and smaller units zeroed, compatible with `Date` constructor) */
+	toUnixTimeMs():number {
+		return Date.UTC(this.year.valueOf(),this.month.valueOf()-1,this.day.valueOf());
+	}
 
 	/**
 	 * Numeric date base 10 shifted -100000101 - +227671231

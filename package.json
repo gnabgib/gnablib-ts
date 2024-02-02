@@ -305,7 +305,6 @@
 			"terser": null
 		},
 		"optDevDependencies": null,
-		"keywords": null,
 		"scripts": {
 			"preversion": null,
 			"version": null,

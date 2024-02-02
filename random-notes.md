@@ -107,3 +107,14 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 [consoleDebugSymbol](/*depth, options, inspect*/):string {}
 ```
 The result of which is included in `console.log(obj)` (in Node) or `util.inspect(obj)`
+
+### Floating point compare
+
+If you have large numbers with high resolution, you may start to see floating point error in comparisons
+eg 0.3!=0.3.  One way to combat that is use `toPrecision` and include significant figures (left and right of decimal place)
+
+For example in TimeOnly, there was briefly floating point error in the following comparison:
+`assert.is(tm.toSeconds(),seconds);`
+both are floating point numbers.  Ended up fixing that using better calculation order, but this also works:
+`assert.is(tm.toSeconds().toPrecision(11),seconds.toPrecision(11));`
+The maximum value is `86399.999999` since that's how many seconds are in a day (without leap seconds)

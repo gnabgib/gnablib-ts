@@ -45,6 +45,19 @@ for (const [epoch, expect] of fromUnixTimeMsSet) {
 	});
 }
 
+const microAsMilli:[number,number][]=[
+	[0,0],
+	[542000,542],
+	[542789,542.789]
+];
+for(const [micro,milli] of microAsMilli) {
+	tsts(`toMillisecond(${micro})`,()=>{
+		const e=Microsecond.new(micro);
+		console.log(e);
+		assert.is(e.toMillisecond(),milli);
+	})
+}
+
 tsts(`now`, () => {
 	const m = Microsecond.now();
 	const mNum = +m;

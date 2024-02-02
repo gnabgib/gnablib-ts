@@ -9,9 +9,11 @@ import { ISerializer } from '../interfaces/ISerializer.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'HourOfDay';
 const secsPerHour = 60 * 60;
-const msPerHour = secsPerHour * 1000;
 const secsPerDay = secsPerHour * 24;
+const msPerHour = secsPerHour * 1000;
 const msPerDay = secsPerDay * 1000;
+const usPerHour = msPerHour * 1000;
+const usPerDay = msPerDay * 1000;
 
 export class Hour implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -91,7 +93,7 @@ export class Hour implements ISerializer {
 	}
 
 	/**
-	 * Create an hour from a js Date object
+	 * Create from a js Date object
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Hour {
@@ -101,7 +103,7 @@ export class Hour implements ISerializer {
 	}
 
 	/**
-	 * Create an hour from a js Date object in UTC
+	 * Create from a js Date object in UTC
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(date: Date, storage?: Uint8Array): Hour {
@@ -110,17 +112,24 @@ export class Hour implements ISerializer {
 		return new Hour(stor);
 	}
 
-	/** Create an hour from seconds since UNIX epoch */
+	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(source: number, storage?: Uint8Array): Hour {
 		const stor = self.setupStor(storage);
 		stor[0] = (source % secsPerDay) / secsPerHour;
 		return new Hour(stor);
 	}
 
-	/** Create an hour from milliseconds since UNIX epoch */
+	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(source: number, storage?: Uint8Array): Hour {
 		const stor = self.setupStor(storage);
 		stor[0] = (source % msPerDay) / msPerHour;
+		return new Hour(stor);
+	}
+
+	/** Create from microseconds since UNIX epoch */
+	public static fromUnixTimeUs(source: number, storage?: Uint8Array): Hour {
+		const stor = self.setupStor(storage);
+		stor[0] = (source % usPerDay) / usPerHour;
 		return new Hour(stor);
 	}
 

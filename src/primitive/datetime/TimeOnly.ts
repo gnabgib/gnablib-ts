@@ -77,6 +77,34 @@ export class TimeOnly implements ISerializer {
 		return this.toString();
 	}
 
+	//toDate makes little sense (would have to provide y/m/d)
+	//toUnixTime likewise makes little sense (would always be 1970-01-01) so instead: toSeconds,
+	// as in seconds since midnight
+	//toUnixTimeMs likewise -> toMilliseconds (ms since midnight)
+
+	/** Seconds (since midnight) value can be floating point (us component)*/
+	toSeconds(): number {
+		return this.toMicroseconds() / 1000000;
+	}
+
+	/** Milliseconds (since midnight) value can be floating point (us component)*/
+	toMilliseconds(): number {
+		return this.toMicroseconds() / 1000;
+	}
+
+	/** Microseconds (since midnight) */
+	toMicroseconds(): number {
+		const usPerSec = 1000000;
+		const usPerMin = usPerSec * 60;
+		const usPerHour = usPerMin * 60;
+		return (
+			this.hour.valueOf() * usPerHour +
+			this.minute.valueOf() * usPerMin +
+			this.second.valueOf() * usPerSec +
+			this.microsecond.valueOf()
+		);
+	}
+
 	/**
 	 * Numeric time, base 10 shifted: 000000000000 - 235959999999
 	 * 2^38 so safe in JS as a number
@@ -245,6 +273,27 @@ export class TimeOnly implements ISerializer {
 		const m = Minute.fromUnixTimeMs(source, stor.subarray(1, 2));
 		const s = Second.fromUnixTimeMs(source, stor.subarray(2, 3));
 		const us = Microsecond.fromUnixTimeMs(source, stor.subarray(3));
+		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
+		return new TimeOnly(h, m, s, us, utc);
+	}
+
+	/**
+	 * Create a time from microseconds since Unix epoch
+	 *
+	 * @param source Number of microseconds since midnight (if floating point it'll be truncated)
+	 * @param [isUtc=true] Unix time is always UTC, however you may wish to override this marker
+	 * if you've adjusted for local
+	 */
+	public static fromUnixTimeUs(
+		source: number,
+		isUtc = true,
+		storage?: Uint8Array
+	): TimeOnly {
+		const stor = self.setupStor(storage);
+		const h = Hour.fromUnixTimeUs(source, stor);
+		const m = Minute.fromUnixTimeUs(source, stor.subarray(1, 2));
+		const s = Second.fromUnixTimeUs(source, stor.subarray(2, 3));
+		const us = Microsecond.fromUnixTimeUs(source, stor.subarray(3));
 		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
 		return new TimeOnly(h, m, s, us, utc);
 	}

@@ -99,6 +99,51 @@ export class DateTime implements ISerializer {
 	}
 
 	/**
+	 * Output as a JS `Date` object (in UTC)
+	 *
+	 * *Note*: `Date` only supports millisecond resolution so accuracy will be lost
+	 */
+	toDate(): Date {
+		return new Date(
+			Date.UTC(
+				this.year.valueOf(),
+				this.month.valueOf() - 1,
+				this.day.valueOf(),
+				this.hour.valueOf(),
+				this.minute.valueOf(),
+				this.second.valueOf(),
+				this.microsecond.valueOf() / 1000
+			)
+		);
+	}
+
+	/** Seconds since the Unix epoch aka unix time */
+	toUnixTime(): number {
+		const yToS = Date.UTC(
+			this.year.valueOf(),
+			this.month.valueOf() - 1,
+			this.day.valueOf(),
+			this.hour.valueOf(),
+			this.minute.valueOf(),
+			this.second.valueOf()
+		);
+		return (yToS + this.microsecond.toMillisecond()) / 1000;
+	}
+
+	/** Milliseconds since the Unix epoch aka unix time (compatible with `Date` constructor) */
+	toUnixTimeMs(): number {
+		const yToS = Date.UTC(
+			this.year.valueOf(),
+			this.month.valueOf() - 1,
+			this.day.valueOf(),
+			this.hour.valueOf(),
+			this.minute.valueOf(),
+			this.second.valueOf()
+		);
+		return yToS + this.microsecond.toMillisecond();
+	}
+
+	/**
 	 * String datetime, without separators
 	 * NOTE there are gaps in valid values, but you can do < > = comparisons
 	 * NOTE Utc indicator is not included in this value
@@ -128,7 +173,7 @@ export class DateTime implements ISerializer {
 	}
 
 	/** Number of bits required to serialize */
-	get serialSizeBits():number {
+	get serialSizeBits(): number {
 		return self.serialBits;
 	}
 

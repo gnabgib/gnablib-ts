@@ -6,8 +6,10 @@ import { Sexagesimal } from '../number/Sexagesimal.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Second';
 const secsPerMin = 60;
-const milliPerSec = 1000;
-const milliPerMin = secsPerMin * milliPerSec;
+const msPerSec = 1000;
+const msPerMin = secsPerMin * msPerSec;
+const usPerSec=1000000;
+const usPerMin = usPerSec*secsPerMin;
 
 export class Second extends Sexagesimal {
 	/** @hidden */
@@ -40,17 +42,24 @@ export class Second extends Sexagesimal {
 		return new Second(stor);
 	}
 
-	/** Create a second from seconds since UNIX epoch */
+	/** Create a second from seconds since Unix epoch */
 	public static fromUnixTime(source: number, storage?: Uint8Array): Second {
 		const stor = self.setupStor(storage);
 		stor[0] = source % secsPerMin;
 		return new Second(stor);
 	}
 
-	/** Create a second from milliseconds since UNIX epoch */
+	/** Create a second from milliseconds since Unix epoch */
 	public static fromUnixTimeMs(source: number, storage?: Uint8Array): Second {
 		const stor = self.setupStor(storage);
-		stor[0] = (source % milliPerMin) / milliPerSec;
+		stor[0] = (source % msPerMin) / msPerSec;
+		return new Second(stor);
+	}
+
+	/** Create from microseconds since Unix epoch */
+	public static fromUnixTimeUs(source: number, storage?: Uint8Array): Second {
+		const stor = self.setupStor(storage);
+		stor[0] = (source % usPerMin) / usPerSec;
 		return new Second(stor);
 	}
 

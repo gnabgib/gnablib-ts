@@ -1,5 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { Micro } from '../number/Micro.js';
 
@@ -17,11 +18,16 @@ export class Microsecond extends Micro {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
+	/** Microsecond as a floating point millisecond */
+	public toMillisecond(): number {
+		return this.valueOf() / 1000;
+	}
+
 	/**
 	 * Create a microsecond from a js Date object
 	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
 	 * {@link fromUnixTime}/{@link fromUnixTimeMs} with a high resolution (floating point) source
-	 * 
+	 *
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Microsecond {
@@ -34,7 +40,7 @@ export class Microsecond extends Micro {
 	 * Create a microsecond from a js Date object in UTC
 	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
 	 * {@link fromUnixTime}/{@link fromUnixTimeMs} with a high resolution (floating point) source
-	 * 
+	 *
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(date: Date, storage?: Uint8Array): Microsecond {
@@ -44,7 +50,7 @@ export class Microsecond extends Micro {
 	}
 
 	/**
-	 * Create a microsecond from float seconds since UNIX epoch
+	 * Create from seconds since Unix epoch
 	 * *NOTE*: `$source` can be floating point (ie higher resolution than seconds)
 	 * */
 	public static fromUnixTime(
@@ -57,7 +63,7 @@ export class Microsecond extends Micro {
 	}
 
 	/**
-	 * Create a microsecond from milliseconds since UNIX epoch
+	 * Create from milliseconds since Unix epoch
 	 * *NOTE*: `$source` can be floating point (ie higher resolution than milliseconds)
 	 * */
 	public static fromUnixTimeMs(
@@ -65,8 +71,24 @@ export class Microsecond extends Micro {
 		storage?: Uint8Array
 	): Microsecond {
 		const stor = self.setupStor(storage);
-		//this.writeValue(stor, (source % 1000) * 1000);
 		self.writeValue(stor, (source * 1000) % 1000000);
+		return new Microsecond(stor);
+	}
+
+	/**
+	 * Create from microseconds since Unix epoch.  Largely the same as new() but `$source`
+	 * is `mod 1000000` allowing wrap around (rather than enforcing range constraints)
+	 * *NOTE*: if `$source` is floating point it will be truncated
+	 * @param source
+	 * @param storage
+	 * @returns
+	 */
+	public static fromUnixTimeUs(
+		source: number,
+		storage?: Uint8Array
+	): Microsecond {
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, source % 1000000);
 		return new Microsecond(stor);
 	}
 
@@ -80,7 +102,10 @@ export class Microsecond extends Micro {
 
 	/** Create a new Microsecond, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Microsecond {
-		return Micro.new(v, storage) as Microsecond;
+		safe.int.inRangeInc(v, 0, 999999);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, v);
+		return new Microsecond(stor);
 	}
 
 	protected static doParse(
@@ -88,8 +113,10 @@ export class Microsecond extends Micro {
 		strict: boolean,
 		storage?: Uint8Array
 	): Microsecond {
-		if (str.toLowerCase() === 'now') return self.now(storage);
-		return super.doParse(str, strict, storage) as Microsecond;
+		const stor = self.setupStor(storage);
+		if (str.toLowerCase() === 'now') return self.now(stor);
+		const m=super.doParse(str, strict, stor);
+		return new Microsecond(stor);
 	}
 
 	/**

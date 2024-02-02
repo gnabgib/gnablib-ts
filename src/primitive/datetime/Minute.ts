@@ -5,10 +5,13 @@ import { Sexagesimal } from '../number/Sexagesimal.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Minute';
-const secsPerMin = 60;
-const secsPerHour = secsPerMin * 60;
-const msPerMin = secsPerMin * 1000;
-const msPerHour = secsPerHour * 1000;
+const minPerHour=60;
+const secPerMin = 60;
+const secPerHour = secPerMin * minPerHour;
+const msPerMin = secPerMin * 1000;
+const msPerHour = msPerMin * minPerHour;
+const usPerMin = secPerMin * 1000000;
+const usPerHour = usPerMin * minPerHour;
 
 export class Minute extends Sexagesimal {
 	/** @hidden */
@@ -22,7 +25,7 @@ export class Minute extends Sexagesimal {
 	}
 
 	/**
-	 * Create a minute from a js Date object
+	 * Create from a js Date object
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date, storage?: Uint8Array): Minute {
@@ -32,7 +35,7 @@ export class Minute extends Sexagesimal {
 	}
 
 	/**
-	 * Create a minute from a js Date object in UTC
+	 * Create from a js Date object in UTC
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(date: Date, storage?: Uint8Array): Minute {
@@ -41,17 +44,24 @@ export class Minute extends Sexagesimal {
 		return new Minute(stor);
 	}
 
-	/** Create a minute from seconds since UNIX epoch */
+	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(source: number, storage?: Uint8Array): Minute {
 		const stor = self.setupStor(storage);
-		stor[0] = (source % secsPerHour) / secsPerMin;
+		stor[0] = (source % secPerHour) / secPerMin;
 		return new Minute(stor);
 	}
 
-	/** Create a minute from milliseconds since UNIX epoch */
+	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(source: number, storage?: Uint8Array): Minute {
 		const stor = self.setupStor(storage);
 		stor[0] = (source % msPerHour) / msPerMin;
+		return new Minute(stor);
+	}
+
+	/** Create from microseconds since UNIX epoch */
+	public static fromUnixTimeUs(source: number, storage?: Uint8Array): Minute {
+		const stor = self.setupStor(storage);
+		stor[0] = (source % usPerHour) / usPerMin;
 		return new Minute(stor);
 	}
 

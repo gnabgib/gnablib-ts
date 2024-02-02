@@ -123,6 +123,12 @@ tsts(`fromDate`,()=>{
     assert.is(d.isUtc.valueBool(),false,'isUtc');
 });
 
+tsts(`toDate`,()=>{
+    const epochMs=1705734810542;
+    const dt=DateTime.fromUnixTimeMs(epochMs);
+    assert.is(dt.toDate().valueOf(),epochMs);
+});
+
 tsts(`fromDateUtc`,()=>{
     // deepcode ignore DateMonthIndex/test: yes, we know
     const epoch=1705734810542;
@@ -138,19 +144,6 @@ tsts(`fromDateUtc`,()=>{
     assert.is(d.isUtc.valueBool(),true,'isUtc');
 });
 
-const fromUnixTimeSet: [number, string][] = [
-    //2024-01-20 07:13:30
-	[1705734810, '2024-01-20T07:13:30.000000Z'],
-    //2024-01-20 07:13:30.534
-	[1705734810.534, '2024-01-20T07:13:30.534000Z'],
-];
-for (const [epoch, expect] of fromUnixTimeSet) {
-	tsts(`fromUnixTime(${epoch})`, () => {
-		const e = DateTime.fromUnixTime(epoch,true);
-		assert.is(e.toString(), expect);
-	});
-}
-
 const fromUnixTimeMsSet: [number, string][] = [
     //2024-01-20 07:13:30.542
 	[1705734810542, '2024-01-20T07:13:30.542000Z'],
@@ -162,6 +155,46 @@ for (const [epoch, expect] of fromUnixTimeMsSet) {
 		const e = DateTime.fromUnixTimeMs(epoch,true);
 		assert.is(e.toString(), expect);
 	});
+}
+
+const unixTimeSet:[dtParts,number,number,string][]=[
+    [
+        { y: 2024, m: 1, d: 20, h: 7, i: 13, s: 30, us: 0, isUtc: true },
+        1705734810,1705734810000,'2024-01-20T07:13:30.000000Z'
+    ],
+    [
+        { y: 2024, m: 1, d: 20, h: 7, i: 13, s: 30, us: 534000, isUtc: true },
+        1705734810.534,1705734810534,'2024-01-20T07:13:30.534000Z'
+    ],
+    [
+        { y: 2024, m: 1, d: 20, h: 7, i: 13, s: 30, us: 542000, isUtc: true },
+        1705734810.542,1705734810542,'2024-01-20T07:13:30.542000Z'
+    ],
+    [
+        { y: 2024, m: 1, d: 20, h: 7, i: 13, s: 30, us: 542789, isUtc: true },
+        1705734810.542789,1705734810542.789,'2024-01-20T07:13:30.542789Z'
+    ],
+];
+for (const [o,epoch,epochMs,str] of unixTimeSet) {
+    const dt= DateTime.new(o.y, o.m, o.d, o.h, o.i, o.s, o.us, o.isUtc);
+    tsts(`toString(${str})`,()=>{
+        assert.is(dt.toString(),str);
+    })
+    tsts(`toUnixTime(${str})`,()=>{
+        assert.is(dt.toUnixTime(),epoch);
+    })
+    tsts(`toUnixTimeMs(${str})`,()=>{
+        assert.is(dt.toUnixTimeMs(),epochMs);
+    })
+    tsts(`fromUnixTime(${epoch})`,()=>{
+        const fr=DateTime.fromUnixTime(epoch);
+        assert.is(fr.toString(),str);
+    })
+    tsts(`fromUnixTimeMs(${epochMs})`,()=>{
+        const fr=DateTime.fromUnixTimeMs(epochMs);
+        assert.is(fr.toString(),str);
+    })
+
 }
 
 tsts(`now`,()=>{

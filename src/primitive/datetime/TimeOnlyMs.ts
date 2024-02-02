@@ -65,6 +65,30 @@ export class TimeOnlyMs implements ISerializer {
 		return this.toString();
 	}
 
+	//toDate makes little sense (would have to provide y/m/d)
+	//toUnixTime likewise makes little sense (would always be 1970-01-01) so instead: toSeconds,
+	// as in seconds since midnight
+	//toUnixTimeMs likewise -> toMilliseconds (ms since midnight)
+
+	/** Time as seconds (since midnight) value can be floating point (ms component)*/
+	toSeconds(): number {
+		return this.toMilliseconds() / 1000;
+	}
+
+	/** Time as milliseconds (since midnight)*/
+	toMilliseconds(): number {
+		const msPerSec = 1000;
+		const msPerMin = 60 * msPerSec;
+		const msPerHour = 60 * msPerMin;
+
+		return (
+			this.hour.valueOf() * msPerHour +
+			this.minute.valueOf() * msPerMin +
+			this.second.valueOf() * msPerSec +
+			this.millisecond.valueOf()
+		);
+	}
+
 	/**
 	 * Numeric time, base 10 shifted: 000000000 - 235959999
 	 * NOTE there are gaps in valid values 240000000, 236000000, etc

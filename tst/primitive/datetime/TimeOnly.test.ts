@@ -122,6 +122,39 @@ for (const [epoch, expect] of millisEpochSet) {
 	});
 }
 
+const toSecondMsUsSet:[number,number,number,number,string,number,number,number][]=[
+    [0,0,0,0,'00:00:00.000000Z',0,0,0],//min
+    [7,13,30,542000,'07:13:30.542000Z',26010.542,26010542,26010542000],
+    [7,13,30,542789,'07:13:30.542789Z',26010.542789,26010542.789,26010542789],
+    [23,59,59,999999,'23:59:59.999999Z',86399.999999,86399999.999,86399999999]//max
+];
+for(const [h,m,s,us,str,seconds,milliseconds,microseconds] of toSecondMsUsSet) {
+    const tm=TimeOnly.new(h,m,s,us,true);
+    tsts(`toSeconds(${str})`,()=>{
+        assert.is(tm.toString(),str);
+        assert.is(tm.toSeconds(),seconds)
+    });
+    tsts(`toMilliseconds(${str})`,()=>{
+        assert.is(tm.toMilliseconds(),milliseconds);
+    });
+    tsts(`toMicroseconds(${str})`,()=>{
+        assert.is(tm.toMicroseconds(),microseconds);
+    });
+    //We can back convert epoch to date with these zeroed values
+    tsts(`fromUnixTime(${seconds})`,()=>{
+        const fr=TimeOnly.fromUnixTime(seconds);
+        assert.is(fr.toString(),str);
+    })
+    tsts(`fromUnixTimeMs(${milliseconds})`,()=>{
+        const fr=TimeOnly.fromUnixTimeMs(milliseconds);
+        assert.is(fr.toString(),str);
+    })
+    tsts(`fromUnixTimeUs(${microseconds})`,()=>{
+        const fr=TimeOnly.fromUnixTimeUs(microseconds);
+        assert.is(fr.toString(),str);
+    })
+}
+
 tsts(`now`,()=>{
     const dt=new Date();
     const t=TimeOnly.now();
