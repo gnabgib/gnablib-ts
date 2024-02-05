@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.4.10",
+	"version": "0.4.11",
 	"description": "A zero dependency library, with provenance, TypeScript/JavaScript applications.",
 	"type": "module",
 	"scripts": {
@@ -25,7 +25,7 @@
 	"engines": {
 		"node": ">=15.3.0"
 	},
-	"types":"index.d.ts",
+	"types": "index.d.ts",
 	"exports": {
 		"./abnf": {
 			"types": "./_o/type/abnf/index.d.ts",
