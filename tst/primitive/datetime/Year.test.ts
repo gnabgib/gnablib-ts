@@ -108,6 +108,11 @@ tsts(`fromDate`,()=>{
     const y=Year.fromDate(dt);
     assert.is(y.valueOf(),dt.getFullYear());
 });
+tsts(`fromDateUtc`,()=>{
+    const dt=new Date(2001,2,3,4,5,6);
+    const y=Year.fromDateUtc(dt);
+    assert.is(y.valueOf(),dt.getUTCFullYear());
+});
 
 tsts(`now`,()=>{
     const dt=new Date();
@@ -123,17 +128,19 @@ tsts(`validate`,()=>{
     assert.is(y.valueOf(),2024);
 });
 
-const leapSet:[number,boolean][]=[
-    [1900,false],//%100 = true
-    [2000,true],//%400 = true
-    [2023,false],
-    [2024,true],
-];
-for (const [yr,isLeap] of leapSet) {
-    tsts(`isLeap(${yr})`,()=>{
-        const y = Year.new(yr);
-        assert.equal(y.isLeap,isLeap);
-    });
+{
+    //Because years follow a cycle of 400, a test of a range of 400 is "all"
+    //We want a range of y > 256 so two bytes of storage are used
+    for(let y=2000;y<2400;y++) {
+        tsts(`isLeap(${y})`,()=>{
+            //Note this is the more traditional calc, but you pay the penalty of:
+            // 1 mod for basic-non-leap (can be optimized to bit logic)
+            // 2 mods for most leap
+            // 3 mods for 4 values (0/100/200/300)
+            const leap=y%4==0&&(y%100!=0||y%400==0);
+            assert.is(Year.isLeap(y),leap);
+        })
+    }
 }
 
 const parseSet:[string,number][]=[

@@ -53,7 +53,6 @@ const microAsMilli:[number,number][]=[
 for(const [micro,milli] of microAsMilli) {
 	tsts(`toMillisecond(${micro})`,()=>{
 		const e=Microsecond.new(micro);
-		console.log(e);
 		assert.is(e.toMillisecond(),milli);
 	})
 }

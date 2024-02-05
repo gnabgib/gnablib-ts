@@ -12,9 +12,12 @@ import { Minute } from './Minute.js';
 import { Second } from './Second.js';
 import { Microsecond } from './Microsecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
+import { DateOnly } from './DateOnly.js';
+import { TimeOnly } from './TimeOnly.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'DateTime';
+const msPerMin = 60 * 1000;
 
 /**
  * Date and time down to microsecond resolution
@@ -24,66 +27,56 @@ const DBG_RPT = 'DateTime';
  */
 export class DateTime implements ISerializer {
 	/**Number of bytes required to store this data */
-	static readonly storageBytes =
-		Year.storageBytes +
-		Month.storageBytes +
-		Day.storageBytes +
-		Hour.storageBytes +
-		Minute.storageBytes +
-		Second.storageBytes +
-		Microsecond.storageBytes +
-		UtcOrNot.storageBytes; //11
+	static readonly storageBytes = DateOnly.storageBytes + TimeOnly.storageBytes; //11
 	/**Number of bits required to serialize this data */
-	static readonly serialBits =
-		Year.serialBits +
-		Month.serialBits +
-		Day.serialBits +
-		Hour.serialBits +
-		Minute.serialBits +
-		Second.serialBits +
-		Microsecond.serialBits +
-		UtcOrNot.serialBits; // 62
+	static readonly serialBits = DateOnly.serialBits + TimeOnly.serialBits; //62
 
 	private constructor(
-		/** Years (-10000 - +22767) ISO8601 */
-		readonly year: Year,
-		/** Months (1-12) */
-		readonly month: Month,
-		/** Days (1-31) */
-		readonly day: Day,
-		/** Hours (0-23) */
-		readonly hour: Hour,
-		/** Minutes (0-59) */
-		readonly minute: Minute,
-		/** Seconds (0-59) */
-		readonly second: Second,
-		/** Microseconds (0-999999) */
-		readonly microsecond: Microsecond,
-		/** In UTC or not */
-		readonly isUtc: UtcOrNot
+		/** Date [-10000-01-01 - +22767-12-31] */
+		readonly date: DateOnly,
+		/** Time [00:00:00.000000 - 23:59:59.999999] */
+		readonly time: TimeOnly
 	) {}
+
+	/** Years (-10000 - +22767) ISO8601 */
+	get year(): Year {
+		return this.date.year;
+	}
+	/** Months (1-12) */
+	get month(): Month {
+		return this.date.month;
+	}
+	/** Days (1-31) */
+	get day(): Day {
+		return this.date.day;
+	}
+	/** Hours (0-23) */
+	get hour(): Hour {
+		return this.time.hour;
+	}
+	/** Minutes (0-59) */
+	get minute(): Minute {
+		return this.time.minute;
+	}
+	/** Seconds (0-59) */
+	get second(): Second {
+		return this.time.second;
+	}
+	/** Microseconds (0-999999) */
+	get microsecond(): Microsecond {
+		return this.time.microsecond;
+	}
+	/** In UTC or not */
+	get isUtc(): UtcOrNot {
+		return this.time.isUtc;
+	}
 
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
 	 * formatted date-time: yyyy-mm-ddThh:mm:ss.mmmmmm(z)
 	 */
 	public toString(dateTimeSep = 'T'): string {
-		return (
-			this.year.toIsoString() +
-			'-' +
-			this.month.toIsoString() +
-			'-' +
-			this.day.toIsoString() +
-			dateTimeSep +
-			this.hour.toIsoString() +
-			':' +
-			this.minute.toPadString() +
-			':' +
-			this.second.toPadString() +
-			'.' +
-			this.microsecond.toPadString() +
-			this.isUtc.toIsoString()
-		);
+		return this.date.toString() + dateTimeSep + this.time.toString();
 	}
 
 	/**
@@ -105,42 +98,24 @@ export class DateTime implements ISerializer {
 	 */
 	toDate(): Date {
 		return new Date(
-			Date.UTC(
-				this.year.valueOf(),
-				this.month.valueOf() - 1,
-				this.day.valueOf(),
-				this.hour.valueOf(),
-				this.minute.valueOf(),
-				this.second.valueOf(),
-				this.microsecond.valueOf() / 1000
-			)
+			this.date.year.valueOf(),
+			/*fucks sake JS*/ this.date.month.valueOf() - 1,
+			this.date.day.valueOf(),
+			this.time.hour.valueOf(),
+			this.time.minute.valueOf(),
+			this.time.second.valueOf(),
+			this.time.microsecond.toMillisecond()
 		);
 	}
 
 	/** Seconds since the Unix epoch aka unix time */
 	toUnixTime(): number {
-		const yToS = Date.UTC(
-			this.year.valueOf(),
-			this.month.valueOf() - 1,
-			this.day.valueOf(),
-			this.hour.valueOf(),
-			this.minute.valueOf(),
-			this.second.valueOf()
-		);
-		return (yToS + this.microsecond.toMillisecond()) / 1000;
+		return this.date.toUnixTime() + this.time.toSeconds();
 	}
 
 	/** Milliseconds since the Unix epoch aka unix time (compatible with `Date` constructor) */
 	toUnixTimeMs(): number {
-		const yToS = Date.UTC(
-			this.year.valueOf(),
-			this.month.valueOf() - 1,
-			this.day.valueOf(),
-			this.hour.valueOf(),
-			this.minute.valueOf(),
-			this.second.valueOf()
-		);
-		return yToS + this.microsecond.toMillisecond();
+		return this.date.toUnixTimeMs() + this.time.toMilliseconds();
 	}
 
 	/**
@@ -150,26 +125,20 @@ export class DateTime implements ISerializer {
 	 */
 	public valueOf(): string {
 		return (
-			this.year.toIsoString() +
-			this.month.toIsoString() +
-			this.day.toIsoString() +
-			this.hour.toIsoString() +
-			this.minute.toPadString() +
-			this.second.toPadString() +
-			this.microsecond.toPadString()
+			this.date.year.toIsoString() +
+			this.date.month.toIsoString() +
+			this.date.day.toIsoString() +
+			this.time.hour.toIsoString() +
+			this.time.minute.toPadString() +
+			this.time.second.toPadString() +
+			this.time.microsecond.toPadString()
 		);
 	}
 
 	/** Serialize into target*/
 	public serialize(target: BitWriter): void {
-		this.year.serialize(target);
-		this.month.serialize(target);
-		this.day.serialize(target);
-		this.hour.serialize(target);
-		this.minute.serialize(target);
-		this.second.serialize(target);
-		this.microsecond.serialize(target);
-		this.isUtc.serialize(target);
+		this.date.serialize(target);
+		this.time.serialize(target);
 	}
 
 	/** Number of bits required to serialize */
@@ -183,14 +152,8 @@ export class DateTime implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): DateTime {
-		//no validate for year
-		this.month.validate();
-		this.day.validate();
-		this.hour.validate();
-		this.minute.validate();
-		this.second.validate();
-		this.microsecond.validate();
-		//no validate for isUtc
+		this.date.validate();
+		this.time.validate();
 		return this;
 	}
 
@@ -236,17 +199,16 @@ export class DateTime implements ISerializer {
 	): DateTime {
 		//Keep the memory contiguous
 		const stor = self.setupStor(storage);
-
-		const y = Year.new(year, stor);
-		const m = Month.new(month, stor.subarray(2, 3));
-		const d = Day.new(day, stor.subarray(3, 4));
-
-		const h = Hour.new(hour, stor.subarray(4, 5));
-		const i = Minute.new(minute, stor.subarray(5, 6));
-		const s = Second.new(second, stor.subarray(6, 7));
-		const us = Microsecond.new(microsecond, stor.subarray(7));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(10));
-		return new DateTime(y, m, d, h, i, s, us, utc);
+		const d = DateOnly.new(year, month, day, stor);
+		const t = TimeOnly.new(
+			hour,
+			minute,
+			second,
+			microsecond,
+			isUtc,
+			stor.subarray(4)
+		);
+		return new DateTime(d, t);
 	}
 
 	/**
@@ -260,21 +222,8 @@ export class DateTime implements ISerializer {
 		isUtc = false,
 		storage?: Uint8Array
 	): DateTime {
-		//Keep the memory contiguous
-		const stor = self.setupStor(storage);
-
-		const y = Year.fromDate(date, stor);
-		const m = Month.fromDate(date, stor.subarray(2, 3));
-		const d = Day.fromDate(date, stor.subarray(3, 4));
-		//NOTE: We could see if date.getTimezoneOffset() is zero and auto detect isUtc
-		// but we want the dev to be explicit that this is a UTC number when it is
-		// and not just conveniently running in the UTC timezone
-		const h = Hour.fromDate(date, stor.subarray(4, 5));
-		const i = Minute.fromDate(date, stor.subarray(5, 6));
-		const s = Second.fromDate(date, stor.subarray(6, 7));
-		const us = Microsecond.fromDate(date, stor.subarray(7));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(10));
-		return new DateTime(y, m, d, h, i, s, us, utc);
+		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+		return self.fromUnixTimeMs(dms, isUtc, storage);
 	}
 
 	/**
@@ -284,21 +233,7 @@ export class DateTime implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(date: Date, storage?: Uint8Array): DateTime {
-		//Keep the memory contiguous
-		const stor = self.setupStor(storage);
-
-		const y = Year.fromDateUtc(date, stor);
-		const m = Month.fromDateUtc(date, stor.subarray(2, 3));
-		const d = Day.fromDateUtc(date, stor.subarray(3, 4));
-		//NOTE: We could see if date.getTimezoneOffset() is zero and auto detect isUtc
-		// but we want the dev to be explicit that this is a UTC number when it is
-		// and not just conveniently running in the UTC timezone
-		const h = Hour.fromDateUtc(date, stor.subarray(4, 5));
-		const i = Minute.fromDateUtc(date, stor.subarray(5, 6));
-		const s = Second.fromDateUtc(date, stor.subarray(6, 7));
-		const us = Microsecond.fromDateUtc(date, stor.subarray(7));
-		const utc = UtcOrNot.new(true, stor.subarray(10));
-		return new DateTime(y, m, d, h, i, s, us, utc);
+		return self.fromUnixTimeMs(date.valueOf(), true, storage);
 	}
 
 	/**
@@ -314,20 +249,9 @@ export class DateTime implements ISerializer {
 		storage?: Uint8Array
 	): DateTime {
 		const stor = self.setupStor(storage);
-
-		//Use Date's builtin to convert ymd part
-		const date = new Date(source * 1000);
-		const y = Year.fromDateUtc(date, stor);
-		const m = Month.fromDateUtc(date, stor.subarray(2, 3));
-		const d = Day.fromDateUtc(date, stor.subarray(3, 4));
-
-		//The rest can come from fromUnixTime
-		const h = Hour.fromUnixTime(source, stor.subarray(4, 5));
-		const i = Minute.fromUnixTime(source, stor.subarray(5, 6));
-		const s = Second.fromUnixTime(source, stor.subarray(6, 7));
-		const us = Microsecond.fromUnixTime(source, stor.subarray(7));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(10));
-		return new DateTime(y, m, d, h, i, s, us, utc);
+		const d = DateOnly.fromUnixTime(source, stor);
+		const t = TimeOnly.fromUnixTime(source, isUtc, stor.subarray(4));
+		return new DateTime(d, t);
 	}
 
 	/**
@@ -343,22 +267,9 @@ export class DateTime implements ISerializer {
 		storage?: Uint8Array
 	): DateTime {
 		const stor = self.setupStor(storage);
-
-		//Use Date's builtin to convert ymd part, note we generate from source so
-		// the timezone offset *at that point in time* is used (if we construct without params we'll
-		// get today's date which may have a different offset due to DST/rule changes etc)
-		const date = new Date(source);
-		const y = Year.fromDateUtc(date, stor);
-		const m = Month.fromDateUtc(date, stor.subarray(2, 3));
-		const d = Day.fromDateUtc(date, stor.subarray(3, 4));
-
-		//The rest can come from fromUnixTime
-		const h = Hour.fromUnixTimeMs(source, stor.subarray(4, 5));
-		const i = Minute.fromUnixTimeMs(source, stor.subarray(5, 6));
-		const s = Second.fromUnixTimeMs(source, stor.subarray(6, 7));
-		const us = Microsecond.fromUnixTimeMs(source, stor.subarray(7));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(10));
-		return new DateTime(y, m, d, h, i, s, us, utc);
+		const d = DateOnly.fromUnixTimeMs(source, stor);
+		const t = TimeOnly.fromUnixTimeMs(source, isUtc, stor.subarray(4));
+		return new DateTime(d, t);
 	}
 
 	/** Create this date-time (local) */
@@ -368,9 +279,7 @@ export class DateTime implements ISerializer {
 		const utcNow = performance.timeOrigin + performance.now();
 		//Calculate the offset to get it in local time
 		const utcDt = new Date(utcNow);
-		const offset = utcDt.getTimezoneOffset() * 60 * 1000;
-		//We've double-created date objects (once for utcDate and again in fromUnixTimeMs), but
-		// we need that safety for using .now at the end of the year in a timezone that isn't UTC
+		const offset = utcDt.getTimezoneOffset() * msPerMin;
 		return self.fromUnixTimeMs(utcNow - offset, false, storage);
 	}
 
@@ -385,17 +294,9 @@ export class DateTime implements ISerializer {
 	public static deserialize(source: BitReader, storage?: Uint8Array): DateTime {
 		//Keep the memory contiguous
 		const stor = self.setupStor(storage);
-
-		const y = Year.deserialize(source, stor);
-		const m = Month.deserialize(source, stor.subarray(2, 3));
-		const d = Day.deserialize(source, stor.subarray(3, 4));
-
-		const h = Hour.deserialize(source, stor.subarray(4, 5));
-		const i = Minute.deserialize(source, stor.subarray(5, 6));
-		const s = Second.deserialize(source, stor.subarray(6, 7));
-		const us = Microsecond.deserialize(source, stor.subarray(7));
-		const utc = UtcOrNot.deserialize(source, stor.subarray(10));
-		return new DateTime(y, m, d, h, i, s, us, utc);
+		const d = DateOnly.deserialize(source, stor);
+		const t = TimeOnly.deserialize(source, stor.subarray(4));
+		return new DateTime(d, t);
 	}
 }
 const self = DateTime;

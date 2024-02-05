@@ -116,6 +116,12 @@ tsts(`fromDate`,()=>{
     assert.is(d.valueOf(),dt.getDate());//Not a great name, JS
 });
 
+tsts(`fromDateUtc`,()=>{
+    const dt=new Date(2001,2,3,4,5,6);
+    const d=Day.fromDateUtc(dt);
+    assert.is(d.valueOf(),dt.getUTCDate());//Not a great name, JS
+});
+
 tsts(`now`,()=>{
     const dt=new Date();
     const d=Day.now();

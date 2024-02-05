@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { Year } from '../../../src/primitive/datetime/Year';
 
 const tsts = suite('DateOnly');
 
@@ -80,23 +81,36 @@ tsts(`new-provide storage`,()=>{
     assert.is(d.valueOf(),20000102);
 });
 
-tsts(`fromDate`,()=>{
-    // deepcode ignore DateMonthIndex/test: yes, we know
-    const dt=new Date(2001,1/*=2 for fucks sake JS*/,3,4,5,6);
-    const d=DateOnly.fromDate(dt);
-    assert.is(d.year.valueOf(),2001);
-    assert.is(d.month.valueOf(),2);
-    assert.is(d.day.valueOf(),3);
-
-    assert.is(d.valueOf(),20010203);
-});
-
-tsts(`toDate`,()=>{
-    //Note you have to use a truncated epoch (h/m/s all zero)
-    const epochMs=981158400000;
-    const o=DateOnly.fromUnixTimeMs(epochMs);
-    assert.is(o.toDate().valueOf(),epochMs)
-})
+{
+    //For anywhere that isn't offset=0, one of these would
+    // fail if the offset isn't being compensated for
+    const y=2024;
+    const m=2;
+    const d=4;
+    for(let h=0;h<24;h++) {
+        const dt=new Date(y,m-1,d,h);
+        const dto=DateOnly.fromDate(dt);
+        tsts(`fromDate(${dt})`,()=>{
+            assert.is(dto.year.valueOf(),y,'y');
+            assert.is(dto.month.valueOf(),m,'m');
+            assert.is(dto.day.valueOf(),d,'d');
+        })
+        tsts(`toDate(${dt})`,()=>{
+            const dateO=dto.toDate();
+            assert.is(dateO.getFullYear(),y,'y');
+            assert.is(dateO.getMonth()+1/*because, that makes sense*/,m,'m');
+            assert.is(dateO.getDate(),d,'d');
+            //assert.is(dtO.toDate().valueOf(),days*DateOnly.msPerDay);
+        })
+        tsts(`fromDateUtc(${dt})`,()=>{
+            const dtu=new Date(Date.UTC(y,m-1,d,h));
+            const dto=DateOnly.fromDateUtc(dtu);
+            assert.is(dto.year.valueOf(),y,'y');
+            assert.is(dto.month.valueOf(),m,'m');
+            assert.is(dto.day.valueOf(),d,'d');
+        })
+    }
+}
 
 const fromUnixTimeSet: [number, string][] = [
     //2024-01-20 07:13:30
@@ -135,6 +149,101 @@ for(const [y,m,d,str,epoch,epochMs] of toUnixTimeSet) {
     tsts(`fromUnixTimeMs(${epochMs})`,()=>{
         const fr=DateOnly.fromUnixTimeMs(epochMs);
         assert.is(fr.toString(),str);
+    })
+}
+
+const toUnixDaySet:[number,number,number,number][]=[
+    //Yet to find a calculator:
+    [-466,9,2,-889487],
+    [-366,9,2,-852962],
+    [-266,9,2,-816438],
+    [-166,9,2,-779914],
+    [-66,9,2,-743390],
+    //Vetted, need a second source:
+    [1,1,1,-719162],
+    [66,9,2,-695177],
+    [166,9,2,-658653],
+    [266,9,2,-622129],
+    [366,9,2,-585605],
+    [466,9,2,-549080],
+    [1166,9,2,-293411],
+    [1266,9,2,-256886],
+    [1366,9,2,-220362],
+    [1466,9,2,-183838],
+    [1566,9,2,-147314],
+    [1666,9,2,-110789],//Fire of london
+    [1766,9,2,-74265],
+    [1866,9,2,-37741],
+    [1966,9,2,-1217],
+    [2066,9,2,35308],
+    [2166,9,2,71832],
+    [2266,9,2,108356],
+    [2366,9,2,144880],
+    [2466,9,2,181405],
+    [1969,1,1,-365],
+    [1969,12,31,-1],
+    //As defined:
+    [-1,2,28,-719835],
+    [0,2,28,-719470],
+    [0,2,29,-719469],//0 was a leap year (%400), not Mary and Joseph noticed
+    [0,3,1,-719468],//epochShift
+    [1970,1,1,0],//epoch
+    [1970,1,2,1],
+    [1970,1,31,30],
+    [1970,2,1,31],
+    [1971,1,1,365],
+    [1972,1,1,730],//365+365
+    [1973,1,1,1096],//3*365+1 1972 was leap
+    [1974,1,1,1461],//4*365+1
+    [1974,3,1,1520],
+    [2000,3,1,11017],
+    [2001,4,23,11435],
+    [2021,4,23,18740],
+]
+for(const [y,m,d,unix] of toUnixDaySet) {
+    const dt=DateOnly.new(y,m,d);
+    tsts(`toUnixDays(${y} ${m} ${d})`,()=>{
+        assert.is(dt.toUnixDays(),unix);
+    });
+    tsts(`fromUnixDays(${unix})`,()=>{
+        const fr=DateOnly.fromUnixDays(unix);
+        assert.is(fr.year.valueOf(),y,'year');
+        assert.is(fr.month.valueOf(),m,'month');
+        assert.is(fr.day.valueOf(),d,'day');
+    });
+}
+
+const dimSet:[number,number,number][]=[
+    [2024,1,31],
+    [2024,2,29],//Leap year
+    [2024,3,31],
+    [2024,4,30],
+    [2024,5,31],
+    [2024,6,30],
+    [2024,7,31],
+    [2024,8,31],
+    [2024,9,30],
+    [2024,10,31],
+    [2024,11,30],
+    [2024,12,31],
+
+    [2025,1,31],
+    [2025,2,28],
+    [2025,3,31],
+    [2025,4,30],
+    [2025,5,31],
+    [2025,6,30],
+    [2025,7,31],
+    [2025,8,31],
+    [2025,9,30],
+    [2025,10,31],
+    [2025,11,30],
+    [2025,12,31],
+
+];
+for(const [y,m,dim] of dimSet) {
+    tsts(`daysInMonth(${y} ${m})`,()=>{
+        assert.is(DateOnly.daysInMonth(y,m),dim);
     })
 }
 
@@ -189,5 +298,30 @@ tsts('serialSizeBits',()=>{
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
+const dowSet:[number,number][]=[
+    [-7,4],
+    [-6,5],
+    [-5,6],
+    [-4,0],
+    [-3,1],
+    [-2,2],
+    [-1,3],
+    [0,4],//We know it was a thursday
+    [1,5],
+    [2,6],
+    [3,0],
+    [4,1],
+    [5,2],
+    [6,3],
+    [7,4],
+    [19758,1],//We know it's a Monday (when running this test)
+];
+//console.log(DateOnly.new(2024,2,5).toUnixDays());
+for(const [unixDay,dow] of dowSet) {
+    
+    tsts(`dayOfWeek(${unixDay})`,()=>{
+        assert.is(DateOnly.dayOfWeek(unixDay),dow);
+    })
+}
 
 tsts.run();

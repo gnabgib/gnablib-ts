@@ -139,7 +139,8 @@ for (const exp of Object.keys(pkg.exports)) {
 fs.writeFileSync('./_o/package.json', JSON.stringify(pkg, null, 2), 'utf8');
 
 // -- -- -- -- -- -- -- -- -- -- -- --
-//5. Copy LICENSE and README.md
+//5. Copy decoy=types, LICENSE and README.md
+fs.copyFileSync('./index.d.ts','./_o/index.d.ts');
 fs.copyFileSync('./LICENSE', './_o/LICENSE');
 fs.copyFileSync('./README.md', './_o/README.md');
 

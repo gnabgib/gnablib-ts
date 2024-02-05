@@ -8,8 +8,9 @@
 		"version": "npm run build && git add -A",
 		"postversion": "git push && git push --tags",
 		"lint": "npx eslint \"src/**/*.{js,ts}\"",
-		"test": "uvu -r tsm -i \"(.slow.test.ts|.log)$\" tst",
-		"test:deep": "uvu -r tsm -i .log$ tst",
+		"test": "uvu -r tsm -i \"(.vslow.test.ts|.slow.test.ts|.log)$\" tst",
+		"test:deep": "uvu -r tsm -i \"(.vslow.test.ts|.log)$\" tst",
+		"test:deeper": "uvu -r tsm -i .log$ tst",
 		"cover": "npx c8 npm test",
 		"cover:report": "npx c8 report --reporter=html --reporter=json-summary --reporter=json",
 		"doc": "npx typedoc",
@@ -24,6 +25,7 @@
 	"engines": {
 		"node": ">=15.3.0"
 	},
+	"types":"index.d.ts",
 	"exports": {
 		"./abnf": {
 			"types": "./_o/type/abnf/index.d.ts",
@@ -212,7 +214,6 @@
 		"CIDR",
 		"IPTree",
 		"IPv4",
-		"DateTime",
 		"Duration",
 		"Int64",
 		"Lazy",
@@ -271,7 +272,10 @@
 		"XChaCha20-Poly1305",
 		"Salsa20-Poly1305",
 		"XSalsa20-Poly1305",
-		"rabbit-cipher"
+		"rabbit-cipher",
+		"DateOnly",
+		"TimeOnly",
+		"DateTime"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
@@ -310,6 +314,7 @@
 			"version": null,
 			"postversion": null,
 			"test:deep": null,
+			"test:deeper": null,
 			"cover": null,
 			"cover:report": null,
 			"doc": null,

@@ -94,6 +94,12 @@ tsts(`fromDate`,()=>{
     assert.is(m.valueOf(),dt.getMonth()+1);//JS stores months 0 based
 });
 
+tsts(`fromDateUtc`,()=>{
+    var dt=new Date(2001,2,3,4,5,6);
+    var m=Month.fromDateUtc(dt);
+    assert.is(m.valueOf(),dt.getUTCMonth()+1);//JS stores months 0 based
+});
+
 tsts(`now`,()=>{
     var dt=new Date();
     var m=Month.now();

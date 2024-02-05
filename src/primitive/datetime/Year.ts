@@ -36,14 +36,6 @@ export class Year implements ISerializer {
 		this.#v = storage;
 	}
 
-	/** Whether this is a leap year */
-	public get isLeap(): boolean {
-		//3 & 15 mask can be done straight off the lower bit
-		if ((this.#v[1] & 3) !== 0) return false;
-		if ((this.#v[1] & 15) === 0) return true;
-		return ((this.#v[0] << 8) | this.#v[1]) % 25 !== 0;
-	}
-
 	/** Year, not zero padded, sign only on negative */
 	public toString(): string {
 		return (((this.#v[0] << 8) | this.#v[1]) - 10000).toString();
@@ -226,6 +218,33 @@ export class Year implements ISerializer {
 	/** Create this year (local) */
 	public static now(storage?: Uint8Array): Year {
 		return self.fromDate(new Date(), storage);
+	}
+
+	/**
+	 * Whether the ISO year `y` is a leap year, or not.
+	 *
+	 * @param y Year integer, can exceed Year range, but cannot exceed Int32 (-2147483648  - 2147483647) because of big logic, floats will be truncated
+	 */
+	public static isLeap(y: number): boolean {
+		y = y | 0;
+		//In a 400 year period, there are:
+		//   100-4+1 = 97 leap years
+		//   400-97  =303 regular old years
+
+		//3 & 15 mask can be done straight off the lower byte
+		//Not a multiple of 4 - no leap (300 values | 300)
+		if ((y & 3) !== 0) return false;
+
+		//Is a multiple of 16 - leap (25 values | 325)
+		//0,16,32,48,64,80,96,112,128,144,160,176,192,208,224,240,256,272,288,304,320,336,352,368,384
+		if ((y & 15) === 0) return true;
+
+		//Isn't a multiple of 25 - leap
+		//There are only 3 numbers that are multiples of 25 now:
+		//(0) (25) (50) (75) 100 (125) (150) (175) 200 (225) (250) (275) 300 (325) (350) (375)
+		// .. 100, 200, 300 (the others have already returned being not multiples of 4 or multiples of 16)
+		//This could also be %100
+		return y % 25 !== 0;
 	}
 
 	/**

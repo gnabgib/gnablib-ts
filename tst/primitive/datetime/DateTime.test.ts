@@ -109,40 +109,55 @@ tsts(`new`,()=>{
     assert.is(d.valueOf(),'20000102114106012345');
 });
 
-tsts(`fromDate`,()=>{
-    // deepcode ignore DateMonthIndex/test: yes, we know
-    const dt=new Date(2001,1/*=2 for fucks sake JS*/,3,4,5,6,789);
-    const d=DateTime.fromDate(dt);
-    assert.is(d.year.valueOf(),2001);
-    assert.is(d.month.valueOf(),2);
-    assert.is(d.day.valueOf(),3);
-    assert.is(d.hour.valueOf(),dt.getHours(),'hour');
-    assert.is(d.minute.valueOf(), dt.getMinutes(), 'minute');
-    assert.is(d.second.valueOf(), dt.getSeconds(), 'second');
-    assert.is(d.microsecond.valueOf(), dt.getMilliseconds()*1000, 'microsecond');
-    assert.is(d.isUtc.valueBool(),false,'isUtc');
-});
 
-tsts(`toDate`,()=>{
-    const epochMs=1705734810542;
-    const dt=DateTime.fromUnixTimeMs(epochMs);
-    assert.is(dt.toDate().valueOf(),epochMs);
-});
-
-tsts(`fromDateUtc`,()=>{
-    // deepcode ignore DateMonthIndex/test: yes, we know
-    const epoch=1705734810542;
-    const dt=new Date(epoch);
-    const d=DateTime.fromDateUtc(dt);
-    assert.is(d.year.valueOf(),dt.getUTCFullYear(),'year');
-    assert.is(d.month.valueOf(),dt.getUTCMonth()+1,'month');//JS stores months off by 1 (0=Jan)
-    assert.is(d.day.valueOf(),dt.getUTCDate(),'day');
-    assert.is(d.hour.valueOf(),dt.getUTCHours(),'hour');
-    assert.is(d.minute.valueOf(), dt.getUTCMinutes(), 'minute');
-    assert.is(d.second.valueOf(), dt.getUTCSeconds(), 'second');
-    assert.is(d.microsecond.valueOf(), dt.getUTCMilliseconds()*1000, 'microsecond');
-    assert.is(d.isUtc.valueBool(),true,'isUtc');
-});
+		
+{
+    //For anywhere that isn't offset=0, one of these would
+    // fail if the offset isn't being compensated for
+    const y=2024;
+    const m=2;
+    const d=4;
+    const i=6;
+    const s=7;
+    const ms=789;
+    for(let h=0;h<24;h++) {
+        const dt=new Date(y,m-1,d,h,i,s,ms);
+        tsts(`fromDate(${dt})`,()=>{
+            const dto=DateTime.fromDate(dt);
+            assert.is(dto.year.valueOf(),y,'y');
+            assert.is(dto.month.valueOf(),m,'mo');
+            assert.is(dto.day.valueOf(),d,'d');
+            assert.is(dto.hour.valueOf(),h,'h');
+            assert.is(dto.minute.valueOf(),i,'mi');
+            assert.is(dto.second.valueOf(),s,'s');
+            assert.is(dto.microsecond.valueOf(),ms*1000,'microsecond');
+            assert.is(dto.isUtc.valueBool(),false,'isUtc');
+        })
+        tsts(`toDate(${dt})`,()=>{
+            const dto=DateTime.new(y,m,d,h,i,s,ms*1000,false);
+            const dateO=dto.toDate();
+            assert.is(dateO.getFullYear(),y,'y');
+            assert.is(dateO.getMonth()+1/*because, that makes sense*/,m,'mo');
+            assert.is(dateO.getDate(),d,'d');
+            assert.is(dateO.getHours(),h,'h');
+            assert.is(dateO.getMinutes(),i,'mi');
+            assert.is(dateO.getSeconds(),s,'s');
+            assert.is(dateO.getMilliseconds(),ms,'ms');
+        })
+        tsts(`fromDateUtc(${dt})`,()=>{
+            const dtu=new Date(Date.UTC(y,m-1,d,h,i,s,ms));
+            const dto=DateTime.fromDateUtc(dtu);
+            assert.is(dto.year.valueOf(),y,'y');
+            assert.is(dto.month.valueOf(),m,'mo');
+            assert.is(dto.day.valueOf(),d,'d');
+            assert.is(dto.hour.valueOf(),h,'h');
+            assert.is(dto.minute.valueOf(),i,'mi');
+            assert.is(dto.second.valueOf(),s,'s');
+            assert.is(dto.microsecond.valueOf(),ms*1000,'microsecond');
+            assert.is(dto.isUtc.valueBool(),true,'isUtc');
+        })
+    }
+}
 
 const fromUnixTimeMsSet: [number, string][] = [
     //2024-01-20 07:13:30.542

@@ -9,7 +9,17 @@ Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runn
 ```bash
 npm run test 
 ```
-Output is inline
+Output is inline, suitable for CI type processes.
+
+```bash
+npm run test:deep
+```
+Output is inline, should be run on all commits, takes a bit longer than test.
+
+```bash
+npm run test:deeper
+```
+Output is inline, for testing intricate aspects, only run when you need to confirm almost exhaustively.
 
 #### Coverage
 
