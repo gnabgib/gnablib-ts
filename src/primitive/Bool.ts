@@ -23,12 +23,12 @@ export class Bool implements ISerializer {
 	static readonly serialBits = 1;
 	protected readonly _v: Uint8Array;
 	protected readonly _mask: number;
-	readonly #shift: number;
+	protected readonly _shift: number;
 
 	protected constructor(storage: Uint8Array, mask: number, shift: number) {
 		this._v = storage;
 		this._mask = mask;
-		this.#shift = shift;
+		this._shift = shift;
 	}
 
 	/** true/false */
@@ -43,7 +43,7 @@ export class Bool implements ISerializer {
 
 	/** Value as an int 1=true, 0=false */
 	public valueOf(): number {
-		return (this._v[0] & this._mask) >> this.#shift;
+		return (this._v[0] & this._mask) >> this._shift;
 	}
 	/** Value as a boolean */
 	public valueBool(): boolean {

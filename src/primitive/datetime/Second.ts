@@ -1,5 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { Sexagesimal } from '../number/Sexagesimal.js';
 
@@ -8,8 +9,8 @@ const DBG_RPT = 'Second';
 const secsPerMin = 60;
 const msPerSec = 1000;
 const msPerMin = secsPerMin * msPerSec;
-const usPerSec=1000000;
-const usPerMin = usPerSec*secsPerMin;
+const usPerSec = 1000000;
+const usPerMin = usPerSec * secsPerMin;
 
 export class Second extends Sexagesimal {
 	/** @hidden */
@@ -20,6 +21,13 @@ export class Second extends Sexagesimal {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		return `${DBG_RPT}(${this.toString()})`;
+	}
+
+	/** Return a copy of this value (using provided storage/different memory) */
+	public clone(storage?: Uint8Array): Second {
+		const stor = self.setupStor(storage);
+		stor[0] = this._v[0];
+		return new Second(stor);
 	}
 
 	/**
@@ -72,7 +80,10 @@ export class Second extends Sexagesimal {
 
 	/** Create a new Second, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Second {
-		return super.new(v, storage) as Second;
+		safe.int.inRangeInc(v, 0, 59);
+		const stor = self.setupStor(storage);
+		stor[0] = v;
+		return new Second(stor);
 	}
 
 	protected static doParse(

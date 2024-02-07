@@ -9,6 +9,9 @@ import { ContentError } from '../error/ContentError.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'DayOfMonth';
 
+let min:Day;
+let max:Day;
+
 /** Day of month */
 export class Day implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -17,10 +20,15 @@ export class Day implements ISerializer {
 	static readonly serialBits = 5; //2^5=32
 	/** Note there's no zero day in a month, so we shift by one internally (0=1st, 30=31st, 31=invalid) */
 	readonly #v: Uint8Array;
-
+	
 	private constructor(storage: Uint8Array) {
 		this.#v = storage;
 	}
+
+	/** Minimum day */
+	static get min():Day {return min;}
+	/** Maximum day, or the longest month - note this isn't always the max in context (could also be 28/29/30) */
+	static get max():Day {return max;}
 
 	/** Day, not zero padded (1-31) */
 	public toString(): string {
@@ -172,3 +180,5 @@ export class Day implements ISerializer {
 	}
 }
 const self = Day;
+min=Day.new(1);
+max=Day.new(31);

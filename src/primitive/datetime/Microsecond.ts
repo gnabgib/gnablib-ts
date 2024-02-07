@@ -23,6 +23,15 @@ export class Microsecond extends Micro {
 		return this.valueOf() / 1000;
 	}
 
+	/** Return a copy of this value (using provided storage/different memory) */
+	public clone(storage?: Uint8Array): Microsecond {
+		const stor = self.setupStor(storage);
+		stor[0] = this._v[0];
+		stor[1] = this._v[1];
+		stor[2] = this._v[2];
+		return new Microsecond(stor);
+	}
+
 	/**
 	 * Create a microsecond from a js Date object
 	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
@@ -115,7 +124,8 @@ export class Microsecond extends Micro {
 	): Microsecond {
 		const stor = self.setupStor(storage);
 		if (str.toLowerCase() === 'now') return self.now(stor);
-		const m=super.doParse(str, strict, stor);
+		//doParse will fill stor with data
+		super.doParse(str, strict, stor);
 		return new Microsecond(stor);
 	}
 

@@ -12,6 +12,9 @@ const DBG_RPT = 'Year';
 const maxHeYear = 32767; //0x7fff
 const maxIsoYear = maxHeYear - 10000;
 
+let min: Year;
+let max: Year;
+
 /**
  * A year in the range -10000 - +22767 (ISO), 10001BC - 22767AD (Gregorian), or 0-32767 (Holocene)
  *
@@ -34,6 +37,15 @@ export class Year implements ISerializer {
 
 	private constructor(storage: Uint8Array) {
 		this.#v = storage;
+	}
+
+	/** Minimum year */
+	static get min(): Year {
+		return min;
+	}
+	/** Maximum year */
+	static get max(): Year {
+		return max;
 	}
 
 	/** Year, not zero padded, sign only on negative */
@@ -263,19 +275,5 @@ export class Year implements ISerializer {
 	}
 }
 const self = Year;
-
-// y: 2
-// m: 1
-// d: 1 do=4 (p=3)
-// h: 1
-// i: 1
-// s: 1
-// ms:2 tom=5 (p=4)
-// us:3 to=6 (p=5)
-// dt=10 (p=8)
-// do yymd
-// in mem: yymdssssh
-// y=15, m=4, d=5|24
-// h=5 m=6, s=6, us=20|37
-//999=10b
-//59,999,999 = 26b
+min = Year.newHolocene(0);
+max = Year.newHolocene(32767);

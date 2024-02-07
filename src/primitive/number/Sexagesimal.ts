@@ -15,10 +15,10 @@ export class Sexagesimal implements ISerializer {
 	static readonly storageBytes = 1;
 	/**Number of bits required to serialize this data */
 	static readonly serialBits = 6;
-	readonly #v: Uint8Array;
+	protected readonly _v: Uint8Array;
 
 	protected constructor(storage: Uint8Array) {
-		this.#v = storage;
+		this._v = storage;
 	}
 
 	/** Not zero padded (0-59) */
@@ -33,17 +33,17 @@ export class Sexagesimal implements ISerializer {
 
 	/** Value as an integer (0-59) */
 	toJSON(): number {
-		return this.#v[0];
+		return this._v[0];
 	}
 
 	/** Value as an integer (0-59) */
 	public valueOf(): number {
-		return this.#v[0];
+		return this._v[0];
 	}
 
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this.#v[0], Sexagesimal.serialBits);
+		target.writeNumber(this._v[0], Sexagesimal.serialBits);
 	}
 
 	/** Number of bits required to serialize */

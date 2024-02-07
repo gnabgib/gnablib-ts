@@ -77,6 +77,13 @@ export class Hour implements ISerializer {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
+	/** Return a copy of this value (using provided storage/different memory) */
+	public clone(storage?: Uint8Array): Hour {
+		const stor = self.setupStor(storage);
+		stor[0] = this.#v[0];
+		return new Hour(stor);
+	}
+
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(self.storageBytes);

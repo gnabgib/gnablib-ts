@@ -28,6 +28,15 @@ export class UtcOrNot extends Bool {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
+	/** Return a copy of this value (using provided storage/different memory) */
+	public clone(storage?: Uint8Array): UtcOrNot {
+		const stor = self.setupStor(storage);
+		//Note we keep the mask/shift, but we mask out any other values that may be nearby
+		// todo: Should we correct the shift? causes some clone problems, but so does zeroing
+		stor[0] = this._v[0] & this._mask;
+		return new UtcOrNot(stor, this._mask, this._shift);
+	}
+
 	public static new(value: boolean, storage?: Uint8Array, pos = 0): UtcOrNot {
 		const stor = self.setupStor(storage);
 		const mask = 1 << pos;

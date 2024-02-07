@@ -20,6 +20,10 @@ const DBG_RPT = 'TimeOnly';
  * *Note*: This is higher resolution than [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)
  */
 export class TimeOnly implements ISerializer {
+	static readonly usPerSec = 1000000;
+	static readonly usPerMin = 60000000;
+	static readonly usPerHour = 3600000000;
+
 	/**Number of bytes required to store this data */
 	static readonly storageBytes =
 		Hour.storageBytes +
@@ -94,13 +98,10 @@ export class TimeOnly implements ISerializer {
 
 	/** Microseconds (since midnight) */
 	toMicroseconds(): number {
-		const usPerSec = 1000000;
-		const usPerMin = usPerSec * 60;
-		const usPerHour = usPerMin * 60;
 		return (
-			this.hour.valueOf() * usPerHour +
-			this.minute.valueOf() * usPerMin +
-			this.second.valueOf() * usPerSec +
+			this.hour.valueOf() * self.usPerHour +
+			this.minute.valueOf() * self.usPerMin +
+			this.second.valueOf() * self.usPerSec +
 			this.microsecond.valueOf()
 		);
 	}
@@ -159,6 +160,21 @@ export class TimeOnly implements ISerializer {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
+	/**
+	 * Return a copy of this time
+	 * @param storage Optional memory to store the data (will be created if not provided)
+	 * @pure
+	 */
+	public clone(storage?:Uint8Array):TimeOnly {
+		const stor = self.setupStor(storage);
+		const h=this.hour.clone(stor);
+		const m=this.minute.clone(stor.subarray(1,2));
+		const s=this.second.clone(stor.subarray(2,3));
+		const us=this.microsecond.clone(stor.subarray(3));
+		const utc=this.isUtc.clone(stor.subarray(6));
+		return new TimeOnly(h,m,s,us,utc);
+	}
+
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(self.storageBytes);
@@ -192,6 +208,23 @@ export class TimeOnly implements ISerializer {
 		return new TimeOnly(h, m, s, us, utc);
 	}
 
+	/**
+	 * Convert from base 10 shifted value {@link valueOf} into new TimeOnly
+	 * @param v 
+	 * @param [isUtc=false] By default value will be considered local, unless this is set to true
+	 * @param storage 
+	 * @returns 
+	 */
+	public static fromValue(v:number,isUtc=false,storage?:Uint8Array) :TimeOnly {
+		const us=v%1000000;
+		v=(v-us)/1000000;
+		const s=v%100;
+		v=(v-s)/100;
+		const m=v%100;
+		v=(v-m)/100;
+		return TimeOnly.new(v,m,s,us,isUtc,storage);
+	}
+	
 	/**
 	 * Create a time from a js Date object
 	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or

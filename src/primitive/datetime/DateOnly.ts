@@ -17,6 +17,9 @@ const daysPerCD = 146097;
 const epochShift = 719468;
 const msPerMin = 60 * 1000;
 
+let min: DateOnly;
+let max: DateOnly;
+
 /**
  * Date down to day resolution (no time component)
  *
@@ -41,6 +44,15 @@ export class DateOnly implements ISerializer {
 		/** Days (1-31) */
 		readonly day: Day
 	) {}
+
+	/** Minimum date = -10000-01-01 */
+	static get min(): DateOnly {
+		return min;
+	}
+	/** Maximum date =  +22767-12-31 */
+	static get max(): DateOnly {
+		return max;
+	}
 
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
@@ -127,11 +139,10 @@ export class DateOnly implements ISerializer {
 	 * you can do <, >, = comparisons
 	 */
 	public valueOf(): number {
-		return (
-			this.year.valueOf() * 10000 +
-			this.month.valueOf() * 100 +
-			this.day.valueOf()
-		);
+		const y = this.year.valueOf() * 10000;
+		return y < 0
+			? y - this.month.valueOf() * 100 - this.day.valueOf()
+			: y + this.month.valueOf() * 100 + this.day.valueOf();
 	}
 
 	/** Serialize into target  - 24 bits*/
@@ -168,6 +179,60 @@ export class DateOnly implements ISerializer {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
+	/**
+	 * Add a number of days to this date, returns a new object (pure)
+	 *
+	 * @param days Integer number of days, can be negative, if floating it will be truncated
+	 * @returns New date
+	 *
+	 * @pure
+	 */
+	public addSafe(days: number, storage?: Uint8Array): DateOnly {
+		return DateOnly.fromUnixDays(this.toUnixDays() + (days | 0), storage);
+	}
+
+	/**
+	 * Add a number of years/months to this date, returns a new object (pure)
+	 *
+	 * Adding years is mostly safe, unless it's currently February 29th, in which case the `day`
+	 * *may* become 28th if the new year isn't leap.  Might be easiest to consider `y=12*m` (although
+	 * the magnitude of `m` is not limited to 12.. you can add `14m`, or - bizarrely - `1y14m` (26m) if you want)
+	 *
+	 * Adding months is safe when the day is <=28.  Could be safe with higher values. When
+	 * the destination month has a lower count of days the `day` will be clamped.  The results
+	 * may also be unexpected if you consider the current value to be relative to the end of a month
+	 * and expect the new value to be likewise the same distance
+	 *
+	 * If you want to add days before/after call {@link addSafe} in sequence
+	 *
+	 * @example
+	 * Sep 30 + 1m1d = Oct 31 //Sep30->Oct30->Oct31
+	 * @example
+	 * Oct 31 + 1m1d = Dec 1  //Oct31->Nov30->Dec01
+	 * @example
+	 * Feb 29 + 1y1m = Mar 29 //Feb29->Mar29. If there was 2 stage validation Feb29->Feb28->Mar28
+	 *
+	 * @param y Integer, if float will be truncated
+	 * @param m
+	 * @param d
+	 *
+	 * @pure
+	 */
+	public add(y: number, m = 0, storage?: Uint8Array): DateOnly {
+		let monthAdd = 0;
+		//By collecting and distributing we normalize high m or m/y sign mismatch
+		// (eg +1-4 == +8)
+		if (y) monthAdd += (y | 0) * 12;
+		if (m) monthAdd += m | 0;
+		const yearAdd = (monthAdd / 12) | 0;
+		monthAdd %= 12;
+
+		let yv = this.year.valueOf() + yearAdd;
+		let mv = this.month.valueOf() + monthAdd;
+		let dv = Math.min(this.day.valueOf(), DateOnly.daysInMonth(yv, mv));
+		return DateOnly.new(yv, mv, dv, storage);
+	}
+
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (storage === undefined) return new Uint8Array(self.storageBytes);
@@ -197,6 +262,30 @@ export class DateOnly implements ISerializer {
 	}
 
 	/**
+	 * Convert from base 10 shifted value {@link valueOf} into new DateOnly
+	 *
+	 * @example
+	 * ```js
+	 * const dto=DateOnly.fromValue(20240115);
+	 * dto.toValue();//20240115
+	 * dto.year.toValue();//2024
+	 * dto.month.toValue();//1
+	 * dto.day.toValue();//15
+	 * ```
+	 *
+	 * @param v
+	 * @param storage
+	 * @returns
+	 */
+	public static fromValue(v: number, storage?: Uint8Array): DateOnly {
+		const d = v % 100;
+		v = (v - d) / 100;
+		const m = v % 100;
+		v = (v - m) / 100;
+		return DateOnly.new(v, m, d, storage).validate();
+	}
+
+	/**
 	 * Create a date from a js Date object
 	 * @param date Value used as source
 	 */
@@ -214,8 +303,8 @@ export class DateOnly implements ISerializer {
 	}
 
 	public static fromUnixDays(source: number, storage?: Uint8Array): DateOnly {
-		const daysPer4y = 1460;//no leap day
-		const daysPer100y = 36524;//with leap days
+		const daysPer4y = 1460; //no leap day
+		const daysPer100y = 36524; //with leap days
 		//Move to 0000-3-1 based days
 		source = (source + epochShift) | 0;
 		const CD =
@@ -304,3 +393,5 @@ export class DateOnly implements ISerializer {
 	}
 }
 const self = DateOnly;
+min = DateOnly.new(-10000, 1, 1);
+max = DateOnly.new(22767, 12, 31);

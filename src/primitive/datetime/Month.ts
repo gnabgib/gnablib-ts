@@ -9,6 +9,9 @@ import { ISerializer } from '../interfaces/ISerializer.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Month';
 
+let min:Month;
+let max:Month;
+
 /** Month of year (gregorian, julian) */
 export class Month implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -21,6 +24,11 @@ export class Month implements ISerializer {
 	private constructor(storage: Uint8Array) {
 		this.#v = storage;
 	}
+
+	/** Minimum month */
+	static get min():Month {return min;}
+	/** Maximum month */
+	static get max():Month {return max;}
 
 	/** Month, not zero padded */
 	public toString(): string {
@@ -190,3 +198,5 @@ export class Month implements ISerializer {
 	}
 }
 const self = Month;
+min=Month.new(1);
+max=Month.new(12);

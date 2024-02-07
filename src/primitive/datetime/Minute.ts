@@ -1,11 +1,12 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { Sexagesimal } from '../number/Sexagesimal.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Minute';
-const minPerHour=60;
+const minPerHour = 60;
 const secPerMin = 60;
 const secPerHour = secPerMin * minPerHour;
 const msPerMin = secPerMin * 1000;
@@ -22,6 +23,13 @@ export class Minute extends Sexagesimal {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		return `${DBG_RPT}(${this.toString()})`;
+	}
+
+	/** Return a copy of this value (using provided storage/different memory) */
+	public clone(storage?: Uint8Array): Minute {
+		const stor = self.setupStor(storage);
+		stor[0] = this._v[0];
+		return new Minute(stor);
 	}
 
 	/**
@@ -82,7 +90,10 @@ export class Minute extends Sexagesimal {
 
 	/** Create a new Minute, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Minute {
-		return Sexagesimal.new(v, storage) as Minute;
+		safe.int.inRangeInc(v, 0, 59);
+		const stor = self.setupStor(storage);
+		stor[0] = v;
+		return new Minute(stor);
 	}
 
 	protected static doParse(

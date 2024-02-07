@@ -15,10 +15,10 @@ export class Micro implements ISerializer {
 	static readonly storageBytes = 3;
 	/**Number of bits required to serialize this data */
 	static readonly serialBits = 20;
-	readonly #v: Uint8Array;
+	protected readonly _v: Uint8Array;
 
 	protected constructor(storage: Uint8Array) {
-		this.#v = storage;
+		this._v = storage;
 	}
 
 	/** Not zero padded (0-999999) */
@@ -33,12 +33,12 @@ export class Micro implements ISerializer {
 
 	/** Value as an integer (0-999999) */
 	toJSON(): number {
-		return (this.#v[0] << 16) | (this.#v[1] << 8) | this.#v[2];
+		return (this._v[0] << 16) | (this._v[1] << 8) | this._v[2];
 	}
 
 	/** Value as an integer (0-999999) */
 	public valueOf(): number {
-		return (this.#v[0] << 16) | (this.#v[1] << 8) | this.#v[2];
+		return (this._v[0] << 16) | (this._v[1] << 8) | this._v[2];
 	}
 
 	/** Serialize into target  - 20 bits*/

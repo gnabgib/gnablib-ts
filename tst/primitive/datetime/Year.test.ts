@@ -230,4 +230,13 @@ tsts('serialSizeBits',()=>{
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
+tsts(`min`,()=>{
+    const y=Year.min;
+    assert.is(y.valueOf(),-10000);
+});
+tsts(`max`,()=>{
+    const y=Year.max;
+    assert.is(y.valueOf(),22767);
+});
+
 tsts.run();

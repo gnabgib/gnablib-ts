@@ -276,6 +276,66 @@ tsts('serialSizeBits',()=>{
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
+tsts(`min`,()=>{
+    const dto=DateTime.min;
+    assert.is(dto.valueOf(),'-100000101000000000000');
+});
+tsts(`max`,()=>{
+    const dto=DateTime.max;
+    assert.is(dto.valueOf(),'+227671231235959999999');
+});
+
+const addSafeSet:[string,number,number,number,number,number,string][]=[
+    ['20230131020304567890',1,0,0,0,0,'20230201020304567890'],
+    ['20230131020304567890',0,1,0,0,0,'20230131030304567890'],
+    ['20230131020304567890',0,22,0,0,0,'20230201000304567890'],
+    ['20230131020304567890',0,0,1,0,0,'20230131020404567890'],
+    ['20230131020304567890',0,0,57,0,0,'20230131030004567890'],
+    ['20230131020304567890',0,0,0,1,0,'20230131020305567890'],
+    ['20230131020304567890',0,0,0,56,0,'20230131020400567890'],
+    ['20230131020304567890',0,0,0,0,1,'20230131020304567891'],
+    ['20230131020304567890',0,0,0,0,432110,'20230131020305000000'],
+];
+for(const [sVal,d,h,m,s,us,expect] of addSafeSet) {
+    tsts(`(${sVal}).addSafe(${d} ${h} ${m} ${s} ${us})`,()=>{
+        const dto=DateTime.fromValue(sVal);
+        assert.is(dto.addSafe({d,h,m,s,us}).valueOf(),expect);
+    });
+}
+
+tsts(`asUtc`,()=>{
+    const start=DateTime.now();
+    //A test that doesn't fail can't do much more than confirm that isUtc toggles
+    assert.is(start.isUtc.valueBool(),false);
+    const end=start.asUtc();
+    assert.is(end.isUtc.valueBool(),true);
+    //console.log(`start=${start.toString()} end=${end.toString()}`);
+});
+
+tsts(`asLocal`,()=>{
+    const start=DateTime.nowUtc();
+    //A test that doesn't fail can't do much more than confirm that isUtc toggles
+    assert.is(start.isUtc.valueBool(),true);
+    const end=start.asLocal();
+    assert.is(end.isUtc.valueBool(),false);
+    //console.log(`start=${start.toString()} end=${end.toString()}`);
+});
+
+const addSet:[string,number,number,string][]=[
+    ['20230131020304567890',0,1,'20230228020304567890'],
+    ['20240131020304567890',0,1,'20240229020304567890'],
+    ['20230131020304567890',1,0,'20240131020304567890'],
+];
+for(const [sVal,yAdd,mAdd,expect] of addSet) {
+    tsts(`(${sVal}).add(${yAdd} ${mAdd})`,()=>{
+        const dto=DateTime.fromValue(sVal);
+        assert.is(dto.add(yAdd,mAdd).valueOf(),expect);
+    })
+}
+
+
+//add
+
 // tsts('general',()=>{
 //     const dt=DateTime.now();
 //     console.log(dt);

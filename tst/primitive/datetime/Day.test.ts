@@ -215,6 +215,16 @@ tsts('serialSizeBits',()=>{
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
+//While these are brittle, I think we know the first and last day of any month
+tsts(`min`,()=>{
+    const d=Day.min;
+    assert.is(d.valueOf(),1);
+});
+tsts(`max`,()=>{
+    const d=Day.max;
+    assert.is(d.valueOf(),31);
+});
+
 // tsts('general',()=>{
 //     const dt=Day.now();
 //     console.log(dt);
