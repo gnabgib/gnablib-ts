@@ -2,7 +2,7 @@
 
 import { ContentError } from '../primitive/error/ContentError.js';
 import { superSafe as safe } from '../safe/index.js';
-import { IRandInt } from './IRandInt.js';
+import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
  * Build a [middle-square](https://en.wikipedia.org/wiki/Middle-square_method)

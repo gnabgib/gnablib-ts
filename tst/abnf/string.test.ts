@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import { BnfChar, BnfString } from '../../src/abnf';
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('ABNF string');
 
@@ -131,9 +131,9 @@ const testMatch: {
 	{ haystack: 'Hello', CI: false, needle: 'HELL' }, //case sensitive match
 ];
 for (const { haystack, needle, CI, expectRem, expectMatch } of testMatch) {
-	tsts(`String(${needle}).atStartOf(${haystack}):`, () => {
+	tsts(`String(${needle},${CI}).atStartOf(${haystack}):`, () => {
 		const c = new BnfString(needle, CI);
-		const w = new WindowStr(haystack);
+		const w = WindowStr.new(haystack);
 		const m = c.atStartOf(w);
 		if (expectRem !== undefined) {
 			assert.is(m.fail, false);

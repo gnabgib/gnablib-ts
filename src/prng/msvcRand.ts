@@ -1,7 +1,7 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { superSafe as safe } from '../safe/index.js';
-import { IRandInt } from './IRandInt.js';
+import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
  * Build a [MSVC](https://orlp.net/blog/when-random-isnt/)

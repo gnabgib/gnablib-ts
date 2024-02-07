@@ -1,7 +1,7 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { superSafe as safe } from '../safe/index.js';
-import { IRandInt } from './IRandInt.js';
+import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
  * Build a [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)

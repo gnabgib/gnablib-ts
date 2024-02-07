@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 import { InsensitiveMatch, CharMatch, Nfa } from '../../src/algo';
 
 const tsts = suite('Thompson NFA');
@@ -17,7 +17,7 @@ for (const {str,expect} of testEmpty) {
     const n=new Nfa();
     //n.debug=true;
     tsts(`// search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -35,7 +35,7 @@ for (const {str,expect} of test_a) {
     const n=new Nfa().concat(new CharMatch('a'));
     //n.debug=true;
     tsts(`/a/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -56,7 +56,7 @@ for (const {str,expect} of test_aOptional) {
     const n=new Nfa().concat(new CharMatch('a')).zeroOrOne();
     //n.debug=true;
     tsts(`/a?/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -77,7 +77,7 @@ for (const {str,expect} of test_aStar) {
     const n=new Nfa().concat(new CharMatch('a')).zeroOrMore();
     //n.debug=true;
     tsts(`/a*/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -98,7 +98,7 @@ for (const {str,expect} of test_aPlus) {
     const n=new Nfa().concat(new CharMatch('a')).oneOrMore();
     //n.debug=true;
     tsts(`/a+/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -119,7 +119,7 @@ for (const {str,expect} of test_a_b) {
     const n=new Nfa().concat(new CharMatch('a')).concat(new CharMatch('b'));
     //n.debug=true;
     tsts(`/ab/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -142,7 +142,7 @@ for (const {str,expect} of test_aAPlus) {
     const n=new Nfa().concat(new InsensitiveMatch('a')).oneOrMore();
     //n.debug=true;
     tsts(`/a+/i search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -165,7 +165,7 @@ for (const {str,expect} of test_aAPlus_b) {
     const n=new Nfa().concat(new InsensitiveMatch('a')).oneOrMore().concat(new CharMatch('b'));
     //n.debug=true;
     tsts(`/[aA]+b/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -190,7 +190,7 @@ for (const {str,expect} of test_a_or_b) {
     );
     //n.debug=true;
     tsts(`/(a|b)/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -221,7 +221,7 @@ for (const {str,expect} of test_a_or_b_or_c_plus) {
     ).oneOrMore();
     //n.debug=true;
     tsts(`/(a|b|c)+/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -249,7 +249,7 @@ for (const {str,expect} of test_a_or_b_star_c) {
     ).zeroOrMore().concat(new CharMatch('c'));
     //n.debug=true;
     tsts(`/(?:a|b)*c/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -271,7 +271,7 @@ for (const {str,expect} of test_abc_or_def) {
     //console.log(n);
     //n.debug=true;
     tsts(`/abc|def/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -295,7 +295,7 @@ for (const {str,expect} of test_a__bStar_or_c) {
     //console.log(n);
     //n.debug=true;
     tsts(`/a(b*|c)/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -319,7 +319,7 @@ for (const {str,expect} of test_4a) {
     const n=new Nfa().repeat(new CharMatch('a'),4);
     //n.debug=true;
     tsts(`/a{4}/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -347,7 +347,7 @@ for (const {str,expect} of test_APlus_20a) {
     // console.log(n);
     //n.debug=true;
     tsts(`/a+a{20}/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -373,7 +373,7 @@ for (const {str,expect} of test_aStar_b) {
     // console.log(n);
     // n.debug=true;
     tsts(`/a*b/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -413,7 +413,7 @@ for (const {str,expect} of test_aStar_bStar_cStar) {
     // console.log(n);
     // n.debug=true;
     tsts(`/a*b*c*/ search(${str}):`,()=>{
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
@@ -431,14 +431,14 @@ const test_aOpt32:{
 for (const {str,expect} of test_aOpt32) {
     tsts(`a?^23 search(${str}):`,()=>{
         const n=new Nfa().repeat(new CharMatch('a'),0,23);
-        const w=new WindowStr(str);
+        const w=WindowStr.new(str);
         assert.is(n.search(w),expect);
     });
 }
 
 tsts(`a?^23a^23 search(a^23):`,()=>{
     const n=new Nfa().repeat(new CharMatch('a'),0,23).concat(new Nfa().repeat(new CharMatch('a'),23));
-    const w=new WindowStr('aaaaaaaaaa'+'aaaaaaaaaa'+'aaa');
+    const w=WindowStr.new('aaaaaaaaaa'+'aaaaaaaaaa'+'aaa');
     //console.log(n);
     assert.is(n.search(w),23);
 });

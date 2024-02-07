@@ -14,8 +14,8 @@
  *
  * @module
  */
-export type { IRandFloat } from './IRandFloat.js';
-export type { IRandInt } from './IRandInt.js';
+export type { IRandFloat } from './interfaces/IRandFloat.js';
+export type { IRandInt } from './interfaces/IRandInt.js';
 export { marsaglia } from './marsaglia.js';
 export { middleSquare } from './middleSquare.js';
 export { msvcRand } from './msvcRand.js';

@@ -114,7 +114,7 @@ export class BnfChar implements IBnf {
 	}
 
 	atStartOf(s: WindowStr): IMatchResult {
-		if (s.length === 0) return new MatchFail(0);
+		if (s.empty) return new MatchFail(0);
 		let match = false;
 		if (this.caseInsensitive) {
 			//Fold to lower case (upper case will break other codepoints)
@@ -126,7 +126,7 @@ export class BnfChar implements IBnf {
 		if (!match) {
 			return new MatchFail(0);
 		}
-		return new MatchSuccess(s.sub(1), { name: this.name, value: s.left(1) });
+		return new MatchSuccess(s.span(1), { name: this.name, value: s.left(1) });
 	}
 
 	[Symbol.toPrimitive](): string {
@@ -206,7 +206,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 		if (c < this.start.ord || c > this.end.ord) {
 			return new MatchFail(0);
 		}
-		return new MatchSuccess(s.sub(1), { name: this.name, value: s.left(1) });
+		return new MatchSuccess(s.span(1), { name: this.name, value: s.left(1) });
 	}
 
 	[Symbol.toPrimitive](): string {
@@ -311,7 +311,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 
 	atStartOf(s: WindowStr): IMatchResult {
 		//Make a copy of the original
-		let ptr = s.sub(0);
+		let ptr = s.span(0);
 		let i = 0;
 		for (; i < this._chars.length; i++) {
 			const match = this._chars[i].atStartOf(ptr);
@@ -416,7 +416,7 @@ export class BnfConcat implements IBnf, Iterable<IBnf> {
 
 	atStartOf(s: WindowStr): IMatchResult {
 		const components: IMatchDetail[] = [];
-		let ptr = s.sub(0);
+		let ptr = s.span(0);
 		for (const item of this.items) {
 			const match = item.atStartOf(ptr);
 			if (match.fail || match.remain===undefined) {
@@ -608,7 +608,7 @@ export class BnfRepeat implements IBnfRepeat {
 
 	atStartOf(s: WindowStr): IMatchResult {
 		const components: IMatchDetail[] = [];
-		let ptr = s.sub(0);
+		let ptr = s.span(0);
 		//Must have at least min matches
 		for (let i = 0; i < this.min; i++) {
 			const match = this.rule.atStartOf(ptr);

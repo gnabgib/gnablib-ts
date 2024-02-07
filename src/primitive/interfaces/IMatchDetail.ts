@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import type { WindowStr } from "../WindowStr.js";
 

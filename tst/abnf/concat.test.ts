@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import { BnfConcat, BnfChar, BnfString, BnfRange } from '../../src/abnf';
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('ABNF concat');
 
@@ -65,7 +65,7 @@ for (const {
 } of testMatch) {
 	tsts(`Concat().atStartOf(${haystack}):`, () => {
 		const c = new BnfConcat(...needles);
-		const w = new WindowStr(haystack);
+		const w = WindowStr.new(haystack);
 		const m = c.atStartOf(w);
 		//console.log(m);
 		if (expectRem !== undefined) {

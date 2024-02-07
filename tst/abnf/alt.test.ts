@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import { BnfAlt, BnfChar, BnfString, BnfRange } from '../../src/abnf';
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('ABNF alt');
 
@@ -51,11 +51,11 @@ const testMatch: {
 for (const { haystack, alts: needles, expectRem, expectMatch } of testMatch) {
 	tsts(`Alt().atStartOf(${haystack}):`, () => {
 		const c = new BnfAlt(...needles);
-		const w = new WindowStr(haystack);
+		const w = WindowStr.new(haystack);
 		const m = c.atStartOf(w);
 		//console.log(m);
 		if (expectRem !== undefined) {
-			assert.is(m.fail, false);
+			assert.is(m.fail, false,'failed!');
 			assert.is(m.remain?.toString(), expectRem);
 			assert.equal(m.result?.value.toString(), expectMatch);
 		} else {

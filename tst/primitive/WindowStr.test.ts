@@ -1,480 +1,456 @@
 import { suite } from 'uvu';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 import * as assert from 'uvu/assert';
+import util from 'util';
 
 const tsts = suite('WindowStr');
 
-const buildTests: {
-	str: string | WindowStr;
-	start?: number;
-	len?: number;
-	expect: string;
-}[] = [
-	{ str: 'Hello', expect: 'Hello' },
-	{ str: 'Hello', start: 0, expect: 'Hello' },
-	{ str: 'Hello', start: 1, expect: 'ello' },
-	{ str: 'Hello', start: 2, expect: 'llo' },
-	{ str: 'Hello', start: 3, expect: 'lo' },
-	{ str: 'Hello', start: 4, expect: 'o' },
-	{ str: 'Hello', start: 5, expect: '' },
-	{ str: 'Hello', len: 5, expect: 'Hello' },
-	{ str: 'Hello', len: 4, expect: 'Hell' },
-	{ str: 'Hello', len: 3, expect: 'Hel' },
-	{ str: 'Hello', len: 2, expect: 'He' },
-	{ str: 'Hello', len: 1, expect: 'H' },
-	{ str: 'Hello', len: 0, expect: '' },
-	{ str: '[Hello]', start: 1, len: 5, expect: 'Hello' },
-	{ str: new WindowStr('[Hello]', 1, 5), expect: 'Hello' },
+const buildSet:[string,number|undefined,number|undefined,string][]=[
+	['Hello',,,'Hello'],
+	['Hello',0,,'Hello'],
+	['Hello',1,,'ello'],
+	['Hello',2,,'llo'],
+	['Hello',3,,'lo'],
+	['Hello',4,,'o'],
+	['Hello',5,,''],
+	['Hello',,5,'Hello'],
+	['Hello',,4,'Hell'],
+	['Hello',,3,'Hel'],
+	['Hello',,2,'He'],
+	['Hello',,1,'H'],
+	['Hello',,0,''],
+	['!Hello!',1,5,'Hello'],
 ];
-for (const { str, start, len, expect } of buildTests) {
-	tsts(`new WindowStr(${str},${start},${len}):`, () => {
-		const w = new WindowStr(str, start, len);
+for(const [str,start,len,expect] of buildSet) {
+	tsts(`new(${str},${start},${len}):`, () => {
+		const w = WindowStr.new(str, start, len);
 		assert.is(w.toString(), expect);
 	});
 }
 
-const badBuildTests: {
-	str: string;
-	start?: number;
-	end?: number;
-}[] = [
-	{ str: 'Hello', start: -1 }, //Start out of range
-	{ str: 'Hello', start: 6 }, //Start out of range
-	{ str: 'Hello', end: -1 }, //End out of range
-	{ str: 'Hello', end: 6 }, //End out of range
+const badBuildSet:[string,number|undefined,number|undefined][]=[
+	['Hello',-1,undefined],//Too early
+	['Hello',6,undefined],//Too late
+	['Hello',,-1],//Too short
+	['Hello',,6],//Too long
 ];
-for (const { str, start, end } of badBuildTests) {
-	tsts(`THROWS: new WindowStr(${str},${start},${end}):`, () => {
-		assert.throws(() => new WindowStr(str, start, end));
+for (const [ str, start, len ] of badBuildSet) {
+	tsts(`new(${str},${start},${len}) throws`, () => {
+		assert.throws(() => WindowStr.new(str, start, len));
 	});
 }
 
-const charAtTests: {
-	str: string | WindowStr;
-	idx: number;
-	expect: string;
-}[] = [
-	{ str: 'Hello', idx: 0, expect: 'H' },
-	{ str: 'Hello', idx: 1, expect: 'e' },
-	{ str: 'Hello', idx: 4, expect: 'o' },
-	{ str: 'Hello', idx: -1, expect: 'o' },
-	{ str: 'Hello', idx: -2, expect: 'l' },
-	{ str: 'Hello', idx: -4, expect: 'e' },
-	{ str: 'Hello', idx: -5, expect: 'H' },
-	{ str: new WindowStr('[Hello]', 1, 5), idx: 0, expect: 'H' },
-	{ str: new WindowStr('[Hello]', 1, 5), idx: -1, expect: 'o' },
+const toStringSet:[string,number|undefined,number|undefined,string][]=[
+	['Hi there',,,'Hi there'],
+	['Bats',1,2,'at'],
 ];
-for (const { str, idx, expect } of charAtTests) {
-	tsts(`WindowStr(${str}).charAt(${idx}):`, () => {
-		const w = new WindowStr(str);
+for(const [str,start,len,expect] of toStringSet) {
+	const w=WindowStr.new(str,start,len);
+	tsts(`${w.debug()}.toString()`,()=>{
+		
+		assert.is(w.toString(),expect);
+	})	
+}
+
+tsts('[Symbol.toStringTag]', () => {
+	const w=WindowStr.new('Syntax',0,5);
+	const str = Object.prototype.toString.call(w);
+	//console.log(str); //[object WindowStr]
+	assert.is(str.indexOf('WindowStr') > 0, true);
+});
+
+tsts('util.inspect',()=>{
+    const w=WindowStr.new('Syntax',0,5);
+    const u=util.inspect(w);
+	//console.log(u); //WindowStr(Syntax, 0, 5)
+    assert.is(u.startsWith('WindowStr('),true);
+});
+
+const charAtSet:[WindowStr,number,string][]=[
+	[WindowStr.new('Hello'),0,'H'],
+	[WindowStr.new('Hello'),1,'e'],
+	[WindowStr.new('Hello'),4,'o'],
+];
+for (const [ w, idx, expect ] of charAtSet) {
+	tsts(`${w.debug()}.charAt(${idx}):`, () => {
 		assert.is(w.charAt(idx), expect);
 	});
 }
-const badCharAtTests: {
-	str: string | WindowStr;
-	idx: number;
-}[] = [
-	{ str: 'Hello', idx: -6 },
-	{ str: 'Hello', idx: 5 },
-	{ str: 'Hello', idx: 20 },
-	{ str: new WindowStr('[Hi]', 1, 2), idx: -3 },
-	{ str: new WindowStr('[Hi]', 1, 2), idx: 2 },
+
+const badCharAtSet:[string,number][]=[
+	['Hello',-1],//Add .length yourself to support back from end indexing
+	['Hello',-6],
+	['Hello',5],
+	['Hello',25],
 ];
-for (const { str, idx } of badCharAtTests) {
-	tsts(`THROWS: WindowStr(${str}).charAt(${idx}):`, () => {
-		const w = new WindowStr(str);
-		assert.throws(() => w.charAt(idx));
+for(const [str,idx] of badCharAtSet) {
+	tsts(`${str}.charAt(${idx}) throws`,()=>{
+		assert.throws(()=>WindowStr.new(str).charAt(idx));
+	})
+}
+
+const codePointAtSet:[WindowStr,number,number][]=[
+	[WindowStr.new('Hello'),0,72],
+	[WindowStr.new('Hi£'),2,163],
+	//From MDN
+	[WindowStr.new('☃★♲'),1,9733],
+	[WindowStr.new('☃★♲',1),0,9733],
+	[WindowStr.new('ABC'),0,65],
+	[WindowStr.new('😍'),0,128525],
+	[WindowStr.new('\ud83d\ude0d'),0,128525],
+	[WindowStr.new('😍'),1,56845],
+	[WindowStr.new('\ud83d\ude0d'),1,56845],
+	[WindowStr.new('\ud83d\ude0d',1),0,56845],
+];
+for(const [w,pos,expect] of codePointAtSet) {
+	tsts(`${w.debug()}.codePointAt(${pos})`,()=>{
+		assert.is(w.codePointAt(pos),expect);
 	});
 }
 
-const endsWithTests: {
-	str: string | WindowStr;
-	search: string;
-	expect: boolean;
-}[] = [
-	{ str: 'Hello', search: 'o', expect: true },
-	{ str: 'Hello', search: 'lo', expect: true },
-	{ str: 'Hello', search: 'llo', expect: true },
-	{ str: 'Hello', search: 'ello', expect: true },
-	{ str: 'Hello', search: 'Hello', expect: true },
-	{ str: 'Hello', search: 'Hell', expect: false },
-	{ str: 'Hello', search: 'Hel', expect: false },
-	{ str: 'Hello', search: 'He', expect: false },
-	{ str: 'Hello', search: 'H', expect: false },
-	{ str: 'Hello', search: '', expect: true }, //Stupid feature
-	{ str: new WindowStr('[Hello]', 1, 5), search: 'lo', expect: true },
-	{ str: new WindowStr('[Hello]', 1, 5), search: 'o]', expect: false }, //Doesn't leak parent
-	{ str: new WindowStr('[Hello]', 1, 5), search: 'He', expect: false },
-	{ str: new WindowStr('[Hello]', 1, 5), search: '[H', expect: false },
+const badCodePointSet:[WindowStr,number][]=[
+	[WindowStr.new('Hello'),-1],//Add .length yourself
+	[WindowStr.new('Hello'),5],//Out of range
+	[WindowStr.new('a',1),0],
+	[WindowStr.new('a',1),10],
 ];
-for (const { str, search, expect } of endsWithTests) {
-	tsts(`WindowStr(${str}).endsWith(${search}):`, () => {
-		const w = new WindowStr(str);
-		assert.is(w.endsWith(search), expect);
-	});
+for(const [w,pos] of badCodePointSet) {
+	tsts(`${w.debug()}.codePointAt(${pos}) throws`,()=>{
+		assert.throws(()=>w.codePointAt(pos));
+	})
 }
 
-const indexOfTests: {
-	str: string | WindowStr;
-	search: string;
-	start?: number;
-	expect: number;
-}[] = [
-	{ str: 'do re mi fa so la ti', search: 'do', expect: 0 },
-	{ str: 'do re mi fa so la ti', search: 're', expect: 3 },
-	{ str: 'do re mi fa so la ti', search: 're', start: 3, expect: 3 },
-	{ str: 'do re mi fa so la ti', search: 're', start: 4, expect: -1 },
-	{ str: 'do re mi fa so la ti', search: 'ti', expect: 18 },
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 're',
-		expect: 0,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 're',
-		start: 1,
-		expect: -1,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'do',
-		expect: -1,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'ti',
-		expect: -1,
-	}, //out of bounds
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'la',
-		expect: 12,
-	}, // "
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'la ',
-		expect: -1,
-	}, //Overlaps end boundary
-	{ str: 'doh doh', search: 'doh', expect: 0 },
-	{ str: 'doh doh', search: 'doh', start: 1, expect: 4 },
-	{ str: 'doh doh', search: 'doh', start: 2, expect: 4 },
-	{ str: 'doh doh', search: 'doh', start: 3, expect: 4 },
-	{ str: 'doh doh', search: 'doh', start: 4, expect: 4 },
-	{ str: 'doh doh', search: 'doh', start: 5, expect: -1 },
-	{ str: 'doh doh', search: 'doh', start: 6, expect: -1 },
+const endsWithSet: [WindowStr,string,boolean][]=[
+	[WindowStr.new('Hello'),'o',true],
+	[WindowStr.new('Hello'),'lo',true],
+	[WindowStr.new('Hello'),'llo',true],
+	[WindowStr.new('Hello'),'ello',true],
+	[WindowStr.new('Hello'),'Hello',true],
+	[WindowStr.new('Hello'),'Hell',false],
+	[WindowStr.new('Hello'),'Hel',false],
+	[WindowStr.new('Hello'),'He',false],
+	[WindowStr.new('Hello'),'H',false],
+	[WindowStr.new('Hello'),'',true],
+	[WindowStr.new('[Hello]',1,5),'lo',true],
+	[WindowStr.new('[Hello]',1,5),'o',true],
+	[WindowStr.new('[Hello]',1,5),'He',false],
+	[WindowStr.new('[Hello]',1,5),'H',false],
+	//Can't escape window:
+	[WindowStr.new('[Hello]',1,5),'o]',false],
+	[WindowStr.new('[Hello]',1,5),'[H',false],
 ];
-for (const { str, search, start, expect } of indexOfTests) {
-	tsts(`WindowStr(${str}).indexOf(${search},${start}):`, () => {
-		const w = new WindowStr(str);
-		assert.is(w.indexOf(search, start), expect);
-	});
+for(const [w,search,expect] of endsWithSet) {
+	tsts(`${w.debug()}.endsWith(${search})`,()=>{
+		assert.is(w.endsWith(search),expect);
+	})
 }
 
-const badIndexOfTests: {
-	str: string | WindowStr;
-	search: string;
-	start: number;
-}[] = [
-	{ str: 'Hello', search: 'll', start: -1 },
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'do',
-		start: -3,
-	}, //Cannot escape child window
+const indexOfSet:[WindowStr,string,number|undefined,number][]=[
+	[WindowStr.new('do re mi fa so la ti'),'do',,0],
+	[WindowStr.new('do re mi fa so la ti'),'re',,3],
+	[WindowStr.new('do re mi fa so la ti'),'re',3,3],
+	[WindowStr.new('do re mi fa so la ti'),'re',4,-1],
+	[WindowStr.new('do re mi fa so la ti'),'la',,15],
+	[WindowStr.new('do re mi fa so la ti'),'ti',,18],
+	[WindowStr.new('do re mi fa so la ti',3,14),'re',,0],
+	[WindowStr.new('do re mi fa so la ti',3,14),'re',1,-1],
+	[WindowStr.new('do re mi fa so la ti',3,14),'do',,-1],
+	[WindowStr.new('do re mi fa so la ti',3,14),'ti',,-1],
+	[WindowStr.new('do re mi fa so la ti',3,14),'la',,12],
+	[WindowStr.new('do re mi fa so la ti',3,14),'la ',,-1],
 ];
-for (const { str, search, start } of badIndexOfTests) {
-	tsts(`THROWS: WindowStr(${str}).indexOf(${search},${start}):`, () => {
-		const w = new WindowStr(str);
-		assert.throws(() => w.indexOf(search, start));
-	});
+for(const [w,search,start,expect] of indexOfSet) {
+	tsts(`${w.debug()}.indexOf(${search},${start})`,()=>{
+		assert.is(w.indexOf(search,start),expect);
+	})
 }
 
-const lastIndexOfTests: {
-	str: string | WindowStr;
-	search: string;
-	length?: number;
-	expect: number;
-}[] = [
-	{ str: 'do re mi fa so la ti', search: 'do', expect: 0 },
-	{ str: 'do re mi fa so la ti', search: 're', expect: 3 },
-	{ str: 'do re mi fa so la ti', search: 're', length: 3, expect: -1 },
-	{ str: 'do re mi fa so la ti', search: 're', length: 4, expect: -1 },
-	{ str: 'do re mi fa so la ti', search: 're', length: 5, expect: 3 },
-	{ str: 'do re mi fa so la ti', search: 'ti', expect: 18 },
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 're',
-		expect: 0,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 're',
-		length: 0,
-		expect: -1,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 're',
-		length: 1,
-		expect: -1,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 're',
-		length: 2,
-		expect: 0,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'do',
-		expect: -1,
-	},
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'ti',
-		expect: -1,
-	}, //out of bounds
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'la',
-		expect: 12,
-	}, // "
-	{
-		str: new WindowStr('do re mi fa so la ti', 3, 14),
-		search: 'la ',
-		expect: -1,
-	}, //Overlaps end boundary
-	{ str: 'doh doh', search: 'doh', expect: 4 },
-	{ str: 'doh doh', search: 'doh', length: 7, expect: 4 },
-	{ str: 'doh doh', search: 'doh', length: 6, expect: 0 }, //only do in second
-	{ str: 'doh doh', search: 'doh', length: 5, expect: 0 },
-	{ str: 'doh doh', search: 'doh', length: 4, expect: 0 },
-	{ str: 'doh doh', search: 'doh', length: 3, expect: 0 },
-	{ str: 'doh doh', search: 'doh', length: 2, expect: -1 }, //only do in first
-	{ str: 'doh doh', search: 'doh', length: 1, expect: -1 },
-	{ str: 'doh doh', search: 'doh', length: 0, expect: -1 },
-];
-for (const { str, search, length, expect } of lastIndexOfTests) {
-	tsts(`WindowStr(${str}).lastIndexOf(${search},${length}):`, () => {
-		const w = new WindowStr(str);
-		assert.is(w.lastIndexOf(search, length), expect);
-	});
-}
-
-const leftTests: {
-	str: string | WindowStr;
-	len: number;
-	expect: string;
-}[] = [
-	{ str: 'Hello', len: 0, expect: '' },
-	{ str: 'Hello', len: 1, expect: 'H' },
-	{ str: 'Hello', len: 2, expect: 'He' },
-	{ str: 'Hello', len: 3, expect: 'Hel' },
-	{ str: 'Hello', len: 4, expect: 'Hell' },
-	{ str: 'Hello', len: 5, expect: 'Hello' },
-	{ str: new WindowStr('[Hello]', 1, 5), len: 5, expect: 'Hello' },
-	{ str: new WindowStr('[Hello]', 1, 5), len: 2, expect: 'He' },
-];
-for (const { str, len, expect } of leftTests) {
-	tsts(`WindowStr(${str}).left(${len}):`, () => {
-		const w = new WindowStr(str);
-		const l = w.left(len);
-		assert.is(l.toString(), expect);
-	});
-}
-
-const badLeftTests: {
-	str: string | WindowStr;
-	len: number;
-}[] = [
-	{ str: 'Hello', len: 6 },
-	{ str: 'Hello', len: 20 },
-	{ str: new WindowStr('[Hello]', 1, 5), len: 6 },
-];
-for (const { str, len } of badLeftTests) {
-	tsts(`THROWS: WindowStr(${str}).left(${len}):`, () => {
-		const w = new WindowStr(str);
-		assert.throws(() => w.left(len));
-	});
-}
-
-tsts(`peerOf():`, () => {
-	const hello = new WindowStr('hello');
-	//Ways to share the same data:
-	//const helloShared=hello.left(0);
-	//const helloShared=hello.right(5);
-	const helloShared = hello.sub(0);
-	assert.is(helloShared.peerOf(hello), true);
-	assert.is(hello.peerOf(helloShared), true);
-	assert.is(helloShared.stringEqual(hello), true);
-	assert.is(hello.stringEqual(helloShared), true);
-
-	//Identical content but not from the same source:
-	//const helloOther=new WindowStr(hello.toString());
-	const helloOther = new WindowStr('hello');
-	assert.is(hello.peerOf(helloOther), false);
-	assert.is(helloOther.peerOf(hello), false);
-	assert.is(helloOther.stringEqual(hello), true);
-	assert.is(hello.stringEqual(helloOther), true);
-
-	//Effective same content
-	const helloSubset = new WindowStr('[hello]', 1, 5);
-	assert.is(hello.peerOf(helloSubset), false);
-	assert.is(helloSubset.peerOf(hello), false);
-	assert.is(helloSubset.stringEqual(hello), true);
-	assert.is(hello.stringEqual(helloOther), true);
+tsts(`indexOf-out of range start throws`,()=>{
+	const w=WindowStr.new('Hello');
+	assert.throws(()=>w.indexOf('lo',10));
 });
 
-const rightTests: {
-	str: string | WindowStr;
-	len: number;
-	expect: string;
-}[] = [
-	{ str: 'Hello', len: 0, expect: '' },
-	{ str: 'Hello', len: 1, expect: 'o' },
-	{ str: 'Hello', len: 2, expect: 'lo' },
-	{ str: 'Hello', len: 3, expect: 'llo' },
-	{ str: 'Hello', len: 4, expect: 'ello' },
-	{ str: 'Hello', len: 5, expect: 'Hello' },
-	{ str: new WindowStr('[Hello]', 1, 5), len: 5, expect: 'Hello' },
-	{ str: new WindowStr('[Hello]', 1, 5), len: 2, expect: 'lo' },
+const lastIndexOfSet:[WindowStr,string,number|undefined,number][]=[
+	[WindowStr.new('do re mi fa so la ti'),'do',,0],
+	[WindowStr.new('do re mi fa so la ti'),'re',,3],
+	[WindowStr.new('do re mi fa so la ti'),'re',3,-1],//window not large enough
+	[WindowStr.new('do re mi fa so la ti'),'re',4,-1],//window not large enough
+	[WindowStr.new('do re mi fa so la ti'),'re',5,3],
+	[WindowStr.new('do re mi fa so la ti'),'ti',,18],
+	[WindowStr.new('do re mi fa so la ti',3,14),'re',,0],//window-adjusted location
+	[WindowStr.new('do re mi fa so la ti',3,14),'re',0,-1],//window not large enough
+	[WindowStr.new('do re mi fa so la ti',3,14),'re',1,-1],//window not large enough
+	[WindowStr.new('do re mi fa so la ti',3,14),'re',2,0],//window-adjusted location
+	[WindowStr.new('do re mi fa so la ti',3,14),'do',,-1],//tries to escape window
+	[WindowStr.new('do re mi fa so la ti',3,14),'ti',,-1],//tries to escape window
+	[WindowStr.new('do re mi fa so la ti',3,14),'la',,12],//window-adjusted location
+	[WindowStr.new('do re mi fa so la ti',3,14),'la ',,-1],//tries to escape window
+	[WindowStr.new('doh doh'),'doh',,4],
+	[WindowStr.new('doh doh'),'doh',7,4],
+	[WindowStr.new('doh doh'),'doh',6,0],
+	[WindowStr.new('doh doh'),'doh',5,0],
+	[WindowStr.new('doh doh'),'doh',4,0],
+	[WindowStr.new('doh doh'),'doh',3,0],
+	[WindowStr.new('doh doh'),'doh',2,-1],//window not large enough
+	[WindowStr.new('doh doh'),'doh',1,-1],//window not large enough
+	[WindowStr.new('doh doh'),'doh',0,-1],//window not large enough
 ];
-for (const { str, len, expect } of rightTests) {
-	tsts(`WindowStr(${str}).right(${len}):`, () => {
-		const w = new WindowStr(str);
-		const r = w.right(len);
-		assert.is(r.toString(), expect);
-	});
+for(const [w,search,len,expect] of lastIndexOfSet) {
+	tsts(`${w.debug()}.lastIndexOf(${search},${len})`,()=>{
+		assert.is(w.lastIndexOf(search,len),expect);
+	});	
 }
 
-const badRightTests: {
-	str: string | WindowStr;
-	len: number;
-}[] = [
-	{ str: 'Hello', len: 6 },
-	{ str: 'Hello', len: 20 },
-	{ str: new WindowStr('[Hello]', 1, 5), len: 6 },
-];
-for (const { str, len } of badRightTests) {
-	tsts(`THROWS: WindowStr(${str}).right(${len}):`, () => {
-		const w = new WindowStr(str);
-		assert.throws(() => w.right(len));
-	});
-}
-
-const splitTests: {
-	str: string;
-	sep: string;
-	limit?: number;
-	expect: string[];
-}[] = [
-	{ str: 'The quick brown!', sep: ' ', expect: ['The', 'quick', 'brown!'] },
-	{ str: 'The quick brown!', sep: ' ', limit: 0, expect: [] },
-	{ str: 'The quick brown!', sep: ' ', limit: 2, expect: ['The', 'quick'] },
-	{ str: 'The quick brown!', sep: '?', expect: ['The quick brown!'] },
-	{ str: 'The quick brown!', sep: '!', expect: ['The quick brown', ''] },
-	{ str: 'The quick brown!', sep: '', expect: [] }, //Empty sep isn't supported
-];
-for (const { str, sep, limit, expect } of splitTests) {
-	tsts(`WindowStr(${str}).split(${sep},${limit}):`, () => {
-		const w = new WindowStr(str);
-		const s = w.split(sep, limit);
-		assert.is(s.length, expect.length, 'Result size matches');
-		for (let i = 0; i < expect.length; i++) {
-			assert.is(s[i].toString(), expect[i]);
-		}
-	});
-}
-
-const startsWithTests: {
-	str: string | WindowStr;
-	search: string;
-	expect: boolean;
-}[] = [
-	{ str: 'Hello', search: 'o', expect: false },
-	{ str: 'Hello', search: 'lo', expect: false },
-	{ str: 'Hello', search: 'llo', expect: false },
-	{ str: 'Hello', search: 'ello', expect: false },
-	{ str: 'Hello', search: 'Hello', expect: true },
-	{ str: 'Hello', search: 'Hell', expect: true },
-	{ str: 'Hello', search: 'Hel', expect: true },
-	{ str: 'Hello', search: 'He', expect: true },
-	{ str: 'Hello', search: 'H', expect: true },
-	{ str: 'Hello', search: '', expect: true }, //Stupid feature
-	{ str: new WindowStr('[Hello]', 1, 5), search: 'lo', expect: false },
-	{ str: new WindowStr('[Hello]', 1, 5), search: 'o]', expect: false },
-	{ str: new WindowStr('[Hello]', 1, 5), search: 'He', expect: true },
-	{ str: new WindowStr('[Hello]', 1, 5), search: '[H', expect: false }, //Doesn't leak parent
-];
-for (const { str, search, expect } of startsWithTests) {
-	tsts(`WindowStr(${str}).startsWith(${search}):`, () => {
-		const w = new WindowStr(str);
-		assert.is(w.startsWith(search), expect);
-	});
-}
-
-const subTests: {
-	str: string;
-	start: number;
-	len?: number;
-	expect: string;
-}[] = [
-	{ str: 'Hello', start: 0, expect: 'Hello' },
-	{ str: 'Hello', start: 1, expect: 'ello' },
-	{ str: 'Hello', start: 2, expect: 'llo' },
-	{ str: 'Hello', start: 3, expect: 'lo' },
-	{ str: 'Hello', start: 4, expect: 'o' },
-	{ str: 'Hello', start: 5, expect: '' },
-	{ str: 'Hello', start: -5, expect: 'Hello' },
-	{ str: 'Hello', start: -4, expect: 'ello' },
-	{ str: 'Hello', start: -3, expect: 'llo' },
-	{ str: 'Hello', start: -2, expect: 'lo' },
-	{ str: 'Hello', start: -1, expect: 'o' },
-
-	{ str: 'Hello', start: 0, len: 0, expect: '' },
-	{ str: 'Hello', start: 1, len: 1, expect: 'e' },
-	{ str: 'Hello', start: 1, len: 2, expect: 'el' },
-	{ str: 'Hello', start: 1, len: 3, expect: 'ell' },
-	{ str: 'Hello', start: 1, len: 4, expect: 'ello' },
-];
-for (const { str, start, len, expect } of subTests) {
-	tsts(`WindowStr(${str}).sub(${start},${len}):`, () => {
-		const w = new WindowStr(str);
-		const clone = w.sub(start, len);
-		assert.is(clone.toString(), expect);
-	});
-}
-
-const badSubTests: {
-	str: string;
-	start: number;
-	len?: number;
-}[] = [
-	{ str: 'Hello', start: 6 },
-	{ str: 'Hello', start: -6 },
-	{ str: 'Hello', start: 1, len: 5 },
-	//{str:'Hello',len:20},
-];
-for (const { str, start, len } of badSubTests) {
-	tsts(`THROWS: WindowStr(${str}).sub(${start},${len}):`, () => {
-		const w = new WindowStr(str);
-		assert.throws(() => w.sub(start, len));
-	});
-}
-
-tsts('WindowStr(Hi).toPrimitive()', () => {
-	//Tests Browser debug, and string concats
-	const w = new WindowStr('Hi');
-	assert.is(String(w), 'WindowStr(Hi)');
+tsts(`lastIndexOf-out of range length throws`,()=>{
+	const w=WindowStr.new('Hello');
+	assert.throws(()=>w.lastIndexOf('lo',10));
 });
 
-tsts('WindowStr(Hello£) -integrated', () => {
-	const w = new WindowStr('Hello£');
-	assert.is(w.length, 6);
-	assert.is(w.empty, false);
-	assert.is(w.codePointAt(0), 72);
-	assert.is(w.codePointAt(5), 163);
+const leftSet:[WindowStr,number,string][]=[
+	[WindowStr.new('Hello'),0,''],
+	[WindowStr.new('Hello'),1,'H'],
+	[WindowStr.new('Hello'),2,'He'],
+	[WindowStr.new('Hello'),3,'Hel'],
+	[WindowStr.new('Hello'),4,'Hell'],
+	[WindowStr.new('Hello'),5,'Hello'],
+	[WindowStr.new('[Hello]',1,5),5,'Hello'],
+	[WindowStr.new('[Hello]',1,5),2,'He'],
+];
+for(const [w,len,expect] of leftSet) {
+	tsts(`${w.debug()}.left(${len})`,()=>{
+		assert.is(w.left(len).toString(),expect);
+	})
+}
+
+tsts(`left-out of range length throws`,()=>{
+	const w=WindowStr.new('Hello');
+	assert.throws(()=>w.left(10));
 });
+
+tsts(`peerOf()`,()=>{
+	const hello=WindowStr.new('Hello');
+	
+	//Ways to share storage:
+	const left=hello.left(4);
+	assert.not.equal(hello,left,'Different objects');
+	assert.is(hello.toString()!=left.toString(),true,'Different content');
+	assert.is(hello.peerOf(left),true);
+	assert.is(left.peerOf(hello),true);
+
+	const right=hello.right(2);
+	assert.not.equal(hello,right,'Different objects');
+	assert.is(hello.toString()!=right.toString(),true,'Different content');
+	assert.is(hello.peerOf(right),true);
+	assert.is(right.peerOf(hello),true);
+
+	const span=hello.span(2,2);
+	assert.not.equal(hello,span,'Different objects');
+	assert.is(hello.toString()!=span.toString(),true,'Different content');
+	assert.is(hello.peerOf(span),true);
+	assert.is(span.peerOf(hello),true);
+
+	//Same content doesn't mean same storage
+	const hello2=WindowStr.new('[Hello]',1,5);
+	//Warning, if you build two String() with the same content, JS may optimize this to
+	// the same storage (after all - immutable) so `const hello2=WindowStr2.new('Hello');`
+	// literally points to the same memory as `hello` (in v8 anyway) !!danger
+	assert.is(hello.toString()==hello2.toString(),true,'Same content');
+	assert.is(hello2.peerOf(hello),false,'hello2-peer-hello');
+	assert.is(hello.peerOf(hello2),false,'hello-peer-hello2');
+})
+
+const rightSet:[WindowStr,number,string][]=[
+	[WindowStr.new('Hello'),0,''],
+	[WindowStr.new('Hello'),1,'o'],
+	[WindowStr.new('Hello'),2,'lo'],
+	[WindowStr.new('Hello'),3,'llo'],
+	[WindowStr.new('Hello'),4,'ello'],
+	[WindowStr.new('Hello'),5,'Hello'],
+	[WindowStr.new('[Hello]',1,5),5,'Hello'],
+	[WindowStr.new('[Hello]',1,5),2,'lo'],
+];
+for(const [w,len,expect] of rightSet) {
+	tsts(`${w.debug()}.right(${len})`,()=>{
+		assert.is(w.right(len).toString(),expect);
+	})
+}
+
+tsts(`right-out of range length throws`,()=>{
+	const w=WindowStr.new('Hello');
+	assert.throws(()=>w.right(10));
+});
+
+const spanSet:[WindowStr,number,number|undefined,string][]=[
+	[WindowStr.new('Hello'),0,,'Hello'],
+	[WindowStr.new('Hello'),1,,'ello'],
+	[WindowStr.new('Hello'),2,,'llo'],
+	[WindowStr.new('Hello'),3,,'lo'],
+	[WindowStr.new('Hello'),4,,'o'],
+	[WindowStr.new('Hello'),5,,''],
+	[WindowStr.new('Hello'),0,0,''],
+	[WindowStr.new('Hello'),0,1,'H'],
+	[WindowStr.new('Hello'),0,2,'He'],
+	[WindowStr.new('Hello'),0,3,'Hel'],
+	[WindowStr.new('Hello'),0,4,'Hell'],
+	[WindowStr.new('Hello'),0,5,'Hello'],
+	[WindowStr.new('Hello'),1,0,''],
+	[WindowStr.new('Hello'),1,1,'e'],
+	[WindowStr.new('Hello'),1,2,'el'],
+	[WindowStr.new('Hello'),1,3,'ell'],
+	[WindowStr.new('Hello'),1,4,'ello'],
+	[WindowStr.new('Hello'),2,3,'llo'],
+	[WindowStr.new('Hello'),2,2,'ll'],
+	[WindowStr.new('Hello'),2,1,'l'],
+	[WindowStr.new('Hello'),2,0,''],
+];
+for(const [w,start,len,expect] of spanSet) {
+	tsts(`${w.debug()}.span(${start}, ${len})`,()=>{
+		const o=w.span(start,len);
+		assert.is(w.peerOf(o),true,'Uses same storage');
+		assert.is(o.toString(),expect,'Has expected content');
+	})
+}
+
+const badSpanSet:[WindowStr,number,number][]=[
+	[WindowStr.new('Hello'),10,0],//Start out of range
+	[WindowStr.new('Hello'),-1,0],//Add your own length
+	[WindowStr.new('Hello'),0,6],//length oversized
+	[WindowStr.new('Hello'),0,-1],//Invalid length
+	[WindowStr.new('Hello'),1,5],//Invalid length after start adjust
+];
+for(const [w,start,len] of badSpanSet) {
+	tsts(`${w.debug()}.span(${start}, ${len}) throws`,()=>{
+		assert.throws(()=>w.span(start,len));
+	});
+}
+
+const splitSet:[WindowStr,string,number|undefined,string[]][]=[
+	[WindowStr.new('The quick brown!'),' ',,['The','quick','brown!']],
+	[WindowStr.new('The quick brown!'),' ',0,[]],
+	[WindowStr.new('The quick brown!'),' ',1,['The quick brown!']],
+	[WindowStr.new('The quick brown!'),' ',2,['The','quick brown!']],
+	[WindowStr.new('The quick brown!'),'?',,['The quick brown!']],
+	[WindowStr.new('The quick brown!'),'!',,['The quick brown','']],
+	[WindowStr.new('The quick brown!'),'',,[]],//empty sep isn't supported
+];
+for(const [w,sep,limit,expect] of splitSet) {
+	tsts(`${w.debug()}.split(${sep},${limit})`,()=>{
+		const s=w.split(sep,limit);
+		assert.is(s.length,expect.length,'Result size matches');
+		for(let i=0;i<expect.length;i++) assert.is(s[i].toString(),expect[i]);
+	})
+}
+
+tsts(`split results in source is different object`,()=>{
+	const w=WindowStr.new('Hello there');
+	tsts(`${w.debug()}.split(?)`,()=>{
+		const [s]=w.split('?');//Should result in 1 piece
+		assert.is(w.toString(),s.toString());
+		assert.is(w===s,false,'Different objects');
+	})
+})
+
+const startsWithSet:[WindowStr,string,boolean][]=[
+	[WindowStr.new('Hello'),'o',false],
+	[WindowStr.new('Hello'),'lo',false],
+	[WindowStr.new('Hello'),'llo',false],
+	[WindowStr.new('Hello'),'ello',false],
+	[WindowStr.new('Hello'),'Hello',true],
+	[WindowStr.new('Hello'),'Hell',true],
+	[WindowStr.new('Hello'),'Hel',true],
+	[WindowStr.new('Hello'),'He',true],
+	[WindowStr.new('Hello'),'H',true],
+	[WindowStr.new('Hello'),'',true],
+	[WindowStr.new('[Hello]',1,5),'lo',false],
+	[WindowStr.new('[Hello]',1,5),'o',false],
+	[WindowStr.new('[Hello]',1,5),'He',true],
+	[WindowStr.new('[Hello]',1,5),'H',true],
+	//Can't escape window:
+	[WindowStr.new('[Hello]',1,5),'o]',false],
+	[WindowStr.new('[Hello]',1,5),'[H',false],
+];
+for(const [w,search,expect] of startsWithSet) {
+	tsts(`${w.debug()}.startsWith(${search})`,()=>{
+		assert.is(w.startsWith(search),expect);
+	})
+}
+
+tsts(`coerce(WindowStr) returns same content`,()=>{
+	const w=WindowStr.new('Hello');
+	const c=WindowStr.coerce(w);
+	assert.is(w,c);
+})
+
+tsts(`coerce(string) returns window`,()=>{
+	const s='finish';
+	const c=WindowStr.coerce(s);
+	assert.instance(c,WindowStr);
+});
+
+const trimStartSet:[WindowStr,string[]|undefined,number|undefined,string][]=[
+	[WindowStr.new(' a '),,,'a '],
+	[WindowStr.new('  a'),,,'a'],
+	[WindowStr.new('a  '),,,'a  '],
+	[WindowStr.new('\ta\tb\t'),,,'a\tb\t'],
+	[WindowStr.new('abba'),['a'],,'bba'],
+	[WindowStr.new('abba'),['a','b'],,''],
+	[WindowStr.new('  a'),,1,' a'],
+	[WindowStr.new('  a'),,2,'a'],
+	[WindowStr.new('  a'),,3,'a'],
+];
+for(const [w,chars,limit,expect] of trimStartSet) {
+	tsts(`${w.debug()}.trimStart(,${limit})`,()=>{
+		const res=w.trimStart(chars,limit);
+		assert.is(res,w,'Mutates state');
+		assert.is(res.toString(),expect);
+	})
+}
+
+const trimEndSet:[WindowStr,string[]|undefined,number|undefined,string][]=[
+	[WindowStr.new(' a '),,,' a'],
+	[WindowStr.new('  a'),,,'  a'],
+	[WindowStr.new('a  '),,,'a'],
+	[WindowStr.new('\ta\tb\t'),,,'\ta\tb'],
+	[WindowStr.new('abba'),['a'],,'abb'],
+	[WindowStr.new('abba'),['a','b'],,''],
+	[WindowStr.new('a  '),,1,'a '],
+	[WindowStr.new('a  '),,2,'a'],
+	[WindowStr.new('a  '),,3,'a'],
+];
+for(const [w,chars,limit,expect] of trimEndSet) {
+	tsts(`${w.debug()}.trimEnd(,${limit})`,()=>{
+		const res=w.trimEnd(chars,limit);
+		assert.is(res,w,'Mutates state');
+		assert.is(res.toString(),expect);
+	})
+}
+
+const shrinkSet:[WindowStr,number|undefined,number|undefined,string][]=[
+	[WindowStr.new('hello'),,,'hello'],
+	[WindowStr.new('hello'),1,,'ello'],
+	[WindowStr.new('hello'),5,,''],
+	[WindowStr.new('hello'),,1,'hell'],
+	[WindowStr.new('hello'),,5,''],
+	[WindowStr.new('hello'),1,1,'ell'],
+];
+for(const [w,startBy,lenBy,expect] of shrinkSet) {
+	tsts(`${w.debug()}.shrink(${startBy}, ${lenBy})`,()=>{
+		const res=w.shrink(startBy,lenBy);
+		assert.is(res,w,'Mutates state');
+		assert.is(res.toString(),expect);
+	})
+}
+
+const badShrinkSet:[WindowStr,number|undefined,number|undefined][]=[
+	[WindowStr.new('hello'),6,undefined],//Start out of range
+	[WindowStr.new('hello'),,6],//Length out of range
+	[WindowStr.new('hello'),3,3],//Combined start/length out of range
+];
+for(const [w,startBy,lenBy] of badShrinkSet) {
+	tsts(`${w.debug()}.shrink(${startBy}, ${lenBy})  throws`,()=>{
+		assert.throws(()=>w.shrink(startBy,lenBy));
+	})
+}
+
 
 tsts.run();

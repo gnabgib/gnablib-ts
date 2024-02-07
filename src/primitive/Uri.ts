@@ -2,7 +2,7 @@
 
 import { BnfAlt, BnfChar, BnfConcat, BnfString, BnfRepeat } from '../abnf/bnf.js';
 import { rules } from "../abnf/rules.js";
-import { WindowStr,WindowStrish } from "./WindowStr.js";
+import { WindowStr,WindowOrString } from "./WindowStr.js";
 
 //URI or URL? All URLs are URI
 
@@ -177,7 +177,7 @@ export class Urn {
         return this.nid.startsWith('uri-');
     }
 
-    static parse(s:WindowStrish):Urn|undefined {
+    static parse(s:WindowOrString):Urn|undefined {
         s=WindowStr.coerce(s);
         const match=namestring.atStartOf(s);
         console.log(match);

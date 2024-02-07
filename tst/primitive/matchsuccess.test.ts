@@ -1,14 +1,15 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { MatchDetail, MatchSuccess, WindowStr } from '../../src/primitive';
+import { MatchDetail, MatchSuccess } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('MatchSuccess');
 
-const w=new WindowStr('ab');
+const w=WindowStr.new('ab');
 const matchSucTest:[MatchDetail,string][]=[
-	[{value:new WindowStr('8')},'remain=ab\n8\n'],
-	[{name:'ford',value:new WindowStr('8')},'remain=ab\nford=8\n'],
-	[{value:new WindowStr('8'),components:[{name:'up',value:new WindowStr('down')}]},'remain=ab\n8\n  up=down\n'],
+	[{value:WindowStr.new('8')},'remain=ab\n8\n'],
+	[{name:'ford',value:WindowStr.new('8')},'remain=ab\nford=8\n'],
+	[{value:WindowStr.new('8'),components:[{name:'up',value:WindowStr.new('down')}]},'remain=ab\n8\n  up=down\n'],
 ];
 let i=0;
 for(const [r,expect] of matchSucTest) {

@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import { BnfChar, BnfRange} from "../../src/abnf";
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('ABNF range');
 
@@ -64,7 +64,7 @@ const testMatch:{
 for (const {haystack,needleStart,needleEnd,expectRem,expectMatch} of testMatch) {
     tsts(`Range(${needleStart},${needleEnd}).atStartOf(${haystack}):`,()=>{
         const r=new BnfRange(needleStart,needleEnd);
-        const w=new WindowStr(haystack);
+        const w=WindowStr.new(haystack);
         const m=r.atStartOf(w);
         if (expectRem!==undefined) {
             assert.is(m.fail,false);

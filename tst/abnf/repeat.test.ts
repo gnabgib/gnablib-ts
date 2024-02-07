@@ -7,7 +7,7 @@ import {
 	BnfRepeat,
 } from '../../src/abnf';
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 //abnf /rfc5234
 const tsts = suite('ABNF repeat');
@@ -76,7 +76,7 @@ for (const {
 } of testMatch) {
 	tsts(`Repeat(${needle},${min},${max}).atStartOf(${haystack}):`, () => {
 		const c = BnfRepeat.Between(min, max, needle);
-		const w = new WindowStr(haystack);
+		const w = WindowStr.new(haystack);
 		const m = c.atStartOf(w);
 		//console.log(m);
 		if (expectRem !== undefined) {

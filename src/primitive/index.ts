@@ -55,7 +55,7 @@ export { uint8ArrayExt } from './UInt8ArrayExt.js';
 export { Uint64, type Uint64ish } from './Uint64.js';
 export { Urn } from './Uri.js';
 export { utf } from './Utf.js';
-export { WindowStr, type WindowStrish } from './WindowStr.js';
+export { WindowStr, type WindowOrString } from './WindowStr.js';
 export { nameValue } from './nameValue.js';
 export { BitReader } from './BitReader.js';
 export { BitWriter } from './BitWriter.js';

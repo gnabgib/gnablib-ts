@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import { BnfChar } from '../../src/abnf';
 import * as assert from 'uvu/assert';
-import { WindowStr } from '../../src/primitive';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('ABNF char');
 
@@ -209,7 +209,7 @@ const testMatch: {
 for (const { haystack, needle, CI, expectRem, expectMatch } of testMatch) {
 	tsts(`Char(${needle}).atStartOf(${haystack}):`, () => {
 		const c = new BnfChar(needle, CI);
-		const w = new WindowStr(haystack);
+		const w = WindowStr.new(haystack);
 		const m = c.atStartOf(w);
 		if (expectRem !== undefined) {
 			assert.is(m.fail, false);
