@@ -13,7 +13,7 @@ import { IRandInt } from './interfaces/IRandInt.js';
  * @returns function to produce integers in the range 0 - 9
  */
 export function marsaglia(seed: number): IRandInt {
-	safe.int.inRangeInc(seed, 1, 99);
+	safe.int.inRangeInc('seed', seed, 1, 99);
 	/** Return a new number [0-9] */
 	function rand(): number {
 		const units = seed % 10;

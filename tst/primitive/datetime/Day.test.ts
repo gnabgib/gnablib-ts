@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('Day');
 
@@ -130,70 +131,66 @@ tsts(`now`,()=>{
     assert.is(d.valueOf(),dt.getDate());//Not a great name, JS
 });
 
-const parseSet:[string,number][]=[
+const parseSet:[WindowStr,number,number][]=[
     //Completely valid
-    ['01',1],
-    ['02',2],
-    ['03',3],
-    ['04',4],
-    ['05',5],
-    ['06',6],
-    ['07',7],
-    ['08',8],
-    ['09',9],
-    ['10',10],
-    ['20',20],
-    ['30',30],
-    ['31',31],
+    [WindowStr.new('01'),1,0],
+    [WindowStr.new('02'),2,0],
+    [WindowStr.new('03'),3,0],
+    [WindowStr.new('04'),4,0],
+    [WindowStr.new('05'),5,0],
+    [WindowStr.new('06'),6,0],
+    [WindowStr.new('07'),7,0],
+    [WindowStr.new('08'),8,0],
+    [WindowStr.new('09'),9,0],
+    [WindowStr.new('10'),10,0],
+    [WindowStr.new('20'),20,0],
+    [WindowStr.new('30'),30,0],
+    [WindowStr.new('31'),31,0],
     //Doesn't have to be zero padded
-    ['2',2],
+    [WindowStr.new('2'),2,0],
+    [WindowStr.new(' 2 '),2,1],//Trailing isn't removed
+    [WindowStr.new('20240208',6),8,0],
 
     //Note: This could fail at the end of the year :|
-    ['now',new Date().getDate()],
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [10,10],
+    [WindowStr.new('now'),new Date().getDate(),0],
+    [WindowStr.new('nOW '),new Date().getDate(),1],
+    
 ];
-for (const [str,expect] of parseSet) {
-    tsts(`parse(${str})`,()=>{
-        const d=Day.parse(str);
+for (const [w,expect,expectLen] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const d=Day.parse(w);
         assert.equal(d.valueOf(),expect);
+        assert.is(w.length,expectLen,'remaining length');
     });
 }
 
-const badParseStrict:string[]=[
+const badParseStrict:WindowStr[]=[
     //Should be zero padded
-    '1',
-    '3',
+    WindowStr.new('1'),
+    WindowStr.new('3'),
 ];
-for (const str of badParseStrict) {
-    tsts(`parse(${str},undefined,true)`,()=>{
-        assert.throws(()=>Day.parse(str,undefined,true));
+for (const w of badParseStrict) {
+    tsts(`parse(${w.debug()},undefined,true)`,()=>{
+        assert.throws(()=>Day.parse(w,undefined,true));
     });
 }
 
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    true,
-    //Symbol("year"),
-    1.5,//Like integers, this is converted to a string, but floating point isn't allowed
-
+const badParse:WindowStr[]=[
     //Bad strings
-    '',//Empty string not allowed
-    'tomorrow',//We support "now" only
-    '1.5',//Floating point - not allowed
-    '1e1',//10 in scientific - not allowed
-    '+01',//Can't have sign
+    WindowStr.new(''),//Empty string not allowed
+    WindowStr.new('tomorrow'),//We support "now" only
+    WindowStr.new('1.5'),//Floating point - not allowed
+    WindowStr.new('1e1'),//10 in scientific - not allowed
+    WindowStr.new('+01'),//Can't have sign
+    WindowStr.new('-1'),//Oh sure the minusst day
     //Out of range:
-    '0',
-    '32',
-    '1000',
+    WindowStr.new('0'),
+    WindowStr.new('32'),
+    WindowStr.new('1000'),
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
-        //@ts-ignore - this is the point of the test
-        assert.throws(()=>Day.parse(unk));
+for (const w of badParse) {
+    tsts(`badParse(${w.debug()})`,()=>{
+        assert.throws(()=>Day.parse(w));
     })
 }
 

@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('Month');
 
@@ -108,109 +109,114 @@ tsts(`now`,()=>{
     assert.is(m.valueOf(),dt.getMonth()+1);//JS stores months 0 based
 });
 
-const parseSet:[string,number][]=[
+const parseSet:[WindowStr,number,number][]=[
     //Exhaustive month-int
-    ['01',1],
-    ['02',2],
-    ['03',3],
-    ['04',4],
-    ['05',5],
-    ['06',6],
-    ['07',7],
-    ['08',8],
-    ['09',9],
-    ['10',10],
-    ['11',11],
-    ['12',12],
+    [WindowStr.new('01'),1,0],
+    [WindowStr.new('02'),2,0],
+    [WindowStr.new('03'),3,0],
+    [WindowStr.new('04'),4,0],
+    [WindowStr.new('05'),5,0],
+    [WindowStr.new('06'),6,0],
+    [WindowStr.new('07'),7,0],
+    [WindowStr.new('08'),8,0],
+    [WindowStr.new('09'),9,0],
+    [WindowStr.new('10'),10,0],
+    [WindowStr.new('11'),11,0],
+    [WindowStr.new('12'),12,0],
     //Doesn't have to be zero padded
-    ['1',1],
-    ['2',2],
-    ['3',3],
-    ['4',4],
-    ['5',5],
-    ['6',6],
-    ['7',7],
-    ['8',8],
-    ['9',9],
+    [WindowStr.new('1'),1,0],
+    [WindowStr.new('2'),2,0],
+    [WindowStr.new('3'),3,0],
+    [WindowStr.new('4'),4,0],
+    [WindowStr.new('5'),5,0],
+    [WindowStr.new('6'),6,0],
+    [WindowStr.new('7'),7,0],
+    [WindowStr.new('8'),8,0],
+    [WindowStr.new('9'),9,0],
     //Exhaustive month-short (may fail if tests run in different locality)
-    ['jan',1],
-    ['feb',2],
-    ['mar',3],
-    ['apr',4],
-    ['may',5],
-    ['jun',6],
-    ['jul',7],
-    ['aug',8],
-    ['sep',9],
-    ['oct',10],
-    ['nov',11],
-    ['dec',12],
+    [WindowStr.new('jan'),1,0],
+    [WindowStr.new('feb'),2,0],
+    [WindowStr.new('mar'),3,0],
+    [WindowStr.new('apr'),4,0],
+    [WindowStr.new('may'),5,0],
+    [WindowStr.new('jun'),6,0],
+    [WindowStr.new('jul'),7,0],
+    [WindowStr.new('aug'),8,0],
+    [WindowStr.new('sep'),9,0],
+    [WindowStr.new('oct'),10,0],
+    [WindowStr.new('nov'),11,0],
+    [WindowStr.new('dec'),12,0],
+    [WindowStr.new('NOV'),11,0],
     //Exhaustive month-long (may fail if tests run in different locality)
-    ['January',1],
-    ['February',2],
-    ['March',3],
-    ['April',4],
-    ['May',5],
-    ['June',6],
-    ['July',7],
-    ['August',8],
-    ['September',9],
-    ['October',10],
-    ['November',11],
-    ['December',12],
+    [WindowStr.new('January'),1,0],
+    [WindowStr.new('February'),2,0],
+    [WindowStr.new('March'),3,0],
+    [WindowStr.new('April'),4,0],
+    [WindowStr.new('May'),5,0],
+    [WindowStr.new('June'),6,0],
+    [WindowStr.new('July'),7,0],
+    [WindowStr.new('August'),8,0],
+    [WindowStr.new('September'),9,0],
+    [WindowStr.new('October'),10,0],
+    [WindowStr.new('November'),11,0],
+    [WindowStr.new('December'),12,0],
+    [WindowStr.new(' December '),12,1],//Trailing space not consumed
+
+    [WindowStr.new('20240208',4,2),2,0],
+
+    //This should match, but will only work if locale=fr
+    //[WindowStr.new('février'),2,0],
 
     //Can be space padded
-    [' 1 ',1],
+    [WindowStr.new(' 1 '),1,1],
 
-    //Note: This could fail at the end of the year :|
-    ['now',new Date().getMonth()+1],
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [10,10],
+    //Note: Could fail at the end of the month :|
+    [WindowStr.new('now'),new Date().getMonth()+1,0],
+    [WindowStr.new('NOW'),new Date().getMonth()+1,0],
+    [WindowStr.new(' NoW '),new Date().getMonth()+1,1],//Leading space is trimmed, but not trailing
 ];
-for (const [str,expect] of parseSet) {
-    tsts(`parse(${str})`,()=>{
-        const m=Month.parse(str);
+for (const [w,expect,expectLen] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const m=Month.parse(w);
         assert.equal(m.valueOf(),expect);
+        assert.is(w.length,expectLen,'remaining length');
     });
 }
 
-const badParseStrict:string[]=[
+const badParseStrict:WindowStr[]=[
     //Should be zero padded
-    '1',
-    '3',
+    WindowStr.new('1'),
+    WindowStr.new('3'),
 ];
-for (const str of badParseStrict) {
-    tsts(`parse(${str},undefined,true)`,()=>{
-        assert.throws(()=>Month.parse(str,undefined,true));
+for (const w of badParseStrict) {
+    tsts(`${w.debug()} parse strict throws`,()=>{
+        assert.throws(()=>Month.parse(w,undefined,true));
     });
 }
 
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    true,
-    //Symbol("year"),
-    1.5,//Like integers, this is converted to a string, but floating point isn't allowed
-
+const badParse:WindowStr[]=[
     //Bad strings
-    '',//Empty string not allowed
-    'tomorrow',//We support "now" only
-    '1.5',//Floating point - not allowed
-    '1e1',//10 in scientific - not allowed
-    '+01',//Can't have sign
-    '-02',//"
-    'A',//Hex isn't allowed (good ol' tenth month)
+    WindowStr.new(''),//Empty string not allowed
+    WindowStr.new('tomorrow'),//We support "now" only
+    WindowStr.new('1.5'),//Floating point - not allowed
+    WindowStr.new('1e1'),//10 in scientific - not allowed, although technically a valid number
+    WindowStr.new('+01'),//Can't have sign
+    WindowStr.new('-02'),//"
+    WindowStr.new('-2'),
+    WindowStr.new('A'),//Hex isn't allowed (good ol' tenth month)
     //Out of range:
-    '0',
-    '00',
-    '13',
-    '1000',
+    WindowStr.new('0'),
+    WindowStr.new('00'),
+    WindowStr.new('13'),
+    WindowStr.new('1000'),
+    //Trailing text
+    WindowStr.new('dec dec'),
+    WindowStr.new('December 1'),
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
+for (const w of badParse) {
+    tsts(`badParse(${w.debug()})`,()=>{
         //@ts-ignore - this is the point of the test
-        assert.throws(()=>Month.parse(unk));
+        assert.throws(()=>Month.parse(w));
     })
 }
 

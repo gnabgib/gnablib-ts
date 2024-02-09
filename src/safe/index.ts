@@ -25,7 +25,7 @@ export interface ISafeInt {
 	/** May throw if $test is not an integer */
 	is(test: unknown): void;
 	/** May throw if $test <$lowIn or >highInc  */
-	inRangeInc(test: number, lowInc: number, highInc: number): void;
+	inRangeInc(noun:string, test: number, lowInc: number, highInc: number): void;
 	/** Coerce $input into an integer :: that will fit in $bytes bytes */
 	coerce(input: unknown): number;
 }
@@ -57,9 +57,9 @@ export interface ISafe {
 export const somewhatSafe: ISafe = {
 	int: {
 		is: noTest,
-		inRangeInc: function (test: number, lowInc: number, highInc: number) {
+		inRangeInc: function (noun:string, test: number, lowInc: number, highInc: number) {
 			if (test < lowInc || test > highInc)
-				throw new InclusiveRangeError(test, lowInc, highInc);
+				throw new InclusiveRangeError(noun, test, lowInc, highInc);
 		},
 		coerce(input: unknown): number {
 			//todo: byte concern?
@@ -106,9 +106,9 @@ export const superSafe: ISafe = {
 			if (!Number.isSafeInteger(test))
 				throw new TypeError(`Not an integer: ${test}`);
 		},
-		inRangeInc: function (test: number, lowInc: number, highInc: number) {
+		inRangeInc: function (noun:string, test: number, lowInc: number, highInc: number) {
 			superSafe.int.is(test);
-			somewhatSafe.int.inRangeInc(test, lowInc, highInc);
+			somewhatSafe.int.inRangeInc(noun, test, lowInc, highInc);
 		},
 		coerce: somewhatSafe.int.coerce,
 	},

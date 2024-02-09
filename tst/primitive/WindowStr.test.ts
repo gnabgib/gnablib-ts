@@ -28,6 +28,15 @@ for(const [str,start,len,expect] of buildSet) {
 	});
 }
 
+tsts(`build with null or undefined ok`,()=>{
+	// @ts-expect-error: We're just checking robustness
+	const wu=WindowStr.new(undefined);
+	// @ts-expect-error: We're just checking robustness
+	const wn=WindowStr.new(null);
+	assert.is(wu.length,0);
+	assert.is(wn.length,0);
+})
+
 const badBuildSet:[string,number|undefined,number|undefined][]=[
 	['Hello',-1,undefined],//Too early
 	['Hello',6,undefined],//Too late
@@ -38,6 +47,18 @@ for (const [ str, start, len ] of badBuildSet) {
 	tsts(`new(${str},${start},${len}) throws`, () => {
 		assert.throws(() => WindowStr.new(str, start, len));
 	});
+}
+
+const emptySet:[WindowStr,number,boolean][]=[
+	[WindowStr.new(''),0,true],
+	[WindowStr.new('Hi'),2,false],
+	[WindowStr.new('Hi',2),0,true],
+];
+for(const [w,expectLen,expectEmpty] of emptySet) {
+	tsts(`${w.debug()}.isEmpty`,()=>{
+		assert.is(w.empty,expectEmpty);
+		assert.is(w.length,expectLen);
+	})
 }
 
 const toStringSet:[string,number|undefined,number|undefined,string][]=[
@@ -170,6 +191,20 @@ tsts(`indexOf-out of range start throws`,()=>{
 	assert.throws(()=>w.indexOf('lo',10));
 });
 
+const indexOfAnySet:[WindowStr,string[],number|undefined,number][]=[
+	[WindowStr.new('2024-01-02'),['-','/','.'],,4],
+	[WindowStr.new('2024/01/02'),['-','/','.'],,4],
+	[WindowStr.new('2024.01.02'),['-','/','.'],,4],
+	[WindowStr.new('-2024-01-02'),['-','/','.'],1,5],
+	[WindowStr.new('abba'),['c','d'],,-1],
+];
+for(const [w,searchs,start,expect] of indexOfAnySet) {
+	tsts(`${w.debug()}.indexOfAny(${searchs},${start})`,()=>{
+		assert.is(w.indexOfAny(searchs,start),expect);
+	})
+
+}
+
 const lastIndexOfSet:[WindowStr,string,number|undefined,number][]=[
 	[WindowStr.new('do re mi fa so la ti'),'do',,0],
 	[WindowStr.new('do re mi fa so la ti'),'re',,3],
@@ -226,6 +261,17 @@ tsts(`left-out of range length throws`,()=>{
 	const w=WindowStr.new('Hello');
 	assert.throws(()=>w.left(10));
 });
+
+const matchSet:[WindowStr,RegExp,RegExpMatchArray|null][]=[
+	[WindowStr.new('Hello'),/l/g,["l","l"]],
+	[WindowStr.new('Hello',3),/l/g,["l"]],
+];
+for(const [w,re,expect] of matchSet) {
+	tsts(`${w.debug()}.match(${re})`,()=>{
+		const res=w.match(re);
+		assert.equal(res,expect);
+	})
+}
 
 tsts(`peerOf()`,()=>{
 	const hello=WindowStr.new('Hello');
@@ -375,6 +421,18 @@ for(const [w,search,expect] of startsWithSet) {
 	})
 }
 
+const testSet:[WindowStr,RegExp,boolean][]=[
+	[WindowStr.new('Hello'),/l/g,true],
+	[WindowStr.new('Hello'),/^l/g,false],
+	[WindowStr.new('Hello'),/^Hel/g,true],
+	[WindowStr.new(']Hello[',1,5),/^Hel/g,true],
+];
+for(const [w,re,expect] of testSet) {
+	tsts(`${w.debug()}.test(${re})`,()=>{
+		assert.equal(w.test(re),expect);
+	})
+}
+
 tsts(`coerce(WindowStr) returns same content`,()=>{
 	const w=WindowStr.new('Hello');
 	const c=WindowStr.coerce(w);
@@ -449,6 +507,34 @@ const badShrinkSet:[WindowStr,number|undefined,number|undefined][]=[
 for(const [w,startBy,lenBy] of badShrinkSet) {
 	tsts(`${w.debug()}.shrink(${startBy}, ${lenBy})  throws`,()=>{
 		assert.throws(()=>w.shrink(startBy,lenBy));
+	})
+}
+
+tsts(`shrink will only mutate if valid`,()=>{
+	const w=WindowStr.new('hello');
+	assert.is(w.toString(),'hello');
+	try {
+		w.shrink(3,3);//This should throw
+	} catch {}
+	assert.is(w.toString(),'hello','One of the two shrinks was not executed before exception');
+});
+
+const iteratorSet:[WindowStr,string[]][]=[
+	[WindowStr.new('hello'),['h','e','l','l','o']],
+	[WindowStr.new('£99'),['£','9','9']],
+	[WindowStr.new('☃★♲'),['☃','★','♲']],
+	[WindowStr.new('ABC'),['A','B','C']],
+	[WindowStr.new('😍'),['😍']],
+	[WindowStr.new('👉🏿'),['👉', '🏿']],
+	[WindowStr.new('👨‍👦'),['👨', '‍', '👦']],
+	[WindowStr.new('\ud83d\ude0d'),['😍']],//Yup that's a surrogate pair
+
+];
+for(const [w,expect] of iteratorSet) {
+	tsts(`${w.debug()}.iterate`,()=>{
+		const found=[...w];
+		assert.is(found.length,expect.length);
+		for(let i=0;i<found.length;i++) assert.is(found[i],expect[i],`[${i}]`);
 	})
 }
 

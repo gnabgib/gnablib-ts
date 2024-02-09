@@ -57,7 +57,7 @@ export class Milli implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Milli {
-		safe.int.inRangeInc((this.#v[0] << 8) | this.#v[1], 0, 999);
+		safe.int.inRangeInc('value', (this.#v[0] << 8) | this.#v[1], 0, 999);
 		return this;
 	}
 
@@ -85,7 +85,7 @@ export class Milli implements ISerializer {
 
 	/** Create a new milli/thousandth, range 0-999 */
 	public static new(v: number, storage?: Uint8Array): Milli {
-		safe.int.inRangeInc(v, 0, 999);
+		safe.int.inRangeInc('value', v, 0, 999);
 		const stor = self.setupStor(storage);
 		self.writeValue(stor, v);
 		return new Milli(stor);

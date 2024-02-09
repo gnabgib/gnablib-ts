@@ -71,7 +71,7 @@ export class Nano implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Nano {
-		safe.int.inRangeInc(this.valueOf(), 0, 999999999);
+		safe.int.inRangeInc('value', this.valueOf(), 0, 999999999);
 		return this;
 	}
 
@@ -91,7 +91,7 @@ export class Nano implements ISerializer {
 
 	/** Create a new nano/billionth, range 0-999999999 */
 	public static new(v: number, storage?: Uint8Array): Nano {
-		safe.int.inRangeInc(v, 0, 999999999);
+		safe.int.inRangeInc('value', v, 0, 999999999);
 		const stor = self.setupStor(storage);
 		self.writeValue(stor, v);
 		return new Nano(stor);

@@ -111,7 +111,7 @@ export class Microsecond extends Micro {
 
 	/** Create a new Microsecond, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Microsecond {
-		safe.int.inRangeInc(v, 0, 999999);
+		safe.int.inRangeInc('value', v, 0, 999999);
 		const stor = self.setupStor(storage);
 		self.writeValue(stor, v);
 		return new Microsecond(stor);

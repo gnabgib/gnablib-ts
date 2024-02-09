@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('Year');
 
@@ -143,72 +144,77 @@ tsts(`validate`,()=>{
     }
 }
 
-const parseSet:[string,number][]=[
-    ['2024',2024],
-    ['+2024',2024],//+ sign is optionally allowed (RFC/ISO aren't clear)
-    ['-0002',-2],
-    ['-0022',-22],
-    ['-0222',-222],
-    ['-2222',-2222],
-    ['-10000',-10000],
-    ['0002',2],
-    ['0022',22],
-    ['0222',222],
-    ['2222',2222],
-    ['+22222',22222],
+const parseSet:[WindowStr,number,number][]=[
+    [WindowStr.new('2024'),2024,0],
+    [WindowStr.new('+2024'),2024,0],//+ sign is optionally allowed (RFC/ISO aren't clear)
+    [WindowStr.new('-0002'),-2,0],
+    [WindowStr.new('-0022'),-22,0],
+    [WindowStr.new('-0222'),-222,0],
+    [WindowStr.new('-2222'),-2222,0],
+    [WindowStr.new('-10000'),-10000,0],
+    [WindowStr.new('0002'),2,0],
+    [WindowStr.new('0022'),22,0],
+    [WindowStr.new('0222'),222,0],
+    [WindowStr.new('2222'),2222,0],
+    //Doesn't consume trailing whitespace:
+    [WindowStr.new(' +22222 '),22222,1],
+    [WindowStr.new('0002\t\t'),2,2],
+    [WindowStr.new('20240208',0,4),2024,0],
+    
     //Note: This could fail at the end of the year :|
-    ['now',new Date().getFullYear()],
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [2000,2000],
+    [WindowStr.new('now'),new Date().getFullYear(),0],
+    [WindowStr.new('NOW'),new Date().getFullYear(),0],//Why are you yelling?
+    [WindowStr.new(' now'),new Date().getFullYear(),0],
+    [WindowStr.new(' now '),new Date().getFullYear(),1],//Trailing whitespace not removed
 ];
-for (const [str,expect] of parseSet) {
-    tsts(`parse(${str})`,()=>{
-        const y=Year.parse(str);
+for (const [w,expect,expectLen] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const y=Year.parse(w);
         assert.equal(y.valueOf(),expect);
+        assert.is(w.length,expectLen,'remaining length');
     });
 }
 
-const badParseStrict:string[]=[
+const badParseStrict:WindowStr[]=[
     //Should be zero padded
-    '-2',
-    '-22',
-    '-222',
-    '2',
-    '22',
-    '222',
+    WindowStr.new('-2'),
+    WindowStr.new('-22'),
+    WindowStr.new('-222'),
+    WindowStr.new('2'),
+    WindowStr.new('22'),
+    WindowStr.new('222'),
     //Must have sign:
-    '00000',
-    '02024',
-    '22222',
+    WindowStr.new('00000'),
+    WindowStr.new('02024'),
+    WindowStr.new('22222'),
 ];
-for (const str of badParseStrict) {
-    tsts(`parse(${str},undefined,true)`,()=>{
-        assert.throws(()=>Year.parse(str,undefined,true));
+for (const w of badParseStrict) {
+    tsts(`${w.debug()}.parseStrict throws`,()=>{
+        assert.throws(()=>Year.parse(w,undefined,true));
     });
 }
 
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    true,
-    //Symbol("year"),
-    2000.5,//Like integers, this is converted to a string, but floating point isn't allowed
-
-    //Bad strings
-    '',//Empty string not allowed
-    'tomorrow',//We support "now" onl
-    '2000.5',//Floating point - not allowed
-    '2e3',//2000 in scientific - not allowed
-    '- 2000',//The sign must be BESIDE the integer
-    //Need at least 4 digits
+const badParseSet:WindowStr[]=[
+    WindowStr.new(''),//Empty string not allowed
+    WindowStr.new('tomorrow'),//We support "now" only
+    WindowStr.new('2000.5'),//Floating point - not allowed
+    WindowStr.new('2e3'),//2000 in scientific - not allowed
+    WindowStr.new('- 2000'),//The sign must be BESIDE the integer
     //Too big
-    '+123456',
+    WindowStr.new('+123456'),
+    //Trailing text
+    WindowStr.new(' +22222 a'),
+    WindowStr.new(' +22222abba'),
+    //While now is in there, there's extra chars
+    WindowStr.new('know'),
+    WindowStr.new('now1'),
+    WindowStr.new('now,'),
+    WindowStr.new('now',1),//=ow
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
+for (const w of badParseSet) {
+    tsts(`${w.debug()}.parse throws`,()=>{
         //@ts-ignore - this is the point of the test
-        assert.throws(()=>Year.parse(unk));
+        assert.throws(()=>Year.parse(w));
     })
 }
 

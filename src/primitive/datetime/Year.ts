@@ -4,6 +4,7 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
@@ -11,9 +12,6 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Year';
 const maxHeYear = 32767; //0x7fff
 const maxIsoYear = maxHeYear - 10000;
-
-let min: Year;
-let max: Year;
 
 /**
  * A year in the range -10000 - +22767 (ISO), 10001BC - 22767AD (Gregorian), or 0-32767 (Holocene)
@@ -113,10 +111,10 @@ export class Year implements ISerializer {
 	// There is no need to validate, this value fits all of the 2^15 space
 
 	/** Create a new year in ISO601 format, range -10000 - +22767 */
-	public static new(year: number, storage?: Uint8Array): Year {
-		safe.int.inRangeInc(year, -10000, maxIsoYear);
+	public static new(v: number, storage?: Uint8Array): Year {
+		safe.int.inRangeInc('value', v, -10000, maxIsoYear);
 		const stor = self.setupStor(storage);
-		self.writeValue(stor, year + 10000);
+		self.writeValue(stor, v + 10000);
 		return new Year(stor);
 	}
 
@@ -132,10 +130,10 @@ export class Year implements ISerializer {
 	): Year {
 		const stor = self.setupStor(storage);
 		if (ad) {
-			safe.int.inRangeInc(year, 1, maxIsoYear);
+			safe.int.inRangeInc('year', year, 1, maxIsoYear);
 			self.writeValue(stor, year + 10000);
 		} else {
-			safe.int.inRangeInc(year, 1, 10001);
+			safe.int.inRangeInc('year', year, 1, 10001);
 			self.writeValue(stor, 10001 - year);
 		}
 		return new Year(stor);
@@ -143,7 +141,7 @@ export class Year implements ISerializer {
 
 	/** Create a new year in Holocene format, range 0 - 32767*/
 	public static newHolocene(year: number, storage?: Uint8Array): Year {
-		safe.int.inRangeInc(year, 0, maxHeYear);
+		safe.int.inRangeInc('year', year, 0, maxHeYear);
 		const stor = self.setupStor(storage);
 		self.writeValue(stor, year);
 		return new Year(stor);
@@ -180,51 +178,47 @@ export class Year implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(
-		input: string,
+		input: WindowStr,
 		storage?: Uint8Array,
 		strict = false
 	): Year {
-		const strVal = safe.string.nullEmpty(input);
-		if (strVal === undefined)
-			throw new ContentError('require string content', 'input', input);
-		if (strVal.toLowerCase() === 'now') return self.now(storage);
+		input.trimStart();
 
-		//Only parse integers (no floating point/scientific notation)
-		// - if there's a sign it must be touching the digits
-		const r = strVal.match(/^\s*([+-])?(\d+)\s*$/);
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(storage);
+		}
+
+		//Optional leading +-, one or more digits, optional trailing space, nothing else
+		const r = input.match(/^([+-])?(\d+)\s*$/);
 		if (r !== null) {
-			const hasSign = r[1] != undefined;
-			let yearPart = r[2];
+			const [, sign, digits] = r;
 			if (strict) {
-				if (yearPart.length > 4 && !hasSign)
+				if (digits.length > 4 && sign == undefined)
 					throw new ContentError(
 						'expecting >4 digits to be signed',
 						'input',
-						strVal
+						input
 					);
-				if (yearPart.length < 4)
+				if (digits.length < 4)
 					throw new ContentError(
 						'expecting 4 digit integer-string',
 						'input',
-						strVal
+						input
 					);
 			}
-			if (r[1] === '-') yearPart = '-' + yearPart;
-			const intVal = parseInt(yearPart, 10);
-			if (!isNaN(intVal)) return self.new(intVal, storage);
+			let intVal = parseInt(digits, 10);
+			if (!isNaN(intVal)) {
+				if (sign) {
+					input.shrink(1);
+					if (sign === '-') intVal = 0 - intVal;
+				}
+				input.shrink(digits.length);
+				return self.new(intVal, storage);
+			}
 		}
-
-		// //Only parse integers (no floating point/scientific notation)
-		// //There can be no space between sign and integer
-		// //if abs(year)<10000 must be zero padded to 4 digits
-		// //if integer is 5 digits or more, must be prefixed by positive/negative sign
-		// // RFC/ISO aren't specific, but + MAY prefix a 4 digit year
-		// if (/^\s*(-\d{4,}|\+?\d{4}|\+\d{5,})\s*$/.test(strVal)) {
-		// //([-+]?\d{4,})\s*$/.test(strVal)) {
-		//     const intVal=parseInt(strVal,10);
-		//     if (!isNaN(intVal)) return this.new(intVal,storage);
-		// }// else console.log(`test: ${strVal} got: ${/^\s*([-+]?\d{4,})\s*$/.test(strVal)}`);
-		throw new ContentError('expecting integer-string', 'input', strVal);
+		throw new ContentError('expecting integer-string', 'year', input);
 	}
 
 	/** Create this year (local) */
@@ -275,5 +269,5 @@ export class Year implements ISerializer {
 	}
 }
 const self = Year;
-min = Year.newHolocene(0);
-max = Year.newHolocene(32767);
+const min = Year.newHolocene(0);
+const max = Year.newHolocene(32767);

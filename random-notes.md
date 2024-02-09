@@ -3,6 +3,17 @@
 
 Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runner /w [uvu/assert](https://github.com/lukeed/uvu/blob/master/docs/api.assert.md)
 
+### Linting
+You may need eslint globally installed:
+`npm install -g eslint`
+
+Make sure dependencies (untracked) are up to date
+`npm install --no-save @typescript-eslint/eslint-plugin`
+
+And lint:`npm run lint`
+Note this uses `npx` so you can't use pnpm here (alt: `pnpm exec eslint \"src/**/*.{js,ts}\"`)
+
+
 
 ### Test
 

@@ -16,6 +16,13 @@ import { errorSetting } from './interfaces/errorSetting.js';
 // }
 
 export class Assert {
+	//arrayEqual<T>(actual:T[],expect:T[],message) - compare size, then each element (in order)
+	//	like in WindowStr
+	//fixedPointEqual(actual,expect,precision,message) - compare two values where floating point
+	// error may occure, so converting .toFixed(precision) and string-comparing will work
+	// like in DateTime (the test diff in that case was fixed by argument order)
+
+
 	/**
 	 * Throw an exception if @see found is outside of [@see lowInc - @see highExc)
 	 * @throws Error

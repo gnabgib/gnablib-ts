@@ -6,6 +6,7 @@ import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
 import { Year } from '../../../src/primitive/datetime/Year';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('DateOnly');
 
@@ -368,6 +369,61 @@ tsts(`max`,()=>{
     assert.is(dto.valueOf(),227671231);
 });
 
+
+const parseSet:[WindowStr,number,number][]=[
+    [WindowStr.new('2024-01-02'),20240102,0],
+    //Other formats
+    [WindowStr.new('2024/01/02'),20240102,0],
+    [WindowStr.new('2024.01.02'),20240102,0],
+    [WindowStr.new('20240102'),20240102,0],
+    [WindowStr.new('+20240102'),20240102,0],
+    //Trailing space rem:
+    [WindowStr.new('2024-01-02 '),20240102,1],
+    [WindowStr.new(' 2024 - 01 - 02 '),20240102,1],
+    [WindowStr.new('2024 - 1 - 2\t \t'),20240102,3],
+    [WindowStr.new('2024\t-\t1 -\t2\r\n'),20240102,2],
+];
+for(const [w,expect,expectLen] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const dt=DateOnly.parse(w);
+        assert.equal(dt.valueOf(),expect);
+        assert.is(w.length,expectLen,'remaining length');
+    });
+}
+
+const badParseStrictSet:WindowStr[]=[
+    WindowStr.new('2024-1-02'),//zero pad month
+    WindowStr.new('2024-01-2'),//zero pad day
+    WindowStr.new('20-01-02'),//zero pad year, honestly y2k man
+    WindowStr.new('2024/01/02'),//can only use dashes
+    WindowStr.new('12-11-10'),//what kind of a date is this?
+];
+for(const w of badParseStrictSet) {
+    tsts(`parse-strict ${w.debug()} throws`,()=>{
+        assert.throws(()=>DateOnly.parse(w,undefined,true));
+    })
+}
+
+const badParseSet:WindowStr[]=[
+    WindowStr.new('2024-01/02'),//Can't have mixed delims
+    WindowStr.new('2024 01 02'),//Spaces are not valid delims (because we support spaces in the parts)
+];
+for(const w of badParseSet) {
+    tsts(`parse ${w.debug()} throws`,()=>{
+        assert.throws(()=>DateOnly.parse(w));
+    })
+}
+
+tsts(`parse-now`, () => {
+    const w=WindowStr.new('now');
+	const dt = new Date();
+    const d=DateOnly.parse(w);
+	//This isn't a great test, but let's use a date object to compare
+	//(tiny chance of this test failing near midnight)
+	assert.is(d.year.valueOf(), dt.getFullYear());
+	assert.is(d.month.valueOf(), dt.getMonth() + 1); //JS stores months off by 1 (0=Jan)
+	assert.is(d.day.valueOf(), dt.getDate()); //Not a great name, JS
+});
 
 //console.log(`-13%12 = (${-13%12} ${(-13/12)} ${(-13/12)|0}) -12%12 = (${-12%12} ${-12/12} ${(-12/12)|0}) -11%12 = (${-11%12} ${-11/12} ${(-11/12)|0})`);
 

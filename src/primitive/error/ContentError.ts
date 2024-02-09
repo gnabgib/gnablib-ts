@@ -27,7 +27,7 @@ export class ContentError extends SyntaxError {
 				keyPad = ' ';
 				key = '' + keyOrValue;
 			}
-			val = ' (' + value + ')';
+			val = ' (' + String(value) + ')';
 		} else {
 			if (keyOrValue) {
 				val = ' (' + keyOrValue + ')';

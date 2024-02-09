@@ -3,6 +3,8 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { WindowStr } from '../WindowStr.js';
+import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 import { Day } from './Day.js';
 import { Month } from './Month.js';
@@ -16,9 +18,6 @@ const daysPerCD = 146097;
 //Amount of days to shift a CD segment to make the epoch 0
 const epochShift = 719468;
 const msPerMin = 60 * 1000;
-
-let min: DateOnly;
-let max: DateOnly;
 
 /**
  * Date down to day resolution (no time component)
@@ -227,9 +226,9 @@ export class DateOnly implements ISerializer {
 		const yearAdd = (monthAdd / 12) | 0;
 		monthAdd %= 12;
 
-		let yv = this.year.valueOf() + yearAdd;
-		let mv = this.month.valueOf() + monthAdd;
-		let dv = Math.min(this.day.valueOf(), DateOnly.daysInMonth(yv, mv));
+		const yv = this.year.valueOf() + yearAdd;
+		const mv = this.month.valueOf() + monthAdd;
+		const dv = Math.min(this.day.valueOf(), DateOnly.daysInMonth(yv, mv));
 		return DateOnly.new(yv, mv, dv, storage);
 	}
 
@@ -343,6 +342,62 @@ export class DateOnly implements ISerializer {
 		return self.fromUnixDays(source / self.msPerDay, storage);
 	}
 
+	/**
+	 * Parse a string into a date, accepts:
+	 * 'now', a 3 part date separated by '-' characters
+	 * @param input
+	 * @param storage
+	 */
+	public static parse(
+		input: WindowStr,
+		storage?: Uint8Array,
+		strict = false
+	): DateOnly {
+		const stor = self.setupStor(storage);
+		input.trimStart();
+
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(storage);
+		}
+
+		let y:Year;let m:Month;let d:Day;
+		//If it's an optional sign followed by 8-9 digits assume it's an undelimitered date
+		if (input.test(/^[-+]?\d{8,9}\s*$/)) {
+			input.trimEnd();
+			d=Day.parse(input.right(2),stor.subarray(3),strict);
+			m=Month.parse(input.span(input.length-4,2),stor.subarray(2),strict);
+			y=Year.parse(input.left(input.length-4),stor,strict);
+			input.shrink(input.length);
+			return new DateOnly(y, m, d);
+		}
+
+		//Dash, slash, dot (germany?) separated allowed
+		let delim1:number;
+		if (!strict) {
+			delim1=input.indexOfAny(['-','/','.'],1);
+		} else {
+			delim1=input.indexOf('-',1);
+		}
+		let delim='';
+		if (delim1>0) {
+			delim=input.charAt(delim1);
+		}
+		//Make sure second delim matches first, and there is one
+		const delim2=input.indexOf(delim,delim1+1);
+		if (delim2>0) {
+			y=Year.parse(input.left(delim1),stor,strict);
+			input.shrink(delim1+1);
+			m=Month.parse(input.left(delim2-delim1-1),stor.subarray(2),strict);
+			input.shrink(delim2-delim1);
+			d=Day.parse(input,stor.subarray(3),strict);
+			return new DateOnly(y,m,d);
+		}
+		
+		throw new ContentError(`Expecting 8-9 digit ymd (with optional sign), or ${delim} delimited date`,'date',input);
+	}
+
 	//public static parse(str: string, storage?: Uint8Array): DateOnly {}
 
 	/** Create this date (local) */
@@ -393,5 +448,5 @@ export class DateOnly implements ISerializer {
 	}
 }
 const self = DateOnly;
-min = DateOnly.new(-10000, 1, 1);
-max = DateOnly.new(22767, 12, 31);
+const min = DateOnly.new(-10000, 1, 1);
+const max = DateOnly.new(22767, 12, 31);

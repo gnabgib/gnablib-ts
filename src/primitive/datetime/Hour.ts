@@ -63,7 +63,7 @@ export class Hour implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Hour {
-		safe.int.inRangeInc(this.#v[0], 0, 23);
+		safe.int.inRangeInc('value', this.#v[0], 0, 23);
 		return this;
 	}
 
@@ -92,10 +92,10 @@ export class Hour implements ISerializer {
 	}
 
 	/** Create a new hour, range 0-23 */
-	public static new(hour: number, storage?: Uint8Array): Hour {
-		safe.int.inRangeInc(hour, 0, 23);
+	public static new(v: number, storage?: Uint8Array): Hour {
+		safe.int.inRangeInc('value', v, 0, 23);
 		const stor = self.setupStor(storage);
-		stor[0] = hour;
+		stor[0] = v;
 		return new Hour(stor);
 	}
 

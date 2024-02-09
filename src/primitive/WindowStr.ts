@@ -4,7 +4,7 @@ import { somewhatSafe as safe } from '../safe/index.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'WindowStr';
 const NOT_FOUND = -1;
-const WHITESPACE=[' ','\t','\n','\v','\f','\r'];
+const WHITESPACE = [' ', '\t', '\n', '\v', '\f', '\r'];
 // type splitter= {
 //     [Symbol.split](string: string, limit?: number | undefined): string[];
 // }
@@ -20,6 +20,8 @@ export class WindowStr {
 	private _start: number;
 	private _len: number;
 
+	//We want source to be String not string
+	// eslint-disable-next-line @typescript-eslint/ban-types
 	protected constructor(source: String, start: number, len: number) {
 		this._src = source;
 		this._start = start;
@@ -64,16 +66,16 @@ export class WindowStr {
 	/**
 	 * Return the Unicode character at the specific index, unlike
 	 * [String.charAt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt)
-	 * this uses full Unicode, not UTF16 so lone surrogates are not a risk.
+	 * this will turn a surrogate pair into a single character (lone surrogates are not a risk)
 	 *
 	 * @throws EnforceTypeError idx not an integer
 	 * @throws OutOfRangeError idx invalid value
 	 * @param idx Integer [0 - {@link length})
-	 * @returns character (Unicode)|''
+	 * @returns character|''
 	 * @pure
 	 */
 	charAt(idx: number): string {
-		safe.int.inRangeInc(idx, 0, this.length - 1);
+		safe.int.inRangeInc('idx', idx, 0, this.length - 1);
 		const cp = this._src.codePointAt(idx + this._start);
 		//if (cp === undefined) return '';
 		//@ts-ignore - We've already tested out of range idx (above), so we know it's a number
@@ -81,14 +83,14 @@ export class WindowStr {
 	}
 
 	/**
-	 * Return the unicode code point of the character at the specific index
+	 * Return the UTF-16 code point of the character at the specific index
 	 * @throws OutOfRangeError idx invalid value
 	 * @param idx Integer [0 - {@link length})
 	 * @returns Integer [0 - 1114111]
 	 * @pure
 	 */
 	codePointAt(idx: number): number {
-		safe.int.inRangeInc(idx, 0, this.length - 1);
+		safe.int.inRangeInc('idx', idx, 0, this.length - 1);
 		//@ts-ignore - We've already tested out of range idx (above), so we know it's a number
 		return this._src.codePointAt(idx + this._start);
 	}
@@ -126,7 +128,7 @@ export class WindowStr {
 	 */
 	indexOf(searchString: string, start?: number): number {
 		if (!start) start = 0;
-		else safe.int.inRangeInc(start, 0, this.length);
+		else safe.int.inRangeInc('start', start, 0, this.length);
 		let pos = this._src.indexOf(searchString, this._start + start);
 		//Not found - return
 		if (pos < 0) return NOT_FOUND;
@@ -134,6 +136,33 @@ export class WindowStr {
 		pos -= this._start;
 		//Filter out positions out of scope
 		return pos <= this.length - searchString.length ? pos : NOT_FOUND;
+	}
+
+	/**
+	 * Search for the first occurrence of any of the given strings,
+	 * the earliest of any of the values will be returned (all will be checked)
+	 * @throws {@link OutOfRangeError} start invalid
+	 * @param search strings to search for
+	 * @param start Integer, starting point to search from [0 - {@link length}) (default 0/all)
+	 * @returns Index or -1
+	 * @pure
+	 */
+	indexOfAny(search: string[], start?: number): number {
+		if (!start) start = 0;
+		else safe.int.inRangeInc('start', start, 0, this.length);
+
+		let earliest = this._len;
+		for (const s of search) {
+			const pos = this._src.indexOf(s, this._start + start);
+			//If not found, or found and it exceeds the window.. ignore
+			if (pos < 0 || pos + s.length > this._len) continue;
+			//Possibly make it the earliest
+			if (pos < earliest) earliest = pos;
+		}
+		if (earliest == this._len) return NOT_FOUND;
+		//Correct scope
+		earliest -= this._start;
+		return earliest;
 	}
 
 	/**
@@ -147,7 +176,7 @@ export class WindowStr {
 		if (length === undefined) {
 			length = this.length;
 		} else {
-			safe.int.inRangeInc(length, 0, this.length);
+			safe.int.inRangeInc('length', length, 0, this.length);
 		}
 		const lastIndexPos = this._start + length - searchString.length;
 		//Because JS treats <=0 as 0 in lastIndexPos we need to catch negative
@@ -169,8 +198,23 @@ export class WindowStr {
 	 * @pure
 	 */
 	left(length: number): WindowStr {
-		safe.int.inRangeInc(length, 0, this.length);
+		safe.int.inRangeInc('length', length, 0, this.length);
 		return new WindowStr(this._src, this._start, length);
+	}
+
+	/**
+	 * Retrieves the result of matching this window against a
+	 * [regular expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions)
+	 * @param regexp A regular expression object, or something that has a `Symbol.match` method
+	 * @returns  An array of matches, or null if no matches are found
+	 * @pure
+	 */
+	match(regexp: {
+		[Symbol.match](string: string): RegExpMatchArray | null;
+	}): RegExpMatchArray | null {
+		return this._src
+			.substring(this._start, this._start + this._len)
+			.match(regexp);
 	}
 
 	/**
@@ -189,7 +233,7 @@ export class WindowStr {
 	 * @pure
 	 */
 	right(length: number): WindowStr {
-		safe.int.inRangeInc(length, 0, this.length);
+		safe.int.inRangeInc('length', length, 0, this.length);
 		const start = this._start + this._len - length;
 		return new WindowStr(this._src, start, length);
 	}
@@ -197,22 +241,22 @@ export class WindowStr {
 	/**
 	 * Shrink this window by forwarding the start by `startBy` and
 	 * decreasing the length by `lengthBy`.  Mutates state.
-	 * 
+	 *
 	 * Perhaps obvious from the name, but you **cannot** provide negative
 	 * values to make a window larger (even if the storage may be larger)
-	 * 
-	 * @param startBy Integer [0 - {@link length}) 
+	 *
+	 * @param startBy Integer [0 - {@link length})
 	 * @param lengthBy Integer [0 - ({@link length}-`startBy`))
 	 * @returns This (chainable)
 	 */
-	shrink(startBy?:number,lengthBy?:number):WindowStr {
-		if (!startBy) startBy=0;
-		else safe.int.inRangeInc(startBy,0,this._len);
-		if (!lengthBy) lengthBy=0;
-		else safe.int.inRangeInc(lengthBy,0,this._len-startBy);
+	shrink(startBy?: number, lengthBy?: number): WindowStr {
+		if (!startBy) startBy = 0;
+		else safe.int.inRangeInc('startBy', startBy, 0, this._len);
+		if (!lengthBy) lengthBy = 0;
+		else safe.int.inRangeInc('lengthBy', lengthBy, 0, this._len - startBy);
 
-		this._start+=startBy;
-		this._len=this._len-startBy-lengthBy;
+		this._start += startBy;
+		this._len = this._len - startBy - lengthBy;
 
 		return this;
 	}
@@ -225,11 +269,11 @@ export class WindowStr {
 	 */
 	span(start: number, length?: number): WindowStr {
 		//If start is low, add length (-1 will give you the last char)
-		safe.int.inRangeInc(start, 0, this._len);
+		safe.int.inRangeInc('start', start, 0, this._len);
 		if (length == undefined) {
 			length = this._len - start;
 		} else {
-			safe.int.inRangeInc(length, 0, this._len - start);
+			safe.int.inRangeInc('length', length, 0, this._len - start);
 		}
 		return new WindowStr(this._src, this._start + start, length);
 	}
@@ -272,23 +316,35 @@ export class WindowStr {
 	startsWith(searchString: string): boolean {
 		return this._src.startsWith(searchString, this._start);
 	}
-	
+
+	/**
+	 * Executes a search with given regular expression, returns true if there's a match, false otherwise
+	 * @param regexp A regular expression object
+	 * @returns Whether there's a match or not
+	 * @pure
+	 */
+	test(regexp: RegExp): boolean {
+		return regexp.test(
+			this._src.substring(this._start, this._start + this._len)
+		);
+	}
+
 	/**
 	 * Remove `chars` from the end of the window, by decreasing the size of the window.
 	 * This mutates internal state.
-	 * 
+	 *
 	 * See similar notes/examples as {@link trimStart}
 	 * @param chars Array of chars/strings to remove (default whitespace)
 	 * @param limit Maximum number of trim-steps (note steps and not chars) (default 0/unlimited)
 	 * @returns This (chainable)
 	 */
-	trimEnd(chars?:string[],limit=0):WindowStr {
-		if (!chars) chars=WHITESPACE;
-		restart:while(this._len>0) {
-			for(const c of chars) {
+	trimEnd(chars?: string[], limit = 0): WindowStr {
+		if (!chars) chars = WHITESPACE;
+		restart: while (this._len > 0) {
+			for (const c of chars) {
 				if (this.endsWith(c)) {
-					this._len-=c.length;
-					if (--limit==0) break restart;
+					this._len -= c.length;
+					if (--limit == 0) break restart;
 					//Restart the search at the new end
 					continue restart;
 				}
@@ -302,42 +358,42 @@ export class WindowStr {
 	/**
 	 * Remove `chars` from the beginning of the window, by decreasing the size of the window.
 	 * This mutates internal state
-	 * 
+	 *
 	 * *Note*: You can provide strings instead of chars for trimming (for example `\r\n` if you
 	 * only want to remove that sequence).  Order is important - if you have ['\r\n','\r'] then:
 	 * `\r\nhi` -> `hi`
 	 * `\rhi` => `hi`
 	 * `\nhi` => `\nhi`
-	 * 
-	 * If you use: 
-	 * 
+	 *
+	 * If you use:
+	 *
 	 * @param chars Array of chars/strings to remove (default whitespace)
-	 * @param limit Maximum number of trim-steps (note steps and not chars) (default 0/unlimited) 
+	 * @param limit Maximum number of trim-steps (note steps and not chars) (default 0/unlimited)
 	 * @returns This (chainable)
-	 * 
+	 *
 	 * @example
 	 * ```js
 	 * import {WindowStr} from 'gnablib/primitive';
-	 * 
+	 *
 	 * const trim=['\r\n','\r'];
 	 * WindowString.new('\r\nhi').trimStart(trim); // hi
 	 * WindowString.new('\rhi').trimStart(trim); // hi
 	 * WindowString.new('\nhi').trimStart(trim); // \nhi
-	 * 
+	 *
 	 * const trim2=['\r,'\r\n'];
 	 * WindowString.new('\r\nhi').trimStart(trim2); // \nhi
 	 * WindowString.new('\rhi').trimStart(trim2); // hi
 	 * WindowString.new('\nhi').trimStart(trim2); // \nhi
 	 * ```
 	 */
-	trimStart(chars?:string[],limit=0):WindowStr {
-		if (!chars) chars=WHITESPACE;
-		restart: while(this._len>0) {
-			for(const c of chars) {
+	trimStart(chars?: string[], limit = 0): WindowStr {
+		if (!chars) chars = WHITESPACE;
+		restart: while (this._len > 0) {
+			for (const c of chars) {
 				if (this.startsWith(c)) {
-					this._start+=c.length;
-					this._len-=c.length;
-					if (--limit==0) break restart;
+					this._start += c.length;
+					this._len -= c.length;
+					if (--limit == 0) break restart;
 					//Restart the search at the new start
 					continue restart;
 				}
@@ -346,6 +402,31 @@ export class WindowStr {
 			break;
 		}
 		return this;
+	}
+
+	[Symbol.iterator](): Iterator<string> {
+		let next = this._start;
+		const src = this._src;
+		const end = this._start + this._len;
+		return {
+			next: function (): IteratorResult<string> {
+				if (next < end) {
+					const cp = src.codePointAt(next++);
+					//@ts-ignore - We know it's in range
+					//If we're more than a single UTF16 codepoint value, eat a second character
+					if (cp > 65535) next++;
+					return {
+						done: false,
+						//@ts-ignore - We know it's in range
+						value: String.fromCodePoint(cp),
+					};
+				}
+				return {
+					done: true,
+					value: undefined,
+				};
+			},
+		};
 	}
 
 	/**
@@ -359,11 +440,12 @@ export class WindowStr {
 	 * @returns
 	 */
 	static new(source: string, start?: number, length?: number): WindowStr {
+		if (!source) source = '';
 		if (!start) start = 0;
-		else safe.int.inRangeInc(start, 0, source.length);
+		else safe.int.inRangeInc('start', start, 0, source.length);
 		if (length === undefined) length = source.length - start;
-		else safe.int.inRangeInc(length, 0, source.length - start);
-		return new WindowStr(String(source), start, length);
+		else safe.int.inRangeInc('length', length, 0, source.length - start);
+		return new WindowStr(new String(source), start, length);
 	}
 
 	/**
@@ -375,6 +457,6 @@ export class WindowStr {
 	 */
 	static coerce(source: WindowOrString): WindowStr {
 		if (source instanceof WindowStr) return source;
-		return new WindowStr(String(source), 0, source.length);
+		return new WindowStr(new String(source), 0, source.length);
 	}
 }

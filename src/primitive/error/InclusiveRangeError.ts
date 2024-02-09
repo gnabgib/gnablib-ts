@@ -4,8 +4,8 @@ const DBG_RPT = 'InclusiveRangeError';
 
 export class InclusiveRangeError<T> extends RangeError {
 	/** Should be in range [$lowInc,$highInc], got $value */
-	constructor(readonly value: T, readonly lowInc: T, readonly highInc: T) {
-		super(`Should be in range [${lowInc},${highInc}] got ${value}`);
+	constructor(readonly noun:string, readonly value: T, readonly lowInc: T, readonly highInc: T) {
+		super(`${noun} should be in range [${lowInc},${highInc}] got ${value}`);
 	}
 
 	/** @hidden */

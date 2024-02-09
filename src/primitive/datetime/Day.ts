@@ -5,12 +5,10 @@ import { BitWriter } from '../BitWriter.js';
 import { BitReader } from '../BitReader.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 import { ContentError } from '../error/ContentError.js';
+import { WindowStr } from '../WindowStr.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'DayOfMonth';
-
-let min:Day;
-let max:Day;
 
 /** Day of month */
 export class Day implements ISerializer {
@@ -20,15 +18,19 @@ export class Day implements ISerializer {
 	static readonly serialBits = 5; //2^5=32
 	/** Note there's no zero day in a month, so we shift by one internally (0=1st, 30=31st, 31=invalid) */
 	readonly #v: Uint8Array;
-	
+
 	private constructor(storage: Uint8Array) {
 		this.#v = storage;
 	}
 
 	/** Minimum day */
-	static get min():Day {return min;}
+	static get min(): Day {
+		return min;
+	}
 	/** Maximum day, or the longest month - note this isn't always the max in context (could also be 28/29/30) */
-	static get max():Day {return max;}
+	static get max(): Day {
+		return max;
+	}
 
 	/** Day, not zero padded (1-31) */
 	public toString(): string {
@@ -66,7 +68,7 @@ export class Day implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Day {
-		safe.int.inRangeInc(this.#v[0], 0, 30);
+		safe.int.inRangeInc('value', this.#v[0], 0, 30);
 		return this;
 	}
 
@@ -88,10 +90,10 @@ export class Day implements ISerializer {
 	}
 
 	/** Create a new day of the month, range 1-31 */
-	public static new(day: number, storage?: Uint8Array): Day {
-		safe.int.inRangeInc(day, 1, 31);
+	public static new(v: number, storage?: Uint8Array): Day {
+		safe.int.inRangeInc('value', v, 1, 31);
 		const stor = self.setupStor(storage);
-		stor[0] = day - 1;
+		stor[0] = v - 1;
 		return new Day(stor);
 	}
 
@@ -126,33 +128,38 @@ export class Day implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(
-		input: string,
+		input: WindowStr,
 		storage?: Uint8Array,
 		strict = false
 	): Day {
-		const strVal = safe.string.nullEmpty(input);
-		if (strVal === undefined)
-			throw new ContentError('require string content', 'input', input);
-		if (strVal.toLowerCase() === 'now') return self.now(storage);
+		input.trimStart();
 
-		//Only parse integers (no floating point/scientific notation)
-		const r = strVal.match(/^\s*(\d\d?)\s*$/);
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(storage);
+		}
+
+		//One more more digits, optional trailing whitespace only
+		const r = input.match(/^(\d+)\s*$/);
 		if (r !== null) {
+			const [, digits] = r;
 			if (strict) {
-				if (r[1].length != 2)
+				if (digits.length != 2)
 					throw new ContentError(
 						'expecting 2 digit unsigned integer-string',
-						'input',
-						strVal
+						'day',
+						input
 					);
 			}
-			const intVal = parseInt(r[1], 10);
+			const intVal = parseInt(digits, 10);
+			input.shrink(digits.length);
 			return self.new(intVal, storage);
 		}
 		throw new ContentError(
 			'expecting 1-2 digit unsigned integer-string',
-			'input',
-			strVal
+			'day',
+			input
 		);
 	}
 
@@ -180,5 +187,5 @@ export class Day implements ISerializer {
 	}
 }
 const self = Day;
-min=Day.new(1);
-max=Day.new(31);
+const min = Day.new(1);
+const max = Day.new(31);

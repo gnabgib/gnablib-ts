@@ -3,14 +3,12 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Month';
-
-let min:Month;
-let max:Month;
 
 /** Month of year (gregorian, julian) */
 export class Month implements ISerializer {
@@ -26,9 +24,13 @@ export class Month implements ISerializer {
 	}
 
 	/** Minimum month */
-	static get min():Month {return min;}
+	static get min(): Month {
+		return min;
+	}
 	/** Maximum month */
-	static get max():Month {return max;}
+	static get max(): Month {
+		return max;
+	}
 
 	/** Month, not zero padded */
 	public toString(): string {
@@ -67,7 +69,7 @@ export class Month implements ISerializer {
 	 * @returns
 	 */
 	public validate(): Month {
-		safe.int.inRangeInc(this.#v[0], 0, 11);
+		safe.int.inRangeInc('value', this.#v[0], 0, 11);
 		return this;
 	}
 
@@ -89,10 +91,10 @@ export class Month implements ISerializer {
 	}
 
 	/** Create a new month of the year, range 1-12 */
-	public static new(month: number, storage?: Uint8Array): Month {
-		safe.int.inRangeInc(month, 1, 12);
+	public static new(v: number, storage?: Uint8Array): Month {
+		safe.int.inRangeInc('value', v, 1, 12);
 		const stor = self.setupStor(storage);
-		stor[0] = month - 1;
+		stor[0] = v - 1;
 		return new Month(stor);
 	}
 
@@ -127,51 +129,53 @@ export class Month implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(
-		input: string,
+		input: WindowStr,
 		storage?: Uint8Array,
 		strict = false
 	): Month {
-		const strVal = safe.string.nullEmpty(input);
-		if (strVal === undefined)
-			throw new ContentError('require string content', 'input', input);
-		if (strVal.toLowerCase() === 'now') return self.now(storage);
+		input.trimStart();
 
-		//Only parse integers (no floating point/scientific notation), but let's be linient
-		// in the match here to prevent Date.parse from making up an answer when it's
-		// a signed-int, or floating point
-		const r = strVal.match(/^\s*([+-])?(\d+)(\.\d+)?\s*$/);
-		if (r !== null) {
-			const [, sign, int, float] = r;
-			if (strict) {
-				if (sign != undefined || float != undefined || int.length != 2) {
-					throw new ContentError(
-						'expecting 2 digit unsigned integer-string',
-						'input',
-						strVal
-					);
-				}
-			} else {
-				//Still have to catch sign, float, or large ints
-				if (sign != undefined || float != undefined || int.length > 2) {
-					throw new ContentError(
-						'expecting 1-2 digit unsigned integer-string',
-						'input',
-						strVal
-					);
-				}
-			}
-			const intVal = parseInt(int, 10);
-			return self.new(intVal, storage);
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(storage);
 		}
 
-		//Try and parse using Date and local settings (16th makes unambiguous day)
-		const tmp = Date.parse(strVal + ' 16, 2000');
-		if (!Number.isNaN(tmp)) return self.fromDate(new Date(tmp), storage);
+		//Three or more letters (including accented letters), or one or more digits.
+		//Either with optional trailing whitespace
+		const r = input.match(
+			/^(?:([\p{Alphabetic}\p{Mark}\p{Join_Control}]{3,})|(\d+))\s*$/u
+		);
+		if (r !== null) {
+			//console.log(r);
+			const [, mon, int] = r;
+			if (mon != undefined) {
+				//Try and parse using Date and local settings (16th makes unambiguous day)
+				const unixMs = Date.parse(mon + ' 16, 2000');
+				if (!Number.isNaN(unixMs)) {
+					input.shrink(mon.length);
+					return self.fromDate(new Date(unixMs), storage);
+				}
+			} else {
+				if (strict) {
+					if (int.length != 2) {
+						throw new ContentError(
+							'expecting 2 digit unsigned integer-string',
+							'month',
+							input
+						);
+					}
+				}
+				const intVal = parseInt(int, 10);
+				input.shrink(int.length);
+				return self.new(intVal, storage);
+			}
+		}
 
 		throw new ContentError(
 			'expecting unsigned integer-string, or short-form-month',
-			'input',
-			strVal
+			'month',
+			input
 		);
 	}
 
@@ -198,5 +202,5 @@ export class Month implements ISerializer {
 	}
 }
 const self = Month;
-min=Month.new(1);
-max=Month.new(12);
+const min = Month.new(1);
+const max = Month.new(12);

@@ -90,7 +90,7 @@ export class Minute extends Sexagesimal {
 
 	/** Create a new Minute, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Minute {
-		safe.int.inRangeInc(v, 0, 59);
+		safe.int.inRangeInc('value', v, 0, 59);
 		const stor = self.setupStor(storage);
 		stor[0] = v;
 		return new Minute(stor);

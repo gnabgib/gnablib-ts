@@ -50,9 +50,9 @@ const intInRange1To5: [number, boolean][] = [
 for (const [test, inRange] of intInRange1To5) {
 	tsts(`somewhatSafe.int.inRangeInc(${test},1,5)`, () => {
 		if (inRange) {
-			assert.not.throws(() => somewhatSafe.int.inRangeInc(test, 1, 5));
+			assert.not.throws(() => somewhatSafe.int.inRangeInc('test', test, 1, 5));
 		} else {
-			assert.throws(() => somewhatSafe.int.inRangeInc(test, 1, 5));
+			assert.throws(() => somewhatSafe.int.inRangeInc('test', test, 1, 5));
 		}
 	});
 }
