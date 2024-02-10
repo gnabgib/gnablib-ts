@@ -3,6 +3,7 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
@@ -75,6 +76,20 @@ export class Nano implements ISerializer {
 		return this;
 	}
 
+	/** Copy this value into storage */
+	protected fill(storage: Uint8Array): void {
+		storage[0] = this.#v[0];
+		storage[1] = this.#v[1];
+		storage[2] = this.#v[2];
+		storage[3] = this.#v[3];
+	}
+
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array): Nano {
+		this.fill(storage);
+		return new Nano(storage);
+	}
+
 	protected static writeValue(target: Uint8Array, v: number): void {
 		target[0] = v >> 24;
 		target[1] = v >> 16;
@@ -97,49 +112,52 @@ export class Nano implements ISerializer {
 		return new Nano(stor);
 	}
 
-	//Partitioned to allow a subclass to override
-	protected static doParse(
-		input: string,
+	protected static parseIntoStorage(
+		input: WindowStr,
+		storage: Uint8Array,
 		strict: boolean,
-		storage?: Uint8Array
-	): Nano {
+		name = 'input'
+	): void {
+		input.trimStart();
 		//Only parse integers (no floating point/scientific notation)
-		const r = input.match(/^\s*(\d{1,9})\s*$/);
-		if (r !== null) {
-			if (strict) {
-				if (r[1].length != 9)
-					throw new ContentError(
-						'expecting 9 digit unsigned integer-string',
-						'input',
-						input
-					);
-			}
-			const iVal = parseInt(r[1], 10);
-			return self.new(iVal, storage);
+		const r = input.match(/^(\d+)\s*$/);
+		if (r === null)
+			throw new ContentError('expecting unsigned integer-string', name, input);
+
+		const [, digits] = r;
+		if (strict && digits.length != 9) {
+			throw new ContentError(
+				'expecting 9 digit unsigned integer-string',
+				name,
+				input
+			);
 		}
-		throw new ContentError('expecting unsigned integer-string', 'input', input);
+		const iVal = parseInt(digits, 10);
+		safe.int.inRangeInc(name, iVal, 0, 999999999);
+		self.writeValue(storage, iVal);
+		input.shrink(digits.length);
 	}
 
 	/**
-	 * Create a nano/billionth from a string accepts:
-	 * 1-9 digit unsigned integer, must be 9 digits if strict
+	 * Parse from a string, accepts:
+	 * 1-9 digit unsigned integer, must be 9 digits if strict.
+	 *
+	 * Leading whitespace will be removed, trailing whitespace will be ignored (but not removed from window)
 	 *
 	 * Throws if:
-	 * - Not a string, or $input is empty
+	 * - Not a string, or $str is empty
 	 * - There's no available $storage
-	 * - The integer value of $input is out of range
-	 * - The content of $input isn't valid
+	 * - The integer value of $str is out of range
+	 * - The content of $str isn't valid
 	 */
 	public static parse(
-		input: string,
-		storage?: Uint8Array,
-		strict = false
+		input: WindowStr,
+		strict = false,
+		storage?: Uint8Array
 	): Nano {
-		const strVal = safe.string.nullEmpty(input);
-		if (strVal === undefined)
-			throw new ContentError('require string content', 'input', input);
-		// deepcode ignore StaticAccessThis: Have to use this so children can override
-		return this.doParse(strVal, strict, storage);
+		const stor = self.setupStor(storage);
+		self.parseIntoStorage(input, stor, strict, 'nano');
+		return new Nano(stor);
 	}
 
 	/**

@@ -6,19 +6,19 @@ import util from 'util';
 const tsts = suite('WindowStr');
 
 const buildSet:[string,number|undefined,number|undefined,string][]=[
-	['Hello',,,'Hello'],
-	['Hello',0,,'Hello'],
-	['Hello',1,,'ello'],
-	['Hello',2,,'llo'],
-	['Hello',3,,'lo'],
-	['Hello',4,,'o'],
-	['Hello',5,,''],
-	['Hello',,5,'Hello'],
-	['Hello',,4,'Hell'],
-	['Hello',,3,'Hel'],
-	['Hello',,2,'He'],
-	['Hello',,1,'H'],
-	['Hello',,0,''],
+	['Hello',undefined,undefined,'Hello'],
+	['Hello',0,undefined,'Hello'],
+	['Hello',1,undefined,'ello'],
+	['Hello',2,undefined,'llo'],
+	['Hello',3,undefined,'lo'],
+	['Hello',4,undefined,'o'],
+	['Hello',5,undefined,''],
+	['Hello',undefined,5,'Hello'],
+	['Hello',undefined,4,'Hell'],
+	['Hello',undefined,3,'Hel'],
+	['Hello',undefined,2,'He'],
+	['Hello',undefined,1,'H'],
+	['Hello',undefined,0,''],
 	['!Hello!',1,5,'Hello'],
 ];
 for(const [str,start,len,expect] of buildSet) {
@@ -40,8 +40,8 @@ tsts(`build with null or undefined ok`,()=>{
 const badBuildSet:[string,number|undefined,number|undefined][]=[
 	['Hello',-1,undefined],//Too early
 	['Hello',6,undefined],//Too late
-	['Hello',,-1],//Too short
-	['Hello',,6],//Too long
+	['Hello',undefined,-1],//Too short
+	['Hello',undefined,6],//Too long
 ];
 for (const [ str, start, len ] of badBuildSet) {
 	tsts(`new(${str},${start},${len}) throws`, () => {
@@ -62,7 +62,7 @@ for(const [w,expectLen,expectEmpty] of emptySet) {
 }
 
 const toStringSet:[string,number|undefined,number|undefined,string][]=[
-	['Hi there',,,'Hi there'],
+	['Hi there',undefined,,'Hi there'],
 	['Bats',1,2,'at'],
 ];
 for(const [str,start,len,expect] of toStringSet) {

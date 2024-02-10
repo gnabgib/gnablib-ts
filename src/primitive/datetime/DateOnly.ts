@@ -350,8 +350,8 @@ export class DateOnly implements ISerializer {
 	 */
 	public static parse(
 		input: WindowStr,
-		storage?: Uint8Array,
-		strict = false
+		strict = false,
+		storage?: Uint8Array
 	): DateOnly {
 		const stor = self.setupStor(storage);
 		input.trimStart();
@@ -359,18 +359,19 @@ export class DateOnly implements ISerializer {
 		//If content starts with "now" and optionally followed by whitespace - run now macro
 		if (input.test(/^now\s*$/i)) {
 			input.shrink(3);
-			return self.now(storage);
+			return self.now(stor);
 		}
 
-		let y:Year;let m:Month;let d:Day;
 		//If it's an optional sign followed by 8-9 digits assume it's an undelimitered date
 		if (input.test(/^[-+]?\d{8,9}\s*$/)) {
 			input.trimEnd();
-			d=Day.parse(input.right(2),stor.subarray(3),strict);
-			m=Month.parse(input.span(input.length-4,2),stor.subarray(2),strict);
-			y=Year.parse(input.left(input.length-4),stor,strict);
+			const ret=new DateOnly(
+				Year.parse(input.left(input.length-4),strict,stor),
+				Month.parse(input.span(input.length-4,2),strict,stor.subarray(2)),
+				Day.parse(input.right(2),strict,stor.subarray(3))
+			)
 			input.shrink(input.length);
-			return new DateOnly(y, m, d);
+			return ret;
 		}
 
 		//Dash, slash, dot (germany?) separated allowed
@@ -387,12 +388,14 @@ export class DateOnly implements ISerializer {
 		//Make sure second delim matches first, and there is one
 		const delim2=input.indexOf(delim,delim1+1);
 		if (delim2>0) {
-			y=Year.parse(input.left(delim1),stor,strict);
-			input.shrink(delim1+1);
-			m=Month.parse(input.left(delim2-delim1-1),stor.subarray(2),strict);
-			input.shrink(delim2-delim1);
-			d=Day.parse(input,stor.subarray(3),strict);
-			return new DateOnly(y,m,d);
+			//Prevent partial parsing (that throws) from consuming the input
+			const ret=new DateOnly(
+				Year.parse(input.left(delim1),strict,stor),
+				Month.parse(input.span(delim1+1,delim2-delim1-1),strict,stor.subarray(2)),
+				Day.parse(input.span(delim2+1),strict,stor.subarray(3))
+			);
+			input.shrink(input.length);
+			return ret;
 		}
 		
 		throw new ContentError(`Expecting 8-9 digit ymd (with optional sign), or ${delim} delimited date`,'date',input);

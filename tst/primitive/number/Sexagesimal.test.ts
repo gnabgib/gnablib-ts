@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('Sexagesimal');
 
@@ -89,68 +90,59 @@ tsts(`new-provide storage`,()=>{
     assert.is(m.valueOf(),12);
 });
 
-const parseSet:[string,number][]=[
+const parseSet:[WindowStr,number,number][]=[
     //Completely valid
-    ['01',1],
-    ['02',2],
-    ['03',3],
-    ['04',4],
-    ['05',5],
-    ['06',6],
-    ['07',7],
-    ['08',8],
-    ['09',9],
-    ['10',10],
-    ['20',20],
-    ['43',43],
-    ['59',59],
+    [WindowStr.new('01'),1,0],
+    [WindowStr.new('02'),2,0],
+    [WindowStr.new('03'),3,0],
+    [WindowStr.new('04'),4,0],
+    [WindowStr.new('05'),5,0],
+    [WindowStr.new('06'),6,0],
+    [WindowStr.new('07'),7,0],
+    [WindowStr.new('08'),8,0],
+    [WindowStr.new('09'),9,0],
+    [WindowStr.new('10'),10,0],
+    [WindowStr.new('20'),20,0],
+    [WindowStr.new('43'),43,0],
+    [WindowStr.new('59'),59,0],
     //Doesn't have to be zero padded
-    ['2',2],
+    [WindowStr.new('2'),2,0],
 
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [10,10],
+    [WindowStr.new(' 2 '),2,1],//Trailing not trimmed
+    [WindowStr.new('011'),11,0],//Leading zero ok
 ];
-for (const [str,expect] of parseSet) {
-    tsts(`parse(${str})`,()=>{
-        const stor=new Uint8Array(1);
-        const s=Sexagesimal.parse(str,stor);
+for (const [w,expect,rem] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const s=Sexagesimal.parse(w);
         assert.equal(s.valueOf(),expect);
+        assert.equal(w.length,rem);
     });
 }
 
-const badParseStrict:string[]=[
+const badParseStrict:WindowStr[]=[
     //Should be zero padded
-    '1',
-    '3',
+    WindowStr.new('1'),
+    WindowStr.new('3'),
 ];
-for (const str of badParseStrict) {
-    tsts(`parse(${str},undefined,true)`,()=>{
-        assert.throws(()=>Sexagesimal.parse(str,undefined,true));
+for (const w of badParseStrict) {
+    tsts(`${w.debug()} parse strict throws`,()=>{
+        assert.throws(()=>Sexagesimal.parse(w,true));
     });
 }
 
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    true,
-    //Symbol("year"),
-    1.5,//Like integers, this is converted to a string, but floating point isn't allowed
-
-    //Bad strings
-    '',//Empty string not allowed
-    'tomorrow',//We support "now" only
-    '1.5',//Floating point - not allowed
-    '1e1',//10 in scientific - not allowed
-    '+01',//Can't have sign
+const badParse:WindowStr[]=[
+    WindowStr.new(''),//Empty string not allowed
+    WindowStr.new('tomorrow'),//We support "now" only
+    WindowStr.new('1.5'),//Floating point - not allowed
+    WindowStr.new('1e1'),//10 in scientific - not allowed
+    WindowStr.new('+01'),//Can't have sign
     //Out of range:
-    '320',
-    '1000',
+    WindowStr.new('320'),
+    WindowStr.new('1000'),
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
-        //@ts-ignore - this is the point of the test
-        assert.throws(()=>Sexagesimal.parse(unk));
+for (const w of badParse) {
+    tsts(`${w.debug()} parse throws`,()=>{
+        assert.throws(()=>Sexagesimal.parse(w));
     })
 }
 
@@ -171,6 +163,7 @@ tsts('serialSizeBits',()=>{
     const bits=o.serialSizeBits;
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
+
 
 // tsts('general',()=>{
 //     const o=Sexagesimal.new(13);

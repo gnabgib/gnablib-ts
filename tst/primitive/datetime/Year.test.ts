@@ -190,7 +190,7 @@ const badParseStrict:WindowStr[]=[
 ];
 for (const w of badParseStrict) {
     tsts(`${w.debug()}.parseStrict throws`,()=>{
-        assert.throws(()=>Year.parse(w,undefined,true));
+        assert.throws(()=>Year.parse(w,true));
     });
 }
 

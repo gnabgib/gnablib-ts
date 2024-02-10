@@ -19,9 +19,6 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'DateTime';
 const msPerMin = 60 * 1000;
 
-let min: DateTime;
-let max: DateTime;
-
 /**
  * Date and time down to microsecond resolution
  * Range: -10000-01-01 00:00:00.000000 - +22767-12-31 23:59:59.999999 (no leap second support)
@@ -226,7 +223,7 @@ export class DateTime implements ISerializer {
 	public add(y: number, m = 0, storage?: Uint8Array): DateTime {
 		const stor = self.setupStor(storage);
 		const d = this.date.add(y, m, stor);
-		const t = this.time.clone(stor.subarray(4));
+		const t = this.time.cloneTo(stor.subarray(4));
 		return new DateTime(d, t);
 	}
 
@@ -275,11 +272,12 @@ export class DateTime implements ISerializer {
 	}
 
 	public static fromValue(v: string, storage?: Uint8Array): DateTime {
+		const stor = self.setupStor(storage);
 		//last 12 are time
 		const dPart = v.substring(0, v.length - 12);
 		const tPart = v.substring(v.length - 12);
-		const d = DateOnly.fromValue(+dPart);
-		const t = TimeOnly.fromValue(+tPart);
+		const d = DateOnly.fromValue(+dPart, stor);
+		const t = TimeOnly.fromValue(+tPart, false, stor.subarray(4));
 		return new DateTime(d, t);
 	}
 
@@ -372,5 +370,5 @@ export class DateTime implements ISerializer {
 	}
 }
 const self = DateTime;
-min = DateTime.new(-10000, 1, 1, 0, 0, 0, 0);
-max = DateTime.new(22767, 12, 31, 23, 59, 59, 999999);
+const min = DateTime.new(-10000, 1, 1, 0, 0, 0, 0);
+const max = DateTime.new(22767, 12, 31, 23, 59, 59, 999999);

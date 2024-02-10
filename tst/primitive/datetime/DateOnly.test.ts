@@ -377,11 +377,11 @@ const parseSet:[WindowStr,number,number][]=[
     [WindowStr.new('2024.01.02'),20240102,0],
     [WindowStr.new('20240102'),20240102,0],
     [WindowStr.new('+20240102'),20240102,0],
-    //Trailing space rem:
-    [WindowStr.new('2024-01-02 '),20240102,1],
-    [WindowStr.new(' 2024 - 01 - 02 '),20240102,1],
-    [WindowStr.new('2024 - 1 - 2\t \t'),20240102,3],
-    [WindowStr.new('2024\t-\t1 -\t2\r\n'),20240102,2],
+    //Trailing space consumed
+    [WindowStr.new('2024-01-02 '),20240102,0],
+    [WindowStr.new(' 2024 - 01 - 02 '),20240102,0],
+    [WindowStr.new('2024 - 1 - 2\t \t'),20240102,0],
+    [WindowStr.new('2024\t-\t1 -\t2\r\n'),20240102,0],
 ];
 for(const [w,expect,expectLen] of parseSet) {
     tsts(`parse(${w.debug()})`,()=>{
@@ -400,7 +400,7 @@ const badParseStrictSet:WindowStr[]=[
 ];
 for(const w of badParseStrictSet) {
     tsts(`parse-strict ${w.debug()} throws`,()=>{
-        assert.throws(()=>DateOnly.parse(w,undefined,true));
+        assert.throws(()=>DateOnly.parse(w,true));
     })
 }
 

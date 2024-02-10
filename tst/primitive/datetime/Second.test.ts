@@ -2,6 +2,8 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Second } from '../../../src/primitive/datetime/Second';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
+import { BitReader } from '../../../src/primitive/BitReader';
 
 const tsts = suite('Second');
 
@@ -27,6 +29,12 @@ tsts(`fromUnixTimeMs`, () => {
 	assert.is(m.valueOf(), 30);
 });
 
+tsts(`fromUnixTimeMs`, () => {
+	const m = Second.fromUnixTimeUs(1705734810543000);
+	assert.is(m.valueOf(), 30);
+});
+
+
 tsts(`now`, () => {
 	const s = Second.now();
 	//Near the end of a second, this test can fail, (but passes otherwise)
@@ -37,16 +45,26 @@ tsts(`now`, () => {
 	const sNum=s.valueOf();
 	assert.is(sNum >= 0 && sNum <= 59, true, 'In valid range');
 });
+
+const parseSet: [WindowStr, number][] = [
+    [WindowStr.new('01'), 1],
+	[WindowStr.new('13'), 13],
+];
+for (const [w, expect] of parseSet) {
+	tsts(`parse(${w.debug()})`, () => {
+		const stor = new Uint8Array(1);
+		const s = Second.parse(w, stor);
+		assert.instance(s,Second);
+		assert.equal(s.valueOf(), expect);
+	});
+}
+
 tsts(`parse(now)`, () => {
-	const s = Second.parse('now');
+	const s = Second.parse(WindowStr.new('now'));
 	const sNum=s.valueOf();
 	assert.is(sNum >= 0 && sNum <= 59, true, 'In valid range');
 });
 
-tsts(`parse(1)`, () => {
-	const s = Second.parse('1');
-	assert.equal(s.valueOf(), 1);
-});
 
 tsts('[Symbol.toStringTag]', () => {
     const dt=Second.now();
@@ -58,6 +76,31 @@ tsts('util.inspect',()=>{
     const dt=Second.now();
     const u=util.inspect(dt);
     assert.is(u.startsWith('Second('),true);
+});
+
+tsts('cloneTo',()=>{
+	const stor1=new Uint8Array(Second.storageBytes);
+	const stor2=new Uint8Array(Second.storageBytes);
+
+	const s=Second.new(22,stor1);
+	assert.instance(s,Second);
+	assert.is(s.valueOf(),22);
+
+	const s2=s.cloneTo(stor2);
+	assert.instance(s2,Second);
+	assert.is(s2.valueOf(),22);
+	
+	//This is a terrible idea, but it proves diff memory
+	stor2[0]=13;
+	assert.is(s.valueOf(),22);
+	assert.is(s2.valueOf(),13);
+})
+
+tsts(`deser`,()=>{
+	const bytes=Uint8Array.of(13<<2);//Value in the top 6 bits of byte
+	const br=new BitReader(bytes);
+	const s=Second.deserialize(br).validate();
+	assert.is(s.valueOf(),13);
 });
 
 // tsts('general',()=>{

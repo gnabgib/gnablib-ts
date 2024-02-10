@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('UtcOrNot');
 
@@ -66,41 +67,35 @@ tsts(`new-provide storage`,()=>{
     assert.is(u.valueOf(),0);
 });
 
-const parseSet:[string,number][]=[
-    ['',0],
-    [' ',0],
-    ['\t',0],
-    ['z',1],
-    ['Z',1],
-    [' Z',1],
+const parseSet:[WindowStr,number,number][]=[
+    [WindowStr.new(''),0,0],
+    [WindowStr.new(' '),0,0],
+    [WindowStr.new('\t'),0,0],
+    [WindowStr.new('z'),1,0],
+    [WindowStr.new('Z'),1,0],
+    [WindowStr.new(' Z'),1,0],
+    [WindowStr.new(' Z '),1,0],
 ];
-for (const [str,expect] of parseSet) {
-    tsts(`parse(${str})`,()=>{
-        const stor=new Uint8Array(1);
-        const u=UtcOrNot.parse(str,stor);
+for (const [w,expect,rem] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const u=UtcOrNot.parse(w);
         assert.equal(u.valueOf(),expect);
+        assert.equal(w.length,rem);
     });
 }
 
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    true,
-    //Symbol("year"),
-    1,//Integers cannot be parsed as utc indicator
-    1.5,//Floats cannot be parsed as utc indicator
-
-    //Bad strings
-    'yes',
-    'true',
-    '1',
-    '1.5',
+const badParse:WindowStr[]=[
+    //Valid for a bool type
+    WindowStr.new('true'),
+    WindowStr.new('1'),
+    //Valid for a bool type with certain settings:
+    WindowStr.new('yes'),
+    //Invalid
+    WindowStr.new('1.5'),
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
-        //@ts-ignore - this is the point of the test
-        assert.throws(()=>UtcOrNot.parse(unk));
+for (const w of badParse) {
+    tsts(`${w.debug()} parse throws`,()=>{
+        assert.throws(()=>UtcOrNot.parse(w));
     })
 }
 
@@ -115,5 +110,22 @@ tsts('util.inspect',()=>{
     const u=util.inspect(o);
     assert.is(u.startsWith('UtcOrNot('),true);
 });
+
+tsts('cloneTo',()=>{
+	const stor1=new Uint8Array(UtcOrNot.storageBytes);
+	const stor2=new Uint8Array(UtcOrNot.storageBytes);
+
+	const o=UtcOrNot.new(true,stor1);
+	assert.instance(o,UtcOrNot);
+	assert.is(o.valueOf(),1);
+
+	const o2=o.cloneTo(stor2);
+	assert.instance(o2,UtcOrNot);
+	assert.is(o2.valueOf(),1);
+	
+	//This is a terrible idea, but it proves diff memory
+	stor2[0]=0;
+    assert.not.equal(o.valueOf(),o2.valueOf());
+})
 
 tsts.run();

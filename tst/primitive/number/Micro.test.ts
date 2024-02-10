@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('Micro');
 
@@ -99,59 +100,51 @@ tsts(`new-provide storage`,()=>{
 });
 
 
-const parseSet:[string,number][]=[
-    ['0',0],
-    ['1',1],
-    ['10',10],
-    ['100',100],
-    ['1000',1000],
-    ['10000',10000],
-    ['100000',100000],
-    ['999999',999999],
-    ['001000',1000],
-
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [10,10],
+const parseSet:[WindowStr,number,number][]=[
+    [WindowStr.new('0'),0,0],
+    [WindowStr.new('1'),1,0],
+    [WindowStr.new('10'),10,0],
+    [WindowStr.new('100'),100,0],
+    [WindowStr.new('1000'),1000,0],
+    [WindowStr.new('10000'),10000,0],
+    [WindowStr.new('100000'),100000,0],
+    [WindowStr.new('999999'),999999,0],
+    [WindowStr.new('001000'),1000,0],
+    
+    [WindowStr.new(' 1 '),1,1],//Trailing space not consumed
+    [WindowStr.new('0999999'),999999,0],//Leading zero ok
 ];
-for (const [str,expect] of parseSet) {
-    tsts(`parse(${str})`,()=>{
-        const ms=Micro.parse(str);
+for (const [w,expect,rem] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const ms=Micro.parse(w);
         assert.equal(ms.valueOf(),expect);
+        assert.equal(w.length,rem);
     });
 }
 
-const badParseStrict:string[]=[
+const badParseStrictSet:WindowStr[]=[
     //Should be zero padded
-    '1',
-    '3',
+    WindowStr.new('1'),
+    WindowStr.new('3'),
 ];
-for (const str of badParseStrict) {
-    tsts(`parse(${str},undefined,true)`,()=>{
-        assert.throws(()=>Micro.parse(str,undefined,true));
+for (const w of badParseStrictSet) {
+    tsts(`${w.debug()} parse-strict throws`,()=>{
+        assert.throws(()=>Micro.parse(w,true));
     });
 }
 
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    true,
-    //Symbol("year"),
-    1.5,//Like integers, this is converted to a string, but floating point isn't allowed
-
-    //Bad strings
-    '',//Empty string not allowed
-    'tomorrow',//We support "now" only
-    '1.5',//Floating point - not allowed
-    '1e1',//10 in scientific - not allowed
-    '+01',//Can't have sign
+const badParse:WindowStr[]=[
+    WindowStr.new(''),//Empty string not allowed
+    WindowStr.new('tomorrow'),//We support "now" only
+    WindowStr.new('1.5'),//Floating point - not allowed
+    WindowStr.new('1e1'),//10 in scientific - not allowed
+    WindowStr.new('+01'),//Can't have sign
     //Out of range:
-    '1000000',
+    WindowStr.new('1000000'),
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
-        //@ts-ignore - this is the point of the test
-        assert.throws(()=>Micro.parse(unk));
+for (const w of badParse) {
+    tsts(`${w.debug()} parse throws`,()=>{
+        assert.throws(()=>Micro.parse(w));
     })
 }
 
@@ -171,6 +164,23 @@ tsts('serialSizeBits',()=>{
     const o=Micro.new(13);
     const bits=o.serialSizeBits;
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
+});
+
+tsts('cloneTo',()=>{
+	const stor1=new Uint8Array(Micro.storageBytes);
+	const stor2=new Uint8Array(Micro.storageBytes);
+
+	const o=Micro.new(22,stor1);
+	assert.instance(o,Micro);
+	assert.is(o.valueOf(),22);
+
+	const o2=o.cloneTo(stor2);
+	assert.instance(o2,Micro);
+	assert.is(o2.valueOf(),22);
+	
+	//This is a terrible idea, but it proves diff memory
+	stor2[0]=13;//This corrupts o2 in the 8 msb
+    assert.not.equal(o.valueOf(),o2.valueOf());
 });
 
 // tsts('general',()=>{

@@ -2,6 +2,8 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Microsecond } from '../../../src/primitive/datetime/Microsecond';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
+import { BitReader } from '../../../src/primitive/BitReader';
 
 const tsts = suite('Microsecond');
 
@@ -45,6 +47,11 @@ for (const [epoch, expect] of fromUnixTimeMsSet) {
 	});
 }
 
+tsts(`fromUnixTimeUs`, () => {
+	const e = Microsecond.fromUnixTimeUs(1705734810542789);
+	assert.is(e.valueOf(), 542789);
+});
+
 const microAsMilli:[number,number][]=[
 	[0,0],
 	[542000,542],
@@ -65,14 +72,19 @@ tsts(`now`, () => {
 	//console.log(m.toString());
 });
 
-tsts(`parse(5678)`, () => {
-	const ms = Microsecond.parse('5678');
-	assert.equal(ms.valueOf(), 5678);
-});
+const parseSet: [WindowStr, number][] = [
+    [WindowStr.new('5678'), 5678],
+];
+for (const [w, expect] of parseSet) {
+	tsts(`parse(${w.debug()})`, () => {
+		const m = Microsecond.parse(w);
+		assert.instance(m,Microsecond);
+		assert.equal(m.valueOf(), expect);
+	});
+}
 
 tsts(`parse(now)`, () => {
-	const stor = new Uint8Array(3);
-	const ms = Microsecond.parse('now', stor);
+	const ms = Microsecond.parse(WindowStr.new('now'));
 	const mNum = +ms;
 	//Tricky to test this!
 	assert.is(mNum >= 0 && mNum <= 999999, true, 'In valid range');
@@ -94,6 +106,31 @@ tsts('serialSizeBits',()=>{
     const o=Microsecond.now();
     const bits=o.serialSizeBits;
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
+});
+
+tsts('cloneTo',()=>{
+	const stor1=new Uint8Array(Microsecond.storageBytes);
+	const stor2=new Uint8Array(Microsecond.storageBytes);
+
+	const o=Microsecond.new(22,stor1);
+	assert.instance(o,Microsecond);
+	assert.is(o.valueOf(),22);
+
+	const o2=o.cloneTo(stor2);
+	assert.instance(o2,Microsecond);
+	assert.is(o2.valueOf(),22);
+	
+	//This is a terrible idea, but it proves diff memory
+	stor2[0]=13;//This corrupts o2 in the 8 msb
+    assert.not.equal(o.valueOf(),o2.valueOf());
+});
+
+tsts(`deser`,()=>{
+	const bytes=Uint8Array.of(0,0,3<<4);//Value in the top 20 bits of 3 bytes
+	const br=new BitReader(bytes);
+	const m=Microsecond.deserialize(br).validate();
+	assert.instance(m,Microsecond);
+	assert.is(m.valueOf(),3);
 });
 
 // tsts('general',()=>{

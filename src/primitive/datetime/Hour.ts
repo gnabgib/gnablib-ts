@@ -3,6 +3,7 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
@@ -77,11 +78,10 @@ export class Hour implements ISerializer {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
-	/** Return a copy of this value (using provided storage/different memory) */
-	public clone(storage?: Uint8Array): Hour {
-		const stor = self.setupStor(storage);
-		stor[0] = this.#v[0];
-		return new Hour(stor);
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array): Hour {
+		storage[0] = this.#v[0];
+		return new Hour(storage);
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -151,41 +151,36 @@ export class Hour implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(
-		input: string,
-		storage?: Uint8Array,
-		strict = false
+		input: WindowStr,
+		strict = false,
+		storage?: Uint8Array
 	): Hour {
-		const strVal = safe.string.nullEmpty(input);
-		if (strVal === undefined)
-			throw new ContentError('require string content', 'input', input);
-		if (strVal.toLowerCase() === 'now') return self.now(storage);
+		input.trimStart();
 
-		//Only parse integers (no floating point/scientific notation)
-		const r = strVal.match(/^\s*(\d+)\s*$/);
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(storage);
+		}
+
+		//One more more digits, optional trailing whitespace only
+		const r = input.match(/^(\d+)\s*$/);
 		if (r !== null) {
+			const [, digits] = r;
 			if (strict) {
-				if (r[1].length != 2)
+				if (digits.length != 2)
 					throw new ContentError(
 						'expecting 2 digit unsigned integer-string',
-						'input',
-						strVal
-					);
-			} else {
-				if (r[1].length > 2)
-					throw new ContentError(
-						'expecting 1-2 digit unsigned integer-string',
-						'input',
-						strVal
+						'hour',
+						input
 					);
 			}
-			const intVal = parseInt(r[1], 10);
-			return self.new(intVal, storage);
+			const intVal = parseInt(digits, 10);
+			const ret = self.new(intVal, storage);
+			input.shrink(digits.length);
+			return ret;
 		}
-		throw new ContentError(
-			'expecting unsigned integer-string',
-			'input',
-			strVal
-		);
+		throw new ContentError('expecting unsigned integer-string', 'hour', input);
 	}
 
 	/** Create this hour (local) */

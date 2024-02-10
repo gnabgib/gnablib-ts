@@ -3,6 +3,7 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
@@ -15,10 +16,10 @@ export class Micro implements ISerializer {
 	static readonly storageBytes = 3;
 	/**Number of bits required to serialize this data */
 	static readonly serialBits = 20;
-	protected readonly _v: Uint8Array;
+	readonly #v: Uint8Array;
 
 	protected constructor(storage: Uint8Array) {
-		this._v = storage;
+		this.#v = storage;
 	}
 
 	/** Not zero padded (0-999999) */
@@ -33,12 +34,12 @@ export class Micro implements ISerializer {
 
 	/** Value as an integer (0-999999) */
 	toJSON(): number {
-		return (this._v[0] << 16) | (this._v[1] << 8) | this._v[2];
+		return (this.#v[0] << 16) | (this.#v[1] << 8) | this.#v[2];
 	}
 
 	/** Value as an integer (0-999999) */
 	public valueOf(): number {
-		return (this._v[0] << 16) | (this._v[1] << 8) | this._v[2];
+		return (this.#v[0] << 16) | (this.#v[1] << 8) | this.#v[2];
 	}
 
 	/** Serialize into target  - 20 bits*/
@@ -71,6 +72,19 @@ export class Micro implements ISerializer {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
+	/** Copy this value into storage */
+	protected fill(storage: Uint8Array): void {
+		storage[0] = this.#v[0];
+		storage[1] = this.#v[1];
+		storage[2] = this.#v[2];
+	}
+
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array): Micro {
+		this.fill(storage);
+		return new Micro(storage);
+	}
+
 	protected static writeValue(target: Uint8Array, v: number): void {
 		target[0] = v >> 16;
 		target[1] = v >> 8;
@@ -92,49 +106,52 @@ export class Micro implements ISerializer {
 		return new Micro(stor);
 	}
 
-	//Partitioned to allow a subclass to override
-	protected static doParse(
-		input: string,
+	protected static parseIntoStorage(
+		input: WindowStr,
+		storage: Uint8Array,
 		strict: boolean,
-		storage?: Uint8Array
-	): Micro {
+		name = 'input'
+	): void {
+		input.trimStart();
 		//Only parse integers (no floating point/scientific notation)
-		const r = input.match(/^\s*(\d{1,6})\s*$/);
-		if (r !== null) {
-			if (strict) {
-				if (r[1].length != 6)
-					throw new ContentError(
-						'expecting 6 digit unsigned integer-string',
-						'input',
-						input
-					);
-			}
-			const iVal = parseInt(r[1], 10);
-			return self.new(iVal, storage);
+		const r = input.match(/^(\d+)\s*$/);
+		if (r === null)
+			throw new ContentError('expecting unsigned integer-string', name, input);
+
+		const [, digits] = r;
+		if (strict && digits.length != 6) {
+			throw new ContentError(
+				'expecting 6 digit unsigned integer-string',
+				name,
+				input
+			);
 		}
-		throw new ContentError('expecting unsigned integer-string', 'input', input);
+		const iVal = parseInt(digits, 10);
+		safe.int.inRangeInc(name, iVal, 0, 999999);
+		self.writeValue(storage, iVal);
+		input.shrink(digits.length);
 	}
 
 	/**
-	 * Create a micro/millionth from a string accepts:
-	 * 1-6 digit unsigned integer, must be 6 digits if strict
+	 * Parse from a string, accepts:
+	 * 1-6 digit unsigned integer, must be 6 digits if strict.
+	 *
+	 * Leading whitespace will be removed, trailing whitespace will be ignored (but not removed from window)
 	 *
 	 * Throws if:
-	 * - Not a string, or $input is empty
+	 * - Not a string, or $str is empty
 	 * - There's no available $storage
-	 * - The integer value of $input is out of range
-	 * - The content of $input isn't valid
+	 * - The integer value of $str is out of range
+	 * - The content of $str isn't valid
 	 */
 	public static parse(
-		input: string,
-		storage?: Uint8Array,
-		strict = false
+		input: WindowStr,
+		strict = false,
+		storage?: Uint8Array
 	): Micro {
-		const strVal = safe.string.nullEmpty(input);
-		if (strVal === undefined)
-			throw new ContentError('require string content', 'input', input);
-		// deepcode ignore StaticAccessThis: Have to use this so children can override
-		return this.doParse(strVal, strict, storage);
+		const stor = self.setupStor(storage);
+		self.parseIntoStorage(input, stor, strict, 'micro');
+		return new Micro(stor);
 	}
 
 	/**

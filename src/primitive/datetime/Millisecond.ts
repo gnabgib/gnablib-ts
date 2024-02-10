@@ -1,6 +1,8 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
+import { WindowStr } from '../WindowStr.js';
 import { Milli } from '../number/Milli.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -15,6 +17,12 @@ export class Millisecond extends Milli {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		return `${DBG_RPT}(${this.toString()})`;
+	}
+
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array): Millisecond {
+		this.fill(storage);
+		return new Millisecond(storage);
 	}
 
 	/**
@@ -67,16 +75,28 @@ export class Millisecond extends Milli {
 
 	/** Create a new Millisecond, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Millisecond {
-		return Milli.new(v, storage) as Millisecond;
+		safe.int.inRangeInc('value', v, 0, 999);
+		const stor = self.setupStor(storage);
+		self.writeValue(stor, v);
+		return new Millisecond(stor);
 	}
 
-	protected static doParse(
-		str: string,
-		strict: boolean,
+	/** {@inheritDoc primitive.number.Micro} */
+	public static parse(
+		input: WindowStr,
+		strict = false,
 		storage?: Uint8Array
 	): Millisecond {
-		if (str.toLowerCase() === 'now') return self.now(storage);
-		return super.doParse(str, strict, storage) as Millisecond;
+		const stor = self.setupStor(storage);
+		input.trimStart();
+
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(stor);
+		}
+		super.parseIntoStorage(input, stor, strict, 'millisecond');
+		return new Millisecond(stor);
 	}
 
 	/**

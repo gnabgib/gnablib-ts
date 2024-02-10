@@ -2,6 +2,7 @@
 
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
+import { WindowStr } from '../WindowStr.js';
 import { Sexagesimal } from '../number/Sexagesimal.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -23,11 +24,10 @@ export class Second extends Sexagesimal {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
-	/** Return a copy of this value (using provided storage/different memory) */
-	public clone(storage?: Uint8Array): Second {
-		const stor = self.setupStor(storage);
-		stor[0] = this._v[0];
-		return new Second(stor);
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array): Second {
+		storage[0] = this._v[0];
+		return new Second(storage);
 	}
 
 	/**
@@ -86,13 +86,22 @@ export class Second extends Sexagesimal {
 		return new Second(stor);
 	}
 
-	protected static doParse(
-		str: string,
-		strict: boolean,
-		storage?: Uint8Array
+	/** {@inheritDoc primitive.number.Sexagesimal} */
+	public static parse(
+		input: WindowStr,
+		strict = false,
+		storage?: Uint8Array		
 	): Second {
-		if (str.toLowerCase() === 'now') return self.now(storage);
-		return super.doParse(str, strict, storage) as Second;
+		const stor = self.setupStor(storage);
+		input.trimStart();
+
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(stor);
+		}
+		super.parseIntoStorage(input, stor, strict, 'second');
+		return new Second(stor);
 	}
 
 	/**

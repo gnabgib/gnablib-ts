@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('TimeOnly');
 
@@ -197,20 +198,99 @@ tsts('serialSizeBits',()=>{
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
-// tsts('general',()=>{
-//     const dt=Day.now();
-//     console.log(dt);
-//     console.log(Object.prototype.toString.call(dt));
-// });
+tsts('cloneTo',()=>{
+	const stor1=new Uint8Array(TimeOnly.storageBytes);
+	const stor2=new Uint8Array(TimeOnly.storageBytes);
 
-// tsts(`norp`,()=>{
-//     const timeLocal=TimeOnly.fromUnixTime(1706563448);
-//     const timeUtc=TimeOnly.fromUnixTime(1706563448,true);
-//     console.log(`es  local=${timeLocal.toString()}, utc=${timeUtc.toString()}`);
+	const o=TimeOnly.new(1,2,3,456789,false,stor1);
+	assert.instance(o,TimeOnly);
+	assert.is(o.valueOf(),10203456789);
 
-//     const timeLocalM=TimeOnly.fromUnixTimeMs(1706563565855);
-//     const timeUtcM=TimeOnly.fromUnixTimeMs(1706563565855,true);
-//     console.log(`ems local=${timeLocalM.toString()}, utc=${timeUtcM.toString()}`);
-// });
+	const o2=o.cloneTo(stor2);
+	assert.instance(o2,TimeOnly);
+	assert.is(o2.valueOf(),10203456789);
+	
+	//This is a terrible idea, but it proves diff memory
+	stor2[0]=13;
+    assert.not.equal(o.valueOf(),o2.valueOf());
+});
+
+const fromValueSet:number[]=[
+    0,//Min
+    10203456789,
+    235959999999,//Max
+];
+for(const src of fromValueSet) {
+    //We expect a round trip so expected=source
+    tsts(`fromValue(${src})`,()=>{
+        const t=TimeOnly.fromValue(src);
+        assert.is(t.valueOf(),src);
+    });
+}
+
+tsts(`min`,()=>{
+    const to=TimeOnly.min;
+    assert.is(to.valueOf(),0);
+});
+tsts(`max`,()=>{
+    const to=TimeOnly.max;
+    assert.is(to.valueOf(),235959999999);
+});
+
+
+const parseSet:[WindowStr,string,number][]=[
+    //Just numbers (assume valueOf compat)
+    [WindowStr.new('000000000000z'),'00:00:00.000000Z',0],
+    [WindowStr.new('000000000000'),'00:00:00.000000',0],
+    [WindowStr.new('235959999999 '),'23:59:59.999999',0],
+    [WindowStr.new('235959999999Z'),'23:59:59.999999Z',0],
+    [WindowStr.new('153631123456'),'15:36:31.123456',0],
+
+    //Normal
+    [WindowStr.new('15:36:31.123456'),'15:36:31.123456',0],
+    [WindowStr.new('15: 36: 31.123456'),'15:36:31.123456',0],
+    [WindowStr.new('00:00:00.000000Z'),'00:00:00.000000Z',0],
+    [WindowStr.new('00:00:00.000000z'),'00:00:00.000000Z',0],
+    [WindowStr.new('00:00:00.000000 '),'00:00:00.000000',0],
+    [WindowStr.new('0:0:0.1 '),'00:00:00.000001',0],
+];
+for(const [w,expect,expectLen] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const to=TimeOnly.parse(w);
+        assert.equal(to.toString(),expect);
+        assert.is(w.length,expectLen,'remaining length');
+    });
+}
+
+const badParseStrictSet:WindowStr[]=[
+    WindowStr.new('0:0:0.1')
+];
+for(const w of badParseStrictSet) {
+    tsts(`parse-strict ${w.debug()} throws`,()=>{
+        assert.throws(()=>TimeOnly.parse(w,true));
+    })
+}
+
+const badParseSet:WindowStr[]=[
+    WindowStr.new('1536'),//Can't be short, or.. what is thi?
+    WindowStr.new('15:36:.'),//Can't be short
+    WindowStr.new('1536:31.123456'),//Can't be a mix of with/without delims
+];
+for(const w of badParseSet) {
+    tsts(`parse ${w.debug()} throws`,()=>{
+        assert.throws(()=>TimeOnly.parse(w));
+    })
+}
+
+tsts(`parse-now`, () => {
+    const w=WindowStr.new('now');
+    const t=TimeOnly.parse(w);
+
+    //The rest are too risky, so just range check
+    const h=t.hour.valueOf(); assert.is(h>=0&&h<=23,true,'hour in range');
+    const m=t.minute.valueOf(); assert.is(m>=0&&m<=59,true,'minute in range');
+    const s=t.second.valueOf(); assert.is(s>=0&&s<=59,true,'second in range');
+    const us=t.microsecond.valueOf(); assert.is(us>=0&&us<=999999,true,'microsecond in range');
+});
 
 tsts.run();

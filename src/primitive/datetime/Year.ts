@@ -179,8 +179,8 @@ export class Year implements ISerializer {
 	 */
 	public static parse(
 		input: WindowStr,
-		storage?: Uint8Array,
-		strict = false
+		strict = false,
+		storage?: Uint8Array		
 	): Year {
 		input.trimStart();
 

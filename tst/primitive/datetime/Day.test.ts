@@ -171,7 +171,7 @@ const badParseStrict:WindowStr[]=[
 ];
 for (const w of badParseStrict) {
     tsts(`parse(${w.debug()},undefined,true)`,()=>{
-        assert.throws(()=>Day.parse(w,undefined,true));
+        assert.throws(()=>Day.parse(w,true));
     });
 }
 

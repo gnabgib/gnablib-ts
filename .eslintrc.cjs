@@ -34,6 +34,6 @@ module.exports = {
   plugins: [
     '@typescript-eslint'
   ],
-  ignorePatterns: ['*.cjs'],
+  ignorePatterns: ['*.cjs','*.test.ts'],
   root: true,
 };

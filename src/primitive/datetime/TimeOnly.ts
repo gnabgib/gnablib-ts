@@ -9,9 +9,12 @@ import { Second } from './Second.js';
 import { Microsecond } from './Microsecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
+import { WindowStr } from '../WindowStr.js';
+import { ContentError } from '../error/ContentError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'TimeOnly';
+const msPerMin = 60 * 1000;
 
 /**
  * Time of day in microsecond resolution (hh:mm:ss.uuuuuu)
@@ -51,6 +54,15 @@ export class TimeOnly implements ISerializer {
 		/** In UTC or not */
 		readonly isUtc: UtcOrNot
 	) {}
+
+	/** Minimum time = 00:00:00.000000 */
+	static get min(): TimeOnly {
+		return min;
+	}
+	/** Maximum time = 23:59:59.999999 */
+	static get max(): TimeOnly {
+		return max;
+	}
 
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
@@ -160,19 +172,14 @@ export class TimeOnly implements ISerializer {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
-	/**
-	 * Return a copy of this time
-	 * @param storage Optional memory to store the data (will be created if not provided)
-	 * @pure
-	 */
-	public clone(storage?:Uint8Array):TimeOnly {
-		const stor = self.setupStor(storage);
-		const h=this.hour.clone(stor);
-		const m=this.minute.clone(stor.subarray(1,2));
-		const s=this.second.clone(stor.subarray(2,3));
-		const us=this.microsecond.clone(stor.subarray(3));
-		const utc=this.isUtc.clone(stor.subarray(6));
-		return new TimeOnly(h,m,s,us,utc);
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array): TimeOnly {
+		const h = this.hour.cloneTo(storage);
+		const m = this.minute.cloneTo(storage.subarray(1, 2));
+		const s = this.second.cloneTo(storage.subarray(2, 3));
+		const us = this.microsecond.cloneTo(storage.subarray(3, 6));
+		const utc = this.isUtc.cloneTo(storage.subarray(6));
+		return new TimeOnly(h, m, s, us, utc);
 	}
 
 	/** If storage empty, builds new, or vets it's the right size */
@@ -210,25 +217,29 @@ export class TimeOnly implements ISerializer {
 
 	/**
 	 * Convert from base 10 shifted value {@link valueOf} into new TimeOnly
-	 * @param v 
+	 * @param v
 	 * @param [isUtc=false] By default value will be considered local, unless this is set to true
-	 * @param storage 
-	 * @returns 
+	 * @param storage
+	 * @returns
 	 */
-	public static fromValue(v:number,isUtc=false,storage?:Uint8Array) :TimeOnly {
-		const us=v%1000000;
-		v=(v-us)/1000000;
-		const s=v%100;
-		v=(v-s)/100;
-		const m=v%100;
-		v=(v-m)/100;
-		return TimeOnly.new(v,m,s,us,isUtc,storage);
+	public static fromValue(
+		v: number,
+		isUtc = false,
+		storage?: Uint8Array
+	): TimeOnly {
+		const us = v % 1000000;
+		v = (v - us) / 1000000;
+		const s = v % 100;
+		v = (v - s) / 100;
+		const m = v % 100;
+		v = (v - m) / 100;
+		return TimeOnly.new(v, m, s, us, isUtc, storage);
 	}
-	
+
 	/**
 	 * Create a time from a js Date object
 	 * **WARN**: Date only has millisecond accuracy, use {@link now}, or
-	 * {@link fromUnixTime}/{@link fromUnixTimeMs} with a high resolution (floating point) source
+	 * {@link fromUnixTime}/{@link fromUnixTimeMs}/{@link fromUnixTimeUs} with a high resolution (floating point) source
 	 * @param date Value used as source
 	 */
 	public static fromDate(
@@ -236,18 +247,8 @@ export class TimeOnly implements ISerializer {
 		isUtc = false,
 		storage?: Uint8Array
 	): TimeOnly {
-		//Keep the memory contiguous
-		const stor = self.setupStor(storage);
-
-		//NOTE: We could see if date.getTimezoneOffset() is zero and auto detect isUtc
-		// but we want the dev to be explicit that this is a UTC number when it is
-		// and not just conveniently running in the UTC timezone (or use fromUtcDate)
-		const h = Hour.fromDate(date, stor);
-		const m = Minute.fromDate(date, stor.subarray(1, 2));
-		const s = Second.fromDate(date, stor.subarray(2, 3));
-		const us = Microsecond.fromDate(date, stor.subarray(3));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+		return self.fromUnixTimeMs(dms, isUtc, storage);
 	}
 
 	/**
@@ -257,15 +258,8 @@ export class TimeOnly implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(date: Date, storage?: Uint8Array): TimeOnly {
-		//Keep the memory contiguous
-		const stor = self.setupStor(storage);
-
-		const h = Hour.fromDateUtc(date, stor);
-		const m = Minute.fromDateUtc(date, stor.subarray(1, 2));
-		const s = Second.fromDateUtc(date, stor.subarray(2, 3));
-		const us = Microsecond.fromDateUtc(date, stor.subarray(3));
-		const utc = UtcOrNot.new(true, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		const dms = date.valueOf();
+		return self.fromUnixTimeMs(dms, true, storage);
 	}
 
 	/**
@@ -280,13 +274,7 @@ export class TimeOnly implements ISerializer {
 		isUtc = true,
 		storage?: Uint8Array
 	): TimeOnly {
-		const stor = self.setupStor(storage);
-		const h = Hour.fromUnixTime(source, stor);
-		const m = Minute.fromUnixTime(source, stor.subarray(1, 2));
-		const s = Second.fromUnixTime(source, stor.subarray(2, 3));
-		const us = Microsecond.fromUnixTime(source, stor.subarray(3));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		return self.fromUnixTimeMs(source * 1000, isUtc, storage);
 	}
 
 	/**
@@ -322,13 +310,73 @@ export class TimeOnly implements ISerializer {
 		isUtc = true,
 		storage?: Uint8Array
 	): TimeOnly {
+		return self.fromUnixTimeMs(source / 1000, isUtc, storage);
+	}
+
+	public static parse(
+		input: WindowStr,
+		strict = false,
+		storage?: Uint8Array
+	): TimeOnly {
 		const stor = self.setupStor(storage);
-		const h = Hour.fromUnixTimeUs(source, stor);
-		const m = Minute.fromUnixTimeUs(source, stor.subarray(1, 2));
-		const s = Second.fromUnixTimeUs(source, stor.subarray(2, 3));
-		const us = Microsecond.fromUnixTimeUs(source, stor.subarray(3));
-		const utc = UtcOrNot.new(isUtc, stor.subarray(6));
-		return new TimeOnly(h, m, s, us, utc);
+		input.trimStart();
+
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(stor);
+		}
+
+		//If it's 12 digits, followed by optional z assume it's an undelimitered time
+		if (input.test(/^\d{12}[Zz]?\s*$/)) {
+			input.trimEnd();
+			const ret = new TimeOnly(
+				Hour.parse(input.left(2), strict, stor),
+				Minute.parse(input.span(2, 2), strict, stor.subarray(1, 2)),
+				Second.parse(input.span(4, 2), strict, stor.subarray(2, 3)),
+				Microsecond.parse(input.span(6, 6), strict, stor.subarray(3, 6)),
+				UtcOrNot.parse(input.span(12), stor.subarray(6))
+			);
+			input.shrink(input.length);
+			return ret;
+		}
+
+		const delim1 = input.indexOf(':');
+		const delim2 = input.indexOf(':', delim1 + 1);
+		const delim3 = input.indexOf('.', delim2 + 1);
+		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
+			let delim4 = input.indexOfAny(['z', 'Z'], delim3 + 1);
+			const utc= UtcOrNot.new(delim4 > 0, stor.subarray(6, 7));
+			//If no z marker was found, set d4 to end of string
+			if (!utc.valueBool()) delim4=input.length;
+
+			const ret = new TimeOnly(
+				Hour.parse(input.left(delim1), strict, stor),
+				Minute.parse(
+					input.span(delim1 + 1, delim2 - delim1 - 1),
+					strict,
+					stor.subarray(1, 2)
+				),
+				Second.parse(
+					input.span(delim2 + 1, delim3 - delim2 - 1),
+					strict,
+					stor.subarray(2, 3)
+				),
+				Microsecond.parse(
+					input.span(delim3 + 1, delim4 - delim3 - 1),
+					strict,
+					stor.subarray(3, 6)
+				),
+				utc
+			);
+			input.shrink(input.length);
+			return ret;
+		}
+		throw new ContentError(
+			`Expecting hh:mm:ss.uuuuuu, or hhmmssuuuuuu with optional utc indicator`,
+			'time',
+			input
+		);
 	}
 
 	/** Create time from this point in (local) time */
@@ -372,3 +420,5 @@ export class TimeOnly implements ISerializer {
 	}
 }
 const self = TimeOnly;
+const min = TimeOnly.new(0, 0, 0, 0, false);
+const max = TimeOnly.new(23, 59, 59, 999999, false);

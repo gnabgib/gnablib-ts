@@ -190,7 +190,7 @@ const badParseStrict:WindowStr[]=[
 ];
 for (const w of badParseStrict) {
     tsts(`${w.debug()} parse strict throws`,()=>{
-        assert.throws(()=>Month.parse(w,undefined,true));
+        assert.throws(()=>Month.parse(w,true));
     });
 }
 

@@ -5,6 +5,7 @@ import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('Bool');
 
@@ -98,71 +99,52 @@ tsts(`new-provide storage`,()=>{
     assert.is(u.valueOf(),0);
 });
 
-const parseSet:[string,number][]=[
-    ['true',1],
-    ['1',1],
-    [' 1',1],
-    ['1\t',1],
+const parseSet:[WindowStr,number,number][]=[
+    [WindowStr.new('true'),1,0],
+    [WindowStr.new('1'),1,0],
+    [WindowStr.new(' 1'),1,0],
+    [WindowStr.new('1\t'),1,0],
 
-    ['false',0],
-    ['0',0],
-    ['false\t',0],
-    [' false',0],
-
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [true,1],
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [1,1],
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [false,0],
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [0,0],
+    [WindowStr.new('false'),0,0],
+    [WindowStr.new('0'),0,0],
+    [WindowStr.new('false\t'),0,0],
+    [WindowStr.new(' false'),0,0],
+    [WindowStr.new(' false '),0,0],
+    [WindowStr.new(' FALSE '),0,0],
 ];
-for (const [str,expect] of parseSet) {
-    tsts(`parse(${str})`,()=>{
-        const u=Bool.parse(str);
+for (const [w,expect,rem] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const u=Bool.parse(w);
         assert.equal(u.valueOf(),expect);
+        assert.equal(w.length,rem);
     });
 }
 
 tsts(`parse(yes/no)`,()=>{
-    assert.throws(()=>Bool.parse('yes',undefined,{allowYes:false}))
-    assert.throws(()=>Bool.parse('no',undefined,{allowYes:false}))
-    assert.equal(1,Bool.parse('yes',undefined,{allowYes:true}).valueOf());
-    assert.equal(0,Bool.parse('no',undefined,{allowYes:true}).valueOf());
+    assert.throws(()=>Bool.parse(WindowStr.new('yes'),{allowYes:false}))
+    assert.throws(()=>Bool.parse(WindowStr.new('no'),{allowYes:false}))
+    assert.equal(1,Bool.parse(WindowStr.new('yes'),{allowYes:true}).valueOf());
+    assert.equal(0,Bool.parse(WindowStr.new('no'),{allowYes:true}).valueOf());
 });
 
 tsts(`parse(on/off)`,()=>{
-    assert.throws(()=>Bool.parse('on',undefined,{allowOn:false}))
-    assert.throws(()=>Bool.parse('off',undefined,{allowOn:false}))
-    assert.equal(1,Bool.parse('on',undefined,{allowOn:true}).valueOf());
-    assert.equal(0,Bool.parse('off',undefined,{allowOn:true}).valueOf());
-    //Bool.parse('offf',undefined,{allowOn:true,allowYes:true});//testing error message
+    //Bool.parse(WindowStr.new('offf'),undefined,{allowOn:true,allowYes:true});//testing error message
+    assert.throws(()=>Bool.parse(WindowStr.new('on'),{allowOn:false}))
+    assert.throws(()=>Bool.parse(WindowStr.new('off'),{allowOn:false}))
+    assert.equal(1,Bool.parse(WindowStr.new('on'),{allowOn:true}).valueOf());
+    assert.equal(0,Bool.parse(WindowStr.new('off'),{allowOn:true}).valueOf());
 });
 
-tsts(`parse-empty`,()=>{
-    //You get a different error message, but this is really just here for coverage
-    //@ts-ignore - We need to send undefined or null to trigger this case
-    assert.throws(()=>Bool.parse(undefined,undefined,{preventUndefined:true}));
-})
-
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    //Symbol("year"),
-    2,//Integers out of range
-    1.5,//Floats cannot be parsed as boolean
-    '2',
-    '1.0',//Bad string even though 1.0 resolves to 1 which is truthy
-    '',//Empty string not understood
-    ' ',//Or whitespace string
-    '\t\t',//"
+const badParse:WindowStr[]=[
+    WindowStr.new('2'),
+    WindowStr.new('1.0'),//Bad string even though 1.0 resolves to 1 which is truthy
+    WindowStr.new(''),//Empty string not understood
+    WindowStr.new(' '),//Or whitespace string
+    WindowStr.new('\t\t'),//"
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
-        //@ts-ignore - this is the point of the test
-        assert.throws(()=>Bool.parse(unk));
+for (const w of badParse) {
+    tsts(`${w.debug()} parse throws`,()=>{
+        assert.throws(()=>Bool.parse(w));
     })
 }
 
@@ -183,6 +165,23 @@ tsts('serialSizeBits',()=>{
     const bits=o.serialSizeBits;
     assert.is(bits>0 && bits<2,true);
 });
+
+tsts('cloneTo',()=>{
+	const stor1=new Uint8Array(Bool.storageBytes);
+	const stor2=new Uint8Array(Bool.storageBytes);
+
+	const o=Bool.new(true,stor1);
+	assert.instance(o,Bool);
+	assert.is(o.valueOf(),1);
+
+	const o2=o.cloneTo(stor2);
+	assert.instance(o2,Bool);
+	assert.is(o2.valueOf(),1);
+	
+	//This is a terrible idea, but it proves diff memory
+	stor2[0]=0;
+    assert.not.equal(o.valueOf(),o2.valueOf());
+})
 
 
 tsts.run();

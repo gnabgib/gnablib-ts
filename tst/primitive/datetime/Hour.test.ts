@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('Hour');
 
@@ -127,6 +128,12 @@ tsts(`fromUnixTimeMs`, () => {
 	assert.is(h.valueOf(), 7);
 });
 
+tsts(`fromUnixTimeUs`, () => {
+	const h = Hour.fromUnixTimeUs(1705734810543000);
+	assert.is(h.valueOf(), 7);
+});
+
+
 tsts(`now`,()=>{
     const dt=new Date();
     const h=Hour.now();
@@ -143,25 +150,22 @@ tsts(`nowUtc`,()=>{
     assert.is(h.valueOf(),dt.getUTCHours());
 });
 
-const parseSet:[string,number][]=[
+const parseSet:[WindowStr,number][]=[
     //Completely valid
-    ['01',1],
-    ['02',2],
-    ['03',3],
-    ['04',4],
-    ['05',5],
-    ['06',6],
-    ['07',7],
-    ['08',8],
-    ['09',9],
-    ['10',10],
-    ['20',20],
-    ['23',23],
+    [WindowStr.new('01'),1],
+    [WindowStr.new('02'),2],
+    [WindowStr.new('03'),3],
+    [WindowStr.new('04'),4],
+    [WindowStr.new('05'),5],
+    [WindowStr.new('06'),6],
+    [WindowStr.new('07'),7],
+    [WindowStr.new('08'),8],
+    [WindowStr.new('09'),9],
+    [WindowStr.new('10'),10],
+    [WindowStr.new('20'),20],
+    [WindowStr.new('23'),23],
     //Doesn't have to be zero padded
-    ['2',2],
-
-    //@ts-ignore - Note parse casts to string, so this is inefficient, but works
-    [10,10],
+    [WindowStr.new('2'),2],
 ];
 for (const [str,expect] of parseSet) {
     tsts(`parse(${str})`,()=>{
@@ -170,46 +174,38 @@ for (const [str,expect] of parseSet) {
     });
 }
 tsts(`parse(now)`, () => {
-	const h = Hour.parse('now');
+	const h = Hour.parse(WindowStr.new('now'));
     const dt=new Date();
     //This isn't a great test, but let's use a date object to compare 
     //(tiny chance of this test failing at the end of an hour)
     assert.is(h.valueOf(),dt.getHours());
 });
 
-const badParseStrict:string[]=[
+const badParseStrict:WindowStr[]=[
     //Should be zero padded
-    '1',
-    '3',
+    WindowStr.new('1'),
+    WindowStr.new('3'),
 ];
-for (const str of badParseStrict) {
-    tsts(`parse(${str},undefined,true)`,()=>{
-        assert.throws(()=>Hour.parse(str,undefined,true));
+for (const w of badParseStrict) {
+    tsts(`${w.debug()} parse strict throws`,()=>{
+        assert.throws(()=>Hour.parse(w,true));
     });
 }
 
-const badParse:unknown[]=[
-    //Primitives
-    undefined,//Undefined not allowed
-    null,//null not allowed
-    true,
-    //Symbol("year"),
-    1.5,//Like integers, this is converted to a string, but floating point isn't allowed
-
-    //Bad strings
-    '',//Empty string not allowed
-    'tomorrow',//We support "now" only
-    '1.5',//Floating point - not allowed
-    '1e1',//10 in scientific - not allowed
-    '+01',//Can't have sign
+const badParse:WindowStr[]=[
+    WindowStr.new(''),//Empty string not allowed
+    WindowStr.new('tomorrow'),//We support "now" only
+    WindowStr.new('1.5'),//Floating point - not allowed
+    WindowStr.new('1e1'),//10 in scientific - not allowed
+    WindowStr.new('+01'),//Can't have sign
     //Out of range:
-    '32',
-    '1000',
+    WindowStr.new('32'),
+    WindowStr.new('1000'),
 ];
-for (const unk of badParse) {
-    tsts(`badParse(${unk})`,()=>{
+for (const w of badParse) {
+    tsts(`${w.debug()} parse throws`,()=>{
         //@ts-ignore - this is the point of the test
-        assert.throws(()=>Hour.parse(unk));
+        assert.throws(()=>Hour.parse(w));
     })
 }
 
@@ -230,6 +226,24 @@ tsts('serialSizeBits',()=>{
     const bits=o.serialSizeBits;
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
+
+tsts('cloneTo',()=>{
+	const stor1=new Uint8Array(Hour.storageBytes);
+	const stor2=new Uint8Array(Hour.storageBytes);
+
+	const h=Hour.new(22,stor1);
+	assert.instance(h,Hour);
+	assert.is(h.valueOf(),22);
+
+	const h2=h.cloneTo(stor2);
+	assert.instance(h2,Hour);
+	assert.is(h2.valueOf(),22);
+	
+	//This is a terrible idea, but it proves diff memory
+	stor2[0]=13;
+	assert.is(h.valueOf(),22);
+	assert.is(h2.valueOf(),13);
+})
 
 
 // tsts('general',()=>{

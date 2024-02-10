@@ -2,6 +2,7 @@
 
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
+import { WindowStr } from '../WindowStr.js';
 import { Micro } from '../number/Micro.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -23,13 +24,10 @@ export class Microsecond extends Micro {
 		return this.valueOf() / 1000;
 	}
 
-	/** Return a copy of this value (using provided storage/different memory) */
-	public clone(storage?: Uint8Array): Microsecond {
-		const stor = self.setupStor(storage);
-		stor[0] = this._v[0];
-		stor[1] = this._v[1];
-		stor[2] = this._v[2];
-		return new Microsecond(stor);
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array): Microsecond {
+		this.fill(storage);
+		return new Microsecond(storage);
 	}
 
 	/**
@@ -117,15 +115,21 @@ export class Microsecond extends Micro {
 		return new Microsecond(stor);
 	}
 
-	protected static doParse(
-		str: string,
-		strict: boolean,
+	/** {@inheritDoc primitive.number.Micro} */
+	public static parse(
+		input: WindowStr,
+		strict = false,
 		storage?: Uint8Array
 	): Microsecond {
 		const stor = self.setupStor(storage);
-		if (str.toLowerCase() === 'now') return self.now(stor);
-		//doParse will fill stor with data
-		super.doParse(str, strict, stor);
+		input.trimStart();
+
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(stor);
+		}
+		super.parseIntoStorage(input, stor, strict, 'microsecond');
 		return new Microsecond(stor);
 	}
 

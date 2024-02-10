@@ -1,21 +1,22 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { BitReader } from '../BitReader.js';
-import { Bool } from '../Bool.js';
+import { _BoolCore } from '../Bool.js';
+import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'UtcOrNot';
 
-export class UtcOrNot extends Bool {
+export class UtcOrNot extends _BoolCore {
 	/** UTC indicator (Z) or ? */
 	public toString(): string {
-		return (this._v[0] & this._mask) === this._mask ? 'Z' : '?';
+		return this.valueOf() ? 'Z' : '?';
 	}
 
 	/** UTC indicator (Z) or empty string */
 	public toIsoString(): string {
-		return (this._v[0] & this._mask) === this._mask ? 'Z' : '';
+		return this.valueOf() ? 'Z' : '';
 	}
 
 	/** @hidden */
@@ -28,33 +29,51 @@ export class UtcOrNot extends Bool {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
-	/** Return a copy of this value (using provided storage/different memory) */
-	public clone(storage?: Uint8Array): UtcOrNot {
-		const stor = self.setupStor(storage);
-		//Note we keep the mask/shift, but we mask out any other values that may be nearby
-		// todo: Should we correct the shift? causes some clone problems, but so does zeroing
-		stor[0] = this._v[0] & this._mask;
-		return new UtcOrNot(stor, this._mask, this._shift);
+	/** Copy this value into provided storage, and return a new object from that */
+	public cloneTo(storage: Uint8Array, pos = 0): UtcOrNot {
+		this.fill(storage, pos);
+		return new UtcOrNot(storage, pos);
 	}
 
 	public static new(value: boolean, storage?: Uint8Array, pos = 0): UtcOrNot {
 		const stor = self.setupStor(storage);
-		const mask = 1 << pos;
-		self.writeValue(stor, value, mask);
-		return new UtcOrNot(stor, mask, pos);
+		self.writeBool(stor, value, pos);
+		return new UtcOrNot(stor, pos);
 	}
 
-	public static parse(input: string, storage?: Uint8Array): UtcOrNot {
-		if (input === undefined || input === null) {
-			throw new ContentError('require string content', 'input', input);
+	/**
+	 * Parse from a string, accepts: 'z' or empty string
+	 *
+	 * Surrounding whitespace will be removed
+	 *
+	 * Throws if:
+	 * - Not a string, or $str is empty
+	 * - There's no available $storage
+	 * - The content of $str isn't valid
+	 */
+	public static parse(input: WindowStr, storage?: Uint8Array): UtcOrNot {
+		const pos = 0;
+		const stor = self.setupStor(storage);
+
+		//Don't have m
+		const str = input.toString().trim().toLowerCase();
+		switch (str) {
+			case 'z':
+				self.writeBool(stor, true, pos);
+				break;
+			case '':
+				self.writeBool(stor, false, pos);
+				break;
+			default:
+				//We don't actually call out to Bool's parsing since it's illogical for this use case
+				throw new ContentError(
+					'expecting z or empty string',
+					'UtcOrNot',
+					input
+				);
 		}
-		input = input.trim().toLowerCase();
-		if (input == 'z') {
-			return self.new(true, storage);
-		} else if (input == '') {
-			return self.new(false, storage);
-		}
-		throw new ContentError('expecting z or empty string', 'input', input);
+		input.shrink(input.length);
+		return new UtcOrNot(stor, pos);
 	}
 
 	/**
@@ -71,10 +90,8 @@ export class UtcOrNot extends Bool {
 		pos = 0
 	): UtcOrNot {
 		const stor = self.setupStor(storage);
-		const mask = 1 << pos;
-		const deser = source.readNumber(self.serialBits);
-		self.writeValue(stor, deser === 1, mask);
-		return new UtcOrNot(stor, mask, pos);
+		self.deserializeTo(source,stor,pos);
+		return new UtcOrNot(stor, pos);
 	}
 }
 

@@ -3,6 +3,7 @@
 import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
+import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
@@ -86,32 +87,37 @@ export class Sexagesimal implements ISerializer {
 		return new Sexagesimal(stor);
 	}
 
-	//Partitioned to allow a subclass to override
-	protected static doParse(
-		input: string,
+	protected static parseIntoStorage(
+		input: WindowStr,
+		storage: Uint8Array,
 		strict: boolean,
-		storage?: Uint8Array
-	): Sexagesimal {
-		//Only parse integers (no floating point/scientific notation)
-		const r = input.match(/^\s*(\d{1,2})\s*$/);
-		if (r !== null) {
-			if (strict) {
-				if (r[1].length != 2)
-					throw new ContentError(
-						'expecting 2 digit unsigned integer-string',
-						'input',
-						input
-					);
-			}
-			const iVal = parseInt(r[1], 10);
-			return self.new(iVal, storage);
+		name = 'input'
+	): void {
+		input.trimStart();
+		//Only parse unsigned integers
+		const r = input.match(/^(\d+)\s*$/);
+		if (r === null)
+			throw new ContentError('expecting unsigned integer-string', name, input);
+
+		const [, digits] = r;
+		if (strict && digits.length != 2) {
+			throw new ContentError(
+				'expecting 2 digit unsigned integer-string',
+				name,
+				input
+			);
 		}
-		throw new ContentError('expecting unsigned integer-string', 'input', input);
+		const iVal = parseInt(digits, 10);
+		safe.int.inRangeInc('value', iVal, 0, 59);
+		storage[0] = iVal;
+		input.shrink(digits.length);
 	}
 
 	/**
-	 * Parse a sexagesimal number from a string, accepts:
-	 * 1-2 digit unsigned integer, must be 2 digits if strict
+	 * Parse from a string, accepts:
+	 * 1-2 digit unsigned integer, must be 2 digits if strict.
+	 *
+	 * Leading whitespace will be removed, trailing whitespace will be ignored (but not removed from window)
 	 *
 	 * Throws if:
 	 * - Not a string, or $str is empty
@@ -120,15 +126,13 @@ export class Sexagesimal implements ISerializer {
 	 * - The content of $str isn't valid
 	 */
 	public static parse(
-		input: string,
-		storage?: Uint8Array,
-		strict = false
+		input: WindowStr,
+		strict = false,
+		storage?: Uint8Array
 	): Sexagesimal {
-		const strVal = safe.string.nullEmpty(input);
-		if (strVal === undefined)
-			throw new ContentError('require string content', 'input', input);
-		// deepcode ignore StaticAccessThis: Have to use this so children can override
-		return this.doParse(strVal, strict, storage);
+		const stor = self.setupStor(storage);
+		self.parseIntoStorage(input, stor, strict, 'sexagesimal');
+		return new Sexagesimal(stor);
 	}
 
 	/**
