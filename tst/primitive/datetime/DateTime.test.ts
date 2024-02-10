@@ -5,6 +5,7 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('DateTime');
 
@@ -332,6 +333,87 @@ for(const [sVal,yAdd,mAdd,expect] of addSet) {
         assert.is(dto.add(yAdd,mAdd).valueOf(),expect);
     })
 }
+
+const parseSet:[WindowStr,string,number][]=[
+    //Just numbers (assume valueOf compat, but notice the extra z part)
+    [WindowStr.new('-100000101000000000000'),'-10000-01-01T00:00:00.000000',0],//min
+    [WindowStr.new('20010203235959999999Z'),'2001-02-03T23:59:59.999999Z',0],
+    [WindowStr.new('20010203235959999999z'),'2001-02-03T23:59:59.999999Z',0],
+    [WindowStr.new('20230131020304567890'),'2023-01-31T02:03:04.567890',0],
+    [WindowStr.new('227671231235959999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+
+    //T separated numbers
+    [WindowStr.new('-100000101T000000000000'),'-10000-01-01T00:00:00.000000',0],//min
+    [WindowStr.new('20010203T235959999999Z'),'2001-02-03T23:59:59.999999Z',0],
+    [WindowStr.new('20010203T235959999999z'),'2001-02-03T23:59:59.999999Z',0],
+    [WindowStr.new('20230131T020304567890'),'2023-01-31T02:03:04.567890',0],
+    [WindowStr.new('+227671231T235959999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+    [WindowStr.new('227671231T235959999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+
+    //T separated regular, date separated
+    [WindowStr.new('-10000-01-01T000000000000'),'-10000-01-01T00:00:00.000000',0],//min
+    [WindowStr.new('2001-02-03T235959999999z'),'2001-02-03T23:59:59.999999Z',0],
+    [WindowStr.new('2023-01-31T020304567890'),'2023-01-31T02:03:04.567890',0],
+    [WindowStr.new('22767-12-31T235959999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+
+    //T separated numbers,time separated
+    [WindowStr.new('-100000101T00:00:00.000000'),'-10000-01-01T00:00:00.000000',0],//min
+    [WindowStr.new('20010203T23:59:59.999999z'),'2001-02-03T23:59:59.999999Z',0],
+    [WindowStr.new('20230131T02:03:04.567890'),'2023-01-31T02:03:04.567890',0],
+    [WindowStr.new('+227671231T23:59:59.999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+
+    //all separated
+    [WindowStr.new('-10000-01-01T00:00:00.000000'),'-10000-01-01T00:00:00.000000',0],//min
+    [WindowStr.new('2001-02-03T23:59:59.999999z'),'2001-02-03T23:59:59.999999Z',0],
+    [WindowStr.new('2023-01-31T02:03:04.567890'),'2023-01-31T02:03:04.567890',0],
+    [WindowStr.new('+22767-12-31T23:59:59.999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+];
+for(const [w,expect,expectLen] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const to=DateTime.parse(w);
+        assert.equal(to.toString(),expect);
+        assert.is(w.length,expectLen,'remaining length');
+    });
+}
+
+// const badParseStrictSet:WindowStr[]=[
+//     WindowStr.new('0:0:0.1')
+// ];
+// for(const w of badParseStrictSet) {
+//     tsts(`parse-strict ${w.debug()} throws`,()=>{
+//         assert.throws(()=>TimeOnly.parse(w,true));
+//     })
+// }
+
+const badParseSet:WindowStr[]=[
+    WindowStr.new('1536'),
+    WindowStr.new('15:36:.'),
+    WindowStr.new('1536:31.123456'),
+    WindowStr.new('-10000-01-01'),//Just a date
+    WindowStr.new('23:59:59.999999z'),//Just a time
+];
+for(const w of badParseSet) {
+    tsts(`parse ${w.debug()} throws`,()=>{
+        assert.throws(()=>DateTime.parse(w));
+    })
+}
+
+tsts(`parse-now`, () => {
+    const w=WindowStr.new('now');
+    const dt=DateTime.parse(w);
+    const dateO = new Date();
+
+	//This isn't a great test, but let's use a date object to compare
+	//(tiny chance of this test failing near midnight)
+	assert.is(dt.year.valueOf(), dateO.getFullYear());
+	assert.is(dt.month.valueOf(), dateO.getMonth() + 1); //JS stores months off by 1 (0=Jan)
+	assert.is(dt.day.valueOf(), dateO.getDate()); //Not a great name, JS
+
+    const h=dt.hour.valueOf(); assert.is(h>=0&&h<=23,true,'hour in range');
+    const m=dt.minute.valueOf(); assert.is(m>=0&&m<=59,true,'minute in range');
+    const s=dt.second.valueOf(); assert.is(s>=0&&s<=59,true,'second in range');
+    const us=dt.microsecond.valueOf(); assert.is(us>=0&&us<=999999,true,'microsecond in range');
+});
 
 
 //add

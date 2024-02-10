@@ -253,6 +253,7 @@ const parseSet:[WindowStr,string,number][]=[
     [WindowStr.new('00:00:00.000000z'),'00:00:00.000000Z',0],
     [WindowStr.new('00:00:00.000000 '),'00:00:00.000000',0],
     [WindowStr.new('0:0:0.1 '),'00:00:00.000001',0],
+    [WindowStr.new('23:59:59.999999z'),'23:59:59.999999Z',0],
 ];
 for(const [w,expect,expectLen] of parseSet) {
     tsts(`parse(${w.debug()})`,()=>{
@@ -286,7 +287,6 @@ tsts(`parse-now`, () => {
     const w=WindowStr.new('now');
     const t=TimeOnly.parse(w);
 
-    //The rest are too risky, so just range check
     const h=t.hour.valueOf(); assert.is(h>=0&&h<=23,true,'hour in range');
     const m=t.minute.valueOf(); assert.is(m>=0&&m<=59,true,'minute in range');
     const s=t.second.valueOf(); assert.is(s>=0&&s<=59,true,'second in range');

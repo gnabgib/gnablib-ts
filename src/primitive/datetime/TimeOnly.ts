@@ -346,9 +346,9 @@ export class TimeOnly implements ISerializer {
 		const delim3 = input.indexOf('.', delim2 + 1);
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
 			let delim4 = input.indexOfAny(['z', 'Z'], delim3 + 1);
-			const utc= UtcOrNot.new(delim4 > 0, stor.subarray(6, 7));
+			const utc = UtcOrNot.new(delim4 > 0, stor.subarray(6, 7));
 			//If no z marker was found, set d4 to end of string
-			if (!utc.valueBool()) delim4=input.length;
+			if (!utc.valueBool()) delim4 = input.length;
 
 			const ret = new TimeOnly(
 				Hour.parse(input.left(delim1), strict, stor),

@@ -14,6 +14,8 @@ import { Microsecond } from './Microsecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
 import { DateOnly } from './DateOnly.js';
 import { TimeOnly } from './TimeOnly.js';
+import { WindowStr } from '../WindowStr.js';
+import { ContentError } from '../error/ContentError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'DateTime';
@@ -340,6 +342,51 @@ export class DateTime implements ISerializer {
 		const d = DateOnly.fromUnixTimeMs(source, stor);
 		const t = TimeOnly.fromUnixTimeMs(source, isUtc, stor.subarray(4));
 		return new DateTime(d, t);
+	}
+
+	public static parse(
+		input: WindowStr,
+		strict = false,
+		storage?: Uint8Array
+	): DateTime {
+		const stor = self.setupStor(storage);
+		input.trimStart();
+
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.test(/^now\s*$/i)) {
+			input.shrink(3);
+			return self.now(stor);
+		}
+
+		//If it's 20-21 digits, with optional leading sign, tailing z assume it's an undelimitered dateTime
+		const r = input.match(/^([-+]?\d{8,9})\d{12}[Zz]?\s*$/);
+		if (r !== null) {
+			const [, dt] = r;
+			//console.log(dt);
+			const ret = new DateTime(
+				DateOnly.parse(input.span(0, dt.length), strict, stor),
+				TimeOnly.parse(input.span(dt.length), strict, stor.subarray(4))
+			);
+			input.shrink(input.length);
+			return ret;
+		}
+
+		const tPos = input.indexOfAny(['t', 'T']);
+		if (tPos > 0) {
+			//console.log(`t=${input.span(tPos+1)}`);
+			const ret = new DateTime(
+				DateOnly.parse(input.span(0, tPos), strict, stor),
+				TimeOnly.parse(input.span(tPos + 1), strict, stor.subarray(4))
+			);
+			input.shrink(input.length);
+			return ret;
+		}
+
+		throw new ContentError(
+			`Expecting yyyy-mm-ddThh:mm:ss.uuuuuuZ or a 20-21 digit date with optional sign/trailing z`,
+			'datetime',
+			input
+		);
 	}
 
 	/** Create this date-time (local) */
