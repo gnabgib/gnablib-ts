@@ -119,6 +119,7 @@ export class Microsecond extends Micro {
 	public static parse(
 		input: WindowStr,
 		strict = false,
+		left = false,
 		storage?: Uint8Array
 	): Microsecond {
 		const stor = self.setupStor(storage);
@@ -129,7 +130,7 @@ export class Microsecond extends Micro {
 			input.shrink(3);
 			return self.now(stor);
 		}
-		super.parseIntoStorage(input, stor, strict, 'microsecond');
+		super.parseIntoStorage(input, stor, strict, left, 'microsecond');
 		return new Microsecond(stor);
 	}
 

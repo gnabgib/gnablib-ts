@@ -252,14 +252,16 @@ const parseSet:[WindowStr,string,number][]=[
     [WindowStr.new('00:00:00.000000Z'),'00:00:00.000000Z',0],
     [WindowStr.new('00:00:00.000000z'),'00:00:00.000000Z',0],
     [WindowStr.new('00:00:00.000000 '),'00:00:00.000000',0],
-    [WindowStr.new('0:0:0.1 '),'00:00:00.000001',0],
     [WindowStr.new('23:59:59.999999z'),'23:59:59.999999Z',0],
+    [WindowStr.new('0:0:0.1'),'00:00:00.100000',0],
+    [WindowStr.new('0:0:0.01'),'00:00:00.010000',0],
 ];
 for(const [w,expect,expectLen] of parseSet) {
     tsts(`parse(${w.debug()})`,()=>{
         const to=TimeOnly.parse(w);
         assert.equal(to.toString(),expect);
         assert.is(w.length,expectLen,'remaining length');
+        to.microsecond.valueOf()
     });
 }
 

@@ -259,7 +259,7 @@ export class TimeOnlyMs implements ISerializer {
 	public static now(storage?: Uint8Array): TimeOnlyMs {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		let utcNow = performance.timeOrigin + performance.now();
+		const utcNow = performance.timeOrigin + performance.now();
 		//Calculate the offset to get it in local time
 		const utcDt = new Date(utcNow);
 		const offset = utcDt.getTimezoneOffset() * 60 * 1000;

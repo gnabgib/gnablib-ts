@@ -334,7 +334,7 @@ export class TimeOnly implements ISerializer {
 				Hour.parse(input.left(2), strict, stor),
 				Minute.parse(input.span(2, 2), strict, stor.subarray(1, 2)),
 				Second.parse(input.span(4, 2), strict, stor.subarray(2, 3)),
-				Microsecond.parse(input.span(6, 6), strict, stor.subarray(3, 6)),
+				Microsecond.parse(input.span(6, 6), strict, false, stor.subarray(3, 6)),
 				UtcOrNot.parse(input.span(12), stor.subarray(6))
 			);
 			input.shrink(input.length);
@@ -365,6 +365,7 @@ export class TimeOnly implements ISerializer {
 				Microsecond.parse(
 					input.span(delim3 + 1, delim4 - delim3 - 1),
 					strict,
+					true, //In compound mode we assume trailing 0s
 					stor.subarray(3, 6)
 				),
 				utc

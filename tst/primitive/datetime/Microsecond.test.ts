@@ -83,6 +83,21 @@ for (const [w, expect] of parseSet) {
 	});
 }
 
+const parseLeftSet:[WindowStr,number][]=[
+    [WindowStr.new('1'),100000],
+    [WindowStr.new('01'),10000],
+    [WindowStr.new('001'),1000],
+    [WindowStr.new('0001'),100],
+    [WindowStr.new('00001'),10],
+    [WindowStr.new('000001'),1],
+];
+for (const [w,expect] of parseLeftSet) {
+    tsts(`parse(${w.debug()})-left`,()=>{
+        const ms=Microsecond.parse(w,false,true);
+        assert.equal(ms.valueOf(),expect);
+    });
+}
+
 tsts(`parse(now)`, () => {
 	const ms = Microsecond.parse(WindowStr.new('now'));
 	const mNum = +ms;

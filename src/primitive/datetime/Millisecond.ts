@@ -85,6 +85,7 @@ export class Millisecond extends Milli {
 	public static parse(
 		input: WindowStr,
 		strict = false,
+		left = false,
 		storage?: Uint8Array
 	): Millisecond {
 		const stor = self.setupStor(storage);
@@ -95,7 +96,7 @@ export class Millisecond extends Milli {
 			input.shrink(3);
 			return self.now(stor);
 		}
-		super.parseIntoStorage(input, stor, strict, 'millisecond');
+		super.parseIntoStorage(input, stor, strict, left, 'millisecond');
 		return new Millisecond(stor);
 	}
 

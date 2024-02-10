@@ -126,6 +126,18 @@ for (const w of badParseStrict) {
     });
 }
 
+const parseLeftSet:[WindowStr,number][]=[
+    [WindowStr.new('1'),100],
+    [WindowStr.new('01'),10],
+    [WindowStr.new('001'),1],
+];
+for (const [w,expect] of parseLeftSet) {
+    tsts(`parse(${w.debug()})-left`,()=>{
+        const ms=Milli.parse(w,false,true);
+        assert.equal(ms.valueOf(),expect);
+    });
+}
+
 const badParse:WindowStr[]=[
     //Bad strings
     WindowStr.new(''),//Empty string not allowed

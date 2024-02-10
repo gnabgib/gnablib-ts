@@ -110,23 +110,29 @@ export class Micro implements ISerializer {
 		input: WindowStr,
 		storage: Uint8Array,
 		strict: boolean,
+		left: boolean,
 		name = 'input'
 	): void {
 		input.trimStart();
 		//Only parse integers (no floating point/scientific notation)
 		const r = input.match(/^(\d+)\s*$/);
+		//We should match unlimited digits because it could be zero pad (!left).. 00001 is still just 1
 		if (r === null)
 			throw new ContentError('expecting unsigned integer-string', name, input);
 
 		const [, digits] = r;
+		let effDigits = digits;
 		if (strict && digits.length != 6) {
 			throw new ContentError(
 				'expecting 6 digit unsigned integer-string',
 				name,
 				input
 			);
+		} else if (digits.length < 6 && left) {
+			//If we're short digits, implied zeros at the end, but only if "left mode"
+			effDigits = (digits + '000000').substring(0, 6);
 		}
-		const iVal = parseInt(digits, 10);
+		const iVal = parseInt(effDigits, 10);
 		safe.int.inRangeInc(name, iVal, 0, 999999);
 		self.writeValue(storage, iVal);
 		input.shrink(digits.length);
@@ -147,10 +153,11 @@ export class Micro implements ISerializer {
 	public static parse(
 		input: WindowStr,
 		strict = false,
+		left = false,
 		storage?: Uint8Array
 	): Micro {
 		const stor = self.setupStor(storage);
-		self.parseIntoStorage(input, stor, strict, 'micro');
+		self.parseIntoStorage(input, stor, strict, left, 'micro');
 		return new Micro(stor);
 	}
 

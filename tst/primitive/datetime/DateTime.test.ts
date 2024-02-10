@@ -367,6 +367,12 @@ const parseSet:[WindowStr,string,number][]=[
     [WindowStr.new('2001-02-03T23:59:59.999999z'),'2001-02-03T23:59:59.999999Z',0],
     [WindowStr.new('2023-01-31T02:03:04.567890'),'2023-01-31T02:03:04.567890',0],
     [WindowStr.new('+22767-12-31T23:59:59.999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+
+    //.. it's complicated
+    [WindowStr.new('1-1-1T2:2:2.2'),'0001-01-01T02:02:02.200000',0],
+    [WindowStr.new('99-12-31T0:0:0.0'),'0099-12-31T00:00:00.000000',0],//Notice party like 99 is quite a while ago
+    //RFC3339
+    [WindowStr.new('1985-04-12T23:20:50.52Z'),'1985-04-12T23:20:50.520000Z',0],
 ];
 for(const [w,expect,expectLen] of parseSet) {
     tsts(`parse(${w.debug()})`,()=>{
@@ -376,14 +382,22 @@ for(const [w,expect,expectLen] of parseSet) {
     });
 }
 
-// const badParseStrictSet:WindowStr[]=[
-//     WindowStr.new('0:0:0.1')
-// ];
-// for(const w of badParseStrictSet) {
-//     tsts(`parse-strict ${w.debug()} throws`,()=>{
-//         assert.throws(()=>TimeOnly.parse(w,true));
-//     })
-// }
+const badParseStrictSet:WindowStr[]=[
+    //WindowStr.new('2023-01-31T02:03:04.567890')
+    WindowStr.new('2023-01-31T02:03:04.5'),//us short
+    WindowStr.new('2023-01-31T02:03:4.567890'),//s short
+    WindowStr.new('2023-01-31T02:3:04.567890'),//mi short
+    WindowStr.new('2023-01-31T2:03:04.567890'),//h short
+    WindowStr.new('2023-01-3T02:03:04.567890'),//d short
+    WindowStr.new('2023-1-31T02:03:04.567890'),//mo short
+    WindowStr.new('23-01-31T02:03:04.567890'),//y short
+    WindowStr.new('1-1-1T2:2:2.2'),//Whole lotta short
+];
+for(const w of badParseStrictSet) {
+    tsts(`parse-strict ${w.debug()} throws`,()=>{
+        assert.throws(()=>DateTime.parse(w,true));
+    })
+}
 
 const badParseSet:WindowStr[]=[
     WindowStr.new('1536'),
@@ -391,6 +405,11 @@ const badParseSet:WindowStr[]=[
     WindowStr.new('1536:31.123456'),
     WindowStr.new('-10000-01-01'),//Just a date
     WindowStr.new('23:59:59.999999z'),//Just a time
+    WindowStr.new('2023-01-31T02:03:04567890'),//missing last time delim
+    WindowStr.new('2023-01-31T02:0304.567890'),//missing second last time delim
+    WindowStr.new('2023-01-31T0203:04.567890'),//missing third last time delim
+    WindowStr.new('2023-0131T02:03:04.567890'),//missing second date delim
+    WindowStr.new('202301-31T02:03:04.567890'),//missing first date delim
 ];
 for(const w of badParseSet) {
     tsts(`parse ${w.debug()} throws`,()=>{
