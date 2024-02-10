@@ -5,9 +5,7 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'WindowStr';
 const NOT_FOUND = -1;
 const WHITESPACE = [' ', '\t', '\n', '\v', '\f', '\r'];
-// type splitter= {
-//     [Symbol.split](string: string, limit?: number | undefined): string[];
-// }
+// file deepcode ignore BadWrapperObjectCreation: <please specify a reason of ignoring this>
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type WindowOrString = WindowStr | string;
@@ -447,6 +445,7 @@ export class WindowStr {
 		else safe.int.inRangeInc('start', start, 0, source.length);
 		if (length === undefined) length = source.length - start;
 		else safe.int.inRangeInc('length', length, 0, source.length - start);
+		// eslint-disable-next-line @typescript-eslint/ban-types
 		return new WindowStr(new String(source), start, length);
 	}
 
