@@ -128,14 +128,14 @@ export class WindowStr {
 	 */
 	indexOf(searchString: string, start?: number): number {
 		if (!start) start = 0;
-		else safe.int.inRangeInc('start', start, 0, this.length);
+		else safe.int.inRangeInc('start', start, 0, this._len);
 		let pos = this._src.indexOf(searchString, this._start + start);
 		//Not found - return
 		if (pos < 0) return NOT_FOUND;
 		//Correct scope
 		pos -= this._start;
 		//Filter out positions out of scope
-		return pos <= this.length - searchString.length ? pos : NOT_FOUND;
+		return pos <= this._len - searchString.length ? pos : NOT_FOUND;
 	}
 
 	/**
@@ -149,19 +149,23 @@ export class WindowStr {
 	 */
 	indexOfAny(search: string[], start?: number): number {
 		if (!start) start = 0;
-		else safe.int.inRangeInc('start', start, 0, this.length);
+		else safe.int.inRangeInc('start', start, 0, this._len);
 
-		let earliest = this._len;
+		const effLen = this._start + this._len;
+		let earliest = effLen;
 		for (const s of search) {
 			const pos = this._src.indexOf(s, this._start + start);
 			//If not found, or found and it exceeds the window.. ignore
-			if (pos < 0 || pos + s.length > this._len) continue;
+			if (pos < 0) continue;
+			if (pos + s.length > effLen) continue;
 			//Possibly make it the earliest
 			if (pos < earliest) earliest = pos;
 		}
-		if (earliest == this._len) return NOT_FOUND;
+		//Make sure something was found
+		if (earliest == effLen) return NOT_FOUND;
 		//Correct scope
 		earliest -= this._start;
+		//console.log(`str=${this.toString()} s=${this._start} l=${this._len} e=${earliest}`);
 		return earliest;
 	}
 
@@ -174,16 +178,14 @@ export class WindowStr {
 	 */
 	lastIndexOf(searchString: string, length?: number): number {
 		if (length === undefined) {
-			length = this.length;
+			length = this._len;
 		} else {
-			safe.int.inRangeInc('length', length, 0, this.length);
+			safe.int.inRangeInc('length', length, 0, this._len);
 		}
 		const lastIndexPos = this._start + length - searchString.length;
 		//Because JS treats <=0 as 0 in lastIndexPos we need to catch negative
 		if (lastIndexPos < 0) return NOT_FOUND;
 		let pos = this._src.lastIndexOf(searchString, lastIndexPos);
-		//Not found - return
-		if (pos < 0) return pos;
 		//Correct scope
 		pos -= this._start;
 		//Filter out positions out of scope

@@ -192,11 +192,19 @@ tsts(`indexOf-out of range start throws`,()=>{
 });
 
 const indexOfAnySet:[WindowStr,string[],number|undefined,number][]=[
+	[WindowStr.new('000123000',3,3),['1'],,0],
+	[WindowStr.new('000123000',3,3),['2'],,1],
+	[WindowStr.new('000123000',3,3),['3'],,2],
+	[WindowStr.new('000123000',3,4),['3'],,2],
+	[WindowStr.new('000123000',3,4),['0'],,3],
+	[WindowStr.new('000123000',3,4),['5'],,-1],
 	[WindowStr.new('2024-01-02'),['-','/','.'],,4],
 	[WindowStr.new('2024/01/02'),['-','/','.'],,4],
 	[WindowStr.new('2024.01.02'),['-','/','.'],,4],
 	[WindowStr.new('-2024-01-02'),['-','/','.'],1,5],
 	[WindowStr.new('abba'),['c','d'],,-1],
+	[WindowStr.new('23:59:59.999999z'),['z','Z'],,15],
+	[WindowStr.new('20010203T23:59:59.999999z',9),['z','Z'],,15],
 ];
 for(const [w,searchs,start,expect] of indexOfAnySet) {
 	tsts(`${w.debug()}.indexOfAny(${searchs},${start})`,()=>{
@@ -229,6 +237,10 @@ const lastIndexOfSet:[WindowStr,string,number|undefined,number][]=[
 	[WindowStr.new('doh doh'),'doh',2,-1],//window not large enough
 	[WindowStr.new('doh doh'),'doh',1,-1],//window not large enough
 	[WindowStr.new('doh doh'),'doh',0,-1],//window not large enough
+	[WindowStr.new('aaaaa',1,3),'a',,2],//'aaa' effective
+	[WindowStr.new('aaaaa',1,3),'a',2,1],//'aaa' search from 'aa'
+	[WindowStr.new('aaaaa',1,3),'a',1,0],//'aaa' search from 'a'
+	[WindowStr.new('aaaaa',1,3),'a',0,-1],//'aaa' search from ''
 ];
 for(const [w,search,len,expect] of lastIndexOfSet) {
 	tsts(`${w.debug()}.lastIndexOf(${search},${len})`,()=>{
