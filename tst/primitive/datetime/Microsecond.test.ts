@@ -52,18 +52,6 @@ tsts(`fromUnixTimeUs`, () => {
 	assert.is(e.valueOf(), 542789);
 });
 
-const microAsMilli:[number,number][]=[
-	[0,0],
-	[542000,542],
-	[542789,542.789]
-];
-for(const [micro,milli] of microAsMilli) {
-	tsts(`toMillisecond(${micro})`,()=>{
-		const e=Microsecond.new(micro);
-		assert.is(e.toMillisecond(),milli);
-	})
-}
-
 tsts(`now`, () => {
 	const m = Microsecond.now();
 	const mNum = +m;

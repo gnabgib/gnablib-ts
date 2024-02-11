@@ -5,7 +5,6 @@ import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
 import { BitReader } from '../../../src/primitive/BitReader';
 import util from 'util';
-import { Year } from '../../../src/primitive/datetime/Year';
 import { WindowStr } from '../../../src/primitive/WindowStr';
 
 const tsts = suite('DateOnly');
@@ -31,9 +30,9 @@ for (const [yr, mo, da, str, serStr, jsonStr] of serSet) {
 		const bytes = hex.toBytes(serStr);
 		const br = new BitReader(bytes);
 		const d = DateOnly.deserialize(br).validate();
-		assert.is(d.year.valueOf(), yr, 'year');
-		assert.is(d.month.valueOf(), mo, 'month');
-		assert.is(d.day.valueOf(), da, 'day');
+		assert.is(d.year, yr, 'year');
+		assert.is(d.month, mo, 'month');
+		assert.is(d.day, da, 'day');
 		assert.is(d.toString(), str);
 	});
 
@@ -64,9 +63,9 @@ tsts(`deser without storage space throws`, () => {
 tsts(`new`, () => {
 	const d = DateOnly.new(2000, 1, 2);
 	assert.is(d.toString(), '2000-01-02');
-	assert.is(d.year.valueOf(), 2000, 'year');
-	assert.is(d.month.valueOf(), 1, 'month');
-	assert.is(d.day.valueOf(), 2, 'day');
+	assert.is(d.year, 2000, 'year');
+	assert.is(d.month, 1, 'month');
+	assert.is(d.day, 2, 'day');
 	//Value off uses base 10 shifting of month/year
 	assert.is(d.valueOf(), 20000102);
 });
@@ -74,9 +73,9 @@ tsts(`new-provide storage`, () => {
 	const stor = new Uint8Array(DateOnly.storageBytes);
 	const d = DateOnly.new(2000, 1, 2, stor);
 	assert.is(d.toString(), '2000-01-02');
-	assert.is(d.year.valueOf(), 2000);
-	assert.is(d.month.valueOf(), 1);
-	assert.is(d.day.valueOf(), 2);
+	assert.is(d.year, 2000);
+	assert.is(d.month, 1);
+	assert.is(d.day, 2);
 	//Value off uses base 10 shifting of month/year
 	assert.is(d.valueOf(), 20000102);
 });
@@ -91,9 +90,9 @@ tsts(`new-provide storage`, () => {
 		const dt = new Date(y, m - 1, d, h);
 		const dto = DateOnly.fromDate(dt);
 		tsts(`fromDate(${dt})`, () => {
-			assert.is(dto.year.valueOf(), y, 'y');
-			assert.is(dto.month.valueOf(), m, 'm');
-			assert.is(dto.day.valueOf(), d, 'd');
+			assert.is(dto.year, y, 'y');
+			assert.is(dto.month, m, 'm');
+			assert.is(dto.day, d, 'd');
 		});
 		tsts(`toDate(${dt})`, () => {
 			const dateO = dto.toDate();
@@ -105,9 +104,9 @@ tsts(`new-provide storage`, () => {
 		tsts(`fromDateUtc(${dt})`, () => {
 			const dtu = new Date(Date.UTC(y, m - 1, d, h));
 			const dto = DateOnly.fromDateUtc(dtu);
-			assert.is(dto.year.valueOf(), y, 'y');
-			assert.is(dto.month.valueOf(), m, 'm');
-			assert.is(dto.day.valueOf(), d, 'd');
+			assert.is(dto.year, y, 'y');
+			assert.is(dto.month, m, 'm');
+			assert.is(dto.day, d, 'd');
 		});
 	}
 }
@@ -207,9 +206,9 @@ for (const [y, m, d, unix] of toUnixDaySet) {
 	});
 	tsts(`fromUnixDays(${unix})`, () => {
 		const fr = DateOnly.fromUnixDays(unix);
-		assert.is(fr.year.valueOf(), y, 'year');
-		assert.is(fr.month.valueOf(), m, 'month');
-		assert.is(fr.day.valueOf(), d, 'day');
+		assert.is(fr.year, y, 'year');
+		assert.is(fr.month, m, 'month');
+		assert.is(fr.day, d, 'day');
 	});
 }
 
@@ -264,9 +263,9 @@ tsts(`now`, () => {
 	const d = DateOnly.now();
 	//This isn't a great test, but let's use a date object to compare
 	//(tiny chance of this test failing near midnight)
-	assert.is(d.year.valueOf(), dt.getFullYear());
-	assert.is(d.month.valueOf(), dt.getMonth() + 1); //JS stores months off by 1 (0=Jan)
-	assert.is(d.day.valueOf(), dt.getDate()); //Not a great name, JS
+	assert.is(d.year, dt.getFullYear());
+	assert.is(d.month, dt.getMonth() + 1); //JS stores months off by 1 (0=Jan)
+	assert.is(d.day, dt.getDate()); //Not a great name, JS
 });
 
 tsts(`nowUtc`, () => {
@@ -274,9 +273,9 @@ tsts(`nowUtc`, () => {
 	const d = DateOnly.nowUtc();
 	//This isn't a great test, but let's use a date object to compare
 	//(tiny chance of this test failing near midnight UTC)
-	assert.is(d.year.valueOf(), dt.getUTCFullYear());
-	assert.is(d.month.valueOf(), dt.getUTCMonth() + 1); //JS stores months off by 1 (0=Jan)
-	assert.is(d.day.valueOf(), dt.getUTCDate()); //Not a great name, JS
+	assert.is(d.year, dt.getUTCFullYear());
+	assert.is(d.month, dt.getUTCMonth() + 1); //JS stores months off by 1 (0=Jan)
+	assert.is(d.day, dt.getUTCDate()); //Not a great name, JS
 });
 
 tsts('[Symbol.toStringTag]', () => {
@@ -420,9 +419,9 @@ tsts(`parse-now`, () => {
     const d=DateOnly.parse(w);
 	//This isn't a great test, but let's use a date object to compare
 	//(tiny chance of this test failing near midnight)
-	assert.is(d.year.valueOf(), dt.getFullYear());
-	assert.is(d.month.valueOf(), dt.getMonth() + 1); //JS stores months off by 1 (0=Jan)
-	assert.is(d.day.valueOf(), dt.getDate()); //Not a great name, JS
+	assert.is(d.year, dt.getFullYear());
+	assert.is(d.month, dt.getMonth() + 1); //JS stores months off by 1 (0=Jan)
+	assert.is(d.day, dt.getDate()); //Not a great name, JS
 });
 
 //console.log(`-13%12 = (${-13%12} ${(-13/12)} ${(-13/12)|0}) -12%12 = (${-12%12} ${-12/12} ${(-12/12)|0}) -11%12 = (${-11%12} ${-11/12} ${(-11/12)|0})`);

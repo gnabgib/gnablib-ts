@@ -19,11 +19,6 @@ export class Microsecond extends Micro {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
-	/** Microsecond as a floating point millisecond */
-	public toMillisecond(): number {
-		return this.valueOf() / 1000;
-	}
-
 	/** Copy this value into provided storage, and return a new object from that */
 	public cloneTo(storage: Uint8Array): Microsecond {
 		this.fill(storage);

@@ -102,10 +102,10 @@ tsts(`deser without storage space throws`, () => {
 tsts(`new`,()=>{
     const d=DateTime.new(2000,1,2,11,41,6,12345,false);
     assert.is(d.toString(),'2000-01-02T11:41:06.012345');
-    assert.is(d.year.valueOf(),2000,'year');
-    assert.is(d.hour.valueOf(),11,'hour');
-    assert.is(d.microsecond.valueOf(), 12345, 'microsecond');
-    assert.is(d.isUtc.valueBool(),false,'isUtc');
+    assert.is(d.year,2000,'year');
+    assert.is(d.hour,11,'hour');
+    assert.is(d.microsecond, 12345, 'microsecond');
+    assert.is(d.isUtc,false,'isUtc');
     //Value off puts all numbers together without delimiters
     assert.is(d.valueOf(),'20000102114106012345');
 });
@@ -125,14 +125,14 @@ tsts(`new`,()=>{
         const dt=new Date(y,m-1,d,h,i,s,ms);
         tsts(`fromDate(${dt})`,()=>{
             const dto=DateTime.fromDate(dt);
-            assert.is(dto.year.valueOf(),y,'y');
-            assert.is(dto.month.valueOf(),m,'mo');
-            assert.is(dto.day.valueOf(),d,'d');
-            assert.is(dto.hour.valueOf(),h,'h');
-            assert.is(dto.minute.valueOf(),i,'mi');
-            assert.is(dto.second.valueOf(),s,'s');
-            assert.is(dto.microsecond.valueOf(),ms*1000,'microsecond');
-            assert.is(dto.isUtc.valueBool(),false,'isUtc');
+            assert.is(dto.year,y,'y');
+            assert.is(dto.month,m,'mo');
+            assert.is(dto.day,d,'d');
+            assert.is(dto.hour,h,'h');
+            assert.is(dto.minute,i,'mi');
+            assert.is(dto.second,s,'s');
+            assert.is(dto.microsecond,ms*1000,'microsecond');
+            assert.is(dto.isUtc,false,'isUtc');
         })
         tsts(`toDate(${dt})`,()=>{
             const dto=DateTime.new(y,m,d,h,i,s,ms*1000,false);
@@ -148,14 +148,14 @@ tsts(`new`,()=>{
         tsts(`fromDateUtc(${dt})`,()=>{
             const dtu=new Date(Date.UTC(y,m-1,d,h,i,s,ms));
             const dto=DateTime.fromDateUtc(dtu);
-            assert.is(dto.year.valueOf(),y,'y');
-            assert.is(dto.month.valueOf(),m,'mo');
-            assert.is(dto.day.valueOf(),d,'d');
-            assert.is(dto.hour.valueOf(),h,'h');
-            assert.is(dto.minute.valueOf(),i,'mi');
-            assert.is(dto.second.valueOf(),s,'s');
-            assert.is(dto.microsecond.valueOf(),ms*1000,'microsecond');
-            assert.is(dto.isUtc.valueBool(),true,'isUtc');
+            assert.is(dto.year,y,'y');
+            assert.is(dto.month,m,'mo');
+            assert.is(dto.day,d,'d');
+            assert.is(dto.hour,h,'h');
+            assert.is(dto.minute,i,'mi');
+            assert.is(dto.second,s,'s');
+            assert.is(dto.microsecond,ms*1000,'microsecond');
+            assert.is(dto.isUtc,true,'isUtc');
         })
     }
 }
@@ -218,22 +218,22 @@ tsts(`now`,()=>{
     const d=DateTime.now();
     //This isn't a great test, but let's use a date object to compare
     //Could fail NYE/midnight
-    assert.is(d.year.valueOf(),dt.getFullYear());
+    assert.is(d.year,dt.getFullYear());
     //Could fail end of month/midnight
-    assert.is(d.month.valueOf(),dt.getMonth()+1);//JS stores months off by 1 (0=Jan)
+    assert.is(d.month,dt.getMonth()+1);//JS stores months off by 1 (0=Jan)
     //Could fail midnight
-    assert.is(d.day.valueOf(),dt.getDate());//Not a great name, JS
+    assert.is(d.day,dt.getDate());//Not a great name, JS
     //Could fail end of hour
-    assert.is(d.hour.valueOf(),dt.getHours(),'hour');
+    assert.is(d.hour,dt.getHours(),'hour');
     
     //The rest are too risky, so just range check
-    const mNum=d.minute.valueOf();
+    const mNum=d.minute;
     assert.is(mNum >= 0 && mNum <= 59, true, 'Minute in range');
-    const sNum=d.second.valueOf();
+    const sNum=d.second;
     assert.is(sNum >= 0 && sNum <= 59, true, 'In valid range');
-    const usNum=d.microsecond.valueOf();
+    const usNum=d.microsecond;
     assert.is(usNum >= 0 && usNum <= 999999, true, 'In valid range');
-    assert.is(d.isUtc.valueBool(),false);
+    assert.is(d.isUtc,false);
 });
 
 tsts(`nowUtc`,()=>{
@@ -241,22 +241,22 @@ tsts(`nowUtc`,()=>{
     const d=DateTime.nowUtc();
     //This isn't a great test, but let's use a date object to compare
     //Could fail NYE/midnight
-    assert.is(d.year.valueOf(),dt.getUTCFullYear());
+    assert.is(d.year,dt.getUTCFullYear());
     //Could fail end of month/midnight
-    assert.is(d.month.valueOf(),dt.getUTCMonth()+1);//JS stores months off by 1 (0=Jan)
+    assert.is(d.month,dt.getUTCMonth()+1);//JS stores months off by 1 (0=Jan)
     //Could fail midnight
-    assert.is(d.day.valueOf(),dt.getUTCDate());//Not a great name, JS
+    assert.is(d.day,dt.getUTCDate());//Not a great name, JS
     //Could fail end of hour
-    assert.is(d.hour.valueOf(),dt.getUTCHours(),'hour');
+    assert.is(d.hour,dt.getUTCHours(),'hour');
 
     //The rest are too risky, so just range check
-    const mNum=d.minute.valueOf();
+    const mNum=d.minute;
     assert.is(mNum >= 0 && mNum <= 59, true, 'Minute in range');
-    const sNum=d.second.valueOf();
+    const sNum=d.second;
     assert.is(sNum >= 0 && sNum <= 59, true, 'In valid range');
-    const usNum=d.microsecond.valueOf();
+    const usNum=d.microsecond;
     assert.is(usNum >= 0 && usNum <= 999999, true, 'In valid range');
-    assert.is(d.isUtc.valueBool(),true);
+    assert.is(d.isUtc,true);
 });
 
 tsts('[Symbol.toStringTag]', () => {
@@ -307,18 +307,18 @@ for(const [sVal,d,h,m,s,us,expect] of addSafeSet) {
 tsts(`asUtc`,()=>{
     const start=DateTime.now();
     //A test that doesn't fail can't do much more than confirm that isUtc toggles
-    assert.is(start.isUtc.valueBool(),false);
+    assert.is(start.isUtc,false);
     const end=start.asUtc();
-    assert.is(end.isUtc.valueBool(),true);
+    assert.is(end.isUtc,true);
     //console.log(`start=${start.toString()} end=${end.toString()}`);
 });
 
 tsts(`asLocal`,()=>{
     const start=DateTime.nowUtc();
     //A test that doesn't fail can't do much more than confirm that isUtc toggles
-    assert.is(start.isUtc.valueBool(),true);
+    assert.is(start.isUtc,true);
     const end=start.asLocal();
-    assert.is(end.isUtc.valueBool(),false);
+    assert.is(end.isUtc,false);
     //console.log(`start=${start.toString()} end=${end.toString()}`);
 });
 
@@ -367,6 +367,12 @@ const parseSet:[WindowStr,string,number][]=[
     [WindowStr.new('2001-02-03T23:59:59.999999z'),'2001-02-03T23:59:59.999999Z',0],
     [WindowStr.new('2023-01-31T02:03:04.567890'),'2023-01-31T02:03:04.567890',0],
     [WindowStr.new('+22767-12-31T23:59:59.999999z'),'+22767-12-31T23:59:59.999999Z',0],//max
+    [WindowStr.new('22767-12-31T23:59:59.999999z'),'+22767-12-31T23:59:59.999999Z',0],//don't need the + in non-strict
+    //Alt date separators
+    [WindowStr.new('2023/01/31T02:03:04.567890'),'2023-01-31T02:03:04.567890',0],
+    [WindowStr.new('2023.01.31T02:03:04.567890'),'2023-01-31T02:03:04.567890',0],
+    //Spacey
+    [WindowStr.new(' 2023 - 01 - 31 T 02:03:04.567890'),'2023-01-31T02:03:04.567890',0],
 
     //.. it's complicated
     [WindowStr.new('1-1-1T2:2:2.2'),'0001-01-01T02:02:02.200000',0],
@@ -392,6 +398,7 @@ const badParseStrictSet:WindowStr[]=[
     WindowStr.new('2023-1-31T02:03:04.567890'),//mo short
     WindowStr.new('23-01-31T02:03:04.567890'),//y short
     WindowStr.new('1-1-1T2:2:2.2'),//Whole lotta short
+    WindowStr.new('22767-12-31T23:59:59.999999z'),//Need a + for 5 digit years
 ];
 for(const w of badParseStrictSet) {
     tsts(`parse-strict ${w.debug()} throws`,()=>{
@@ -424,14 +431,14 @@ tsts(`parse-now`, () => {
 
 	//This isn't a great test, but let's use a date object to compare
 	//(tiny chance of this test failing near midnight)
-	assert.is(dt.year.valueOf(), dateO.getFullYear());
-	assert.is(dt.month.valueOf(), dateO.getMonth() + 1); //JS stores months off by 1 (0=Jan)
-	assert.is(dt.day.valueOf(), dateO.getDate()); //Not a great name, JS
+	assert.is(dt.year, dateO.getFullYear());
+	assert.is(dt.month, dateO.getMonth() + 1); //JS stores months off by 1 (0=Jan)
+	assert.is(dt.day, dateO.getDate()); //Not a great name, JS
 
-    const h=dt.hour.valueOf(); assert.is(h>=0&&h<=23,true,'hour in range');
-    const m=dt.minute.valueOf(); assert.is(m>=0&&m<=59,true,'minute in range');
-    const s=dt.second.valueOf(); assert.is(s>=0&&s<=59,true,'second in range');
-    const us=dt.microsecond.valueOf(); assert.is(us>=0&&us<=999999,true,'microsecond in range');
+    const h=dt.hour; assert.is(h>=0&&h<=23,true,'hour in range');
+    const m=dt.minute; assert.is(m>=0&&m<=59,true,'minute in range');
+    const s=dt.second; assert.is(s>=0&&s<=59,true,'second in range');
+    const us=dt.microsecond; assert.is(us>=0&&us<=999999,true,'microsecond in range');
 });
 
 

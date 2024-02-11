@@ -43,16 +43,11 @@ export class TimeOnly implements ISerializer {
 		UtcOrNot.serialBits; // 38
 
 	private constructor(
-		/** Hours (0-23) */
-		readonly hour: Hour,
-		/** Minutes (0-59) */
-		readonly minute: Minute,
-		/** Seconds (0-59) */
-		readonly second: Second,
-		/** Microseconds (0-999999) */
-		readonly microsecond: Microsecond,
-		/** In UTC or not */
-		readonly isUtc: UtcOrNot
+		private readonly _hour: Hour,
+		private readonly _minute: Minute,
+		private readonly _second: Second,
+		private readonly _microsecond: Microsecond,
+		private readonly _isUtc: UtcOrNot
 	) {}
 
 	/** Minimum time = 00:00:00.000000 */
@@ -64,20 +59,48 @@ export class TimeOnly implements ISerializer {
 		return max;
 	}
 
+	/** Hours (0-23) */
+	get hour(): number {
+		return this._hour.valueOf();
+	}
+	/** Minutes (0-59) */
+	get minute(): number {
+		return this._minute.valueOf();
+	}
+	/** Seconds (0-59) */
+	get second(): number {
+		return this._second.valueOf();
+	}
+	/** Microseconds (0-999999) */
+	get microsecond(): number {
+		return this._microsecond.valueOf();
+	}
+	/** In UTC or not */
+	get isUtc(): boolean {
+		return this._isUtc.valueBool();
+	}
+
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
 	 * formatted time: hh:mm:ss.mmmmmm(z) (all zero padded)
+	 * @param [sep=true] Include separators (default) or not
 	 */
-	public toString(): string {
+	public toString(sep = true): string {
+		let sep1 = '',
+			sep2 = '';
+		if (sep) {
+			sep1 = ':';
+			sep2 = '.';
+		}
 		return (
-			this.hour.toIsoString() +
-			':' +
-			this.minute.toPadString() +
-			':' +
-			this.second.toPadString() +
-			'.' +
-			this.microsecond.toPadString() +
-			this.isUtc.toIsoString()
+			this._hour.toIsoString() +
+			sep1 +
+			this._minute.toPadString() +
+			sep1 +
+			this._second.toPadString() +
+			sep2 +
+			this._microsecond.toPadString() +
+			this._isUtc.toIsoString()
 		);
 	}
 
@@ -111,10 +134,10 @@ export class TimeOnly implements ISerializer {
 	/** Microseconds (since midnight) */
 	toMicroseconds(): number {
 		return (
-			this.hour.valueOf() * self.usPerHour +
-			this.minute.valueOf() * self.usPerMin +
-			this.second.valueOf() * self.usPerSec +
-			this.microsecond.valueOf()
+			this._hour.valueOf() * self.usPerHour +
+			this._minute.valueOf() * self.usPerMin +
+			this._second.valueOf() * self.usPerSec +
+			this._microsecond.valueOf()
 		);
 	}
 
@@ -127,20 +150,20 @@ export class TimeOnly implements ISerializer {
 	 */
 	public valueOf(): number {
 		return (
-			this.hour.valueOf() * 10000000000 +
-			this.minute.valueOf() * 100000000 +
-			this.second.valueOf() * 1000000 +
-			this.microsecond.valueOf()
+			this._hour.valueOf() * 10000000000 +
+			this._minute.valueOf() * 100000000 +
+			this._second.valueOf() * 1000000 +
+			this._microsecond.valueOf()
 		);
 	}
 
 	/** Serialize into target  - 38 bits*/
 	public serialize(target: BitWriter): void {
-		this.hour.serialize(target);
-		this.minute.serialize(target);
-		this.second.serialize(target);
-		this.microsecond.serialize(target);
-		this.isUtc.serialize(target);
+		this._hour.serialize(target);
+		this._minute.serialize(target);
+		this._second.serialize(target);
+		this._microsecond.serialize(target);
+		this._isUtc.serialize(target);
 	}
 
 	/** Number of bits required to serialize */
@@ -154,10 +177,10 @@ export class TimeOnly implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): TimeOnly {
-		this.hour.validate();
-		this.minute.validate();
-		this.second.validate();
-		this.microsecond.validate();
+		this._hour.validate();
+		this._minute.validate();
+		this._second.validate();
+		this._microsecond.validate();
 		//no validate for isUtc
 		return this;
 	}
@@ -174,11 +197,11 @@ export class TimeOnly implements ISerializer {
 
 	/** Copy this value into provided storage, and return a new object from that */
 	public cloneTo(storage: Uint8Array): TimeOnly {
-		const h = this.hour.cloneTo(storage);
-		const m = this.minute.cloneTo(storage.subarray(1, 2));
-		const s = this.second.cloneTo(storage.subarray(2, 3));
-		const us = this.microsecond.cloneTo(storage.subarray(3, 6));
-		const utc = this.isUtc.cloneTo(storage.subarray(6));
+		const h = this._hour.cloneTo(storage);
+		const m = this._minute.cloneTo(storage.subarray(1, 2));
+		const s = this._second.cloneTo(storage.subarray(2, 3));
+		const us = this._microsecond.cloneTo(storage.subarray(3, 6));
+		const utc = this._isUtc.cloneTo(storage.subarray(6));
 		return new TimeOnly(h, m, s, us, utc);
 	}
 

@@ -34,11 +34,11 @@ for (const [hr, mi, se, us, utc, str, ser] of serSet) {
 		const bytes = hex.toBytes(ser);
 		const br = new BitReader(bytes);
 		const t = TimeOnly.deserialize(br).validate();
-		assert.is(t.hour.valueOf(), hr, 'hour');
-		assert.is(t.minute.valueOf(), mi, 'minute');
-		assert.is(t.second.valueOf(), se, 'second');
-		assert.is(t.microsecond.valueOf(), us, 'microsecond');
-        assert.is(t.isUtc.valueBool(),utc,'isUtc');
+		assert.is(t.hour, hr, 'hour');
+		assert.is(t.minute, mi, 'minute');
+		assert.is(t.second, se, 'second');
+		assert.is(t.microsecond, us, 'microsecond');
+        assert.is(t.isUtc,utc,'isUtc');
 		assert.is(t.toString(), str);
 	});
 }
@@ -62,11 +62,11 @@ tsts(`deser without storage space throws`, () => {
 tsts(`new`,()=>{
     const t=TimeOnly.new(11,41,6,12345,false);
     assert.is(t.toString(),'11:41:06.012345');
-    assert.is(t.hour.valueOf(),11,'hour');
-    assert.is(t.minute.valueOf(), 41, 'minute');
-    assert.is(t.second.valueOf(), 6, 'second');
-    assert.is(t.microsecond.valueOf(), 12345, 'microsecond');
-    assert.is(t.isUtc.valueBool(),false,'isUtc');
+    assert.is(t.hour,11,'hour');
+    assert.is(t.minute, 41, 'minute');
+    assert.is(t.second, 6, 'second');
+    assert.is(t.microsecond, 12345, 'microsecond');
+    assert.is(t.isUtc,false,'isUtc');
     //Value off uses base 10 shifting (string form without any separators)
     assert.is(t.valueOf(),114106012345);
 });
@@ -80,20 +80,20 @@ tsts(`fromDate`,()=>{
     // deepcode ignore DateMonthIndex/test: yes, we know
     const dt=new Date(2001,1/*=2 for fucks sake JS*/,3,4,5,6,789);
     const t=TimeOnly.fromDate(dt);
-    assert.is(t.hour.valueOf(),dt.getHours(),'hour');
-    assert.is(t.minute.valueOf(), dt.getMinutes(), 'minute');
-    assert.is(t.second.valueOf(), dt.getSeconds(), 'second');
-    assert.is(t.microsecond.valueOf(), dt.getMilliseconds()*1000, 'microsecond');
-    assert.is(t.isUtc.valueBool(),false,'isUtc');
+    assert.is(t.hour,dt.getHours(),'hour');
+    assert.is(t.minute, dt.getMinutes(), 'minute');
+    assert.is(t.second, dt.getSeconds(), 'second');
+    assert.is(t.microsecond, dt.getMilliseconds()*1000, 'microsecond');
+    assert.is(t.isUtc,false,'isUtc');
 });
 
 tsts(`fromDateUtc`,()=>{
     const dt=new Date();
     const t=TimeOnly.fromDateUtc(dt);
-    assert.is(t.hour.valueOf(),dt.getUTCHours(),'hour');
-    assert.is(t.minute.valueOf(), dt.getUTCMinutes(), 'minute');
-    assert.is(t.second.valueOf(), dt.getUTCSeconds(), 'second');
-    assert.is(t.isUtc.valueBool(),true);
+    assert.is(t.hour,dt.getUTCHours(),'hour');
+    assert.is(t.minute, dt.getUTCMinutes(), 'minute');
+    assert.is(t.second, dt.getUTCSeconds(), 'second');
+    assert.is(t.isUtc,true);
 });
 
 const secondsEpochSet: [number, string,string][] = [
@@ -161,10 +161,10 @@ tsts(`now`,()=>{
     const t=TimeOnly.now();
     //This isn't a great test, but let's use a date object to compare
     //(tiny chance of this test failing near midnight)
-    assert.is(t.hour.valueOf(),dt.getHours(),'hour');
-    assert.is(t.minute.valueOf(), dt.getMinutes(), 'minute');
-    assert.is(t.second.valueOf(), dt.getSeconds(), 'second');
-    assert.is(t.isUtc.valueBool(),false);
+    assert.is(t.hour,dt.getHours(),'hour');
+    assert.is(t.minute, dt.getMinutes(), 'minute');
+    assert.is(t.second, dt.getSeconds(), 'second');
+    assert.is(t.isUtc,false);
     //unsafe to test microsecond
 });
 
@@ -173,10 +173,10 @@ tsts(`nowUtc`,()=>{
     const t=TimeOnly.nowUtc();
     //This isn't a great test, but let's use a date object to compare
     //(tiny chance of this test failing near midnight UTC)
-    assert.is(t.hour.valueOf(),dt.getUTCHours(),'hour');
-    assert.is(t.minute.valueOf(), dt.getUTCMinutes(), 'minute');
-    assert.is(t.second.valueOf(), dt.getUTCSeconds(), 'second');
-    assert.is(t.isUtc.valueBool(),true);
+    assert.is(t.hour,dt.getUTCHours(),'hour');
+    assert.is(t.minute, dt.getUTCMinutes(), 'minute');
+    assert.is(t.second, dt.getUTCSeconds(), 'second');
+    assert.is(t.isUtc,true);
     //unsafe to test microsecond
 });
 
@@ -289,10 +289,10 @@ tsts(`parse-now`, () => {
     const w=WindowStr.new('now');
     const t=TimeOnly.parse(w);
 
-    const h=t.hour.valueOf(); assert.is(h>=0&&h<=23,true,'hour in range');
-    const m=t.minute.valueOf(); assert.is(m>=0&&m<=59,true,'minute in range');
-    const s=t.second.valueOf(); assert.is(s>=0&&s<=59,true,'second in range');
-    const us=t.microsecond.valueOf(); assert.is(us>=0&&us<=999999,true,'microsecond in range');
+    const h=t.hour; assert.is(h>=0&&h<=23,true,'hour in range');
+    const m=t.minute; assert.is(m>=0&&m<=59,true,'minute in range');
+    const s=t.second; assert.is(s>=0&&s<=59,true,'second in range');
+    const us=t.microsecond; assert.is(us>=0&&us<=999999,true,'microsecond in range');
 });
 
 tsts.run();

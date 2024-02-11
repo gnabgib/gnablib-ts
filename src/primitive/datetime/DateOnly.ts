@@ -37,11 +37,11 @@ export class DateOnly implements ISerializer {
 
 	private constructor(
 		/** Years (-10000 - +22767) ISO8601 */
-		readonly year: Year,
+		private readonly _year: Year,
 		/** Months (1-12) */
-		readonly month: Month,
+		private readonly _month: Month,
 		/** Days (1-31) */
-		readonly day: Day
+		private readonly _day: Day
 	) {}
 
 	/** Minimum date = -10000-01-01 */
@@ -53,17 +53,32 @@ export class DateOnly implements ISerializer {
 		return max;
 	}
 
+	/** Years (-10000 - +22767) ISO8601 */
+	get year(): number {
+		return this._year.valueOf();
+	}
+	/** Months (1-12) */
+	get month(): number {
+		return this._month.valueOf();
+	}
+	/** Days (1-31) */
+	get day(): number {
+		return this._day.valueOf();
+	}
+
 	/**
 	 * [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)/[RFC3339](https://www.rfc-editor.org/rfc/rfc3339)
 	 * formatted date: yyyy-mm-dd (zero padded year/month/day)
+	 *
+	 * @param [sep='-'] Character to separate components (default -)
 	 */
-	public toString(): string {
+	public toString(sep = '-'): string {
 		return (
-			this.year.toIsoString() +
-			'-' +
-			this.month.toIsoString() +
-			'-' +
-			this.day.toIsoString()
+			this._year.toIsoString() +
+			sep +
+			this._month.toIsoString() +
+			sep +
+			this._day.toIsoString()
 		);
 	}
 
@@ -89,17 +104,17 @@ export class DateOnly implements ISerializer {
 	 */
 	toDate(): Date {
 		return new Date(
-			this.year.valueOf(),
-			/*fucks sake JS*/ this.month.valueOf() - 1,
-			this.day.valueOf()
+			this._year.valueOf(),
+			/*fucks sake JS*/ this._month.valueOf() - 1,
+			this._day.valueOf()
 		);
 	}
 
 	/** Days since the Unix epoch (1970-01-01) */
 	toUnixDays(): number {
-		let yv = this.year.valueOf();
-		let mv = this.month.valueOf();
-		const dv = this.day.valueOf();
+		let yv = this._year.valueOf();
+		let mv = this._month.valueOf();
+		const dv = this._day.valueOf();
 		//Move so 1-March first day of year (28/29-Feb last)
 		if (mv > 2) {
 			mv -= 3;
@@ -138,17 +153,17 @@ export class DateOnly implements ISerializer {
 	 * you can do <, >, = comparisons
 	 */
 	public valueOf(): number {
-		const y = this.year.valueOf() * 10000;
+		const y = this._year.valueOf() * 10000;
 		return y < 0
-			? y - this.month.valueOf() * 100 - this.day.valueOf()
-			: y + this.month.valueOf() * 100 + this.day.valueOf();
+			? y - this._month.valueOf() * 100 - this._day.valueOf()
+			: y + this._month.valueOf() * 100 + this._day.valueOf();
 	}
 
 	/** Serialize into target  - 24 bits*/
 	public serialize(target: BitWriter): void {
-		this.year.serialize(target);
-		this.month.serialize(target);
-		this.day.serialize(target);
+		this._year.serialize(target);
+		this._month.serialize(target);
+		this._day.serialize(target);
 	}
 
 	/** Number of bits required to serialize */
@@ -163,8 +178,8 @@ export class DateOnly implements ISerializer {
 	 */
 	public validate(): DateOnly {
 		//no validate for year
-		this.month.validate();
-		this.day.validate();
+		this._month.validate();
+		this._day.validate();
 		return this;
 	}
 
@@ -226,9 +241,9 @@ export class DateOnly implements ISerializer {
 		const yearAdd = (monthAdd / 12) | 0;
 		monthAdd %= 12;
 
-		const yv = this.year.valueOf() + yearAdd;
-		const mv = this.month.valueOf() + monthAdd;
-		const dv = Math.min(this.day.valueOf(), DateOnly.daysInMonth(yv, mv));
+		const yv = this._year.valueOf() + yearAdd;
+		const mv = this._month.valueOf() + monthAdd;
+		const dv = Math.min(this._day.valueOf(), DateOnly.daysInMonth(yv, mv));
 		return DateOnly.new(yv, mv, dv, storage);
 	}
 
@@ -365,40 +380,48 @@ export class DateOnly implements ISerializer {
 		//If it's an optional sign followed by 8-9 digits assume it's an undelimitered date
 		if (input.test(/^[-+]?\d{8,9}\s*$/)) {
 			input.trimEnd();
-			const ret=new DateOnly(
-				Year.parse(input.left(input.length-4),strict,stor),
-				Month.parse(input.span(input.length-4,2),strict,stor.subarray(2)),
-				Day.parse(input.right(2),strict,stor.subarray(3))
-			)
+			const ret = new DateOnly(
+				Year.parse(input.left(input.length - 4), strict, stor),
+				Month.parse(input.span(input.length - 4, 2), strict, stor.subarray(2)),
+				Day.parse(input.right(2), strict, stor.subarray(3))
+			);
 			input.shrink(input.length);
 			return ret;
 		}
 
 		//Dash, slash, dot (germany?) separated allowed
-		let delim1:number;
+		let delim1: number;
 		if (!strict) {
-			delim1=input.indexOfAny(['-','/','.'],1);
+			delim1 = input.indexOfAny(['-', '/', '.'], 1);
 		} else {
-			delim1=input.indexOf('-',1);
+			delim1 = input.indexOf('-', 1);
 		}
-		let delim='';
-		if (delim1>0) {
-			delim=input.charAt(delim1);
+		let delim = '';
+		if (delim1 > 0) {
+			delim = input.charAt(delim1);
 		}
 		//Make sure second delim matches first, and there is one
-		const delim2=input.indexOf(delim,delim1+1);
-		if (delim2>0) {
+		const delim2 = input.indexOf(delim, delim1 + 1);
+		if (delim2 > 0) {
 			//Prevent partial parsing (that throws) from consuming the input
-			const ret=new DateOnly(
-				Year.parse(input.left(delim1),strict,stor),
-				Month.parse(input.span(delim1+1,delim2-delim1-1),strict,stor.subarray(2)),
-				Day.parse(input.span(delim2+1),strict,stor.subarray(3))
+			const ret = new DateOnly(
+				Year.parse(input.left(delim1), strict, stor),
+				Month.parse(
+					input.span(delim1 + 1, delim2 - delim1 - 1),
+					strict,
+					stor.subarray(2)
+				),
+				Day.parse(input.span(delim2 + 1), strict, stor.subarray(3))
 			);
 			input.shrink(input.length);
 			return ret;
 		}
-		
-		throw new ContentError(`Expecting 8-9 digit ymd (with optional sign), or ${delim} delimited date`,'date',input);
+
+		throw new ContentError(
+			`Expecting 8-9 digit ymd (with optional sign), or ${delim} delimited date`,
+			'date',
+			input
+		);
 	}
 
 	//public static parse(str: string, storage?: Uint8Array): DateOnly {}

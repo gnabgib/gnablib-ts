@@ -4,14 +4,6 @@ import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
-import { Year } from './Year.js';
-import { Month } from './Month.js';
-import { Day } from './Day.js';
-import { Hour } from './Hour.js';
-import { Minute } from './Minute.js';
-import { Second } from './Second.js';
-import { Microsecond } from './Microsecond.js';
-import { UtcOrNot } from './UtcOrNot.js';
 import { DateOnly } from './DateOnly.js';
 import { TimeOnly } from './TimeOnly.js';
 import { WindowStr } from '../WindowStr.js';
@@ -50,35 +42,35 @@ export class DateTime implements ISerializer {
 	}
 
 	/** Years (-10000 - +22767) ISO8601 */
-	get year(): Year {
+	get year(): number {
 		return this.date.year;
 	}
 	/** Months (1-12) */
-	get month(): Month {
+	get month(): number {
 		return this.date.month;
 	}
 	/** Days (1-31) */
-	get day(): Day {
+	get day(): number {
 		return this.date.day;
 	}
 	/** Hours (0-23) */
-	get hour(): Hour {
+	get hour(): number {
 		return this.time.hour;
 	}
 	/** Minutes (0-59) */
-	get minute(): Minute {
+	get minute(): number {
 		return this.time.minute;
 	}
 	/** Seconds (0-59) */
-	get second(): Second {
+	get second(): number {
 		return this.time.second;
 	}
 	/** Microseconds (0-999999) */
-	get microsecond(): Microsecond {
+	get microsecond(): number {
 		return this.time.microsecond;
 	}
 	/** In UTC or not */
-	get isUtc(): UtcOrNot {
+	get isUtc(): boolean {
 		return this.time.isUtc;
 	}
 
@@ -109,13 +101,13 @@ export class DateTime implements ISerializer {
 	 */
 	toDate(): Date {
 		return new Date(
-			this.date.year.valueOf(),
-			/*fucks sake JS*/ this.date.month.valueOf() - 1,
-			this.date.day.valueOf(),
-			this.time.hour.valueOf(),
-			this.time.minute.valueOf(),
-			this.time.second.valueOf(),
-			this.time.microsecond.toMillisecond()
+			this.date.year,
+			/*fucks sake JS*/ this.date.month - 1,
+			this.date.day,
+			this.time.hour,
+			this.time.minute,
+			this.time.second,
+			this.time.microsecond / 1000
 		);
 	}
 
@@ -135,15 +127,7 @@ export class DateTime implements ISerializer {
 	 * NOTE Utc indicator is not included in this value
 	 */
 	public valueOf(): string {
-		return (
-			this.date.year.toIsoString() +
-			this.date.month.toIsoString() +
-			this.date.day.toIsoString() +
-			this.time.hour.toIsoString() +
-			this.time.minute.toPadString() +
-			this.time.second.toPadString() +
-			this.time.microsecond.toPadString()
-		);
+		return this.date.toString('') + this.time.toString(false);
 	}
 
 	/** Serialize into target*/
@@ -188,7 +172,7 @@ export class DateTime implements ISerializer {
 		if (v.m) us += v.m * TimeOnly.usPerMin;
 		if (v.s) us += v.s * TimeOnly.usPerSec;
 		if (v.us) us += v.us;
-		return DateTime.fromUnixTimeMs(us / 1000, this.isUtc.valueBool(), storage);
+		return DateTime.fromUnixTimeMs(us / 1000, this.time.isUtc, storage);
 	}
 
 	/**
@@ -199,7 +183,7 @@ export class DateTime implements ISerializer {
 	 */
 	public asUtc(storage?: Uint8Array): DateTime {
 		let unixMs = this.toUnixTimeMs();
-		if (!this.time.isUtc.valueBool()) {
+		if (!this.time.isUtc) {
 			const dt = new Date(unixMs);
 			unixMs += dt.getTimezoneOffset() * msPerMin;
 		}
@@ -214,7 +198,7 @@ export class DateTime implements ISerializer {
 	 */
 	public asLocal(storage?: Uint8Array): DateTime {
 		let unixMs = this.toUnixTimeMs();
-		if (this.time.isUtc.valueBool()) {
+		if (this.time.isUtc) {
 			const dt = new Date(unixMs);
 			unixMs -= dt.getTimezoneOffset() * msPerMin;
 		}
