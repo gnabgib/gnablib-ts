@@ -60,7 +60,7 @@ const dodgyNewSet:[number,number,number,number,number,string,string][]=[
     [0,0,0,1.001,0,'1.001000s','PT1.001000S'], //floating point error
     [0,0,0,0,1.5,'0.000001s','PT0.000001S'],//us truncated (NOT rounded)
 ];
-for(const [d,h,m,s,us,str,iso] of newSet) {
+for(const [d,h,m,s,us,str,iso] of dodgyNewSet) {
     const du=Duration.new({d,h,m,s,us});
     tsts(`({${d} ${h} ${m} ${s} ${us}}).toString`,()=>{
         assert.equal(du.toString(),str);
@@ -71,6 +71,21 @@ for(const [d,h,m,s,us,str,iso] of newSet) {
     tsts(`({${d} ${h} ${m} ${s} ${us}}).toIso8601`,()=>{
         assert.equal(du.toIso8601(),iso);
     });
+}
+
+const badNewSet:IDurationParts[]=[
+    {d:-1},
+    {h:-1},
+    {m:-1},
+    {s:-1},
+    {us:-1},
+    {d:16777217},//Exceeds allowed days
+    {h:402653208},//Exceeds allowed days, via hour conversion
+];
+for(const parts of badNewSet) {
+    tsts(`(${parts}) throws`,()=>{
+        assert.throws(()=>Duration.new(parts));
+    })
 }
 
 const parseSet:[WindowStr,string][]=[
@@ -104,6 +119,8 @@ const badParseSet:WindowStr[]=[
     WindowStr.new('1y'),//What's a y?
     WindowStr.new('1d!'),//Good until !
     WindowStr.new('1min'),//Good until `in`
+    WindowStr.new('-1d'),
+    WindowStr.new('16777217d'),//Too big
 ];
 for(const w of badParseSet) {
     tsts(`parse(${w.debug()}) throws`,()=>{
@@ -180,20 +197,75 @@ tsts('serialSizeBits',()=>{
     assert.is(bits>0 && bits<=64,true);//Make sure it fits in 64 bits
 });
 
-tsts('fromUs negative throws',()=>{
-    assert.throws(()=>Duration.fromUs(-1));
-});
-
-const badNewSet:IDurationParts[]=[
-    {d:-1},
-    {h:-1},
-    {m:-1},
-    {s:-1},
-    {us:-1},
+const fromUsSet:[number,string][]=[
+    [0,'0s'],
+    [1e6,'1s'],
+    [60e6,'1m'],
 ];
-for(const parts of badNewSet) {
-    tsts(`(${parts}) throws`,()=>{
-        assert.throws(()=>Duration.new(parts));
+for(const [us,str] of fromUsSet) {
+    tsts(`fromUs(${us})`,()=>{
+        const du=Duration.fromUs(us);
+        assert.equal(du.toString(),str);
+    });
+}
+const badFromUsSet:number[]=[
+    -1,//negative
+    -1e6,//negative
+    //16777216 days in us is exactly: 1,449,551,462,400,000,000
+    1.5e18,//> max days
+];
+for(const us of badFromUsSet) {
+    tsts(`fromUs(${us}) throws`,()=>{
+        assert.throws(()=>Duration.fromUs(us));
+    })
+}
+
+tsts(`(4e7h 1u) loses precision`,()=>{
+    const du=Duration.new({h:4e7,us:1});
+    assert.equal(du.toString(),'1666666d16h');//the us was lost
+})
+
+const addSet:[Duration,Duration,string][]=[
+    [Duration.new({d:1}),Duration.new({m:1}),'1d1m'],
+    [Duration.new({d:1}),Duration.zero,'1d'],
+    [Duration.new({s:1}),Duration.new({h:1}),'1h1s'],
+    [Duration.new({us:13}),Duration.new({us:7}),'0.000020s'],
+    [Duration.max,Duration.new({d:3}),Duration.max.toString()],
+    [Duration.max,Duration.new({m:3}),Duration.max.toString()],
+    [Duration.max,Duration.new({us:1}),Duration.max.toString()],
+];
+for(const [a,b,str] of addSet) {
+    tsts(`${a}+${b}=${str}`,()=>{
+        const c=a.add(b);
+        assert.equal(c.toString(),str);
+    })
+}
+
+const subSet:[Duration,Duration,string][]=[
+    [Duration.new({d:1}),Duration.new({h:1}),'23h'],
+    [Duration.new({d:1}),Duration.new({h:25}),'0s'],
+    [Duration.new({h:1}),Duration.new({m:1}),'59m'],
+    [Duration.new({s:1}),Duration.new({us:100000}),'0.900000s'],
+];
+for(const [a,b,str] of subSet) {
+    tsts(`${a}-${b}=${str}`,()=>{
+        const c=a.sub(b);
+        assert.equal(c.toString(),str);
+    })
+}
+
+const gtSet:[Duration,Duration][]=[
+    [Duration.new({d:1}),Duration.new({h:1})],
+    [Duration.new({m:1}),Duration.new({s:1})],
+    [Duration.new({h:1}),Duration.new({us:1})],
+    [Duration.new({d:1,us:1}),Duration.new({d:1})],
+];
+for(const [a,b] of gtSet) {
+    tsts(`${a}>${b}`,()=>{
+        assert.equal(a.gt(b),true);
+    });
+    tsts(`${b}<${a}`,()=>{
+        assert.equal(b.gt(a),false);
     })
 }
 

@@ -4,9 +4,10 @@ import { superSafe as safe } from '../../safe/index.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
 import { WindowStr } from '../WindowStr.js';
-import { ContentError } from '../error/ContentError.js';
-import { LessThanError } from '../error/LessThanError.js';
-import { NegativeError } from '../error/NegativeError.js';
+import { AtMostError } from '../../error/AtMostError.js';
+import { ContentError } from '../../error/ContentError.js';
+import { LessThanError } from '../../error/LessThanError.js';
+import { NegativeError } from '../../error/NegativeError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -14,27 +15,28 @@ const DBG_RPT = 'Duration';
 const usPerS = 1000000; //        1000000
 const usPerM = usPerS * 60; //   60000000
 const usPerH = usPerM * 60; // 3600000000
-const usPerD = usPerH * 24; //86400000000 //more than 2^32
+const usPerD = usPerH * 24; //86400000000 //more than 2^32	
 const maxU32 = 4294967295;
 const maxU32p1 = maxU32 + 1;
+const maxU24=16777216;
 
 export interface IDurationParts {
-	/** Days >0*/
+	/** Days [0 - 16777216]*/
 	d?: number;
-	/** Hours >0*/
+	/** Hours >=0*/
 	h?: number;
-	/** Minutes >0*/
+	/** Minutes >=0*/
 	m?: number;
-	/** Seconds >0*/
+	/** Seconds >=0*/
 	s?: number;
-	/** Microseconds >0*/
+	/** Microseconds >=0*/
 	us?: number;
 }
 
 /**
  * An exact duration, with microsecond accuracy.  Unsigned
  *
- * Range: 0 - ~45K years
+ * Range: 0 - ~46K years
  */
 export class Duration implements ISerializer {
 	/**Number of bytes required to store this data */
@@ -50,6 +52,9 @@ export class Duration implements ISerializer {
 	/** Zero duration */
 	public static get zero(): Duration {
 		return zero;
+	}
+	public static get max():Duration {
+		return max;
 	}
 
 	/** Hours (0 - 24)  */
@@ -67,6 +72,27 @@ export class Duration implements ISerializer {
 	/** Microseconds (0 - 999999) */
 	public get microsecond(): number {
 		return this.#us % usPerS;
+	}
+
+	/** Entire duration in floating point days */
+	public toDays():number {
+		return this.day+(this.#us/usPerD);
+	}
+	/** Entire duration in floating point hours */
+	public toHours():number {
+		return this.day*24+(this.#us/usPerH);
+	}
+	/** Entire duration in floating point minutes */
+	public toMinutes():number {
+		return this.day*24*60+(this.#us/usPerM);
+	}
+	/** Entire duration in floating point seconds */
+	public toSeconds():number {
+		return this.day*24*60*60+(this.#us/usPerS);
+	}
+	/** Entire duration in microseconds (integer overflow at 9007199254740991us/~105k days/~285 years) */
+	public toMicroseconds():number {
+		return this.day*usPerD+this.#us;
 	}
 
 	/**
@@ -215,6 +241,56 @@ export class Duration implements ISerializer {
 		return this;
 	}
 
+	/** 
+	 * Add a duration to this
+	 * @param dur Duration to add
+	 * @return A new duration with sum
+	 * @pure
+	*/
+	public add(dur:Duration):Duration {
+		let us=this.#us+dur.#us;
+		let d=this.day+dur.day;
+		if (us>=usPerD) {
+			us-=usPerD;
+			d+=1;
+		}
+		if (d>maxU24) return max;
+		return new Duration(us,d);
+	}
+
+	/**
+	 * Subtract duration from this
+	 * @param dur Duration to subtract
+	 * @returns A new duration
+	 * @pure
+	 */
+	public sub(dur:Duration):Duration {
+		//Clamp at zero
+		if (dur.gt(this)) return zero;
+
+		let d=this.day-dur.day;
+		let us=this.#us - dur.#us;
+		if (us<0) {
+			us+=usPerD;
+			d-=1;
+		}
+		return new Duration(us,d);
+	}
+
+	/**
+	 * Whether `this` > `dur`
+	 * @param dur 
+	 * @returns 
+	 * @pure
+	 */
+	public gt(dur:Duration):boolean {
+		if (this.day > dur.day) return true;
+		if (this.day == dur.day) {
+			return this.#us>dur.#us;
+		}
+		return false;
+	}
+
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
 		return DBG_RPT;
@@ -225,18 +301,32 @@ export class Duration implements ISerializer {
 		return `${DBG_RPT}(${this.toString()})`;
 	}
 
+	/**
+	 * Create a duration from microseconds
+	 * @param us range 0 - 9007199254740991 (~105k days/~285 years)
+	 */
 	public static fromUs(us: number): Duration {
 		if (us<0) throw new NegativeError('microseconds',us);
 		const usp = us % usPerD;
 		const d = (us / usPerD) | 0;
+		if (d>maxU24) throw new AtMostError('days',maxU24,d);
 		return new Duration(usp, d);
 	}
 
+	/**
+	 * Create a duration from parts, d/h/m/s can be floating point.
+	 * h/m/s/us can exceed their maximum (the values will roll up)
+	 * All values are optional, but if specified must be >=0
+	 * @param parts 
+	 * @returns 
+	 */
 	public static new(parts: IDurationParts): Duration {
+		let d = 0;
 		let usp = 0;
 		if (parts.d) {
-			if (parts.d<0) throw new NegativeError('days',parts.d);
-			usp += parts.d * usPerD;
+			d = parts.d;
+			if (d<0) throw new NegativeError('days',d);
+			if (d>maxU24) throw new AtMostError('days',maxU24,d);
 		}
 		if (parts.h) {
 			if (parts.h<0) throw new NegativeError('hours',parts.h);
@@ -256,7 +346,22 @@ export class Duration implements ISerializer {
 			if (parts.us<0) throw new NegativeError('microseconds',parts.us);
 			usp += parts.us | 0;
 		}
-		return new Duration(usp % usPerD, (usp / usPerD) | 0);
+		//Catch any fractional days and move them to micros
+		const dRem=d%1;
+		if (dRem!=0) {
+			usp+=Math.round(dRem*usPerD);
+			//We can convert `d` to an integer now
+			d>>>=0;
+		}
+
+		//If `us` has exceeded a day, update `d` and `us`.  NOTE both because floating point is allowed
+		// in parts, and any piece but `us` can exceed max_safe_int it's possible to lose precision.
+		if (usp>=usPerD) {
+			d+=Math.floor(usp/usPerD);
+			usp%=usPerD;
+			if (d>maxU24) throw new AtMostError('days',maxU24,d);
+		}
+		return new Duration(usp,d);
 	}
 
 	public static fromTimeLike(timeLike: string): Duration {
@@ -334,3 +439,4 @@ export class Duration implements ISerializer {
 	}
 }
 const zero = Duration.fromUs(0);
+const max=Duration.new({d:maxU24,h:23,m:59,s:59,us:999999});
