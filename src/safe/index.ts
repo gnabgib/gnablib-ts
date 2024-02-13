@@ -16,6 +16,8 @@ safe.int.inRangeInclusive(test:number,low:number,high:number) //May throw RangeE
 
 import { InclusiveRangeError } from '../primitive/error/InclusiveRangeError.js';
 import { LengthError } from '../primitive/error/LengthError.js';
+import { LessThanError } from '../primitive/error/LessThanError.js';
+import { NegativeError } from '../primitive/error/NegativeError.js';
 import { ILengther } from '../primitive/interfaces/ILengther.js';
 
 function noTest() {}
@@ -25,7 +27,7 @@ export interface ISafeInt {
 	/** May throw if $test is not an integer */
 	is(test: unknown): void;
 	/** May throw if $test <$lowIn or >highInc  */
-	inRangeInc(noun:string, test: number, lowInc: number, highInc: number): void;
+	inRangeInc(noun: string, test: number, lowInc: number, highInc: number): void;
 	/** Coerce $input into an integer :: that will fit in $bytes bytes */
 	coerce(input: unknown): number;
 }
@@ -49,15 +51,20 @@ export interface ISafe {
 	string: ISafeStr;
 	/** Make sure that $test is at least $need elements in size (Invalid length; need $need have $test.length) */
 	lengthAtLeast(test: ILengther, need: number): void;
-    /** Make sure that $test is at least $need elements in size (Invalid $name; need $need have $test.length) */
-    lengthAtLeast(name:string,test:ILengther,need:number):void;
+	/** Make sure that $test is at least $need elements in size (Invalid $name; need $need have $test.length) */
+	lengthAtLeast(name: string, test: ILengther, need: number): void;
 }
 
 /** Performs range checks, but not type checks */
 export const somewhatSafe: ISafe = {
 	int: {
 		is: noTest,
-		inRangeInc: function (noun:string, test: number, lowInc: number, highInc: number) {
+		inRangeInc: function (
+			noun: string,
+			test: number,
+			lowInc: number,
+			highInc: number
+		) {
 			if (test < lowInc || test > highInc)
 				throw new InclusiveRangeError(noun, test, lowInc, highInc);
 		},
@@ -84,19 +91,23 @@ export const somewhatSafe: ISafe = {
 			return str;
 		},
 	},
-	lengthAtLeast(nameOrTest:string|ILengther,testOrNeed:ILengther|number,need?:number) {
-        if (need!==undefined) {
-            const len=(testOrNeed as ILengther).length;
-            if (len < need) throw new LengthError(need,''+nameOrTest,len);
-        } else {
-            const len=(nameOrTest as ILengther).length;
-            need=(testOrNeed as number);
-            if (len< need) throw new LengthError(need,len);
-        }
+	lengthAtLeast(
+		nameOrTest: string | ILengther,
+		testOrNeed: ILengther | number,
+		need?: number
+	) {
+		if (need !== undefined) {
+			const len = (testOrNeed as ILengther).length;
+			if (len < need) throw new LengthError(need, '' + nameOrTest, len);
+		} else {
+			const len = (nameOrTest as ILengther).length;
+			need = testOrNeed as number;
+			if (len < need) throw new LengthError(need, len);
+		}
 	},
-    // lengthAtLeast2(name:string,test:ILengther,need:number) {
-    //     if (test.length<need) throw new LengthError(need,name,test.length);
-    // }
+	// lengthAtLeast2(name:string,test:ILengther,need:number) {
+	//     if (test.length<need) throw new LengthError(need,name,test.length);
+	// }
 };
 
 /** Performs range and type checks */
@@ -106,7 +117,12 @@ export const superSafe: ISafe = {
 			if (!Number.isSafeInteger(test))
 				throw new TypeError(`Not an integer: ${test}`);
 		},
-		inRangeInc: function (noun:string, test: number, lowInc: number, highInc: number) {
+		inRangeInc: function (
+			noun: string,
+			test: number,
+			lowInc: number,
+			highInc: number
+		) {
 			superSafe.int.is(test);
 			somewhatSafe.int.inRangeInc(noun, test, lowInc, highInc);
 		},

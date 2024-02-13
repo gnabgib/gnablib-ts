@@ -2,7 +2,6 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import {
 	Grievous,
-	NegativeError,
 	NotEnoughDataError,
 	NotEnoughSpaceError,
 	NotSupportedError,
@@ -26,11 +25,6 @@ for (const [value, low, highInc] of oorTests) {
 		assert.instance(e, Error);
 	});
 }
-
-tsts('NegativeError', () => {
-	const e = new NegativeError('irrelevant', 11);
-	assert.instance(e, Error);
-});
 
 tsts('ZeroError', () => {
 	const e = new ZeroError('irrelevant');

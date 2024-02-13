@@ -62,25 +62,6 @@ export class OutOfRangeError<T> extends RangeError {
 }
 
 /**
- * $noun should not be negative, got: $value
- */
-export class NegativeError extends RangeError {
-	readonly noun: string;
-	readonly value: number;
-
-	/**
-	 * $noun should not be negative, got: $value
-	 * @param noun
-	 * @param value
-	 */
-	constructor(noun: string, value: number) {
-		super(`${noun} should not be negative, got: ${value}`);
-		this.noun = noun;
-		this.value = value;
-	}
-}
-
-/**
  * $noun must $reason='not be' 0
  */
 export class ZeroError extends RangeError {

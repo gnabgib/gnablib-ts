@@ -4,9 +4,9 @@ import { safety } from './Safety.js';
 import { hex } from '../codec/Hex.js';
 import {
 	EnforceTypeError,
-	NegativeError,
 	NotSupportedError,
 } from './ErrorExt.js';
+import { NegativeError } from './error/NegativeError.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = 0x100000000;

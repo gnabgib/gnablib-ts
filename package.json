@@ -134,7 +134,8 @@
 	},
 	"files": [
 		"_o/dist",
-		"_o/type"
+		"_o/type",
+		"_o/index.d.ts"
 	],
 	"repository": {
 		"type": "git",
@@ -288,7 +289,7 @@
 	},
 	"homepage": "https://github.com/gnabgib/gnablib-ts#readme",
 	"devDependencies": {
-		"@types/node": "^20.11.16",
+		"@types/node": "^20.11.17",
 		"terser": "^5.27.0",
 		"tsm": "^2.3.0",
 		"typescript": "^5.3.3",

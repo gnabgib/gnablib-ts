@@ -47,6 +47,7 @@ export class BitReader {
 
 		let byteBitSpace = 8 - this.bitPos;
 		let ptr = this.#bitPtr >>> 3;
+		//Unaligned read
 		if (bitCount <= byteBitSpace) {
 			const ret = (this.#buff[ptr] & mask[this.bitPos]) >>> (byteBitSpace - bitCount);
 			this.#bitPtr += bitCount;
