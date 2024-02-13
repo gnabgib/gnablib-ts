@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { safety } from '../primitive/Safety.js';
-import { ContentError } from '../primitive/error/ContentError.js';
+import { ContentError } from '../error/ContentError.js';
 import { IUucodeEncodeOpts } from './interfaces/IUucodeEncodeOpts.js';
 /**
  * Support: (Uint8Array)

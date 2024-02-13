@@ -62,14 +62,6 @@ export { BitWriter } from './BitWriter.js';
 //These are dupes of package.json-exports, and no one will want to import them this way
 // but typedoc doesn't pick them up otherwise
 /**
- * # Error
- *
- * - {@link primitive.error.ContentError ContentError} Invalid content (eg for parsing or setting value)
- * - {@link primitive.error.LengthError LengthError} Invalid length (strings, arrays, etc)
- * - {@link primitive.error.InclusiveRangeError InclusiveRangeError} Value not in range
- */
-export * as error from './error/index.js';
-/**
  * # Date and time
  *
  * A series of classes to hold date and time information.  Partitioned from {@link primitive}

@@ -10,7 +10,7 @@ import { Microsecond } from './Microsecond.js';
 import { UtcOrNot } from './UtcOrNot.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 import { WindowStr } from '../WindowStr.js';
-import { ContentError } from '../error/ContentError.js';
+import { ContentError } from '../../error/ContentError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'TimeOnly';

@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { LessThanError } from '../../../src/primitive/error/LessThanError';
+import { LessThanError } from '../../src/error/LessThanError';
 
 const tsts = suite('LessThanError');
 //While these are rigid we need to make sure the error message is reasonable

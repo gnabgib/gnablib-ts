@@ -21,3 +21,4 @@ export class NegativeError extends RangeError {
 		return DBG_RPT;
 	}
 }
+

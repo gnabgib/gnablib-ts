@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/error/ContentError.js';
+import { ContentError } from '../error/ContentError.js';
 import { hex } from './Hex.js';
 import { IUriDecodeOpts } from './interfaces/IUriDecodeOpts.js';
 import { utf8 } from './Utf8.js';

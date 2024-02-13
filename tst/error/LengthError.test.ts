@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { LengthError } from '../../../src/primitive/error/LengthError';
+import { LengthError } from '../../src/error/LengthError';
 
 const tsts = suite('LengthError');
 //While these are rigid we need to make sure the error message is reasonable

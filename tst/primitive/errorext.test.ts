@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import {
-	Grievous,
 	NotEnoughDataError,
 	NotEnoughSpaceError,
 	NotSupportedError,
@@ -58,10 +57,5 @@ for (const [reason] of nsTests) {
 		assert.instance(e, Error);
 	});
 }
-
-tsts('Grievous', () => {
-	const e = new Grievous('irrelevant');
-	assert.instance(e, Error);
-});
 
 tsts.run();

@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { LengthError } from '../../primitive/error/LengthError.js';
+import { LengthError } from '../../error/LengthError.js';
 
 /**
  * [Zero padding](https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding)

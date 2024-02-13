@@ -3,7 +3,7 @@
 import { hex } from '../codec/Hex.js';
 import { ZeroError } from '../primitive/ErrorExt.js';
 import { safety } from '../primitive/Safety.js';
-import { ContentError } from '../primitive/error/ContentError.js';
+import { ContentError } from '../error/ContentError.js';
 
 //https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 //Some source from: https://github.com/zxing/zxing

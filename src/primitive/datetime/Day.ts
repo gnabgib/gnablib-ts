@@ -4,7 +4,7 @@ import { superSafe as safe } from '../../safe/index.js';
 import { BitWriter } from '../BitWriter.js';
 import { BitReader } from '../BitReader.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
-import { ContentError } from '../error/ContentError.js';
+import { ContentError } from '../../error/ContentError.js';
 import { WindowStr } from '../WindowStr.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');

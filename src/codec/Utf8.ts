@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/error/ContentError.js';
+import { ContentError } from '../error/ContentError.js';
 
 /**
  * Support: (TextEncoded.encode, TextDecoder.decode)

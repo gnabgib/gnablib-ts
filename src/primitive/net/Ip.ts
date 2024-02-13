@@ -3,7 +3,7 @@
 import { intExt } from '../IntExt.js';
 import { safety } from '../Safety.js';
 import { U32 } from '../number/U32.js';
-import { ContentError } from '../error/ContentError.js';
+import { ContentError } from '../../error/ContentError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'IpV4';

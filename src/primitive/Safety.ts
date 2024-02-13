@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { EnforceTypeError, NotInRangeError, NullError } from './ErrorExt.js';
-import { LengthError } from './error/LengthError.js';
+import { LengthError } from '../error/LengthError.js';
 import { ILengther } from './interfaces/ILengther.js';
 
 /** @namespace */

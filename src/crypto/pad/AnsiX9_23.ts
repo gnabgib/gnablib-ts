@@ -1,8 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { getRandomValues } from 'crypto';
-import { ContentError } from '../../primitive/error/ContentError.js';
-import { LengthError } from '../../primitive/error/LengthError.js';
+import { ContentError } from '../../error/ContentError.js';
+import { LengthError } from '../../error/LengthError.js';
 
 /**
  * [ANSI X9.23 padding](https://www.ibm.com/docs/en/linux-on-systems?topic=processes-ansi-x923-cipher-block-chaining)
@@ -23,7 +23,7 @@ export class AnsiX9_23 {
 	/**
 	 * {@inheritDoc crypto.IPad.pad}
 	 *
-	 * @throws {@link ../primitive/error/LengthError}
+	 * @throws {@link error.LengthError}
 	 * If `input` is too long
 	 *
 	 * @example
@@ -50,7 +50,7 @@ export class AnsiX9_23 {
 	/**
 	 * {@inheritDoc crypto.IPad.unpad}
 	 *
-	 * @throws {@link ../primitive/error/ContentError}
+	 * @throws {@link error.ContentError}
 	 * If padding marker isn't found
 	 *
 	 * @example

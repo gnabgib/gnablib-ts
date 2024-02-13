@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/error/ContentError.js';
+import { ContentError } from '../error/ContentError.js';
 import { superSafe as safe } from '../safe/index.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 

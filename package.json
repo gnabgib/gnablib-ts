@@ -87,6 +87,10 @@
 			"types": "./_o/type/endian/index.d.ts",
 			"default": "./_o/dist/endian/index.js"
 		},
+		"./error": {
+			"types": "./_o/type/error/index.d.ts",
+			"default": "./_o/dist/error/index.js"
+		},
 		"./log": {
 			"types": "./_o/type/log/index.d.ts",
 			"default": "./_o/dist/log/index.js"
@@ -98,10 +102,6 @@
 		"./primitive/datetime": {
 			"types": "./_o/type/primitive/datetime/index.d.ts",
 			"default": "./_o/dist/primitive/datetime/index.js"
-		},
-		"./primitive/error": {
-			"types": "./_o/type/primitive/error/index.d.ts",
-			"default": "./_o/dist/primitive/error/index.js"
 		},
 		"./primitive/net": {
 			"types": "./_o/type/primitive/net/index.d.ts",

@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../primitive/error/ContentError.js';
-import { LengthError } from '../primitive/error/LengthError.js';
+import { ContentError } from '../error/ContentError.js';
+import { LengthError } from '../error/LengthError.js';
 
 const tbl_con = 'bdfghjklmnprstvz';
 const tbl_con_byte = [

@@ -14,10 +14,10 @@ safe.int.inRangeInclusive(test:number,low:number,high:number) //May throw RangeE
 
 */
 
-import { InclusiveRangeError } from '../primitive/error/InclusiveRangeError.js';
-import { LengthError } from '../primitive/error/LengthError.js';
-import { LessThanError } from '../primitive/error/LessThanError.js';
-import { NegativeError } from '../primitive/error/NegativeError.js';
+import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
+import { LengthError } from '../error/LengthError.js';
+import { LessThanError } from '../error/LessThanError.js';
+import { NegativeError } from '../error/NegativeError.js';
 import { ILengther } from '../primitive/interfaces/ILengther.js';
 
 function noTest() {}

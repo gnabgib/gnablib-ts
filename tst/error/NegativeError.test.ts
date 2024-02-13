@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { NegativeError } from '../../../src/primitive/error/NegativeError';
+import { NegativeError } from '../../src/error/NegativeError';
 
 const tsts = suite('NegativeError');
 //While these are rigid we need to make sure the error message is reasonable

@@ -7,7 +7,7 @@ import { ISerializer } from '../interfaces/ISerializer.js';
 import { DateOnly } from './DateOnly.js';
 import { TimeOnly } from './TimeOnly.js';
 import { WindowStr } from '../WindowStr.js';
-import { ContentError } from '../error/ContentError.js';
+import { ContentError } from '../../error/ContentError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'DateTime';

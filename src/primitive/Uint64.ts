@@ -6,7 +6,7 @@ import {
 	EnforceTypeError,
 	NotSupportedError,
 } from './ErrorExt.js';
-import { NegativeError } from './error/NegativeError.js';
+import { NegativeError } from '../error/NegativeError.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = 0x100000000;

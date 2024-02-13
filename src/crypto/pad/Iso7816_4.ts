@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { ContentError } from '../../primitive/error/ContentError.js';
-import { LengthError } from '../../primitive/error/LengthError.js';
+import { ContentError } from '../../error/ContentError.js';
+import { LengthError } from '../../error/LengthError.js';
 //import { somewhatSafe } from '../../safe/index.js';
 
 const Iso7816_4_marker = 0x80;

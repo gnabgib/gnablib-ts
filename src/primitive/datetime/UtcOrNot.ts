@@ -3,7 +3,7 @@
 import { BitReader } from '../BitReader.js';
 import { _BoolCore } from '../Bool.js';
 import { WindowStr } from '../WindowStr.js';
-import { ContentError } from '../error/ContentError.js';
+import { ContentError } from '../../error/ContentError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'UtcOrNot';

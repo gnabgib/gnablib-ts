@@ -42,7 +42,7 @@
  * @packageDocumentation
  */
 
-import { ContentError } from '../primitive/error/ContentError.js';
+import { ContentError } from '../error/ContentError.js';
 
 const last6Bits = 0b111111;
 const first2Bits = 0b11000000;

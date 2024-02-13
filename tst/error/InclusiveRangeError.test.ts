@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { InclusiveRangeError } from '../../../src/primitive/error/InclusiveRangeError';
+import { InclusiveRangeError } from '../../src/error/InclusiveRangeError';
 
 const tsts = suite('InclusiveRangeError');
 //While these are rigid we need to make sure the error message is reasonable

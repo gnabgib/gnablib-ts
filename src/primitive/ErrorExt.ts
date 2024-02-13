@@ -137,12 +137,3 @@ export class NotSupportedError extends TypeError {
 		super(reason??"Not supported");
 	}
 }
-
-export class Grievous extends Error {
-	readonly reason: string;
-	constructor(reason: string) {
-		super('Most grievous of situations (log a bug): ' + reason);
-		this.reason = reason;
-	}
-}
-

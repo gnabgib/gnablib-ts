@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { uri, utf8 } from '../../src/codec';
-import { ContentError } from '../../src/primitive/error/ContentError';
+import { ContentError } from '../../src/error/ContentError';
 
 const tsts = suite('Uri/RFC 3986');
 

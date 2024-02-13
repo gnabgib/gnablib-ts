@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { ContentError } from '../../../src/primitive/error/ContentError';
+import { ContentError } from '../../src/error/ContentError';
 import util from 'util';
 
 const tsts = suite('ContentError');
