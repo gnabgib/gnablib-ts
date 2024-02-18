@@ -61,23 +61,6 @@ export class OutOfRangeError<T> extends RangeError {
 	}
 }
 
-/**
- * $noun must $reason='not be' 0
- */
-export class ZeroError extends RangeError {
-	readonly noun: string;
-
-	/**
-	 * ${noun} must ${reason=not be} 0
-	 * @param noun string
-	 * @param reason string='not be'
-	 */
-	constructor(noun: string, reason = 'not be') {
-		super(`${noun} must ${reason} 0`);
-		this.noun = noun;
-	}
-}
-
 export class NotEnoughSpaceError extends RangeError {
 	readonly noun: string;
 	readonly need: number;

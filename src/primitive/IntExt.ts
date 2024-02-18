@@ -26,50 +26,7 @@ export const intExt = {
 		}
 		return stringExt.padStart(value.toString(), len, '0');
 	},
-
-	/**
-	 * Convert an 8 bit uint into an int (>127 considered negative)
-	 * @param uint8 Integer 0-0xff (truncated if oversized)
-	 * @returns
-	 */
-	sign8: function (uint8: number): number {
-		uint8 = uint8 & 0xff;
-		return uint8 <= 0x7f ? uint8 : ~(0xff - uint8);
-	},
-
-	/**
-	 * Convert a 16 bit uint into an int (>32767 considered negative)
-	 * @param uint16 INteger 0-0xffff (truncated if oversized)
-	 * @returns
-	 */
-	sign16: function (uint16: number): number {
-		uint16 = uint16 & 0xffff;
-		return uint16 <= 0x7fff ? uint16 : ~(0xffff - uint16);
-	},
-
-	/**
-	 * Convert a 32 bit uint into an int (>2147483647 considered negative)
-	 * @param uint32 Integer 0x0xffffffff (truncated if oversized)
-	 * @returns
-	 */
-	sign32(uint32: number): number {
-		return uint32 | 0; //ASM.js derived shortcut
-	},
-
-	/**
-	 * Extended version of parseInt with radix 16, still accepts whitespace, but doesn't allow scientific
-	 * notation, fractions or other chars in the input.  Signs are allowed only right beside numbers.
-	 * @param value
-	 * @returns
-	 */
-	strictParseHexInt: function (value: string): number | undefined {
-		if (/^\s*[-+]?(?:0x)?([a-fA-F\d]+)\s*$/.test(value)) {
-			return parseInt(value, 16);
-		} else {
-			return undefined;
-		}
-	},
-
+	
 	/**
 	 * Encode an unsigned integer as a set of bytes without a fixed size
 	 * @param uint Number to encode >=0 <=2^53 (max safe int)

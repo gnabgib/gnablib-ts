@@ -8,7 +8,7 @@
  * - An optional sign
  * - One or more digits
  * - Trailing whitespace
- * 
+ *
  * Floating point numbers that have only zeros after the decimal won't parse.
  * Scientific notation won't parse.
  *
@@ -18,6 +18,28 @@
 export function parseDec(input: string): number {
 	if (/^\s*[-+]?\d+\s*$/.test(input)) {
 		return Number.parseInt(input, 10);
+	}
+	return Number.NaN;
+}
+
+/**
+ * Parse string content as a base16 form of an integer.  Much stricter than
+ * [Number.parseInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt),
+ * this *only* allows:
+ * - Leading whitespace
+ * - An optional sign
+ * - An optional 0x marker
+ * - One or more digits
+ * - Trailing whitespace
+ *
+ * Floating point numbers won't parse.
+ * Scientific notation won't parse (but can look like hex)
+ * @param input A string hexadecimal integer, leading/trailing whitespace is ignored
+ * @returns Integer or NaN
+ */
+export function parseHex(input: string): number {
+	if (/^\s*[-+]?(?:0x)?([a-fA-F0-9]+)\s*$/.test(input)) {
+		return parseInt(input, 16);
 	}
 	return Number.NaN;
 }

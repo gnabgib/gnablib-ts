@@ -6,7 +6,7 @@ import { BitWriter } from '../BitWriter.js';
 import { WindowStr } from '../WindowStr.js';
 import { AtMostError } from '../../error/AtMostError.js';
 import { ContentError } from '../../error/ContentError.js';
-import { LessThanError } from '../../error/LessThanError.js';
+import { LTError } from '../../error/LTError.js';
 import { NegativeError } from '../../error/NegativeError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 
@@ -389,8 +389,8 @@ export class Duration implements ISerializer {
 		}
 		//Unlike new, we don't accept s/m being >=60
 		//@ts-expect-error: m is either 0 or set by case 2/3, so fuck off TS
-		if (parts.m >= 60) throw new LessThanError('minutes', parts.m, 60);
-		if (parts.s >= 60) throw new LessThanError('seconds', parts.s, 60);
+		if (parts.m >= 60) throw new LTError('minutes', parts.m, 60);
+		if (parts.s >= 60) throw new LTError('seconds', parts.s, 60);
 		return Duration.new(parts);
 	}
 

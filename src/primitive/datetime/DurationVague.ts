@@ -6,7 +6,7 @@ import { BitWriter } from '../BitWriter.js';
 import { WindowStr } from '../WindowStr.js';
 import { AtMostError } from '../../error/AtMostError.js';
 import { ContentError } from '../../error/ContentError.js';
-import { LessThanError } from '../../error/LessThanError.js';
+import { LTError } from '../../error/LTError.js';
 import { NegativeError } from '../../error/NegativeError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
 

@@ -1,9 +1,9 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../codec/Hex.js';
-import { ZeroError } from '../primitive/ErrorExt.js';
-import { safety } from '../primitive/Safety.js';
 import { ContentError } from '../error/ContentError.js';
+import { ZeroError } from '../error/ZeroError.js';
+import { somewhatSafe } from '../safe/index.js';
 
 //https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 //Some source from: https://github.com/zxing/zxing
@@ -134,7 +134,7 @@ class Gf8 implements IGf<Uint8Array> {
 	private readonly _logTable: Uint8Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safety.intInRangeInc(pow2Size, 1, 8, 'pow2Size');
+		somewhatSafe.int.inRangeInc('pow2Size', pow2Size, 1, 8);
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -171,7 +171,7 @@ class Gf8 implements IGf<Uint8Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safety.intGte(degree, 0, 'degree');
+		somewhatSafe.int.gte('degree', degree, 0);
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -184,18 +184,18 @@ class Gf8 implements IGf<Uint8Array> {
 		return this._lastSpot + 1;
 	}
 
-	exp(pos: number): number {
-		return this._expTable[pos];
+	exp(input: number): number {
+		return this._expTable[input];
 	}
 
-	log(pos: number): number {
-		if (pos === 0) throw new ZeroError('a');
-		return this._logTable[pos];
+	log(input: number): number {
+		if (input === 0) throw new ZeroError('input');
+		return this._logTable[input];
 	}
 
-	inverse(a: number): number {
-		if (a === 0) throw new ZeroError('a');
-		return this._expTable[this._lastSpot - this._logTable[a]];
+	inverse(input: number): number {
+		if (input === 0) throw new ZeroError('input');
+		return this._expTable[this._lastSpot - this._logTable[input]];
 	}
 
 	mul(a: number, b: number): number {
@@ -220,8 +220,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	readonly coefficients: Uint8Array;
 
 	constructor(field: IGf<Uint8Array>, coefficients: Uint8Array) {
-		if (coefficients.length === 0)
-			throw new ZeroError('Coefficients.length', '>');
+		somewhatSafe.len.atLeast('Coefficients', coefficients, 1);
 		this._field = field;
 		if (coefficients.length > 1 && coefficients[0] === 0) {
 			// Leading term must be non-zero for anything except the constant polynomial "0"
@@ -325,7 +324,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safety.intGte(degree, 0, 'degree');
+		somewhatSafe.int.gte('degree', degree, 0);
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -387,7 +386,7 @@ class Gf16 implements IGf<Uint16Array> {
 	private readonly _logTable: Uint16Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safety.intInRangeInc(pow2Size, 1, 16, 'pow2Size');
+		somewhatSafe.int.inRangeInc('pow2Size', pow2Size, 1, 16);
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -424,7 +423,7 @@ class Gf16 implements IGf<Uint16Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safety.intGte(degree, 0, 'degree');
+		somewhatSafe.int.gte('degree', degree, 0);
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -437,30 +436,30 @@ class Gf16 implements IGf<Uint16Array> {
 		return this._lastSpot + 1;
 	}
 
-	exp(pos: number): number {
-		return this._expTable[pos];
+	exp(input: number): number {
+		return this._expTable[input];
 	}
 
 	/**
 	 * Lookup the log table at given position
-	 * @param pos 1-@see this.lastSpot
+	 * @param input 1-@see this.lastSpot
 	 * @throws ZeroError pos=0
 	 * @returns number
 	 */
-	log(pos: number): number {
-		if (pos === 0) throw new ZeroError('a');
-		return this._logTable[pos];
+	log(input: number): number {
+		if (input === 0) throw new ZeroError('input');
+		return this._logTable[input];
 	}
 
 	/**
 	 * Multiplicative inverse of a
-	 * @param a number 1-@see this.lastSpot
+	 * @param input number 1-@see this.lastSpot
 	 * @throws ZeroError a=0
 	 * @returns
 	 */
-	inverse(a: number): number {
-		if (a === 0) throw new ZeroError('a');
-		return this._expTable[this._lastSpot - this._logTable[a]];
+	inverse(input: number): number {
+		if (input === 0) throw new ZeroError('input');
+		return this._expTable[this._lastSpot - this._logTable[input]];
 	}
 
 	/**
@@ -491,8 +490,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	readonly coefficients: Uint16Array;
 
 	constructor(field: Gf16, coefficients: Uint16Array) {
-		if (coefficients.length === 0)
-			throw new ZeroError('Coefficients.length', '>');
+		somewhatSafe.len.atLeast('Coefficients', coefficients, 1);
 		this._field = field;
 		if (coefficients.length > 1 && coefficients[0] === 0) {
 			// Leading term must be non-zero for anything except the constant polynomial "0"
@@ -596,7 +594,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safety.intGte(degree, 0, 'degree');
+		somewhatSafe.int.gte('degree', degree, 0);
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;

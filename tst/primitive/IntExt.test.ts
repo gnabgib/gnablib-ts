@@ -5,63 +5,6 @@ import { intExt } from '../../src/primitive';
 
 const tsts = suite('IntExt');
 
-const sign8Set = [
-	//Low numbers
-	[1, 1],
-	[0, 0],
-	[10, 10],
-	//Large numbers
-	[0x7f, 127],
-	[0x80, -128],
-	[0xfe, -2],
-	[0xff, -1],
-	//Already negative numbers
-	[-1, -1],
-];
-for (const test of sign8Set) {
-	tsts('sign8 ' + test[0], () => {
-		assert.is(intExt.sign8(test[0]), test[1]);
-	});
-}
-
-const sign16Set = [
-	//Low numbers
-	[1, 1],
-	[0, 0],
-	[10, 10],
-	//Large numbers
-	[0x7fff, 32767],
-	[0x8000, -32768],
-	[0xfffe, -2],
-	[0xffff, -1],
-	//Already negative numbers
-	[-1, -1],
-];
-for (const test of sign16Set) {
-	tsts('sign16 ' + test[0], () => {
-		assert.is(intExt.sign16(test[0]), test[1]);
-	});
-}
-
-const sign32Set = [
-	//Low numbers
-	[1, 1],
-	[0, 0],
-	[10, 10],
-	//Large numbers
-	[0x7fffffff, 2147483647],
-	[0x80000000, -2147483648],
-	[0xfffffffe, -2],
-	[0xffffffff, -1],
-	//Already negative numbers
-	[-1, -1],
-];
-for (const test of sign32Set) {
-	tsts('sign32 ' + test[0], () => {
-		assert.is(intExt.sign32(test[0]), test[1]);
-	});
-}
-
 const scaleCodes = [
 	[0, '00'],
 	[1, '01'],
@@ -173,26 +116,6 @@ for (const test of scaleCodes) {
 		const bytes = hex.toBytes(test[1] as string);
 		const res = intExt.uintFromScaleBytes(bytes);
 		assert.equal(res.value, num);
-	});
-}
-
-const strictParseIntHex = [
-	['ff', 255],
-	['FE', 254],
-	['20', 32],
-	['+20', 32], //2*16, not 2*10
-	['-20', -32],
-	['- 20', undefined], //sign must touch number
-	['0xfd', 253], //Can start with 0x
-	['-0xfc', -252], //Can start with 0x, can be negative
-	['+0xfb', 251], //Can start with 0x, can have sign
-	['0xFA', 250], //Case insensitive ext symbols
-	['- 0xfd', undefined], //Sign must touch 0x starter
-	['xfc', undefined], //Not a valid leading
-];
-for (const test of strictParseIntHex) {
-	tsts('Parse base 16 ' + test[0], () => {
-		assert.equal(intExt.strictParseHexInt(test[0] as string), test[1]);
 	});
 }
 
