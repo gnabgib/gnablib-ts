@@ -173,60 +173,6 @@ export const safety = {
 	},
 
 	/**
-	 * Requires that `test` isn't null, and length is exactly `len`
-	 * @param test Value to test
-	 * @param len Exact length
-	 * @param noun Value description (default='value')
-	 *
-	 * @throws {@link ./NullError}
-	 * [$noun ]cannot be null
-	 *
-	 * @throws {@link ./NotInRangeError}
-	 * $noun/value length should be x==$eq, got: $test.length
-	 */
-	lenExactly: function (test: ILengther, len: number, noun?: string): void {
-		this.notNull(test, noun);
-		if (noun === undefined) noun = 'value';
-		noun += ' length';
-		if (test.length != len)
-			throw new NotInRangeError(
-				noun,
-				test.length,
-				undefined,
-				undefined,
-				'==',
-				len
-			);
-	},
-
-	/**
-	 * Request that `test` isn't null, and length is at least `gte`
-	 * @param test Value to test
-	 * @param gte Min length (inclusive)
-	 * @param noun Value description (default='value')
-	 *
-	 * @throws {@link ./NullError}
-	 * [$noun ]cannot be null
-	 *
-	 * @throws {@link ./NotInRangeError}
-	 * $noun/value length should be x>=$gte, got: $test.length
-	 */
-	lenGte: function (test: ILengther, gte: number, noun?: string): void {
-		this.notNull(test, noun);
-		if (noun === undefined) noun = 'value';
-		noun += ' length';
-		if (test.length < gte)
-			throw new NotInRangeError(
-				noun,
-				test.length,
-				undefined,
-				undefined,
-				'>=',
-				gte
-			);
-	},
-
-	/**
 	 * Request that `test` is a multiple of `mul` in length (no leftovers)
 	 * @param test
 	 * @param mul

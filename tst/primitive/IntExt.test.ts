@@ -176,27 +176,6 @@ for (const test of scaleCodes) {
 	});
 }
 
-const strictParseIntDec = [
-	['421', 421],
-	['-421', -421],
-	['- 421', undefined],
-	[' 421', 421],
-	['+421', 421],
-	['Infinity', undefined],
-	['421e+0', undefined], //would be 421 with parseInt
-	['421hop', undefined], //would be 421 with parseInt
-	['hop1.61803398875', undefined],
-	['1.61803398875', undefined], //Would be 1 with parseInt
-	['0x10', undefined], //Hex fails
-	['0e7', undefined], //Octal on other platform - fails
-];
-
-for (const test of strictParseIntDec) {
-	tsts('Parse base 10 ' + test[0], () => {
-		assert.equal(intExt.strictParseDecInt(test[0] as string), test[1]);
-	});
-}
-
 const strictParseIntHex = [
 	['ff', 255],
 	['FE', 254],

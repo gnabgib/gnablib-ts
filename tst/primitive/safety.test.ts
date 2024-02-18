@@ -150,40 +150,6 @@ for(const [test,throws] of lenInRangeInc1_5Test) {
     })
 }
 
-const lenExactly1Test:[string|undefined,boolean][]=[
-    ['',true],//Too short
-    ['a',false],
-    ['ab',true],//Too long
-    [undefined,true],//Invalid
-];
-i=0;
-for(const [test,throws] of lenExactly1Test) {
-    tsts(`lenExactly[${i++}]`,()=>{
-        if (throws) {
-            assert.throws(()=>safety.lenExactly(test,1));
-        } else {
-            safety.lenExactly(test,1);
-        }
-    })
-}
-
-const lenGte1Test:[string|undefined,boolean][]=[
-    ['',true],//Too short
-    ['a',false],
-    ['ab',false],
-    [undefined,true],//Invalid
-];
-i=0;
-for(const [test,throws] of lenGte1Test) {
-    tsts(`lenExactly[${i++}]`,()=>{
-        if (throws) {
-            assert.throws(()=>safety.lenGte(test,1));
-        } else {
-            safety.lenGte(test,1);
-        }
-    })
-}
-
 const numInRangeIncExc1_5Test:[number|undefined,boolean][]=[
     [0,true],//out of range
     [1,false],

@@ -144,7 +144,7 @@ export class TimeOnlyMs implements ISerializer {
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(this.storageBytes);
-		safe.lengthAtLeast('storage', storage, this.storageBytes);
+		safe.len.atLeast('storage', storage, this.storageBytes);
 		return storage;
 	}
 

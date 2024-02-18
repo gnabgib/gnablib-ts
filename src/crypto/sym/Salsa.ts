@@ -1,10 +1,10 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
 import { InvalidValueError } from '../../primitive/ErrorExt.js';
-import { safety } from '../../primitive/Safety.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
+import { somewhatSafe } from '../../safe/index.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
 const blockSize = 64; //16*32bit = 512bit
@@ -22,14 +22,14 @@ class SalsaBlock {
 
 	// // prettier-ignore
 	// private quartRound(a: number, b: number, c: number, d: number) {
-    //     this.u32[b] ^=  U32.rol(this.u32[a] + this.u32[d], 7);
-    //     this.u32[c] ^=  U32.rol(this.u32[b] + this.u32[a], 9);
-    //     this.u32[d] ^=  U32.rol(this.u32[c] + this.u32[b], 13);
-    //     this.u32[a] ^=  U32.rol(this.u32[d] + this.u32[c], 18);
+	//     this.u32[b] ^=  U32.rol(this.u32[a] + this.u32[d], 7);
+	//     this.u32[c] ^=  U32.rol(this.u32[b] + this.u32[a], 9);
+	//     this.u32[d] ^=  U32.rol(this.u32[c] + this.u32[b], 13);
+	//     this.u32[a] ^=  U32.rol(this.u32[d] + this.u32[c], 18);
 	// }
 
 	public block(): void {
-        // prettier-ignore
+		// prettier-ignore
 		for (let i = this.rounds; i > 0; i -= 2) {
 			//Column round
 			/* 0 o v v
@@ -93,40 +93,35 @@ class Salsa implements IFullCrypt {
 	readonly #state = new Uint32Array(blockSize32);
 	/** Temp processing block */
 	readonly #b: SalsaBlock;
-    readonly #count:U64Mut;
+	readonly #count: U64Mut;
 
-	constructor(
-		key: Uint8Array,
-		nonce: Uint8Array,
-		count: U64,
-		rounds: number
-	) {
+	constructor(key: Uint8Array, nonce: Uint8Array, count: U64, rounds: number) {
 		this.#b = new SalsaBlock(rounds);
-        /* C K K K
-         * K C N N
-         * P P C K
-         * K K K C */
+		/* C K K K
+		 * K C N N
+		 * P P C K
+		 * K K K C */
 
-        let ka:Uint8Array;
-        let kb:Uint8Array;
-        let rc:Array<number>;
-        if (key.length===16) {
-            //128 bit key
-            //Ka = Kb = LE(Key)
-            ka=key.slice(0);
-            asLE.i32(ka,0,4);
-            kb=ka.slice();
-            rc=tau;
-        } else if (key.length===32) {
-            //256 bit key
-            // ka= LE(Key[0:16]), kb=LE(Key[16:32])
-            ka=key.slice(0,16);
-            asLE.i32(ka,0,4);
-            kb=key.slice(16,32);
-            asLE.i32(kb,0,4);
-            rc=sigma;
-        } else throw new InvalidValueError('key.length', key.length, 16, 32);
-		safety.lenExactly(nonce, 8, 'nonce'); //64 bit nonce
+		let ka: Uint8Array;
+		let kb: Uint8Array;
+		let rc: Array<number>;
+		if (key.length === 16) {
+			//128 bit key
+			//Ka = Kb = LE(Key)
+			ka = key.slice(0);
+			asLE.i32(ka, 0, 4);
+			kb = ka.slice();
+			rc = tau;
+		} else if (key.length === 32) {
+			//256 bit key
+			// ka= LE(Key[0:16]), kb=LE(Key[16:32])
+			ka = key.slice(0, 16);
+			asLE.i32(ka, 0, 4);
+			kb = key.slice(16, 32);
+			asLE.i32(kb, 0, 4);
+			rc = sigma;
+		} else throw new InvalidValueError('key.length', key.length, 16, 32);
+		somewhatSafe.len.exactly('nonce', nonce, 8); //64 bit nonce
 
 		//CONSTANTS
 		this.#state[0] = rc[0];
@@ -136,14 +131,14 @@ class Salsa implements IFullCrypt {
 
 		//KEY
 		const ka32 = new Uint32Array(ka.buffer);
-        this.#state.set(ka32,1);
-        const kb32=new Uint32Array(kb.buffer);
-        this.#state.set(kb32,11);
+		this.#state.set(ka32, 1);
+		const kb32 = new Uint32Array(kb.buffer);
+		this.#state.set(kb32, 11);
 
 		//COUNTER
-        //Bind #count to the state array in position 8/9 (we know U64 uses little endian order)
-        this.#count=U64Mut.fromArray(this.#state,8);
-        this.#count.set(count);
+		//Bind #count to the state array in position 8/9 (we know U64 uses little endian order)
+		this.#count = U64Mut.fromArray(this.#state, 8);
+		this.#count.set(count);
 
 		//NONCE
 		const n = nonce.slice();
@@ -158,7 +153,7 @@ class Salsa implements IFullCrypt {
 		this.#b.u32.set(this.#state);
 		this.#b.block();
 		for (let i = 0; i < blockSize32; i++) this.#b.u32[i] += this.#state[i];
-        this.#count.addEq(U64.fromInt(1));
+		this.#count.addEq(U64.fromInt(1));
 	}
 
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
@@ -213,15 +208,15 @@ function hSalsa(
 	key: Uint8Array,
 	input: Uint8Array,
 	rounds: number
-):void {
-    safety.lenGte(output,32,'output'); //256 bit output
-	safety.lenExactly(key, 32, 'key'); //256 bit key
-	safety.lenGte(input, 16, 'input'); //128 bit input
+): void {
+	somewhatSafe.len.atLeast('output', output, 32); //256 bit output
+	somewhatSafe.len.exactly('key', key, 32); //256 bit key
+	somewhatSafe.len.atLeast('input', input, 16); //128 bit input
 	const b = new SalsaBlock(rounds);
-    /* C K K K
-     * K C I I
-     * I I C K
-     * K K K C */
+	/* C K K K
+	 * K C I I
+	 * I I C K
+	 * K K K C */
 
 	//Setup block
 	//CONSTANTS
@@ -231,14 +226,14 @@ function hSalsa(
 	b.u32[15] = sigma[3];
 
 	//KEY (8 u32)
-    b.u8.set(key.slice(0,16),4);
-    b.u8.set(key.slice(16,32),44);//11*4
+	b.u8.set(key.slice(0, 16), 4);
+	b.u8.set(key.slice(16, 32), 44); //11*4
 
 	//Input (4 u32) - because input could be >16
-    b.u8.set(input.subarray(0,16),24);//6*4
-    
-    //Make sure everything is LE
-    asLE.i32(b.u8,0,16);
+	b.u8.set(input.subarray(0, 16), 24); //6*4
+
+	//Make sure everything is LE
+	asLE.i32(b.u8, 0, 16);
 
 	//Generate output
 	b.block();
@@ -256,24 +251,19 @@ function hSalsa(
 	b32[5] = b.u32[7];
 	b32[6] = b.u32[8];
 	b32[7] = b.u32[9];
-    asLE.i32(output,0,8);
+	asLE.i32(output, 0, 8);
 }
 
 class XSalsa extends Salsa {
-    constructor(
-		key: Uint8Array,
-		nonce: Uint8Array,
-		count: U64,
-		rounds: number
-    ) {
-        safety.lenExactly(nonce, 24, 'nonce'); //192 bit nonce
-                
-        //Generate z (hSalsa output)
-        const z=new Uint8Array(32);
-        hSalsa(z,key,nonce,rounds);
+	constructor(key: Uint8Array, nonce: Uint8Array, count: U64, rounds: number) {
+		somewhatSafe.len.exactly('nonce', nonce, 24); //192 bit nonce
 
-        super(z,nonce.subarray(16),count,rounds);
-    }
+		//Generate z (hSalsa output)
+		const z = new Uint8Array(32);
+		hSalsa(z, key, nonce, rounds);
+
+		super(z, nonce.subarray(16), count, rounds);
+	}
 }
 
 /**
@@ -283,11 +273,11 @@ class XSalsa extends Salsa {
  * Like {@link crypto/ChaCha20}, the cipher is based on an add-rotate-XOR (ARX) function.  Salsa uses the
  * CTR block mode
  *
- * First Published: *2007*  
- * Blocksize: *64 bytes*  
- * Key size: *16, 32 bytes*  
- * Nonce size: *8 bytes*  
- * Rounds: *20*  
+ * First Published: *2007*
+ * Blocksize: *64 bytes*
+ * Key size: *16, 32 bytes*
+ * Nonce size: *8 bytes*
+ * Rounds: *20*
  *
  * Specified in
  * - [Snuffle 2005](https://cr.yp.to/snuffle.html)
@@ -310,28 +300,28 @@ export class Salsa20 extends Salsa {
  * @param input At least 16 bytes (128 bits / 4 U32) - only first 16 bytes are used
  */
 export function hSalsa20(
-    output: Uint8Array,
+	output: Uint8Array,
 	key: Uint8Array,
 	input: Uint8Array
-):void {
-    hSalsa(output,key,input,20);
+): void {
+	hSalsa(output, key, input, 20);
 }
 
 /**
  * [XSalsa20](https://en.wikipedia.org/wiki/Salsa20#XSalsa20_with_192-bit_nonce)
- * 
+ *
  * XSalsa20 is a variant of {@link Salsa20} that allows a 192 bit (24 byte) nonce, far more
  * than Salsa's 64 bit (8 byte) nonce.  Larger nonce allows longer reuse of keys (you should
  * not reuse nonces).
- * 
- * First Published: *2008*  
- * Blocksize: *64 bytes*  
- * Key size: *16, 32 bytes*  
- * Nonce size: *24 bytes*  
- * Rounds: *20*  
+ *
+ * First Published: *2008*
+ * Blocksize: *64 bytes*
+ * Key size: *16, 32 bytes*
+ * Nonce size: *24 bytes*
+ * Rounds: *20*
  */
 export class XSalsa20 extends XSalsa {
-    /**
+	/**
 	 * @param key Key bytes, 32 bytes in length (256 bits, 8 U32)
 	 * @param nonce Non-repeated NONCE, exactly 24 bytes (192 bits, 6 U32)
 	 * @param count Block count generally 0 or 1 (default 0)

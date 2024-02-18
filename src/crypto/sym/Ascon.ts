@@ -1,10 +1,10 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { IHash } from '../interfaces/IHash.js';
-import { safety } from '../../primitive/Safety.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
 import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
+import { somewhatSafe } from '../../safe/index.js';
 
 // prettier-ignore
 /** Round constants (expand into 64bit) 2.6.1 */
@@ -182,8 +182,8 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		bRound: number
 	) {
 		super(rate, aRound, bRound);
-		safety.lenInRangeInc(key, 0, 20, 'key'); //0-160 bits
-		safety.lenExactly(nonce, 16, 'nonce'); //128 bits
+		somewhatSafe.int.inRangeInc('key.length', key.length, 0, 20); //0-160 bits
+		somewhatSafe.len.exactly('nonce', nonce, 16); //128 bits
 		//Note rate/aRound/bRound are tunable but not expected to be exposed so no need for safety checks)
 		this.#key = key;
 
@@ -341,10 +341,10 @@ class _AsconAead extends AAscon implements IAeadCrypt {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Key size: *16 bytes*  
- * Nonce size: *16 bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Key size: *16 bytes*
+ * Nonce size: *16 bytes*
  * Rounds: *6*
  *
  * Specified in
@@ -358,7 +358,7 @@ export class Ascon128 extends _AsconAead {
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, 8, 12, 6);
-		safety.lenExactly(key, 16, 'key'); //128 bits
+		somewhatSafe.len.exactly('key', key, 16); //128 bits
 	}
 }
 
@@ -368,10 +368,10 @@ export class Ascon128 extends _AsconAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *16 bytes*  
- * Key size: *16 bytes*  
- * Nonce size: *16 bytes*  
+ * First Published: *2014*
+ * Block size: *16 bytes*
+ * Key size: *16 bytes*
+ * Nonce size: *16 bytes*
  * Rounds: *8*
  *
  * Specified in
@@ -385,7 +385,7 @@ export class Ascon128a extends _AsconAead {
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, 16, 12, 8);
-		safety.lenExactly(key, 16, 'key'); //128 bits
+		somewhatSafe.len.exactly('key', key, 16); //128 bits
 	}
 }
 
@@ -395,10 +395,10 @@ export class Ascon128a extends _AsconAead {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Key size: *20 bytes*  
- * Nonce size: *16 bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Key size: *20 bytes*
+ * Nonce size: *16 bytes*
  * Rounds: *6*
  *
  * Specified in
@@ -412,7 +412,7 @@ export class Ascon80pq extends _AsconAead {
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, 8, 12, 6);
-		safety.lenExactly(key, 20, 'key'); //160 bits
+		somewhatSafe.len.exactly('key', key, 20); //160 bits
 	}
 }
 
@@ -510,10 +510,10 @@ class _AsconHash extends AAscon implements IHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/12*  
- * Hash size: *32 bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/12*
+ * Hash size: *32 bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
@@ -530,10 +530,10 @@ export class AsconHash extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/8*  
- * Hash size: *32 bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/8*
+ * Hash size: *32 bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
@@ -550,10 +550,10 @@ export class AsconHashA extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/12*  
- * Hash size: *? bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/12*
+ * Hash size: *? bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)
@@ -570,10 +570,10 @@ export class AsconXof extends _AsconHash {
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
  *
- * First Published: *2014*  
- * Block size: *8 bytes*  
- * Rounds: *12/8*  
- * Hash size: *? bytes*  
+ * First Published: *2014*
+ * Block size: *8 bytes*
+ * Rounds: *12/8*
+ * Hash size: *? bytes*
  *
  * Specified in
  * - [NIST](https://csrc.nist.gov/CSRC/media/Projects/lightweight-cryptography/documents/round-2/spec-doc-rnd2/ascon-spec-round2.pdf)

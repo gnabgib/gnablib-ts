@@ -38,7 +38,6 @@ export class Iso7816_4 {
 	 */
 	static pad(input: Uint8Array, len: number, pos = 0): Uint8Array {
 		const ret = new Uint8Array(len);
-		//somewhatSafe.lengthAtLeast(input,len+pos);
 		const need = len - (input.length - pos);
 		if (need <= 0) throw LengthError.atMost(len,'input.length',len-need);
 		ret.set(input.subarray(pos));

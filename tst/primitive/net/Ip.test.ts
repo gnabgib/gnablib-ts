@@ -96,10 +96,13 @@ const badStringParse:string[] = [
 	'+1.1.1.1', //Sign not allowed
 	'1.1.1.-1', //Sign not allowed
 	'', //Not enough parts
+	'a.b.c.d',
+	'1.2.3.d',
 ];
 
 for (const bad of badStringParse) {
 	tsts('Parsing bad string throws: ' + bad, () => {
+		//IpV4.fromString(bad)
 		assert.throws(() => IpV4.fromString(bad));
 	});
 }

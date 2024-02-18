@@ -3,7 +3,7 @@
 import { nextPow2 } from '../algo/nextPow2.js';
 import { NotEnoughSpaceError, NotSupportedError } from './ErrorExt.js';
 import { IReadTyped } from './interfaces/IReadTyped.js';
-import { intExt } from './IntExt.js';
+import { UInt } from './number/index.js';
 import type { IReadArray } from './interfaces/IReadArray.js';
 import type { IReadWriteArray } from './interfaces/IReadWriteArray.js';
 import { IWriteTyped } from './interfaces/IWriteTyped.js';
@@ -544,7 +544,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 				return target.at(prop);
 			},
 			set(target, prop, value): boolean {
-				const u = intExt.strictParseDecUint((prop as string) ?? '');
+				const u = UInt.parseDec((prop as string) ?? '');
 				if (u !== undefined) {
 					target.setEl(u, value);
 					return true;
@@ -704,7 +704,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 					target[prop as any] = value;
 					return true;
 				}
-				const u = intExt.strictParseDecUint((prop as string) ?? '');
+				const u = UInt.parseDec((prop as string) ?? '');
 				if (u !== undefined) {
 					target.setEl(u, value);
 					return true;

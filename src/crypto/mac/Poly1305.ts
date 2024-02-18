@@ -1,11 +1,11 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { IAeadCrypt, IHash, IFullCrypt } from '../index.js';
 import { ChaCha20, Salsa20, XChaCha20, XSalsa20 } from '../sym/index.js';
 import { asLE } from '../../endian/platform.js';
 import { NotInRangeError } from '../../primitive/ErrorExt.js';
-import { safety } from '../../primitive/Safety.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
+import { somewhatSafe } from '../../safe/index.js';
 
 const tagSize = 16;
 
@@ -38,7 +38,7 @@ export class Poly1305 implements IHash {
 	#bPos = 0;
 
 	constructor(key: Uint8Array) {
-		safety.lenExactly(key, 32, 'key'); //256
+		somewhatSafe.len.exactly('key', key, 32); //256
 
 		const r16 = new Uint16Array(key.slice(0, 16).buffer);
 		//Make sure data is LE
@@ -371,7 +371,7 @@ class Poly1305Aead implements IAeadCrypt {
 		}
 		this.#stage = stage_done;
 		//Make sure the provided tag is the right size
-		safety.lenExactly(tag, tagSize, 'tag');
+		somewhatSafe.len.exactly('tag', tag, tagSize);
 
 		const foundTag = this.#hash.sumIn();
 

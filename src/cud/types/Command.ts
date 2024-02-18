@@ -1,13 +1,13 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { utf8 } from '../../codec/Utf8.js';
-import { safety } from '../../primitive/Safety.js';
+import { somewhatSafe } from '../../safe/index.js';
 
 export class Command {
 	readonly char: string;
 	readonly human: string;
 	constructor(char: string, human: string) {
-		safety.lenExactly(char,1,'char');
+		somewhatSafe.len.exactly('char',char,1);
 		this.char = char;
 		this.human = human;
 	}

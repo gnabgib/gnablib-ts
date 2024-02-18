@@ -14,8 +14,11 @@ safe.int.inRangeInclusive(test:number,low:number,high:number) //May throw RangeE
 
 */
 
+import { GTEError } from '../error/GTEError.js';
+import { GTError } from '../error/GTError.js';
 import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
 import { LengthError } from '../error/LengthError.js';
+import { NaNError } from '../error/NaNError.js';
 import { ILengther } from '../primitive/interfaces/ILengther.js';
 
 function noTest() {}
@@ -28,6 +31,10 @@ export interface ISafeInt {
 	inRangeInc(noun: string, test: number, lowInc: number, highInc: number): void;
 	/** Coerce $input into an integer :: that will fit in $bytes bytes */
 	coerce(input: unknown): number;
+	/** May throw if $test <= $gt */
+	gt(noun: string, test: number, gt: number): void;
+	/** May throw if $test < $gte */
+	gte(noun: string, test: number, gte: number): void;
 }
 
 export interface ISafeFloat {
@@ -43,14 +50,21 @@ export interface ISafeStr {
 	nullEmpty(v: unknown): string | undefined;
 }
 
+/** Length safety checks */
+export interface ISafeLen {
+	/** Make sure that $test is at least $need elements in size (Invalid length; need $need have $test.length) */
+	atLeast(test: ILengther, need: number): void;
+	/** Make sure that $test is at least $need elements in size (Invalid $name; need $need have $test.length) */
+	atLeast(name: string, test: ILengther, need: number): void;
+	/** Make sure that $test is exactly $need elements in size (Invalid $noun; need $need have $test.length) */
+	exactly(noun: string, test: ILengther, need: number): void;
+}
+
 export interface ISafe {
 	int: ISafeInt;
 	float: ISafeFloat;
 	string: ISafeStr;
-	/** Make sure that $test is at least $need elements in size (Invalid length; need $need have $test.length) */
-	lengthAtLeast(test: ILengther, need: number): void;
-	/** Make sure that $test is at least $need elements in size (Invalid $name; need $need have $test.length) */
-	lengthAtLeast(name: string, test: ILengther, need: number): void;
+	len: ISafeLen;
 }
 
 /** Performs range checks, but not type checks */
@@ -63,14 +77,32 @@ export const somewhatSafe: ISafe = {
 			lowInc: number,
 			highInc: number
 		) {
-			if (test < lowInc || test > highInc)
-				throw new InclusiveRangeError(noun, test, lowInc, highInc);
+			//So! When you're expecting an int, this looks best:
+			//if (test < lowInc || test > highInc)
+			//	throw new InclusiveRangeError(noun, test, lowInc, highInc);
+			//But.. NaN can't be compared, so neither of those conditions pass.. and it sneaks through
+			//Rather, let's check in-range as OK (which NaN can't be)
+			if (test >= lowInc && test <= highInc) return true;
+			//Then exclude NaN with a different error (extra compare, but this is unhappy path)
+			if (Number.isNaN(test)) throw new NaNError(noun);
+			//And finally talk about the range constraint
+			throw new InclusiveRangeError(noun, test, lowInc, highInc);
 		},
 		coerce(input: unknown): number {
 			//todo: byte concern?
 			// if (bytes) this.inRangeInc(bytes,0,6);//JS supports 53 bit ints max, in terms of bytes 2^48 is the max
 			// else bytes=6;
 			return (input as number) | 0;
+		},
+		gt(noun: string, test: number, gt: number) {
+			if (test > gt) return;
+			if (Number.isNaN(test)) throw new NaNError(noun);
+			throw new GTError(noun, test, gt);
+		},
+		gte(noun: string, test: number, gte: number) {
+			if (test >= gte) return;
+			if (Number.isNaN(test)) throw new NaNError(noun);
+			throw new GTEError(noun, test, gte);
 		},
 	},
 	float: {
@@ -89,23 +121,25 @@ export const somewhatSafe: ISafe = {
 			return str;
 		},
 	},
-	lengthAtLeast(
-		nameOrTest: string | ILengther,
-		testOrNeed: ILengther | number,
-		need?: number
-	) {
-		if (need !== undefined) {
-			const len = (testOrNeed as ILengther).length;
-			if (len < need) throw new LengthError(need, '' + nameOrTest, len);
-		} else {
-			const len = (nameOrTest as ILengther).length;
-			need = testOrNeed as number;
-			if (len < need) throw new LengthError(need, len);
-		}
+	len: {
+		atLeast(
+			nameOrTest: string | ILengther,
+			testOrNeed: ILengther | number,
+			need?: number
+		) {
+			if (need !== undefined) {
+				const len = (testOrNeed as ILengther).length;
+				if (len < need) throw new LengthError(need, '' + nameOrTest, len);
+			} else {
+				const len = (nameOrTest as ILengther).length;
+				need = testOrNeed as number;
+				if (len < need) throw new LengthError(need, len);
+			}
+		},
+		exactly(noun: string, test: ILengther, need: number) {
+			if (test.length !== need) throw new LengthError(need, noun, test.length);
+		},
 	},
-	// lengthAtLeast2(name:string,test:ILengther,need:number) {
-	//     if (test.length<need) throw new LengthError(need,name,test.length);
-	// }
 };
 
 /** Performs range and type checks */
@@ -125,6 +159,14 @@ export const superSafe: ISafe = {
 			somewhatSafe.int.inRangeInc(noun, test, lowInc, highInc);
 		},
 		coerce: somewhatSafe.int.coerce,
+		gt(noun: string, test: number, gt: number) {
+			superSafe.int.is(test);
+			somewhatSafe.int.gt(noun, test, gt);
+		},
+		gte(noun: string, test: number, gte: number) {
+			superSafe.int.is(test);
+			somewhatSafe.int.gte(noun, test, gte);
+		},
 	},
 	float: {
 		is: function (test: unknown): void {
@@ -140,7 +182,7 @@ export const superSafe: ISafe = {
 		},
 		nullEmpty: somewhatSafe.string.nullEmpty,
 	},
-	lengthAtLeast: somewhatSafe.lengthAtLeast,
+	len: somewhatSafe.len,
 };
 
 // export const safe:ISafe=superSafe;

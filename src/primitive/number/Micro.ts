@@ -94,7 +94,7 @@ export class Micro implements ISerializer {
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(self.storageBytes);
-		safe.lengthAtLeast('storage', storage, self.storageBytes);
+		safe.len.atLeast('storage', storage, self.storageBytes);
 		return storage;
 	}
 

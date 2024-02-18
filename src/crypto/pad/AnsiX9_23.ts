@@ -37,7 +37,6 @@ export class AnsiX9_23 {
 	static pad(input: Uint8Array, len: number, pos = 0): Uint8Array {
 		const ret = new Uint8Array(len);
 		const need = len - (input.length - pos);
-		//somewhatSafe.lengthAtLeast(input,pos+len);
 		if (need < 0) throw new LengthError(len, 'input', len - need);
 		const randPad = new Uint8Array(need - 1);
 		getRandomValues(randPad);

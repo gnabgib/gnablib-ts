@@ -530,7 +530,7 @@ export class Aes implements IBlockCrypt {
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		safe.lengthAtLeast(...nameValue({block}),byteStart+blockSize);
+		safe.len.atLeast(...nameValue({block}),byteStart+blockSize);
 		this._decBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 
@@ -542,7 +542,7 @@ export class Aes implements IBlockCrypt {
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		safe.lengthAtLeast(...nameValue({block}),byteStart+blockSize);
+		safe.len.atLeast(...nameValue({block}),byteStart+blockSize);
 		this._encBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 }

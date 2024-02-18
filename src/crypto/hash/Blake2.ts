@@ -1,11 +1,12 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import * as littleEndian from '../../endian/little.js';
 import { Uint64, Uint64ish } from '../../primitive/Uint64.js';
 import type { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64 } from '../../primitive/number/U64.js';
-import { safety } from '../../primitive/Safety.js';
+import { somewhatSafe } from '../../safe/index.js';
+import { LengthError } from '../../error/LengthError.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)
 // [BLAKE2 — fast secure hashing](https://www.blake2.net/)
@@ -82,7 +83,7 @@ class Blake2_32bit implements IHash {
 	#bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		safety.lenInRangeInc(key, 0, 32, 'key');
+		somewhatSafe.int.inRangeInc('key.length',key.length,0,32);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -345,7 +346,7 @@ class Blake2_64bit implements IHash {
 	#bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		safety.lenInRangeInc(key, 0, 64, 'key');
+		somewhatSafe.int.inRangeInc('key.length',key.length,0,64);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -622,8 +623,8 @@ export class Blake2s extends Blake2_32bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
-		safety.intInRangeInc(digestSize, 1, 32, 'digestSize');
-		safety.intInRangeInc(fanOut, 0, 255, 'fanOut');
+		somewhatSafe.int.inRangeInc('digestSize',digestSize,1,32);
+		somewhatSafe.int.inRangeInc('fanOut',fanOut,0,255);
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
@@ -636,7 +637,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!salt || salt.length == 0) {
 			//nop
 		} else if (salt.length != saltSize32) {
-			safety.lenExactly(salt, saltSize32, 'salt');
+			somewhatSafe.len.exactly('salt',salt,saltSize32);
 		} else {
 			p.set(salt, 16);
 		}
@@ -644,7 +645,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!personalization || personalization.length == 0) {
 			//nop
 		} else if (personalization.length != saltSize32) {
-			safety.lenExactly(personalization, saltSize32, 'personalization');
+			somewhatSafe.len.exactly('personalization',personalization,saltSize32);
 		} else {
 			p.set(personalization, 24);
 		}
@@ -688,8 +689,8 @@ export class Blake2b extends Blake2_64bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
-		safety.intInRangeInc(digestSize, 1, 64, 'digestSize');
-		safety.intInRangeInc(fanOut, 0, 255, 'fanOut');
+		somewhatSafe.int.inRangeInc('digestSize',digestSize,1,64);
+		somewhatSafe.int.inRangeInc('fanOut',fanOut,0,255);
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
@@ -702,7 +703,7 @@ export class Blake2b extends Blake2_64bit {
 		if (!salt || salt.length == 0) {
 			//nop
 		} else if (salt.length != saltSize64) {
-			safety.lenExactly(salt,saltSize64,'salt');
+			throw new LengthError(saltSize64,'salt',salt.length);
 		} else {
 			p.set(salt, 32);
 		}
@@ -710,7 +711,7 @@ export class Blake2b extends Blake2_64bit {
 		if (!personalization || personalization.length == 0) {
 			//nop
 		} else if (personalization.length != saltSize64) {
-			safety.lenExactly(personalization,saltSize64,'personalization');
+			throw new LengthError(saltSize64,'personalization',personalization.length);
 		} else {
 			p.set(personalization, 48);
 		}

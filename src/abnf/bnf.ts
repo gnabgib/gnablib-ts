@@ -7,12 +7,12 @@ import {
 } from '../primitive/MatchResult.js';
 import { IMatchResult } from "../primitive/interfaces/IMatchResult.js";
 import { IMatchDetail } from "../primitive/interfaces/IMatchDetail.js";
-import { safety } from '../primitive/Safety.js';
 import { stringExt } from '../primitive/StringExt.js';
 import { utf } from '../primitive/Utf.js';
 import type { WindowStr } from '../primitive/WindowStr.js';
 import { IBnf } from './interfaces/IBnf.js';
 import { IBnfRepeat } from './interfaces/IBnfRepeat.js';
+import { somewhatSafe } from '../safe/index.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 //Augmented Backus-Naur Form
@@ -57,7 +57,7 @@ export class BnfChar implements IBnf {
 				caseInsensitive = value.caseInsensitive;
 			}
 		} else {
-			safety.lenExactly(value, 1, 'value');
+			somewhatSafe.len.exactly('value',value,1);
 			this.ord = value.charCodeAt(0);
 		}
 		this.caseInsensitive = BnfChar.smartSensitive(this.ord, caseInsensitive);
@@ -159,7 +159,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 		if (this.start.caseInsensitive || this.end.caseInsensitive)
 			throw new RangeError('You can only specify case sensitive characters.');
 		this.nonPrintable = this.start.nonPrintable || this.end.nonPrintable;
-		safety.intGt(this.end.ord, this.start.ord, 'this.end.ord');
+		somewhatSafe.int.gt('end.ord',this.end.ord,this.start.ord);
 		this.name = name;
 	}
 
@@ -266,7 +266,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 			this.nonPrintable = nonPrint;
 			ci = ci_all_undef ? undefined : ci_mixed ? 'mix' : caseInsensitive;
 		} else {
-			safety.lenGte(value, 2, 'value');
+			somewhatSafe.len.atLeast('value',value,2);
 			let nonPrint = false;
 			let ci_all_undef = true;
 			this._chars = value.split('').map((c) => {
@@ -577,8 +577,8 @@ export class BnfRepeat implements IBnfRepeat {
 	 */
 	private constructor(rule: IBnf, min: number, max: number, name?: string) {
 		//max = infinity, but we cannot measure that..this is a decent equiv for now
-		safety.intGte(min, 0, 'min');
-		safety.intGte(max, min, 'max');
+		somewhatSafe.int.gte('min',min,0);
+		somewhatSafe.int.gte('max',max,min);
 		this.rule = rule;
 		this.min = min;
 		this.max = max;

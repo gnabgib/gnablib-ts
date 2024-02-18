@@ -43,7 +43,7 @@ export class BitReader {
 	readNumber(bitCount: number): number {
 		//Make sure there's data in the buffer
 		const byteCountNeeded = (this.#bitPtr + bitCount + 7) >>> 3;
-		safe.lengthAtLeast('(internal)buffer',this.#buff, byteCountNeeded);
+		safe.len.atLeast('(internal)buffer',this.#buff, byteCountNeeded);
 
 		let byteBitSpace = 8 - this.bitPos;
 		let ptr = this.#bitPtr >>> 3;

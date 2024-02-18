@@ -1,10 +1,10 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { intExt } from '../IntExt.js';
 import { bitExt } from '../BitExt.js';
-import { safety } from '../Safety.js';
 import { IpV4 } from './Ip.js';
 import { ContentError } from '../../error/ContentError.js';
+import { UInt } from '../number/index.js';
+import { somewhatSafe } from '../../safe/index.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Cidr';
@@ -19,7 +19,7 @@ export class Cidr {
 	readonly mask: number;
 
 	constructor(ipv4: IpV4, mask: number) {
-		safety.intInRangeInc(mask, 0, 32, 'mask');
+		somewhatSafe.int.inRangeInc('mask',mask,0,32);
 		const ipv4Int = ipv4.valueOf();
 		this.bitMask = bitExt.lsbs(32 - mask);
 		const startInt = (ipv4Int & ~this.bitMask) >>> 0;
@@ -72,9 +72,9 @@ export class Cidr {
 	 */
 	equals(other: Cidr): boolean {
 		//We only consider normal form (so 10.10.10.10/24===10.10.10.0/24)
-		safety.notNull(other, 'Cidr.equals(other)');
 		return (
-			this.mask === other.mask && this.startIp.valueOf() === other.startIp.valueOf()
+			this.mask === other.mask &&
+			this.startIp.valueOf() === other.startIp.valueOf()
 		);
 	}
 
@@ -109,9 +109,9 @@ export class Cidr {
 	 */
 	static fromString(value: string): Cidr {
 		const parts = value.split('/');
-		safety.lenExactly(parts, 2, 'part');
+		somewhatSafe.len.exactly('parts',parts,2);
 		const ipv4 = IpV4.fromString(parts[0]);
-		const mask = intExt.strictParseDecUint(parts[1]);
+		const mask = UInt.parseDec(parts[1]);
 		if (mask === undefined)
 			throw new ContentError('Expecting integer 0-32', 'Mask', parts[1]);
 

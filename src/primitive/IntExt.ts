@@ -57,37 +57,6 @@ export const intExt = {
 	},
 
 	/**
-	 * Extended version of parseInt, which still accepts whitespace, but doesn't allow scientific
-	 * notation, fractions, other chars in the input.  Signs are allowed only right beside numbers (otherwise
-	 * it could be a formula?)
-	 * NOTE: NaN could be used here (because number=float) but on most platforms, this would return either
-	 *  an INT or null.  Also note +-Infinity ARE NOT INTS (sorry MDN)
-	 * @param value
-	 * @param base
-	 */
-	strictParseDecInt: function (value: string): number | undefined {
-		if (/^\s*[-+]?(\d+)\s*$/.test(value)) {
-			return parseInt(value, 10);
-		} else {
-			return undefined;
-		}
-	},
-
-	/**
-	 * Extended version of parseInt, still accepts whitespace, but doesn't allow signs (always
-	 * positive) unlike @see startParseDecInt
-	 * @param value
-	 * @returns
-	 */
-	strictParseDecUint: function (value: string): number | undefined {
-		if (/^\s*(\d+)\s*$/.test(value)) {
-			return parseInt(value, 10);
-		} else {
-			return undefined;
-		}
-	},
-
-	/**
 	 * Extended version of parseInt with radix 16, still accepts whitespace, but doesn't allow scientific
 	 * notation, fractions or other chars in the input.  Signs are allowed only right beside numbers.
 	 * @param value

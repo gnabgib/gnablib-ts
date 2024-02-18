@@ -1,8 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE, asLE } from '../../endian/platform.js';
-import { safety } from '../../primitive/Safety.js';
 import { U32 } from '../../primitive/number/U32.js';
+import { somewhatSafe } from '../../safe/index.js';
 import { IFullCrypt } from '../index.js';
 
 // Section 2.5 Counter System
@@ -45,8 +45,8 @@ export class Rabbit implements IFullCrypt {
 	#counterCarryBit = 0;
 
 	constructor(key: Uint8Array, iv?: Uint8Array) {
-		safety.lenExactly(key, 16, 'key');
-		if (iv !== undefined) safety.lenExactly(iv, 8, 'iv');
+		somewhatSafe.len.exactly('key', key, 16);
+		if (iv !== undefined) somewhatSafe.len.exactly('iv', iv, 8);
 		//Copy the key and correct endianness if required
 		const k = key.slice();
 		asBE.i128(k);
@@ -211,7 +211,7 @@ export class Rabbit implements IFullCrypt {
 		}
 	}
 
-    encryptSize(plainLen: number): number {
+	encryptSize(plainLen: number): number {
 		return plainLen;
 	}
 }

@@ -57,6 +57,44 @@ for (const [test, inRange] of intInRange1To5) {
 	});
 }
 
+const intGt5Set:[number,boolean][]=[
+	[0,false],
+	[4,false],
+	[5,false],
+	[5.1,true],
+	[6,true],
+];
+for(const [test,inRange] of intGt5Set) {
+	if (inRange) {
+		tsts(`somewhatSafe.int.gt(${test},5)`,()=>{
+			assert.not.throws(()=>somewhatSafe.int.gt('$noun',test,5));
+		})
+	} else {
+		tsts(`somewhatSafe.int.gt(${test},5) throws`,()=>{
+			assert.throws(()=>somewhatSafe.int.gt('$noun',test,5));
+		})
+	}
+}
+
+const intGte5Set:[number,boolean][]=[
+	[0,false],
+	[4,false],
+	[5,true],
+	[5.1,true],//5.1 isn't an int, but it is >5
+	[6,true],
+];
+for(const [test,inRange] of intGte5Set) {
+	if (inRange) {
+		tsts(`somewhatSafe.int.gte(${test},5)`,()=>{
+			assert.not.throws(()=>somewhatSafe.int.gte('$noun',test,5));
+		})
+	} else {
+		tsts(`somewhatSafe.int.gte(${test},5) throws`,()=>{
+			assert.throws(()=>somewhatSafe.int.gte('$noun',test,5));
+		})
+	}
+}
+
 const isFloat: [unknown, boolean][] = [
 	//no checks in somewhatSafe
 	[0, true],
@@ -132,14 +170,34 @@ const lengthAtLeast: [ILengther, number, boolean][] = [
 	['abba', 1, true],
 ];
 for (const [test, need, expect] of lengthAtLeast) {
-	tsts(`safe.string.lengthAtLeast(${test},${need})`, () => {
-		if (expect) {
-			assert.not.throws(() => somewhatSafe.lengthAtLeast(test, need));
-		} else {
-			assert.throws(() => somewhatSafe.lengthAtLeast(test, need));
-		}
-	});
+	if (expect) {
+		tsts(`safe.len.atLeast(${test},${need})`, () => {
+			assert.not.throws(()=>somewhatSafe.len.atLeast('$noun',test,need));
+		});	
+	} else {
+		tsts(`safe.len.atLeast(${test},${need}) throws`, () => {
+			assert.throws(()=>somewhatSafe.len.atLeast('$noun',test,need));
+		});	
+	}
 }
+
+const lengthExactlySet:[ILengther,number,boolean][] =[
+	[new Uint8Array(1),1,true],
+	[new Uint8Array(1),0,false],
+	[new Uint8Array(1),2,false],
+];
+for(const [test,need,exact] of lengthExactlySet) {
+	if (exact) {
+		tsts(`safe.len.exactly(${test},${need})`,()=>{
+			assert.not.throws(()=>somewhatSafe.len.exactly('$noun',test,need));
+		})
+	} else {
+		tsts(`safe.len.exactly(${test},${need}) throws`,()=>{
+			assert.throws(()=>somewhatSafe.len.exactly('$noun',test,need));
+		})
+	}
+}
+
 // tsts(`general`,()=>{
 //     const myString='hello';
 //     somewhatSafe.lengthAtLeast(...nameValue({myString}),6);

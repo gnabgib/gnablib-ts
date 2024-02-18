@@ -45,7 +45,7 @@ export class BitWriter {
 		// 2 + 6 + 7 /8 = 1	 	0 + 9 + 7 /8 = 2
 		//console.log(`t.bc=${this.#bitCount} bc=${bitCount}`);
 		const byteCountNeed = (this.#bitCount + bitCount + 7) >>> 3;
-		safe.lengthAtLeast('(internal)buffer', this.#buff, byteCountNeed);
+		safe.len.atLeast('(internal)buffer', this.#buff, byteCountNeed);
 
 		let ptr = this.#bitCount >>> 3;
 		let byteBitSpace = 8 - this.bitPos;

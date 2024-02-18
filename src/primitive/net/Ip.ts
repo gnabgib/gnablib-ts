@@ -1,9 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { intExt } from '../IntExt.js';
-import { safety } from '../Safety.js';
 import { U32 } from '../number/U32.js';
-import { ContentError } from '../../error/ContentError.js';
+import { UInt } from '../number/index.js';
+import { somewhatSafe } from '../../safe/index.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'IpV4';
@@ -12,7 +11,7 @@ export class IpV4 {
 	readonly bytes: Uint8Array;
 
 	constructor(bytes: Uint8Array) {
-		safety.lenExactly(bytes, 4, 'bytes');
+		somewhatSafe.len.exactly('bytes',bytes,4);
 		this.bytes = bytes;
 	}
 
@@ -53,23 +52,18 @@ export class IpV4 {
 	 * Create an IPv4 from 4 integers
 	 * @throws EnforceTypeError If `part0`,`part1`,`part2`,`part3` not integers
 	 * @throws OutOfRangeError If `part0`,`part1`,`part2`,`part3` <0 or >255
-	 * @param part0
-	 * @param part1
-	 * @param part2
-	 * @param part3
+	 * @param p0
+	 * @param p1
+	 * @param p2
+	 * @param p3
 	 * @returns
 	 */
-	static fromParts(
-		part0: number,
-		part1: number,
-		part2: number,
-		part3: number
-	): IpV4 {
-		safety.intInRangeInc(part0, 0, 0xff, 'part0');
-		safety.intInRangeInc(part1, 0, 0xff, 'part1');
-		safety.intInRangeInc(part2, 0, 0xff, 'part2');
-		safety.intInRangeInc(part3, 0, 0xff, 'part3');
-		return new IpV4(Uint8Array.of(part0, part1, part2, part3));
+	static fromParts(p0: number, p1: number, p2: number, p3: number): IpV4 {
+		somewhatSafe.int.inRangeInc('first part', p0, 0, 255);
+		somewhatSafe.int.inRangeInc('second part', p1, 0, 255);
+		somewhatSafe.int.inRangeInc('third part', p2, 0, 255);
+		somewhatSafe.int.inRangeInc('fourth part', p3, 0, 255);
+		return new IpV4(Uint8Array.of(p0, p1, p2, p3));
 	}
 
 	/**
@@ -83,40 +77,12 @@ export class IpV4 {
 	 */
 	static fromString(value: string): IpV4 {
 		const parts = value.split('.');
-		safety.lenExactly(parts, 4, 'part');
+		somewhatSafe.len.exactly('parts',parts,4);
 
-		const p0 = intExt.strictParseDecUint(parts[0]);
-		if (p0 === undefined)
-			throw new ContentError(
-				'looking for integer 0-255',
-				'First part',
-				parts[0]
-			);
-
-		const p1 = intExt.strictParseDecUint(parts[1]);
-		if (p1 === undefined)
-			throw new ContentError(
-				'looking for integer 0-255',
-				'Second part',
-				parts[1]
-			);
-
-		const p2 = intExt.strictParseDecUint(parts[2]);
-		if (p2 === undefined)
-			throw new ContentError(
-				'looking for integer 0-255',
-				'Third part',
-				parts[2]
-			);
-
-		const p3 = intExt.strictParseDecUint(parts[3]);
-		if (p3 === undefined)
-			throw new ContentError(
-				'looking for integer 0-255',
-				'Fourth part',
-				parts[3]
-			);
-
+		const p0 = UInt.parseDec(parts[0]);
+		const p1 = UInt.parseDec(parts[1]);
+		const p2 = UInt.parseDec(parts[2]);
+		const p3 = UInt.parseDec(parts[3]);
 		return IpV4.fromParts(p0, p1, p2, p3);
 	}
 
