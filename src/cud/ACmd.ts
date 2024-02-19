@@ -1,7 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import type { OldDateTime } from '../primitive/DateTime.js';
+import { BitWriter } from '../primitive/BitWriter.js';
 import { intExt } from '../primitive/IntExt.js';
+import { DateTime } from '../primitive/datetime/DateTime.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
 import type { Plane } from './types/Plane.js';
@@ -10,7 +11,6 @@ import type { Plane } from './types/Plane.js';
  * @alpha
  */
 export abstract class ACmd {
-	readonly started: OldDateTime;
 	readonly plane: Plane;
 	readonly cmd: Command;
 	readonly userId: number;
@@ -18,12 +18,11 @@ export abstract class ACmd {
 
 	constructor(
 		userId: number,
-		started: OldDateTime,
+		readonly started: DateTime,
 		table: TableName,
 		plane: Plane,
 		cmd: Command
 	) {
-		this.started = started;
 		this.plane = plane;
 		this.cmd = cmd;
 		this.userId = userId;
@@ -52,7 +51,9 @@ export abstract class ACmd {
 		// <extra>
 		// min 14 bytes
 		// NOTE: You can jump to byte 11 (first, potentially only U) to find the next row (remain are scaled)
-		const s = this.started.serialize().toBytesBE();
+		const bw = new BitWriter(Math.ceil(DateTime.serialBits / 8));
+		this.started.serialize(bw);
+		//const s = this.started.serialize().toBytesBE();
 		const p = this.plane.toBin();
 		const c = this.cmd.toBin();
 		const u = intExt.uintToScaleBytes(this.userId);
@@ -60,7 +61,7 @@ export abstract class ACmd {
 		const e = intExt.uintToScaleBytes(extraSpace);
 
 		const ret = new Uint8Array(
-			s.length +
+			bw.byteCount +
 				p.length +
 				c.length +
 				u.length +
@@ -69,8 +70,8 @@ export abstract class ACmd {
 				extraSpace
 		);
 		let ptr = 0;
-		ret.set(s, ptr);
-		ptr += s.length;
+		ret.set(bw.getBytes(), ptr);
+		ptr += bw.byteCount;
 		ret.set(p, ptr++);
 		ret.set(c, ptr++);
 		ret.set(u, ptr);

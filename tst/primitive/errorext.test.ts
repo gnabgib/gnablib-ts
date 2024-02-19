@@ -6,7 +6,6 @@ import {
 	NotSupportedError,
 	NullError,
 	OutOfRangeError,
-	ZeroError,
 } from '../../src/primitive';
 
 const tsts = suite('ErrorExt');
@@ -24,11 +23,6 @@ for (const [value, low, highInc] of oorTests) {
 		assert.instance(e, Error);
 	});
 }
-
-tsts('ZeroError', () => {
-	const e = new ZeroError('irrelevant');
-	assert.instance(e, Error);
-});
 
 tsts('NotEnoughSpaceError', () => {
 	const e = new NotEnoughSpaceError('irrelevant', 1, 3);

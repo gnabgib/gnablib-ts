@@ -1,6 +1,5 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { OldDateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { intExt } from '../primitive/IntExt.js';
 import { TableName } from './TableName.js';
@@ -8,16 +7,16 @@ import { Plane } from './types/Plane.js';
 import { ACmdData } from './CommandData.js';
 import type { ACmd } from './ACmd.js';
 import { ACmdCtrl } from './CommandCtrl.js';
-import { U64 } from '../primitive/number/U64.js';
+import { DateTime } from '../primitive/datetime/DateTime.js';
+import { BitReader } from '../primitive/BitReader.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)
-	let s: OldDateTime;
+	let s: DateTime;
 	let ptr = pos;
+	const br = new BitReader(bin);
 	try {
-		//Bytes->u64 will work, but DateTime may through if byte values
-		// are invalid.. leap seconds, and some other holes in the ranges
-		s = OldDateTime.deserialize(U64.fromBytesBE(bin, ptr));
+		s = DateTime.deserialize(br);
 	} catch {
 		return new FromBinResult<ACmd>(
 			0,

@@ -1,6 +1,5 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { OldDateTime } from '../primitive/DateTime.js';
 import { intExt } from '../primitive/IntExt.js';
 import { utf8 } from '../codec/Utf8.js';
 import { fpb64 } from '../codec/ieee754-fpb.js';
@@ -8,6 +7,8 @@ import { Uint64 } from '../primitive/Uint64.js';
 import { Int64 } from '../primitive/Int64.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { asBE } from '../endian/platform.js';
+import { DateTime } from '../primitive/datetime/DateTime.js';
+import { BitWriter } from '../primitive/BitWriter.js';
 
 /**
  * @alpha
@@ -39,11 +40,12 @@ export function unknownToBin(value: unknown): Uint8Array {
 	} else if (value === undefined || value === null) {
 		ret = new Uint8Array(1);
 		//ret[0]=0;
-	} else if (value instanceof OldDateTime) {
-		const d = value.serialize().toBytesBE();
-		ret = new Uint8Array(1 + d.length);
-		ret[0] = d.length;
-		ret.set(d, 1);
+	} else if (value instanceof DateTime) {
+		const bw = new BitWriter(value.serialSizeBits / 8);
+		value.serialize(bw);
+		ret = new Uint8Array(1 + bw.byteCount);
+		ret[0] = bw.bitCount;
+		ret.set(bw.getBytes(), 1);
 	} else if (value instanceof Int64) {
 		const i = value.toMinBytes();
 		ret = new Uint8Array(1 + i.length);

@@ -3,7 +3,6 @@
 export * as interfaces from './interfaces/index.js';
 
 export { bitExt, Carrier } from './BitExt.js';
-export { OldDateTime } from './DateTime.js';
 export { Duration } from './Duration.js';
 export * from './ErrorExt.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';

@@ -1,13 +1,15 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { NullError } from '../../primitive/ErrorExt.js';
-import { OldDateTime } from '../../primitive/DateTime.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
+import { DateTime } from '../../primitive/datetime/DateTime.js';
+import { BitWriter } from '../../primitive/BitWriter.js';
+import { BitReader } from '../../primitive/BitReader.js';
 
-export class DateTimeCol extends ACudColType implements IValid<OldDateTime> {
+export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 	/*MySQL supports microsecond res, but only for years 1000-9999 which is smaller than -4713-294276 (doh)*/
 	readonly mysqlType = 'BIGINT';
 	/*SQLite supports second resolution (int) or milliseconds in some formats (which can be dropped) 
@@ -21,21 +23,23 @@ export class DateTimeCol extends ACudColType implements IValid<OldDateTime> {
 		super(nullable);
 	}
 
-	cudByteSize(_input: OldDateTime): number {
+	cudByteSize(_input: DateTime): number {
 		return 8;
 	}
 
-	valid(input: OldDateTime | undefined): Error | undefined {
+	valid(input: DateTime | undefined): Error | undefined {
 		if (input === undefined || input === null) {
 			if (!this.nullable) return new NullError('DateTime');
 		}
 	}
-	unknownBin(value: OldDateTime | undefined): Uint8Array {
+	unknownBin(value: DateTime | undefined): Uint8Array {
 		if (!value) {
 			if (!this.nullable) throw new NullError('DateTime');
 			return new Uint8Array([0]);
 		}
-		const d = value.toBin();
+		const bw = new BitWriter(Math.ceil(DateTime.serialBits / 8));
+		value.serialize(bw);
+		const d = bw.getBytes();
 		const ret = new Uint8Array(1 + d.length);
 		ret[0] = d.length;
 		ret.set(d, 1);
@@ -45,7 +49,7 @@ export class DateTimeCol extends ACudColType implements IValid<OldDateTime> {
 	binUnknown(
 		bin: Uint8Array,
 		pos: number
-	): FromBinResult<OldDateTime | undefined> {
+	): FromBinResult<DateTime | undefined> {
 		if (pos + 1 > bin.length)
 			return new FromBinResult(
 				0,
@@ -79,13 +83,16 @@ export class DateTimeCol extends ACudColType implements IValid<OldDateTime> {
 				'DateTimeCol.binUnknown missing data'
 			);
 
-		const dFrom = OldDateTime.fromBin(bin, pos);
-		if (!dFrom.success)
+		const br = new BitReader(bin.subarray(pos));
+		try {
+			const dFrom = DateTime.deserialize(br);
+			return new FromBinResult(1 + l, dFrom);
+		} catch (e) {
 			return new FromBinResult(
 				0,
 				undefined,
-				'DateTimeCol.binUnknown bad value: ' + dFrom.reason
+				'DateTimeCol.binUnknown bad value: ' + e.message
 			);
-		return new FromBinResult(1 + l, dFrom.value);
+		}
 	}
 }

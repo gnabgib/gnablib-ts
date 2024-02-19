@@ -1,7 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { OldDateTime } from '../primitive/DateTime.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
+import { DateTime } from '../primitive/datetime/DateTime.js';
 import { ACmd } from './ACmd.js';
 import { ColName } from './ColName.js';
 import { CreateColDef } from './CreateColDef.js';
@@ -16,7 +16,7 @@ import { Plane } from './types/Plane.js';
 export abstract class ACmdCtrl extends ACmd {
 	constructor(
 		userId: number,
-		started: OldDateTime,
+		started: DateTime,
 		table: TableName,
 		cmd: CommandCtrl
 	) {
@@ -24,7 +24,7 @@ export abstract class ACmdCtrl extends ACmd {
 	}
 
 	static fromBinSub(
-		s: OldDateTime,
+		s: DateTime,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -62,7 +62,7 @@ export class CmdCtrlCreate extends ACmdCtrl {
 
 	public constructor(
 		userId: number,
-		started: OldDateTime,
+		started: DateTime,
 		table: TableName,
 		...cols: CreateColDef[]
 	) {
@@ -100,11 +100,11 @@ export class CmdCtrlCreate extends ACmdCtrl {
 		table: TableName,
 		...cols: CreateColDef[]
 	): CmdCtrlCreate {
-		return new CmdCtrlCreate(userId, OldDateTime.now(), table, ...cols);
+		return new CmdCtrlCreate(userId, DateTime.now(), table, ...cols);
 	}
 
 	static fromBinSub(
-		s: OldDateTime,
+		s: DateTime,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -151,7 +151,7 @@ export class CmdCtrlInsCols extends ACmdCtrl {
 	 */
 	public constructor(
 		userId: number,
-		started: OldDateTime,
+		started: DateTime,
 		table: TableName,
 		after: ColName | undefined,
 		...cols: InsertColDef[]
@@ -201,11 +201,11 @@ export class CmdCtrlInsCols extends ACmdCtrl {
 		after: ColName | undefined,
 		...cols: InsertColDef[]
 	): CmdCtrlInsCols {
-		return new CmdCtrlInsCols(userId, OldDateTime.now(), table, after, ...cols);
+		return new CmdCtrlInsCols(userId, DateTime.now(), table, after, ...cols);
 	}
 
 	static fromBinSub(
-		s: OldDateTime,
+		s: DateTime,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -256,7 +256,7 @@ export class CmdCtrlRemCols extends ACmdCtrl {
 
 	public constructor(
 		userId: number,
-		started: OldDateTime,
+		started: DateTime,
 		table: TableName,
 		...cols: ColName[]
 	) {
@@ -294,11 +294,11 @@ export class CmdCtrlRemCols extends ACmdCtrl {
 		table: TableName,
 		...cols: ColName[]
 	): CmdCtrlRemCols {
-		return new CmdCtrlRemCols(userId, OldDateTime.now(), table, ...cols);
+		return new CmdCtrlRemCols(userId, DateTime.now(), table, ...cols);
 	}
 
 	static fromBinSub(
-		s: OldDateTime,
+		s: DateTime,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -332,22 +332,23 @@ export class CmdCtrlRemCols extends ACmdCtrl {
  * @alpha
  */
 export class CmdCtrlDrop extends ACmdCtrl {
-	public constructor(userId: number, started: OldDateTime, table: TableName) {
+	public constructor(userId: number, started: DateTime, table: TableName) {
 		super(userId, started, table, CommandCtrl.Drop);
 	}
 
 	static Now(userId: number, table: TableName): CmdCtrlDrop {
-		return new CmdCtrlDrop(userId, OldDateTime.now(), table);
+		return new CmdCtrlDrop(userId, DateTime.now(), table);
 	}
 
 	static fromBinSub(
-		s: OldDateTime,
+		s: DateTime,
 		cByte: number,
 		u: number,
 		t: TableName,
 		e: number,
 		bin: Uint8Array,
 		len: number,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		pos: number
 	): FromBinResult<CmdCtrlDrop> {
 		return new FromBinResult(len + e, new CmdCtrlDrop(u, s, t));

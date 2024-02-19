@@ -1,7 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { utf8 } from '../codec/Utf8.js';
-import { OutOfRangeError } from '../primitive/ErrorExt.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { safety } from '../primitive/Safety.js';
 
@@ -38,7 +37,7 @@ export class ColName {
 	 */
 	static fromStr(name: string): ColName {
 		const bytes = utf8.toBytes(name);
-		safety.lenInRangeInc(bytes,minLen,maxLen,'name-bytes');
+		safety.lenInRangeInc(bytes, minLen, maxLen, 'name-bytes');
 		return new ColName(name, bytes);
 	}
 
@@ -48,7 +47,7 @@ export class ColName {
 	 * @returns
 	 */
 	static fromUtf8Bytes(utf8bytes: Uint8Array): ColName {
-		safety.lenInRangeInc(utf8bytes,minLen,maxLen,'utf8bytes');
+		safety.lenInRangeInc(utf8bytes, minLen, maxLen, 'utf8bytes');
 		const n = utf8.fromBytes(utf8bytes);
 		return new ColName(n, utf8bytes);
 	}

@@ -1,7 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { FromBinResult } from './FromBinResult.js';
-import { stringExt } from './StringExt.js';
 
 const mark2Byte = 0x80; //10000000
 const mark3Byte = 0xc0; //11000000
@@ -13,20 +12,6 @@ const mark8Byte = 0xfe; //11111110
 const shift32Bit = 0x100000000;
 
 export const intExt = {
-	/**
-	 * Convert `value` into a string, and pad the start with zeros such that the length
-	 * is at least `len`.  If negative, the sign will appear before any padding.
-	 * @param value
-	 * @param len
-	 * @returns
-	 */
-	zeroPad: function (value: number, len: number): string {
-		if (value < 0) {
-			return '-' + stringExt.padStart((0 - value).toString(), len, '0');
-		}
-		return stringExt.padStart(value.toString(), len, '0');
-	},
-	
 	/**
 	 * Encode an unsigned integer as a set of bytes without a fixed size
 	 * @param uint Number to encode >=0 <=2^53 (max safe int)

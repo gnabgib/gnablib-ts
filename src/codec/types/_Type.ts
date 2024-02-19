@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 /*
     Common: Null, Int, Utf8, Bool, DateTime, Float, 
@@ -36,7 +36,6 @@ import { Int64 } from '../../primitive/Int64.js';
 import { Uint64 } from '../../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../ieee754-fpb.js';
 import { utf8 } from '../Utf8.js';
-import { OldDateTime } from '../../primitive/DateTime.js';
 import { BinResult, FromBinResult } from '../../primitive/FromBinResult.js';
 import type {
 	/*ReadonlyBigInt64Array,*/ ReadonlyInt16Array,
@@ -46,6 +45,7 @@ import type {
 import { safety } from '../../primitive/Safety.js';
 import { DateTime } from '../../primitive/datetime/DateTime.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
+import { BitReader } from '../../primitive/BitReader.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -637,18 +637,18 @@ export function encode(value: unknown): Uint8Array {
 	if (value instanceof Int64) {
 		return encodeInt(value);
 	}
-	if (value instanceof OldDateTime) {
-		const d = value.toBin();
-		const ret = new Uint8Array(d.length + 1);
-		ret[0] = Type.DateTime;
-		ret.set(d, 1);
-		return ret;
-	}
+	// if (value instanceof OldDateTime) {
+	// 	const d = value.toBin();
+	// 	const ret = new Uint8Array(d.length + 1);
+	// 	ret[0] = Type.DateTime;
+	// 	ret.set(d, 1);
+	// 	return ret;
+	// }
 	if (value instanceof DateTime) {
-		const br=new BitWriter(9);
-		br.writeNumber(Type.DateTime,8);
-		value.serialize(br);
-		return br.getBytes();
+		const bw = new BitWriter(1 + value.serialSizeBits / 8);
+		bw.writeNumber(Type.DateTime, 8);
+		value.serialize(bw);
+		return bw.getBytes();
 	}
 	if (value instanceof Uint8Array) {
 		return encodeBin(value);
@@ -750,9 +750,14 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			return new BinResult(1, false);
 		case Type.DateTime:
 			if (pos + 8 > bin.length) return 'decode missing data';
-			dFrom = OldDateTime.fromBin(bin, pos);
-			if (!dFrom.success) return 'decode failed DateTime ' + dFrom.reason;
-			return new BinResult(1 + 8, dFrom.value);
+			try {
+				const br = new BitReader(bin.subarray(pos));
+				const dFrom = DateTime.deserialize(br);
+				return new BinResult(1 + 8, dFrom);
+			} catch (e) {
+				return 'decode failed DateTime ' + e.message;
+			}
+
 		case Type.Utf8_0:
 			return new BinResult(1, '');
 		case Type.Utf8_1:
