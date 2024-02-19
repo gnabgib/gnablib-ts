@@ -30,6 +30,7 @@ const parseDecSet: [string, number, number][] = [
 	['4wd', 4, Number.NaN],
 	['1 is the loneliest', 1, Number.NaN], //It's a song
 	['421e+0', 421, Number.NaN],
+    ['421e+1', 421, Number.NaN],
 	['421hop', 421, Number.NaN],
 	['1.61803398875', 1, Number.NaN], //JS just truncates the decimal parts
 	['0x10', 16, Number.NaN],

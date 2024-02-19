@@ -697,8 +697,6 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 	if (pos >= bin.length) return 'decode unable to fine type';
 	const type = bin[ptr++];
 	let len: number | string;
-	let need: string | undefined;
-	let dFrom: FromBinResult<OldDateTime>;
 	switch (type) {
 		// UInt_Var, //1-8B 0 - 72057594037927935 (2^56 - 1) 72 peta
 		// UInt_1, //1B 0 - 255 (2^8 - 1) aka Byte
@@ -754,8 +752,8 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 				const br = new BitReader(bin.subarray(pos));
 				const dFrom = DateTime.deserialize(br);
 				return new BinResult(1 + 8, dFrom);
-			} catch (e) {
-				return 'decode failed DateTime ' + e.message;
+			} catch (e: unknown) {
+				return 'decode failed DateTime ' + (e as Error).message ?? '';
 			}
 
 		case Type.Utf8_0:

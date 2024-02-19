@@ -87,11 +87,11 @@ export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 		try {
 			const dFrom = DateTime.deserialize(br);
 			return new FromBinResult(1 + l, dFrom);
-		} catch (e) {
+		} catch (e: unknown) {
 			return new FromBinResult(
 				0,
 				undefined,
-				'DateTimeCol.binUnknown bad value: ' + e.message
+				'DateTimeCol.binUnknown bad value: ' + (e as Error).message ?? ''
 			);
 		}
 	}
