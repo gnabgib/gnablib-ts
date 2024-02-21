@@ -15,3 +15,5 @@ export { DateOnly } from './DateOnly.js';
 export { TimeOnly } from './TimeOnly.js';
 export { TimeOnlyMs } from './TimeOnlyMs.js';
 export { DateTime } from './DateTime.js';
+//Durations
+export { DurationExact, Duration } from './Duration.js';

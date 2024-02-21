@@ -2,7 +2,7 @@
 export type { IBuildable } from './IBuildable.js';
 export type { IBufferer } from './IBufferer.js';
 export type { ICidrValue } from './ICidrValue.js';
-export type { IDurationComponents } from './IDurationComponents.js';
+export type { IDurationExactParts, IDurationParts } from './IDurationParts.js';
 export type { ILengther } from './ILengther.js';
 export type { IMatchDetail } from './IMatchDetail.js';
 export type { IMatchResult } from './IMatchResult.js';

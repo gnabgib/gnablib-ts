@@ -3,7 +3,6 @@
 export * as interfaces from './interfaces/index.js';
 
 export { bitExt, Carrier } from './BitExt.js';
-export { Duration } from './Duration.js';
 export * from './ErrorExt.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
 //export { Int64 } from './Int64_es2020.js';
@@ -80,6 +79,11 @@ export { BitWriter } from './BitWriter.js';
  * - {@link primitive.datetime.Millisecond Millisecond} Range 0 - 999
  * - {@link primitive.datetime.Microsecond Microsecond} Range 0 - 999999
  * - {@link primitive.datetime.UtcOrNot UtcOrNot}
+ * 
+ * ## Duration
+ * 
+ * - {@link primitive.datetime.Duration Duration} Range 0 - 367200y
+ * - {@link primitive.datetime.DurationExact DurationExact} Range 0 - 134117046d
  */
 export * as datetime from './datetime/index.js';
 /**
