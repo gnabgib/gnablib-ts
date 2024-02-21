@@ -4,12 +4,12 @@ const DBG_RPT = 'LTError';
 /**
  * An error representing an invalid value, where it should have been less than a value
  */
-export class LTError extends RangeError {
+export class LTError<T> extends RangeError {
 	/** $noun should be <$lt, got $value */
 	constructor(
 		readonly noun: string,
-		readonly value: number,
-		readonly lt: number
+		readonly value: T,
+		readonly lt: T
 	) {
 		super(`${noun} should be <${lt}, got ${value}`);
 	}

@@ -186,8 +186,8 @@ const lengthExactlySet:[ILengther,number,boolean][] =[
 	[new Uint8Array(1),0,false],
 	[new Uint8Array(1),2,false],
 ];
-for(const [test,need,exact] of lengthExactlySet) {
-	if (exact) {
+for(const [test,need,expect] of lengthExactlySet) {
+	if (expect) {
 		tsts(`safe.len.exactly(${test},${need})`,()=>{
 			assert.not.throws(()=>somewhatSafe.len.exactly('$noun',test,need));
 		})
@@ -198,9 +198,42 @@ for(const [test,need,exact] of lengthExactlySet) {
 	}
 }
 
-// tsts(`general`,()=>{
-//     const myString='hello';
-//     somewhatSafe.lengthAtLeast(...nameValue({myString}),6);
-// })
+const zeroToFiveSet:[number,boolean][]=[
+	[-1,false],
+	[0,true],
+	[0.00001,true],
+	[5,false],
+	[4.9999999,true],
+];
+for(const [test,expect] of zeroToFiveSet) {
+	if (expect) {
+		tsts(`safe.float.zeroTo(${test},5)`,()=>{
+			assert.not.throws(()=>somewhatSafe.float.zeroTo('$noun',test,5));
+		})
+	} else {
+		tsts(`safe.float.zeroTo(${test},5) throws`,()=>{
+			assert.throws(()=>somewhatSafe.float.zeroTo('$noun',test,5));
+		})
+	}
+}
+
+const ltFiveSet:[number,boolean][]=[
+	[-1,true],
+	[0,true],
+	[0.00001,true],
+	[5,false],
+	[4.9999999,true],
+];
+for(const [test,expect] of ltFiveSet) {
+	if (expect) {
+		tsts(`safe.float.lt(${test},5)`,()=>{
+			assert.not.throws(()=>somewhatSafe.float.lt('$noun',test,5));
+		})
+	} else {
+		tsts(`safe.float.lt(${test},5) throws`,()=>{
+			assert.throws(()=>somewhatSafe.float.lt('$noun',test,5));
+		})
+	}
+}
 
 tsts.run();

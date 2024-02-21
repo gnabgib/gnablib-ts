@@ -4,12 +4,12 @@ const DBG_RPT = 'AtMostError';
 /**
  * An error representing an invalid value, where it should have been less than equal to a value
  */
-export class AtMostError extends RangeError {
+export class AtMostError<T> extends RangeError {
 	/** $noun should be at most $max, got $value */
 	constructor(
 		readonly noun: string,
-		readonly max: number,
-		readonly value: number
+		readonly value: T,
+		readonly max: T
 	) {
 		super(`${noun} should be at most ${max}, got ${value}`);
 	}

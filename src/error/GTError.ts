@@ -4,12 +4,12 @@ const DBG_RPT = 'GTError';
 /**
  * An error representing an invalid value, where it should have been greater than a value
  */
-export class GTError extends RangeError {
+export class GTError<T> extends RangeError {
 	/** $noun should be >$gt, got $value */
 	constructor(
 		readonly noun: string,
-		readonly value: number,
-		readonly gt: number
+		readonly value: T,
+		readonly gt: T
 	) {
 		super(`${noun} should be >${gt}, got ${value}`);
 	}

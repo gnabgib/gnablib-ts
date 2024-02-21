@@ -550,5 +550,23 @@ for(const [w,expect] of iteratorSet) {
 	})
 }
 
+tsts(`getReset`,()=>{
+	const w=WindowStr.new('hello');
+	const reset=w.getReset();
+	
+	w.shrink(2,1);
+	assert.equal(w.toString(),'ll');
+	reset();
+
+	assert.equal(w.toString(),'hello');
+});
+
+tsts(`substring`,()=>{
+	const w=WindowStr.new('hello');
+	assert.equal(w.substring(0),'hello');
+	assert.equal(w.substring(1,4),'ell');
+	assert.equal(w.substring(2,4),'ll');
+});
+
 
 tsts.run();

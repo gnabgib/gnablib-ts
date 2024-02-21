@@ -226,6 +226,21 @@ export class WindowStr {
 	}
 
 	/**
+	 * Create a reset point, calling the returned function will return this window to
+	 * the state it is in when this function is requested.  Useful for backing out
+	 * a multi-step parse that fails at a later step.  Like a transaction that auto-
+	 * commits
+	 */
+	getReset(): () => void {
+		const s = this._start;
+		const l = this._len;
+		return () => {
+			this._start = s;
+			this._len = l;
+		};
+	}
+
+	/**
 	 * A new window, on the same storage, using the last `length` characters of this
 	 * @throws OutOfRangeError length invalid value
 	 * @param length Integer [0 - {@link length})
@@ -315,6 +330,18 @@ export class WindowStr {
 	 */
 	startsWith(searchString: string): boolean {
 		return this._src.startsWith(searchString, this._start);
+	}
+
+	/**
+	 * Return part of the window from the start index up to and excluding the end index, or to the end of the window
+	 * if no end index is supplied.
+	 * @param start The index of the first character to include in the returned substring
+	 * @param end The index of the first character to exclude from the returned substring
+	 * @pure
+	 */
+	substring(start: number, end?: number): string {
+		if (!end) end = this._len;
+		return this._src.substring(this._start + start, this._start + end);
 	}
 
 	/**

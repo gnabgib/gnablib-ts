@@ -17,6 +17,7 @@ safe.int.inRangeInclusive(test:number,low:number,high:number) //May throw RangeE
 import { GTEError } from '../error/GTEError.js';
 import { GTError } from '../error/GTError.js';
 import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
+import { LTError } from '../error/LTError.js';
 import { LengthError } from '../error/LengthError.js';
 import { NaNError } from '../error/NaNError.js';
 import { ILengther } from '../primitive/interfaces/ILengther.js';
@@ -35,11 +36,17 @@ export interface ISafeInt {
 	gt(noun: string, test: number, gt: number): void;
 	/** May throw if $test < $gte */
 	gte(noun: string, test: number, gte: number): void;
+	/** Make sure that $test is <$lt */
+	lt(noun: string, test: number, lt: number): void;
 }
 
 export interface ISafeFloat {
 	is(test: unknown): void;
 	coerce(input: unknown): number;
+	/** Make sure that $test is <$lt */
+	lt(noun: string, test: number, lt: number): void;
+	/** Make sure that $test is >=0 and <$lt */
+	zeroTo(noun: string, test: number, lt: number): void;
 }
 
 /** String safety checks */
@@ -104,11 +111,26 @@ export const somewhatSafe: ISafe = {
 			if (Number.isNaN(test)) throw new NaNError(noun);
 			throw new GTEError(noun, test, gte);
 		},
+		lt(noun: string, test: number, lt: number) {
+			if (test < lt) return;
+			//Range constraint (note the message won't mention zero but that's ok?)
+			throw new LTError(noun, test, lt);
+		},
 	},
 	float: {
 		is: noTest,
 		coerce: function (input: unknown): number {
 			return +(input as number);
+		},
+		lt(noun: string, test: number, lt: number) {
+			if (test < lt) return;
+			//Range constraint (note the message won't mention zero but that's ok?)
+			throw new LTError(noun, test, lt);
+		},
+		zeroTo(noun: string, test: number, to: number) {
+			if (test >= 0 && test < to) return;
+			//Range constraint (note the message won't mention zero but that's ok?)
+			throw new LTError(noun, test, to);
 		},
 	},
 	string: {
@@ -167,6 +189,10 @@ export const superSafe: ISafe = {
 			superSafe.int.is(test);
 			somewhatSafe.int.gte(noun, test, gte);
 		},
+		lt(noun: string, test: number, lt: number) {
+			superSafe.int.is(test);
+			somewhatSafe.int.lt(noun, test, lt);
+		},
 	},
 	float: {
 		is: function (test: unknown): void {
@@ -174,6 +200,8 @@ export const superSafe: ISafe = {
 				throw new TypeError(`Not a float: ${test}`);
 		},
 		coerce: somewhatSafe.float.coerce,
+		lt: somewhatSafe.float.lt,
+		zeroTo: somewhatSafe.float.zeroTo,
 	},
 	string: {
 		is: function (test: unknown) {
