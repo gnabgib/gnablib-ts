@@ -79,6 +79,10 @@
 			"types": "./_o/type/cud/index.d.ts",
 			"default": "./_o/dist/cud/index.js"
 		},
+		"./datetime": {
+			"types": "./_o/type/datetime/index.d.ts",
+			"default": "./_o/dist/datetime/index.js"
+		},
 		"./ecc": {
 			"types": "./_o/type/ecc/index.d.ts",
 			"default": "./_o/dist/ecc/index.js"
@@ -98,10 +102,6 @@
 		"./primitive": {
 			"types": "./_o/type/primitive/index.d.ts",
 			"default": "./_o/dist/primitive/index.js"
-		},
-		"./primitive/datetime": {
-			"types": "./_o/type/primitive/datetime/index.d.ts",
-			"default": "./_o/dist/primitive/datetime/index.js"
 		},
 		"./primitive/net": {
 			"types": "./_o/type/primitive/net/index.d.ts",

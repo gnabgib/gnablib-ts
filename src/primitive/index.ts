@@ -60,33 +60,6 @@ export { BitWriter } from './BitWriter.js';
 //These are dupes of package.json-exports, and no one will want to import them this way
 // but typedoc doesn't pick them up otherwise
 /**
- * # Date and time
- *
- * A series of classes to hold date and time information.  Partitioned from {@link primitive}
- * because some of these units can be redefined (with different range constraints)
- *
- * ## Date
- *
- * - {@link primitive.datetime.Year Year} Range -10000 - +22767
- * - {@link primitive.datetime.Month Month} Range 1 - 12
- * - {@link primitive.datetime.Day Day} Range 1 - 31
- *
- * ## Time
- *
- * - {@link primitive.datetime.Hour Hour} Range 0 -23
- * - {@link primitive.datetime.Minute Minute} Range 0 - 59
- * - {@link primitive.datetime.Second Second} Range 0 - 59 (no leap seconds)
- * - {@link primitive.datetime.Millisecond Millisecond} Range 0 - 999
- * - {@link primitive.datetime.Microsecond Microsecond} Range 0 - 999999
- * - {@link primitive.datetime.UtcOrNot UtcOrNot}
- * 
- * ## Duration
- * 
- * - {@link primitive.datetime.Duration Duration} Range 0 - 367200y
- * - {@link primitive.datetime.DurationExact DurationExact} Range 0 - 134117046d
- */
-export * as datetime from './datetime/index.js';
-/**
  * # Number
  *
  * - {@link primitive.number.Micro Micro} Range 0 - 999999
