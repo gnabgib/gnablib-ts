@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Duration } from '../../../src/primitive/datetime/Duration';
+import { Duration, DurationExact } from '../../../src/primitive/datetime/Duration';
 import { IDurationParts } from '../../../src/primitive/interfaces/IDurationParts';
 import { BitWriter } from '../../../src/primitive/BitWriter';
 import { hex } from '../../../src/codec';
@@ -286,6 +286,80 @@ for (const [a, b] of gtSet) {
 	tsts(`${b}<${a}`, () => {
 		assert.equal(b.gt(a), false);
 	});
+}
+
+const addDurationSet:[Duration,Duration,string][]=[
+	
+	[Duration.new({d:1}),Duration.new({d:1}),'2d'],
+	[Duration.new({d:1}),Duration.new({m:1}),'1m1d'],
+	[Duration.new({y:1}),Duration.new({d:1}),'1y1d'],
+	[Duration.new({y:1}),Duration.new({h:25}),'1y1d1h'],
+	[Duration.new({ y: 3, m: 5, d: 7, h: 11, i: 13, s: 17, us: 19 }),Duration.zero,'3y5m7d11h13i17.000019s'],
+	[Duration.max,Duration.new({us:1}),'367200y'],
+	[Duration.max,Duration.new({s:1}),'367200y'],
+	[Duration.max,Duration.new({i:1}),'367200y'],
+	[Duration.max,Duration.new({h:1}),'367200y'],
+	[Duration.max,Duration.new({d:1}),'367200y'],
+	[Duration.max,Duration.new({m:1}),'367200y'],
+	[Duration.max,Duration.new({y:1}),'367200y'],
+	//Transition boundaries
+	[Duration.new({i:59}),Duration.new({i:1}),'1h'],
+	[Duration.new({i:59}),Duration.new({s:61}),'1h1s'],
+	[Duration.new({d:146096}),Duration.new({d:1}),'400y'],
+	[Duration.new({d:146096}),Duration.new({d:2}),'400y1d'],
+];
+for(const [a,b,str] of addDurationSet) {
+	tsts(`${a}+${b}=${str}`, () => {
+		const c = a.add(b);
+		assert.equal(c.toString(), str);
+	});	
+}
+
+const addDurationExactSet:[Duration,DurationExact,string][]=[
+	[Duration.new({d:1}),DurationExact.new({d:1}),'2d'],
+	[Duration.new({y:1}),DurationExact.new({d:1}),'1y1d'],
+	[Duration.new({y:1}),DurationExact.new({h:25}),'1y1d1h'],
+	[Duration.new({ y: 3, m: 5, d: 7, h: 11, i: 13, s: 17, us: 19 }),DurationExact.zero,'3y5m7d11h13i17.000019s'],
+	[Duration.max,DurationExact.new({us:1}),'367200y'],
+	[Duration.max,DurationExact.new({s:1}),'367200y'],
+	[Duration.max,DurationExact.new({i:1}),'367200y'],
+	[Duration.max,DurationExact.new({h:1}),'367200y'],
+	[Duration.max,DurationExact.new({d:1}),'367200y'],
+];
+for(const [a,b,str] of addDurationExactSet) {
+	tsts(`${a}+${b}=${str}`, () => {
+		const c = a.add(b);
+		assert.equal(c.toString(), str);
+	});	
+}
+
+const subDurationSet:[Duration,Duration,string][]=[
+	[Duration.new({d:1}),Duration.new({d:1}),'0s'],
+	[Duration.new({d:1}),Duration.new({h:1}),'23h'],
+	[Duration.new({m:13}),Duration.new({y:1}),'1m'],
+	//Without a context, moving between y-m and d-h-i-s is impossible.. so zero
+	[Duration.new({m:1}),Duration.new({d:1}),'0s'],
+	[Duration.new({m:1}),Duration.new({h:1}),'0s'],
+	[Duration.new({m:1}),Duration.new({i:1}),'0s'],
+	[Duration.new({m:1}),Duration.new({s:1}),'0s'],
+	[Duration.new({m:1}),Duration.new({us:1}),'0s'],
+];
+for(const [a,b,str] of subDurationSet) {
+	tsts(`${a}-${b}=${str}`, () => {
+		const c = a.sub(b);
+		assert.equal(c.toString(), str);
+	});	
+}
+
+const subDurationExactSet:[Duration,DurationExact,string][]=[
+	[Duration.new({d:1}),DurationExact.new({d:1}),'0s'],
+	[Duration.new({d:1}),DurationExact.new({h:1}),'23h'],
+];
+for(const [a,b,str] of subDurationExactSet) {
+	tsts(`${a}-${b}=${str}`, () => {
+		const c = a.sub(b);
+		assert.equal(c.toString(), str);
+	});	
 }
 
 tsts('coverage', () => {

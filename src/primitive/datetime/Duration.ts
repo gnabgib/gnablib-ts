@@ -14,7 +14,10 @@ import { ContentError } from '../../error/ContentError.js';
 import { LTError } from '../../error/LTError.js';
 import { Float, Int } from '../number/index.js';
 import { WindowStr } from '../WindowStr.js';
-import { IDurationExactParts, IDurationParts } from '../interfaces/IDurationParts.js';
+import {
+	IDurationExactParts,
+	IDurationParts,
+} from '../interfaces/IDurationParts.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT_E = 'DurationExact';
@@ -26,6 +29,7 @@ const usPerM = usPerS * 60; //   60000000
 const usPerH = usPerM * 60; // 3600000000
 const usPerD = usPerH * hPerD; //86400000000 //more than 2^32
 const daysPerCD = 146097;
+const hPerCD = daysPerCD * hPerD;
 const maxDays = 134117046; //Number of days in 918CD*400 = 367200y
 const maxDH = maxDays * hPerD;
 //We chose 500 here because that's less than a month of time, but large enough
@@ -39,6 +43,7 @@ const monthFrac = 720;
 const mfPerYear = monthFrac * mPerY;
 const maxYears = 367200;
 const maxYM = maxYears * mPerY; //4406400
+const maxYMf = maxYM * monthFrac;
 //Note Duration.maxYears == DurationExact.maxDays but when Duration years are less than max years (eg maxYears-1)
 // you can provide dhis components that'll EXCEED maxYears (but we cannot tell without having to guess at a y/m<->d conversion)
 //It is expected you're EITHER using Duration with days, or with years+months at very large values (allows .gt to work)
@@ -331,7 +336,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		);
 	}
 
-    //?support? toDays, toHours, toMinutes, toSeconds, toMicroseconds (max ~285y)
+	//?support? toDays, toHours, toMinutes, toSeconds, toMicroseconds (max ~285y)
 
 	protected _otherHours(): number {
 		return this.day * hPerD;
@@ -413,9 +418,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 			dh += 1;
 		}
 		//If we exceed max - return max
-		if (dh > maxDH) return maxE;
-		//Max has a day component only, no hisu allowed
-		if (dh == maxDH && misu > 0) return maxE;
+		if (dh >= maxDH) return maxE;
 
 		const d = (dh / hPerD) | 0;
 		const h = dh % hPerD;
@@ -766,6 +769,13 @@ export class Duration extends ADurationCore implements ISerializer {
 		return this;
 	}
 
+	//Extract current value as three integers, all u32
+	private _ymf_dh_misu(): [number, number, number] {
+		const ymf =
+			this.year * mfPerYear + ((this._storage[3] << 8) | this._storage[4]);
+		return [ymf, ...this._dh_misu()];
+	}
+
 	/**
 	 * Whether this is greater than `d`.  Note no effort is made to shift
 	 * years/months into days and vice versa, elements are compared verbatim, and so
@@ -785,7 +795,112 @@ export class Duration extends ADurationCore implements ISerializer {
 		}
 		return false; //Would have to be equal at this point..which isn't gt
 	}
-	//todo: add, sub
+
+	/**
+	 * Add an exact duration to this, note the exactness of the duration will be
+	 * compromised, any day/hour components will become context sensitive (a day
+	 * being 23-25hours depending on daylight/winter savings, an hour being 0-2
+	 * at 2am for the same reason)
+	 * @pure
+	 */
+	public add(d: DurationExact): Duration;
+	/**
+	 * Add a duration to this
+	 * @pure
+	 */
+	public add(d: Duration): Duration;
+	public add(du: ADurationCore): Duration {
+		let [ymf, dh, misu] = this._ymf_dh_misu();
+		//Diverge: Duration vs Duration Exact
+		if (du instanceof Duration) {
+			const [oymf, odh, omisu] = du._ymf_dh_misu();
+			ymf += oymf;
+			dh += odh;
+			misu += omisu;
+		} else {
+			// @ts-expect-error: du is ADurationCore, as we are, and we can see protected properties @@bug (ts2446)
+			const [odh, omisu] = du._dh_misu();
+			dh += odh;
+			misu += omisu;
+		}
+		//End-diverge
+		if (misu >= usPerH) {
+			misu -= usPerH;
+			dh += 1;
+		}
+		if (dh >= hPerCD) {
+			dh -= hPerCD;
+			ymf += mfPerYear * 400;
+		}
+		if (ymf >= maxYMf) return maxV;
+
+		const mf = ymf % mfPerYear;
+		const y = (ymf - mf) / mfPerYear;
+		const d = (dh / hPerD) | 0;
+		const h = dh % hPerD;
+		const u = misu % usPerS;
+		misu = (misu / usPerS) | 0;
+		const s = misu % 60;
+		misu = (misu / 60) | 0;
+		const i = misu % 60;
+
+		const stor = new Uint8Array(Duration.storageBytes);
+		Duration._loadYMfD(y, mf, d, stor);
+		ADurationCore._loadHISU(h, i, s, u, stor, 8);
+		return new Duration(stor, 8);
+	}
+
+	/**
+	 * Subtract an exact duration from this, note the exact/vague boundary is at 400years,
+	 * (when the two coincide) so 1y1d - 2d will *fail*.  The two aren't really expected
+	 * to interop, but this gives the ability to say "3 days before 1000 years from now" etc
+	 * @pure
+	 */
+	public sub(d: DurationExact): Duration;
+	/**
+	 * Subtract a duration from this
+	 * @pure
+	 */
+	public sub(d: Duration): Duration;
+	public sub(du: ADurationCore): Duration {
+		let [ymf, dh, misu] = this._ymf_dh_misu();
+		//Diverge: Duration vs Duration Exact
+		if (du instanceof Duration) {
+			const [oymf, odh, omisu] = du._ymf_dh_misu();
+			ymf -= oymf;
+			dh -= odh;
+			misu -= omisu;
+		} else {
+			// @ts-expect-error: du is ADurationCore, as we are, and we can see protected properties @@bug (ts2446)
+			const [odh, omisu] = du._dh_misu();
+			dh -= odh;
+			misu -= omisu;
+		}
+		if (misu < 0) {
+			misu += usPerH;
+			dh -= 1;
+		}
+		if (dh < 0) {
+			dh += hPerCD;
+			ymf -= mfPerYear * 400;
+		}
+		if (ymf < 0) return zeroV;
+
+		const mf = ymf % mfPerYear;
+		const y = (ymf - mf) / mfPerYear;
+		const d = (dh / hPerD) | 0;
+		const h = dh % hPerD;
+		const u = misu % usPerS;
+		misu = (misu / usPerS) | 0;
+		const s = misu % 60;
+		misu = (misu / 60) | 0;
+		const i = misu % 60;
+
+		const stor = new Uint8Array(Duration.storageBytes);
+		Duration._loadYMfD(y, mf, d, stor);
+		ADurationCore._loadHISU(h, i, s, u, stor, 8);
+		return new Duration(stor, 8);
+	}
 
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
@@ -831,7 +946,7 @@ export class Duration extends ADurationCore implements ISerializer {
 	 */
 	public static new(parts: IDurationParts): Duration {
 		let m = 0;
-        if (parts.y) {
+		if (parts.y) {
 			if (parts.y < 0) throw new NegativeError('years', parts.y);
 			if (parts.y > maxYears) throw new AtMostError('years', parts.y, maxYears);
 			m = parts.y * mPerY;
