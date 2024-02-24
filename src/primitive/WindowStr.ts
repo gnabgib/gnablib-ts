@@ -168,7 +168,7 @@ export class WindowStr {
 	}
 
 	/**
-	 * Search for hte last occurrence of the given string
+	 * Search for the last occurrence of the given string
 	 * @param searchString What to search for
 	 * @param length Integer, [0 - {@link length}) (default=length/whole window)
 	 * @returns Index or -1
@@ -188,6 +188,33 @@ export class WindowStr {
 		pos -= this._start;
 		//Filter out positions out of scope
 		return pos < 0 ? NOT_FOUND : pos;
+	}
+
+	/**
+	 * Search for the last occurrence of any of the given strings
+	 * @param search strings to search for
+	 * @param length Integer, [0 - {@link length}) (default=length/whole window)
+	 * @returns Index or -1
+	 * @pure
+	 */
+	lastIndexOfAny(search:string[],length?:number):number {
+		if (length === undefined) {
+			length = this._len;
+		} else {
+			safe.int.inRangeInc('length', length, 0, this._len);
+			length+=this._start;
+		}
+		let latest=this._start-1;
+		for(const s of search) {
+			const pos=this._src.lastIndexOf(s,length-s.length);
+			if (pos<latest) continue;
+			latest=pos;
+		}
+		//Make sure something was found
+		if (latest==this._start-1) return NOT_FOUND;
+		//Correct scope
+		latest -=this._start;
+		return latest;
 	}
 
 	/**

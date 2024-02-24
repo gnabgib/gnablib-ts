@@ -206,9 +206,9 @@ const indexOfAnySet:[WindowStr,string[],number|undefined,number][]=[
 	[WindowStr.new('23:59:59.999999z'),['z','Z'],,15],
 	[WindowStr.new('20010203T23:59:59.999999z',9),['z','Z'],,15],
 ];
-for(const [w,searchs,start,expect] of indexOfAnySet) {
-	tsts(`${w.debug()}.indexOfAny(${searchs},${start})`,()=>{
-		assert.is(w.indexOfAny(searchs,start),expect);
+for(const [w,searches,start,expect] of indexOfAnySet) {
+	tsts(`${w.debug()}.indexOfAny(${searches},${start})`,()=>{
+		assert.is(w.indexOfAny(searches,start),expect);
 	})
 
 }
@@ -246,6 +246,28 @@ for(const [w,search,len,expect] of lastIndexOfSet) {
 	tsts(`${w.debug()}.lastIndexOf(${search},${len})`,()=>{
 		assert.is(w.lastIndexOf(search,len),expect);
 	});	
+}
+
+const lastIndexOfAnySet:[WindowStr,string[],number|undefined,number][]=[
+	[WindowStr.new('a z b'),['z','Z'],,2],
+	[WindowStr.new('A Zz b'),['z','Z'],,3],
+	[WindowStr.new('A Zz b'),['z'],,3],
+	[WindowStr.new('A Zz b'),['Z'],,2],
+	[WindowStr.new('A zZ b'),['z','Z'],,3],
+	[WindowStr.new('A zZ b'),['z'],,2],
+	[WindowStr.new('A zZ b'),['Z'],,3],
+	[WindowStr.new('A zZ b'),['y'],,-1],
+	[WindowStr.new('A Zz b',0,5),['b'],,-1],
+	[WindowStr.new('A Zz b',0,5),['b','Z'],,2],
+	[WindowStr.new('Hello',1,3),['h','H'],,-1],
+	[WindowStr.new('Hello',1,3),['he','HE'],,-1],
+	[WindowStr.new('lolo',0,3),['lo'],,0],
+	[WindowStr.new('lolo',0,3),['lo','ol'],,1],
+];
+for(const [w,searches,length,expect] of lastIndexOfAnySet) {
+	tsts(`${w.debug()}.lastIndexOfAny([${searches}],${length})`,()=>{
+		assert.is(w.lastIndexOfAny(searches,length),expect);
+	})
 }
 
 tsts(`lastIndexOf-out of range length throws`,()=>{
