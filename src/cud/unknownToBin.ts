@@ -7,7 +7,7 @@ import { Uint64 } from '../primitive/Uint64.js';
 import { Int64 } from '../primitive/Int64.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { asBE } from '../endian/platform.js';
-import { DateTime } from '../primitive/datetime/DateTime.js';
+import { DateTimeLocal } from '../datetime/outdex.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 
 /**
@@ -40,7 +40,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 	} else if (value === undefined || value === null) {
 		ret = new Uint8Array(1);
 		//ret[0]=0;
-	} else if (value instanceof DateTime) {
+	} else if (value instanceof DateTimeLocal) {
 		const bw = new BitWriter(value.serialSizeBits / 8);
 		value.serialize(bw);
 		ret = new Uint8Array(1 + bw.byteCount);

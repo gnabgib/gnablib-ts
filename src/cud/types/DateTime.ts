@@ -5,11 +5,11 @@ import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { DateTime } from '../../primitive/datetime/DateTime.js';
+import { DateTimeLocal } from '../../datetime/outdex.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
 
-export class DateTimeCol extends ACudColType implements IValid<DateTime> {
+export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 	/*MySQL supports microsecond res, but only for years 1000-9999 which is smaller than -4713-294276 (doh)*/
 	readonly mysqlType = 'BIGINT';
 	/*SQLite supports second resolution (int) or milliseconds in some formats (which can be dropped) 
@@ -23,21 +23,21 @@ export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 		super(nullable);
 	}
 
-	cudByteSize(_input: DateTime): number {
+	cudByteSize(_input: DateTimeLocal): number {
 		return 8;
 	}
 
-	valid(input: DateTime | undefined): Error | undefined {
+	valid(input: DateTimeLocal | undefined): Error | undefined {
 		if (input === undefined || input === null) {
 			if (!this.nullable) return new NullError('DateTime');
 		}
 	}
-	unknownBin(value: DateTime | undefined): Uint8Array {
+	unknownBin(value: DateTimeLocal | undefined): Uint8Array {
 		if (!value) {
 			if (!this.nullable) throw new NullError('DateTime');
 			return new Uint8Array([0]);
 		}
-		const bw = new BitWriter(Math.ceil(DateTime.serialBits / 8));
+		const bw = new BitWriter(Math.ceil(DateTimeLocal.serialBits / 8));
 		value.serialize(bw);
 		const d = bw.getBytes();
 		const ret = new Uint8Array(1 + d.length);
@@ -49,7 +49,7 @@ export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 	binUnknown(
 		bin: Uint8Array,
 		pos: number
-	): FromBinResult<DateTime | undefined> {
+	): FromBinResult<DateTimeLocal | undefined> {
 		if (pos + 1 > bin.length)
 			return new FromBinResult(
 				0,
@@ -85,7 +85,7 @@ export class DateTimeCol extends ACudColType implements IValid<DateTime> {
 
 		const br = new BitReader(bin.subarray(pos));
 		try {
-			const dFrom = DateTime.deserialize(br);
+			const dFrom = DateTimeLocal.deserialize(br);
 			return new FromBinResult(1 + l, dFrom);
 		} catch (e: unknown) {
 			return new FromBinResult(

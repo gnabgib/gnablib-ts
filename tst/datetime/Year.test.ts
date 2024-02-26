@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Year} from '../../src/datetime/Year';
+import {Year} from '../../src/datetime/outdex';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
@@ -42,12 +42,6 @@ tsts(`deser without source data throws`,()=>{
     const br=new BitReader(bytes);
     assert.throws(()=>Year.deserialize(br));
 });
-tsts(`deser without storage space throws`,()=>{
-    const stor=new Uint8Array(0);
-    const bytes=Uint8Array.of(0,0);
-    const br=new BitReader(bytes);
-    assert.throws(()=>Year.deserialize(br,stor));
-});
 
 const toStrSet:[number,string,string,string][]=[
     [-3333,'-3333','-3333','-3333'],
@@ -79,11 +73,6 @@ tsts(`new`,()=>{
     const y=Year.new(2001);
     assert.is(y.valueOf(),2001);
     assert.is(y.toString(),'2001');
-});
-tsts(`new-provide storage`,()=>{
-    const stor=new Uint8Array(Year.storageBytes);
-    const y=Year.new(2020,stor);
-    assert.is(y.valueOf(),2020);
 });
 
 const gregSet:[number,boolean,number][]=[

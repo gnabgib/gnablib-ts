@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Hour} from '../../src/datetime/Hour';
+import {Hour} from '../../src/datetime/outdex';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
@@ -66,12 +66,6 @@ tsts(`deser without source data throws`,()=>{
     const br=new BitReader(bytes);
     assert.throws(()=>Hour.deserialize(br).validate());
 });
-tsts(`deser without storage space throws`,()=>{
-    const stor=new Uint8Array(0);
-    const bytes=Uint8Array.of(0x00);
-    const br=new BitReader(bytes);
-    assert.throws(()=>Hour.deserialize(br,stor).validate());
-});
 
 const toStrSet:[number,string,string,string][]=[
     [1,'1','01','1'],
@@ -97,11 +91,6 @@ tsts(`new`,()=>{
     const h=Hour.new(11);
     assert.is(h.valueOf(),11);
     assert.is(h.toString(),'11');
-});
-tsts(`new-provide storage`,()=>{
-    const stor=new Uint8Array(Hour.storageBytes);
-    const h=Hour.new(12,stor);
-    assert.is(h.valueOf(),12);
 });
 
 tsts(`fromDate`,()=>{
@@ -210,40 +199,40 @@ for (const w of badParse) {
 }
 
 tsts('[Symbol.toStringTag]', () => {
-    const o=Hour.now();
+    const o=Hour.min;
 	const str = Object.prototype.toString.call(o);
 	assert.is(str.indexOf('HourOfDay') > 0, true);
 });
 
 tsts('util.inspect',()=>{
-    const o=Hour.now();
+    const o=Hour.max;
     const u=util.inspect(o);
     assert.is(u.startsWith('HourOfDay('),true);
 });
 
 tsts('serialSizeBits',()=>{
-    const o=Hour.now();
+    const o=Hour.max;
     const bits=o.serialSizeBits;
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
-tsts('cloneTo',()=>{
-	const stor1=new Uint8Array(Hour.storageBytes);
-	const stor2=new Uint8Array(Hour.storageBytes);
+// tsts('cloneTo',()=>{
+// 	const stor1=new Uint8Array(Hour.storageBytes);
+// 	const stor2=new Uint8Array(Hour.storageBytes);
 
-	const h=Hour.new(22,stor1);
-	assert.instance(h,Hour);
-	assert.is(h.valueOf(),22);
+// 	const h=Hour.new(22,stor1);
+// 	assert.instance(h,Hour);
+// 	assert.is(h.valueOf(),22);
 
-	const h2=h.cloneTo(stor2);
-	assert.instance(h2,Hour);
-	assert.is(h2.valueOf(),22);
+// 	const h2=h.cloneTo(stor2);
+// 	assert.instance(h2,Hour);
+// 	assert.is(h2.valueOf(),22);
 	
-	//This is a terrible idea, but it proves diff memory
-	stor2[0]=13;
-	assert.is(h.valueOf(),22);
-	assert.is(h2.valueOf(),13);
-})
+// 	//This is a terrible idea, but it proves diff memory
+// 	stor2[0]=13;
+// 	assert.is(h.valueOf(),22);
+// 	assert.is(h2.valueOf(),13);
+// })
 
 
 // tsts('general',()=>{

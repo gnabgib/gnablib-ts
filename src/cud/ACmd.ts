@@ -2,7 +2,7 @@
 
 import { BitWriter } from '../primitive/BitWriter.js';
 import { intExt } from '../primitive/IntExt.js';
-import { DateTime } from '../primitive/datetime/DateTime.js';
+import { DateTimeLocal } from '../datetime/outdex.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
 import type { Plane } from './types/Plane.js';
@@ -18,7 +18,7 @@ export abstract class ACmd {
 
 	constructor(
 		userId: number,
-		readonly started: DateTime,
+		readonly started: DateTimeLocal,
 		table: TableName,
 		plane: Plane,
 		cmd: Command
@@ -51,7 +51,7 @@ export abstract class ACmd {
 		// <extra>
 		// min 14 bytes
 		// NOTE: You can jump to byte 11 (first, potentially only U) to find the next row (remain are scaled)
-		const bw = new BitWriter(Math.ceil(DateTime.serialBits / 8));
+		const bw = new BitWriter(Math.ceil(DateTimeLocal.serialBits / 8));
 		this.started.serialize(bw);
 		//const s = this.started.serialize().toBytesBE();
 		const p = this.plane.toBin();

@@ -14,6 +14,7 @@ safe.int.inRangeInclusive(test:number,low:number,high:number) //May throw RangeE
 
 */
 
+import { AtMostError } from '../error/AtMostError.js';
 import { GTEError } from '../error/GTEError.js';
 import { GTError } from '../error/GTError.js';
 import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
@@ -38,6 +39,8 @@ export interface ISafeInt {
 	gte(noun: string, test: number, gte: number): void;
 	/** Make sure that $test is <$lt */
 	lt(noun: string, test: number, lt: number): void;
+	/** Make sure that $test is <=$lt */
+	lte(noun:string,test:number,lte:number):void;
 }
 
 export interface ISafeFloat {
@@ -116,6 +119,11 @@ export const somewhatSafe: ISafe = {
 			//Range constraint (note the message won't mention zero but that's ok?)
 			throw new LTError(noun, test, lt);
 		},
+		lte(noun: string, test: number, lte: number) {
+			if (test <= lte) return;
+			//Range constraint (note the message won't mention zero but that's ok?)
+			throw new AtMostError(noun,test,lte);
+		},
 	},
 	float: {
 		is: noTest,
@@ -192,6 +200,10 @@ export const superSafe: ISafe = {
 		lt(noun: string, test: number, lt: number) {
 			superSafe.int.is(test);
 			somewhatSafe.int.lt(noun, test, lt);
+		},
+		lte(noun: string, test: number, lte: number) {
+			superSafe.int.is(test);
+			somewhatSafe.int.lte(noun, test, lte);
 		},
 	},
 	float: {

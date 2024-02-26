@@ -1,11 +1,83 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Minute } from '../../src/datetime/Minute';
+import { Minute } from '../../src/datetime/outdex';
 import util from 'util';
 import { WindowStr } from '../../src/primitive/WindowStr';
 import { BitReader } from '../../src/primitive/BitReader';
+import { BitWriter } from '../../src/primitive/BitWriter';
+import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('Minute');
+
+const serSet:[number,string][] = [
+    [0,'00'],
+    [1,'04'],
+    [2,'08'],
+    [3,'0C'],
+    [4,'10'],
+    [5,'14'],
+    [6,'18'],
+    [7,'1C'],
+    [8,'20'],
+    [9,'24'],
+
+    [58,'E8'],
+    [59,'EC']
+];
+for (const [mi,ser] of serSet) {
+    tsts(`ser(${mi})`,()=>{
+        const m = Minute.new(mi);
+        assert.equal(m.valueOf(),mi);
+    
+        const bw=new BitWriter(Math.ceil(Minute.serialBits/8));
+        m.serialize(bw);
+        assert.is(hex.fromBytes(bw.getBytes()),ser);
+    });
+
+    tsts(`deser(${ser})`,()=>{
+        const bytes=hex.toBytes(ser);
+        const br=new BitReader(bytes);
+        const m=Minute.deserialize(br).validate();
+        assert.is(m.valueOf(),mi);
+    });
+}
+
+tsts(`deser with invalid source value (60) throws`,()=>{
+    const bytes=Uint8Array.of(60<<2);
+    const br=new BitReader(bytes);
+    assert.throws(()=>Minute.deserialize(br).validate());
+});
+tsts(`deser without source data throws`,()=>{
+    const bytes=new Uint8Array();
+    const br=new BitReader(bytes);
+    assert.throws(()=>Minute.deserialize(br).validate());
+});
+
+const toStrSet:[number,string,string,string][]=[
+    [1,'1','01','1'],
+    [2,'2','02','2'],
+    [12,'12','12','12'],
+    [59,'59','59','59'],
+];
+for (const [se,str,isoStr,jsonStr] of toStrSet) {
+    const s = Minute.new(se);
+    tsts(`toString(${se})`,()=>{        
+        assert.equal(s.toString(),str);
+    });
+    tsts(`toIsoString(${se})`,()=>{        
+        assert.equal(s.toIsoString(),isoStr);
+    });
+    tsts(`toJSON(${se})`,()=>{        
+        const json=JSON.stringify(s);
+        assert.equal(json,jsonStr);
+    });
+}
+
+tsts(`new`,()=>{
+    const m=Minute.new(11);
+    assert.is(m.valueOf(),11);
+    assert.is(m.toString(),'11');
+});
 
 tsts(`fromDate`, () => {
 	const dt = new Date(2001, 2, 3, 4, 5, 6);
@@ -60,8 +132,7 @@ const parseSet: [WindowStr, number][] = [
 ];
 for (const [w, expect] of parseSet) {
 	tsts(`parse(${w.debug()})`, () => {
-		const stor = new Uint8Array(1);
-		const m = Minute.parse(w, true, stor);
+		const m = Minute.parse(w, true);
 		assert.instance(m,Minute);
 		assert.equal(m.valueOf(), expect);
 	});
@@ -75,47 +146,67 @@ tsts(`parse(now)`, () => {
 	assert.is(mNum >= 0 && mNum <= 59, true, 'In valid range');
 });
 
+const badParseStrict:WindowStr[]=[
+    //Should be zero padded
+    WindowStr.new('1'),
+    WindowStr.new('3'),
+];
+for (const w of badParseStrict) {
+    tsts(`${w.debug()} parse strict throws`,()=>{
+        assert.throws(()=>Minute.parse(w,true));
+    });
+}
+
+const badParse:WindowStr[]=[
+    WindowStr.new(''),//Empty string not allowed
+    WindowStr.new('tomorrow'),//We support "now" only
+    WindowStr.new('1.5'),//Floating point - not allowed
+    WindowStr.new('1e1'),//10 in scientific - not allowed
+    WindowStr.new('+01'),//Can't have sign
+    //Out of range:
+    WindowStr.new('320'),
+    WindowStr.new('1000'),
+];
+for (const w of badParse) {
+    tsts(`${w.debug()} parse throws`,()=>{
+        assert.throws(()=>Minute.parse(w));
+    })
+}
+
 tsts('[Symbol.toStringTag]', () => {
-    const dt=Minute.now();
+    const dt=Minute.min;
 	const str = Object.prototype.toString.call(dt);
 	assert.is(str.indexOf('Minute') > 0, true);
 });
 
 tsts('util.inspect',()=>{
-    const dt=Minute.now();
+    const dt=Minute.max;
     const u=util.inspect(dt);
     assert.is(u.startsWith('Minute('),true);
 });
 
-tsts('cloneTo',()=>{
-	const stor1=new Uint8Array(Minute.storageBytes);
-	const stor2=new Uint8Array(Minute.storageBytes);
-
-	const m=Minute.new(22,stor1);
-	assert.instance(m,Minute);
-	assert.is(m.valueOf(),22);
-
-	const m2=m.cloneTo(stor2);
-	assert.instance(m2,Minute);
-	assert.is(m2.valueOf(),22);
-	
-	//This is a terrible idea, but it proves diff memory
-	stor2[0]=13;
-	assert.is(m.valueOf(),22);
-	assert.is(m2.valueOf(),13);
-})
-
-tsts(`deser`,()=>{
-	const bytes=Uint8Array.of(13<<2);//Value in the top 6 bits of byte
-	const br=new BitReader(bytes);
-	const m=Minute.deserialize(br).validate();
-	assert.is(m.valueOf(),13);
+tsts('serialSizeBits',()=>{
+    const o=Minute.min;
+    const bits=o.serialSizeBits;
+    assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
-// tsts('general',()=>{
-//     const dt=Day.now();
-//     console.log(dt);
-//     console.log(Object.prototype.toString.call(dt));
-// });
+// tsts('cloneTo',()=>{
+// 	const stor1=new Uint8Array(Minute.storageBytes);
+// 	const stor2=new Uint8Array(Minute.storageBytes);
+
+// 	const m=Minute.new(22,stor1);
+// 	assert.instance(m,Minute);
+// 	assert.is(m.valueOf(),22);
+
+// 	const m2=m.cloneTo(stor2);
+// 	assert.instance(m2,Minute);
+// 	assert.is(m2.valueOf(),22);
+	
+// 	//This is a terrible idea, but it proves diff memory
+// 	stor2[0]=13;
+// 	assert.is(m.valueOf(),22);
+// 	assert.is(m2.valueOf(),13);
+// })
 
 tsts.run();

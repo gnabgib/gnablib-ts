@@ -18,29 +18,22 @@
  * - {@link datetime.Millisecond Millisecond} Range 0 - 999
  * - {@link datetime.Microsecond Microsecond} Range 0 - 999999
  * - {@link datetime.UtcOrNot UtcOrNot}
- * 
+ *
  * ## Duration
- * 
+ *
  * - {@link datetime.Duration Duration} Range 0 - 367200y
  * - {@link datetime.DurationExact DurationExact} Range 0 - 134117046d
  */
 //Dates
-export { Year } from './Year.js';
-export { Month } from './Month.js';
-export { Day } from './Day.js';
+export { Year, Month, Day } from './outdex.js';
 //Time
-export { Hour } from './Hour.js';
-export { Minute } from './Minute.js';
-export { Second } from './Second.js';
-export { Millisecond } from './Millisecond.js';
-export { Microsecond } from './Microsecond.js';
-export { UtcOrNot } from './UtcOrNot.js';
+export { Hour, Minute, Second, Millisecond, Microsecond } from './outdex.js';
 //Aggregates
-export { DateOnly } from './DateOnly.js';
-export { TimeOnly } from './TimeOnly.js';
-export { TimeOnlyMs } from './TimeOnlyMs.js';
-export { DateTime } from './DateTime.js';
+export { DateOnly, TimeOnly, TimeOnlyMs, DateTimeLocal, DateTimeUtc } from './outdex.js';
 //Durations
 export { DurationExact, Duration } from './Duration.js';
 //Interfaces
-export type { IDurationExactParts, IDurationParts } from './interfaces/IDurationParts.js';
+export type {
+	IDurationExactParts,
+	IDurationParts,
+} from './interfaces/IDurationParts.js';

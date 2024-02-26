@@ -12,10 +12,6 @@ import { BitWriter } from '../primitive/BitWriter.js';
 import { BitReader } from '../primitive/BitReader.js';
 import { ISerializer } from '../primitive/interfaces/ISerializer.js';
 import { NegativeError } from '../error/NegativeError.js';
-import { Hour } from './Hour.js';
-import { Minute } from './Minute.js';
-import { Second } from './Second.js';
-import { Microsecond } from './Microsecond.js';
 import { ContentError } from '../error/ContentError.js';
 import { LTError } from '../error/LTError.js';
 import { Float, Int } from '../primitive/number/index.js';
@@ -26,30 +22,42 @@ import {
 } from './interfaces/IDurationParts.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-const DBG_RPT_E = 'DurationExact';
-const DBG_RPT_V = 'Duration'; //aka DurationVague
-const hPerD = 24;
-const mPerY = 12;
-const usPerS = 1000000; //        1000000
-const usPerM = usPerS * 60; //   60000000
-const usPerH = usPerM * 60; // 3600000000
-const usPerD = usPerH * hPerD; //86400000000 //more than 2^32
+
+const dayBytesDe = 4;
+const dayBytesDv = 3;
+const hourBytes = 1;
+const minBytes = 1;
+const secBytes = 1;
+const microBytes = 3;
+const hisuStorageBytes = hourBytes + minBytes + secBytes + microBytes; //6
+
+const daySerBitsDe = 27; //2^27 = 134,217,728 (~367438y)
+const daySerBitsDv = 18 + 1; //2^18 = 262,144, just need 146097 the extra bit (waste) is align end hex of DE/D
+const hourSerBits = 5; //2^5 = 32
+const minSerBits = 6; //2^6 = 64
+const secSerBits = 6; //2^6 = 64
+const microSerBits = 20; //2^20 = 1048576
+const hisuSerialBits = hourSerBits + minSerBits + secSerBits + microSerBits; //37
+
+const hPerDay = 24;
+const mPerYear = 12;
+const usPerDay = 86400000000; ////24*60*60*1000000 ~~2^37
+const usPerHour = 3600000000; //60*60*1000000 ~~2^32
+const usPerMin = 60000000; //60*1000000
+const usPerSec = 1000000;
 const daysPerCD = 146097;
-const hPerCD = daysPerCD * hPerD;
+const hPerCD = 3506328; // 146097 * 24
 const maxDays = 134117046; //Number of days in 918CD*400 = 367200y
-const maxDH = maxDays * hPerD;
+const maxDH = 3218809104; //134117046*24 ~~2^32
 //We chose 500 here because that's less than a month of time, but large enough
 // for most plausible use-cases for representing time in this format
 const maxTimeLikeHours = 500;
-const daySerialBitsDe = 27; //2^27 = 134,217,728 (~367438y)
-const dayStorageBytesDe = 4;
-const daySerialBitsDv = 18 + 1; //2^18 = 262,144, just need 146097 the extra bit (waste) is align end hex of DE/D
-const dayStorageBytesDv = 3;
+
 const monthFrac = 720;
-const mfPerYear = monthFrac * mPerY;
+const mfPerYear = 8640; //720*12
 const maxYears = 367200;
-const maxYM = maxYears * mPerY; //4406400
-const maxYMf = maxYM * monthFrac;
+const maxYM = 4406400; // 367200*24
+const maxYMf = 3172608000; // 4406400*720 ~~2^32
 //Note Duration.maxYears == DurationExact.maxDays but when Duration years are less than max years (eg maxYears-1)
 // you can provide dhis components that'll EXCEED maxYears (but we cannot tell without having to guess at a y/m<->d conversion)
 //It is expected you're EITHER using Duration with days, or with years+months at very large values (allows .gt to work)
@@ -58,16 +66,8 @@ const yearStorageBytes = 3;
 const monthStorageBytes = 2;
 
 //By using a shared _DurationCore, DurationExact and Duration can share features and code
-const hisuSerialBits =
-	Hour.serialBits +
-	Minute.serialBits +
-	Second.serialBits +
-	Microsecond.serialBits; //37
-const hisuStorageBytes =
-	Hour.storageBytes +
-	Minute.storageBytes +
-	Second.storageBytes +
-	Microsecond.storageBytes; //6
+
+
 
 abstract class ADurationCore {
 	protected constructor(
@@ -196,25 +196,25 @@ abstract class ADurationCore {
 	}
 
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._storage[this._hPos], Hour.serialBits);
-		target.writeNumber(this._storage[this._hPos + 1], Minute.serialBits);
-		target.writeNumber(this._storage[this._hPos + 2], Second.serialBits);
-		target.writeNumber(this.microsecond, Microsecond.serialBits);
+		target.writeNumber(this._storage[this._hPos], hourSerBits);
+		target.writeNumber(this._storage[this._hPos + 1], minSerBits);
+		target.writeNumber(this._storage[this._hPos + 2], secSerBits);
+		target.writeNumber(this.microsecond, microSerBits);
 	}
 
 	protected _validate(): void {
 		safe.int.lt('hour', this._storage[this._hPos], 24);
 		safe.int.lt('minute', this._storage[this._hPos + 1], 60);
 		safe.int.lt('second', this._storage[this._hPos + 2], 60);
-		safe.int.lt('second', this.microsecond, usPerS);
+		safe.int.lt('second', this.microsecond, usPerSec);
 	}
 
 	//Extract the current value into two integers, both u32
 	protected _dh_misu(): [number, number] {
 		return [
-			this.day * hPerD + this._storage[this._hPos],
-			this._storage[this._hPos + 1] * usPerM +
-				this._storage[this._hPos + 2] * usPerS +
+			this.day * hPerDay + this._storage[this._hPos],
+			this._storage[this._hPos + 1] * usPerMin +
+				this._storage[this._hPos + 2] * usPerSec +
 				this.microsecond,
 		];
 	}
@@ -240,15 +240,15 @@ abstract class ADurationCore {
 		let us = 0;
 		if (parts.h) {
 			if (parts.h < 0) throw new NegativeError('hours', parts.h);
-			us += parts.h * usPerH;
+			us += parts.h * usPerHour;
 		}
 		if (parts.i) {
 			if (parts.i < 0) throw new NegativeError('minutes', parts.i);
-			us += parts.i * usPerM;
+			us += parts.i * usPerMin;
 		}
 		if (parts.s) {
 			if (parts.s < 0) throw new NegativeError('seconds', parts.s);
-			us += parts.s * usPerS;
+			us += parts.s * usPerSec;
 		}
 		//Round to nearest us, to help with floating point error eg 1.001 s = 1.0009999999
 		us = Math.round(us);
@@ -309,18 +309,18 @@ abstract class ADurationCore {
 		storage: Uint8Array,
 		hPos: number
 	): void {
-		const h = source.readNumber(Hour.serialBits);
-		const i = source.readNumber(Minute.serialBits);
-		const s = source.readNumber(Second.serialBits);
-		const u = source.readNumber(Microsecond.serialBits);
+		const h = source.readNumber(hourSerBits);
+		const i = source.readNumber(minSerBits);
+		const s = source.readNumber(secSerBits);
+		const u = source.readNumber(microSerBits);
 		ADurationCore._loadHISU(h, i, s, u, storage, hPos);
 	}
 }
 
 export class DurationExact extends ADurationCore implements ISerializer {
-	static readonly serialBits = daySerialBitsDe + hisuSerialBits; //64
+	static readonly serialBits = daySerBitsDe + hisuSerialBits; //64
 	static readonly storageBytes =
-		dayStorageBytesDe + //day
+		dayBytesDe + //day
 		hisuStorageBytes; //10
 
 	public static get zero(): DurationExact {
@@ -345,7 +345,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	//?support? toDays, toHours, toMinutes, toSeconds, toMicroseconds (max ~285y)
 
 	protected _otherHours(): number {
-		return this.day * hPerD;
+		return this.day * hPerDay;
 	}
 
 	/**
@@ -374,9 +374,25 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		return 'P' + bit;
 	}
 
+	/**
+	 * Extract this duration as a 3-integer array:
+	 * - Years & months in months (y*12+m) - always 0 for DurationExact
+	 * - Days & hours in hours (d*24+h) - u32 (0 - 3218809104)
+	 * - Minutes, seconds & micros ((m*60+s)*1000000+u) - u32 (0 - 3599999999)
+	 */
+	public toYmDhMiso(): [number, number, number] {
+		return [
+			0,
+			this.day * hPerDay + this._storage[this._hPos],
+			this._storage[this._hPos + 1] * usPerMin +
+				this._storage[this._hPos + 2] * usPerSec +
+				this.microsecond,
+		];
+	}
+
 	/** Serialize into target  - 38 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this.day, daySerialBitsDe);
+		target.writeNumber(this.day, daySerBitsDe);
 		super.serialize(target);
 	}
 
@@ -414,29 +430,29 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 * @pure
 	 */
 	public add(de: DurationExact): DurationExact {
-		let [dh, misu] = this._dh_misu();
-		const [odh, omisu] = de._dh_misu();
+		let [, dh, misu] = this.toYmDhMiso();
+		const [, odh, omisu] = de.toYmDhMiso();
 		dh += odh;
 		misu += omisu;
 
-		if (misu >= usPerH) {
-			misu -= usPerH;
+		if (misu >= usPerHour) {
+			misu -= usPerHour;
 			dh += 1;
 		}
 		//If we exceed max - return max
 		if (dh >= maxDH) return maxE;
 
-		const d = (dh / hPerD) | 0;
-		const h = dh % hPerD;
-		const u = misu % usPerS;
-		misu = (misu / usPerS) | 0;
+		const d = (dh / hPerDay) | 0;
+		const h = dh % hPerDay;
+		const u = misu % usPerSec;
+		misu = (misu / usPerSec) | 0;
 		const s = misu % 60;
 		misu = (misu / 60) | 0;
 		const i = misu % 60;
 
 		const stor = new Uint8Array(DurationExact.storageBytes);
 		DurationExact._loadDHISU(d, h, i, s, u, stor);
-		return new DurationExact(stor, dayStorageBytesDe);
+		return new DurationExact(stor, dayBytesDe);
 	}
 
 	/**
@@ -446,12 +462,12 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 * @pure
 	 */
 	public sub(de: DurationExact): DurationExact {
-		let [dh, misu] = this._dh_misu();
-		const [odh, omisu] = de._dh_misu();
+		let [, dh, misu] = this.toYmDhMiso();
+		const [, odh, omisu] = de.toYmDhMiso();
 		dh -= odh;
 		misu -= omisu;
 		if (misu < 0) {
-			misu += usPerH;
+			misu += usPerHour;
 			dh -= 1;
 		}
 		if (dh < 0) {
@@ -459,27 +475,27 @@ export class DurationExact extends ADurationCore implements ISerializer {
 			return zeroE;
 		}
 
-		const d = (dh / hPerD) | 0;
-		const h = dh % hPerD;
-		const u = misu % usPerS;
-		misu = (misu / usPerS) | 0;
+		const d = (dh / hPerDay) | 0;
+		const h = dh % hPerDay;
+		const u = misu % usPerSec;
+		misu = (misu / usPerSec) | 0;
 		const s = misu % 60;
 		misu = (misu / 60) | 0;
 		const i = misu % 60;
 
 		const stor = new Uint8Array(DurationExact.storageBytes);
 		DurationExact._loadDHISU(d, h, i, s, u, stor);
-		return new DurationExact(stor, dayStorageBytesDe);
+		return new DurationExact(stor, dayBytesDe);
 	}
 
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
-		return DBG_RPT_E;
+		return 'DurationExact';
 	}
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `${DBG_RPT_E}(${this.toString()})`;
+		return `DurationExact(${this.toString()})`;
 	}
 
 	//Store d-u into storage, range checks must have been done before calling this
@@ -495,7 +511,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		storage[1] = d >> 16;
 		storage[2] = d >> 8;
 		storage[3] = d;
-		ADurationCore._loadHISU(h, i, s, u, storage, dayStorageBytesDe);
+		ADurationCore._loadHISU(h, i, s, u, storage, dayBytesDe);
 	}
 
 	/**
@@ -516,24 +532,24 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		//Catch any fractional days and move them to micros
 		const dRem = d % 1;
 		if (dRem != 0) {
-			us += Math.round(dRem * usPerD);
+			us += Math.round(dRem * usPerDay);
 			d -= dRem;
 		}
 		//If more than a day in micros, move to days
-		if (us >= usPerD) {
-			d += Math.floor(us / usPerD);
-			us %= usPerD;
+		if (us >= usPerDay) {
+			d += Math.floor(us / usPerDay);
+			us %= usPerDay;
 		}
 		//Calculate seconds+micros
-		const u = us % usPerS;
-		const s = (us / usPerS) % 60 | 0;
+		const u = us % usPerSec;
+		const s = (us / usPerSec) % 60 | 0;
 		//Calculate hours+minutes
-		const h = (us / usPerH) | 0;
-		const i = ((us / usPerM) | 0) % 60;
+		const h = (us / usPerHour) | 0;
+		const i = ((us / usPerMin) | 0) % 60;
 
 		const stor = new Uint8Array(DurationExact.storageBytes);
 		DurationExact._loadDHISU(d, h, i, s, u, stor);
-		const ret = new DurationExact(stor, dayStorageBytesDe);
+		const ret = new DurationExact(stor, dayBytesDe);
 		//Make sure that in total, the value is valid (not >max), we've made sure days can't be
 		//>max, we just need to test the equal max case
 		if (d == maxDays && us > 0) throw new AtMostError('duration', ret, maxE);
@@ -552,13 +568,13 @@ export class DurationExact extends ADurationCore implements ISerializer {
 			i = 0,
 			s = 0,
 			u = 0;
-		u = us % usPerS;
-		us = Math.floor(us / usPerS);
+		u = us % usPerSec;
+		us = Math.floor(us / usPerSec);
 		s = us % 60;
 		us = Math.floor(us / 60);
 		i = us % 60;
 		us = Math.floor(us / 60);
-		h = us % hPerD;
+		h = us % hPerDay;
 		us = Math.floor(us / 24);
 		d = us;
 
@@ -567,7 +583,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		if (d > maxDays) throw new AtMostError('days', d, maxDays);
 		const stor = new Uint8Array(DurationExact.storageBytes);
 		DurationExact._loadDHISU(d, h, i, s, u, stor);
-		return new DurationExact(stor, dayStorageBytesDe);
+		return new DurationExact(stor, dayBytesDe);
 	}
 
 	public static fromTimeLike(timeLike: string): DurationExact {
@@ -608,13 +624,13 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		if (i > 59) throw new AtMostError('minutes', i, 59);
 		//Note the different error/test because seconds is currently floating-point (could be 59.999999 which is ok, but >59)
 		if (s >= 60) throw new LTError('seconds', s, 60);
-		const d = (h / hPerD) | 0;
-		h = h % hPerD;
-		const u = ((s % 1) * usPerS) | 0;
+		const d = (h / hPerDay) | 0;
+		h = h % hPerDay;
+		const u = ((s % 1) * usPerSec) | 0;
 		s = s | 0;
 		const stor = new Uint8Array(DurationExact.storageBytes);
 		DurationExact._loadDHISU(d, h, i, s, u, stor);
-		return new DurationExact(stor, dayStorageBytesDe);
+		return new DurationExact(stor, dayBytesDe);
 	}
 
 	public static parse(input: WindowStr): DurationExact {
@@ -632,13 +648,13 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 */
 	public static deserialize(source: BitReader): DurationExact {
 		const stor = new Uint8Array(DurationExact.storageBytes);
-		const d = source.readNumber(daySerialBitsDe);
+		const d = source.readNumber(daySerBitsDe);
 		stor[0] = d >> 24;
 		stor[1] = d >> 16;
 		stor[2] = d >> 8;
 		stor[3] = d;
-		ADurationCore._deserHISU(source, stor, dayStorageBytesDe);
-		return new DurationExact(stor, dayStorageBytesDe);
+		ADurationCore._deserHISU(source, stor, dayBytesDe);
+		return new DurationExact(stor, dayBytesDe);
 	}
 }
 const zeroE = DurationExact.fromUs(0);
@@ -661,10 +677,10 @@ const maxE = DurationExact.new({ d: maxDays });
 export class Duration extends ADurationCore implements ISerializer {
 	static readonly serialBits =
 		ymSerialBits + //32
-		daySerialBitsDv + //32+19 = 51
+		daySerBitsDv + //32+19 = 51
 		hisuSerialBits; //32+19+37 = 88
 	static readonly storageBytes =
-		yearStorageBytes + monthStorageBytes + dayStorageBytesDv + hisuStorageBytes; //14
+		yearStorageBytes + monthStorageBytes + dayBytesDv + hisuStorageBytes; //14
 
 	public static get zero(): Duration {
 		return zeroV;
@@ -695,7 +711,7 @@ export class Duration extends ADurationCore implements ISerializer {
 	}
 
 	protected _otherHours(): number {
-		const ym = this.year * mPerY + this.month;
+		const ym = this.year * mPerYear + this.month;
 		//Shortest month = 28d = 672h so 75% of a month is at least 500h
 		if (ym >= 0.75) return 501;
 		//However we both can't combine y-months and days (how long is a month etc)
@@ -704,7 +720,7 @@ export class Duration extends ADurationCore implements ISerializer {
 		// use the same 24 as DurationExact and expect the caller to only be using this
 		// with low day counts (probably without year/months too).  Which is
 		// somewhat enforced by not implementing fromTimeLike on this type
-		return this.day * hPerD;
+		return this.day * hPerDay;
 		//Effects toTimeLike()
 	}
 
@@ -753,7 +769,7 @@ export class Duration extends ADurationCore implements ISerializer {
 		const monthFracs =
 			((this._storage[3] << 8) | this._storage[4]) + this.year * mfPerYear;
 		target.writeNumber(monthFracs, ymSerialBits);
-		target.writeNumber(this.day, daySerialBitsDv);
+		target.writeNumber(this.day, daySerBitsDv);
 		super.serialize(target);
 	}
 
@@ -769,10 +785,26 @@ export class Duration extends ADurationCore implements ISerializer {
 	 */
 	public validate(): Duration {
 		safe.int.lt('year', this.year, maxYears + 1); //maxYears is inclusive
-		safe.float.lt('month', this.month, mPerY);
+		safe.float.lt('month', this.month, mPerYear);
 		safe.int.lt('day', this.day, daysPerCD);
 		this._validate();
 		return this;
+	}
+
+	/**
+	 * Extract this duration as a 3-integer array:
+	 * - Years & months in months (y*12+m) - float (0 - 4406400)
+	 * - Days & hours in hours (d*24+h) - int (0 - 3506328)
+	 * - Minutes, seconds & micros ((m*60+s)*1000000+u) - u32 (0 - 3599999999)
+	 */
+	public toYmDhMiso(): [number, number, number] {
+		return [
+			this.year * 12 + this.month,
+			this.day * hPerDay + this._storage[this._hPos],
+			this._storage[this._hPos + 1] * usPerMin +
+				this._storage[this._hPos + 2] * usPerSec +
+				this.microsecond,
+		];
 	}
 
 	//Extract current value as three integers, all u32
@@ -830,8 +862,8 @@ export class Duration extends ADurationCore implements ISerializer {
 			misu += omisu;
 		}
 		//End-diverge
-		if (misu >= usPerH) {
-			misu -= usPerH;
+		if (misu >= usPerHour) {
+			misu -= usPerHour;
 			dh += 1;
 		}
 		if (dh >= hPerCD) {
@@ -842,10 +874,10 @@ export class Duration extends ADurationCore implements ISerializer {
 
 		const mf = ymf % mfPerYear;
 		const y = (ymf - mf) / mfPerYear;
-		const d = (dh / hPerD) | 0;
-		const h = dh % hPerD;
-		const u = misu % usPerS;
-		misu = (misu / usPerS) | 0;
+		const d = (dh / hPerDay) | 0;
+		const h = dh % hPerDay;
+		const u = misu % usPerSec;
+		misu = (misu / usPerSec) | 0;
 		const s = misu % 60;
 		misu = (misu / 60) | 0;
 		const i = misu % 60;
@@ -883,7 +915,7 @@ export class Duration extends ADurationCore implements ISerializer {
 			misu -= omisu;
 		}
 		if (misu < 0) {
-			misu += usPerH;
+			misu += usPerHour;
 			dh -= 1;
 		}
 		if (dh < 0) {
@@ -894,10 +926,10 @@ export class Duration extends ADurationCore implements ISerializer {
 
 		const mf = ymf % mfPerYear;
 		const y = (ymf - mf) / mfPerYear;
-		const d = (dh / hPerD) | 0;
-		const h = dh % hPerD;
-		const u = misu % usPerS;
-		misu = (misu / usPerS) | 0;
+		const d = (dh / hPerDay) | 0;
+		const h = dh % hPerDay;
+		const u = misu % usPerSec;
+		misu = (misu / usPerSec) | 0;
 		const s = misu % 60;
 		misu = (misu / 60) | 0;
 		const i = misu % 60;
@@ -910,12 +942,12 @@ export class Duration extends ADurationCore implements ISerializer {
 
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
-		return DBG_RPT_V;
+		return 'Duration';
 	}
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `${DBG_RPT_V}(${this.toString()})`;
+		return `Duration(${this.toString()})`;
 	}
 
 	//Store y-d, range checks must have been done before
@@ -955,7 +987,7 @@ export class Duration extends ADurationCore implements ISerializer {
 		if (parts.y) {
 			if (parts.y < 0) throw new NegativeError('years', parts.y);
 			if (parts.y > maxYears) throw new AtMostError('years', parts.y, maxYears);
-			m = parts.y * mPerY;
+			m = parts.y * mPerYear;
 		}
 		if (parts.m) {
 			if (parts.m < 0) throw new NegativeError('months', parts.m);
@@ -969,41 +1001,41 @@ export class Duration extends ADurationCore implements ISerializer {
 			d = parts.d;
 			const dRem = d % 1;
 			if (dRem != 0) {
-				us += Math.round(dRem * usPerD);
+				us += Math.round(dRem * usPerDay);
 				d -= dRem;
 			}
 			//if (parts.d % 1 !== 0) throw new TypeError(`days must whole: ${d}`);
 			d = parts.d;
 		}
 		//If more than a day in micros, move to days
-		if (us >= usPerD) {
-			d += Math.floor(us / usPerD);
-			us %= usPerD;
+		if (us >= usPerDay) {
+			d += Math.floor(us / usPerDay);
+			us %= usPerDay;
 		}
 		//Catch excess days and add them to years
 		if (d > daysPerCD) {
 			const cd = (d / daysPerCD) | 0;
 			d %= daysPerCD;
-			m += cd * 400 * mPerY;
+			m += cd * 400 * mPerYear;
 		}
 
 		//Calculate years+monthFracs
-		const y = (m / mPerY) | 0;
-		const mf = Math.round((m % mPerY) * monthFrac);
+		const y = (m / mPerYear) | 0;
+		const mf = Math.round((m % mPerYear) * monthFrac);
 		//Slightly incorrect error, but how better to phrase?
 		if (m > maxYM)
 			throw new AtMostError(
 				'years+months+days',
-				`${y}y${m % mPerY}m${d}d`,
+				`${y}y${m % mPerYear}m${d}d`,
 				maxYears + 'y'
 			);
 
 		//Calculate seconds+micros
-		const u = us % usPerS;
-		const s = (us / usPerS) % 60 | 0;
+		const u = us % usPerSec;
+		const s = (us / usPerSec) % 60 | 0;
 		//Calculate hours+minutes
-		const h = (us / usPerH) | 0;
-		const i = ((us / usPerM) | 0) % 60;
+		const h = (us / usPerHour) | 0;
+		const i = ((us / usPerMin) | 0) % 60;
 
 		const stor = new Uint8Array(Duration.storageBytes);
 		Duration._loadYMfD(y, mf, d, stor);
@@ -1063,7 +1095,7 @@ export class Duration extends ADurationCore implements ISerializer {
 		const ym = source.readNumber(32);
 		const y = (ym / mfPerYear) | 0;
 		const mf = ym % mfPerYear;
-		const d = source.readNumber(daySerialBitsDv);
+		const d = source.readNumber(daySerBitsDv);
 		Duration._loadYMfD(y, mf, d, stor);
 		ADurationCore._deserHISU(source, stor, 8);
 		return new Duration(stor, 8);

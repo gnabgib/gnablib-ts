@@ -1,6 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { DateOnly } from '../../src/datetime/DateOnly';
+import { DateOnly, Month } from '../../src/datetime/outdex';
+//import { DateOnly } from '../../src/datetime/DateOnly';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
@@ -10,10 +11,10 @@ import { WindowStr } from '../../src/primitive/WindowStr';
 const tsts = suite('DateOnly');
 
 const serSet: [number, number, number, string, string, string][] = [
-	[-10000, 1, 1, '-10000-01-01', '000000', '"-10000-01-01"'], //Yep, the null date, also min
-	[1952, 12, 31, '1952-12-31', '5D617E', '"1952-12-31"'], //010111010110000 1011 11110
-	[2024, 1, 14, '2024-01-14', '5DF00D', '"2024-01-14"'], //010111011111000 0000 01101
-	[22767, 12, 31, '+22767-12-31', 'FFFF7E', '"+22767-12-31"'], //max
+	[-10000, 1, 1, '-10000-01-01', '000000', '-100000101'], //Yep, the null date, also min
+	[1952, 12, 31, '1952-12-31', '5D617E', '19521231'], //010111010110000 1011 11110
+	[2024, 1, 14, '2024-01-14', '5DF00D', '20240114'], //010111011111000 0000 01101
+	[22767, 12, 31, '+22767-12-31', 'FFFF7E', '227671231'], //max
 ];
 for (const [yr, mo, da, str, serStr, jsonStr] of serSet) {
 	tsts(`ser(${yr} ${mo} ${da})`, () => {
@@ -53,12 +54,6 @@ tsts(`deser without source data throws`, () => {
 	const br = new BitReader(bytes);
 	assert.throws(() => DateOnly.deserialize(br).validate());
 });
-tsts(`deser without storage space throws`, () => {
-	const stor = new Uint8Array(0);
-	const bytes = Uint8Array.of(0xff, 0xff, 0x7e);
-	const br = new BitReader(bytes);
-	assert.throws(() => DateOnly.deserialize(br, stor).validate());
-});
 
 tsts(`new`, () => {
 	const d = DateOnly.new(2000, 1, 2);
@@ -66,16 +61,6 @@ tsts(`new`, () => {
 	assert.is(d.year, 2000, 'year');
 	assert.is(d.month, 1, 'month');
 	assert.is(d.day, 2, 'day');
-	//Value off uses base 10 shifting of month/year
-	assert.is(d.valueOf(), 20000102);
-});
-tsts(`new-provide storage`, () => {
-	const stor = new Uint8Array(DateOnly.storageBytes);
-	const d = DateOnly.new(2000, 1, 2, stor);
-	assert.is(d.toString(), '2000-01-02');
-	assert.is(d.year, 2000);
-	assert.is(d.month, 1);
-	assert.is(d.day, 2);
 	//Value off uses base 10 shifting of month/year
 	assert.is(d.valueOf(), 20000102);
 });
@@ -209,39 +194,6 @@ for (const [y, m, d, unix] of toUnixDaySet) {
 		assert.is(fr.year, y, 'year');
 		assert.is(fr.month, m, 'month');
 		assert.is(fr.day, d, 'day');
-	});
-}
-
-const dimSet: [number, number, number][] = [
-	[2024, 1, 31],
-	[2024, 2, 29], //Leap year
-	[2024, 3, 31],
-	[2024, 4, 30],
-	[2024, 5, 31],
-	[2024, 6, 30],
-	[2024, 7, 31],
-	[2024, 8, 31],
-	[2024, 9, 30],
-	[2024, 10, 31],
-	[2024, 11, 30],
-	[2024, 12, 31],
-
-	[2025, 1, 31],
-	[2025, 2, 28],
-	[2025, 3, 31],
-	[2025, 4, 30],
-	[2025, 5, 31],
-	[2025, 6, 30],
-	[2025, 7, 31],
-	[2025, 8, 31],
-	[2025, 9, 30],
-	[2025, 10, 31],
-	[2025, 11, 30],
-	[2025, 12, 31],
-];
-for (const [y, m, dim] of dimSet) {
-	tsts(`daysInMonth(${y} ${m})`, () => {
-		assert.is(DateOnly.daysInMonth(y, m), dim);
 	});
 }
 
@@ -423,7 +375,5 @@ tsts(`parse-now`, () => {
 	assert.is(d.month, dt.getMonth() + 1); //JS stores months off by 1 (0=Jan)
 	assert.is(d.day, dt.getDate()); //Not a great name, JS
 });
-
-//console.log(`-13%12 = (${-13%12} ${(-13/12)} ${(-13/12)|0}) -12%12 = (${-12%12} ${-12/12} ${(-12/12)|0}) -11%12 = (${-11%12} ${-11/12} ${(-11/12)|0})`);
 
 tsts.run();

@@ -2,7 +2,7 @@
 
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { intExt } from '../primitive/IntExt.js';
-import { DateTime } from '../primitive/datetime/DateTime.js';
+import { DateTimeLocal } from '../datetime/outdex.js';
 import { ACmd } from './ACmd.js';
 import { ColValue } from './ColValue.js';
 import type { TableName } from './TableName.js';
@@ -17,7 +17,7 @@ export abstract class ACmdData extends ACmd {
 
 	constructor(
 		userId: number,
-		started: DateTime,
+		started: DateTimeLocal,
 		table: TableName,
 		recId: number,
 		cmd: CommandData
@@ -43,7 +43,7 @@ export abstract class ACmdData extends ACmd {
 	}
 
 	static fromBinSub(
-		s: DateTime,
+		s: DateTimeLocal,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -78,7 +78,7 @@ abstract class ADataCols extends ACmdData {
 
 	public constructor(
 		userId: number,
-		started: DateTime,
+		started: DateTimeLocal,
 		table: TableName,
 		recId: number,
 		cmd: CommandData,
@@ -120,7 +120,7 @@ abstract class ADataCols extends ACmdData {
 export class CmdDataInsert extends ADataCols {
 	public constructor(
 		userId: number,
-		started: DateTime,
+		started: DateTimeLocal,
 		table: TableName,
 		recId: number,
 		...cols: ColValue[]
@@ -134,11 +134,11 @@ export class CmdDataInsert extends ADataCols {
 		recId: number,
 		...cols: ColValue[]
 	): CmdDataInsert {
-		return new CmdDataInsert(userId, DateTime.now(), table, recId, ...cols);
+		return new CmdDataInsert(userId, DateTimeLocal.now(), table, recId, ...cols);
 	}
 
 	static fromBinSub(
-		s: DateTime,
+		s: DateTimeLocal,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -190,7 +190,7 @@ export class CmdDataInsert extends ADataCols {
 export class CmdDataPut extends ADataCols {
 	public constructor(
 		userId: number,
-		started: DateTime,
+		started: DateTimeLocal,
 		table: TableName,
 		recId: number,
 		...cols: ColValue[]
@@ -204,11 +204,11 @@ export class CmdDataPut extends ADataCols {
 		recId: number,
 		...cols: ColValue[]
 	): CmdDataPut {
-		return new CmdDataPut(userId, DateTime.now(), table, recId, ...cols);
+		return new CmdDataPut(userId, DateTimeLocal.now(), table, recId, ...cols);
 	}
 
 	static fromBinSub(
-		s: DateTime,
+		s: DateTimeLocal,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -259,7 +259,7 @@ export class CmdDataPut extends ADataCols {
 export class CmdDataPatch extends ADataCols {
 	public constructor(
 		userId: number,
-		started: DateTime,
+		started: DateTimeLocal,
 		table: TableName,
 		recId: number,
 		...cols: ColValue[]
@@ -273,11 +273,11 @@ export class CmdDataPatch extends ADataCols {
 		recId: number,
 		...cols: ColValue[]
 	): CmdDataPatch {
-		return new CmdDataPatch(userId, DateTime.now(), table, recId, ...cols);
+		return new CmdDataPatch(userId, DateTimeLocal.now(), table, recId, ...cols);
 	}
 
 	static fromBinSub(
-		s: DateTime,
+		s: DateTimeLocal,
 		cByte: number,
 		u: number,
 		t: TableName,
@@ -328,7 +328,7 @@ export class CmdDataPatch extends ADataCols {
 export class CmdDataDelete extends ACmdData {
 	public constructor(
 		userId: number,
-		started: DateTime,
+		started: DateTimeLocal,
 		table: TableName,
 		recId: number
 	) {
@@ -336,11 +336,11 @@ export class CmdDataDelete extends ACmdData {
 	}
 
 	static Now(userId: number, table: TableName, recId: number): CmdDataDelete {
-		return new CmdDataDelete(userId, DateTime.now(), table, recId);
+		return new CmdDataDelete(userId, DateTimeLocal.now(), table, recId);
 	}
 
 	static fromBinSub(
-		s: DateTime,
+		s: DateTimeLocal,
 		cByte: number,
 		u: number,
 		t: TableName,

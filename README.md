@@ -192,6 +192,12 @@ Name|Capacities|Optional parameters
 [TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, customization
 [TurboSHAKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|128, 256|digest size, customization
 
+### DateTime
+
+- Year, Month, Day
+- Hour, Minute, Second, Millisecond, Microsecond
+- DateTimeLocal, DateTimeUtc, DateOnly, TimeOnly
+- Duration, DurationExact
 
 ### Error Correction Codes
 
@@ -218,8 +224,6 @@ Name|Capacities|Optional parameters
 
 ### Primitive
 
-- DateTime, DateOnly, TimeOnly
-- Duration
 - Fixed TypedArray
 - Int64
 - Lazy

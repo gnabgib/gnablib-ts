@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Day} from '../../src/datetime/Day';
+import {Day} from '../../src/datetime/outdex';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
@@ -73,12 +73,6 @@ tsts(`deser without source data throws`,()=>{
     const br=new BitReader(bytes);
     assert.throws(()=>Day.deserialize(br).validate());
 });
-tsts(`deser without storage space throws`,()=>{
-    const stor=new Uint8Array(0);
-    const bytes=Uint8Array.of(0x98);
-    const br=new BitReader(bytes);
-    assert.throws(()=>Day.deserialize(br,stor).validate());
-});
 
 const toStrSet:[number,string,string,string][]=[
     [1,'1','01','1'],
@@ -104,11 +98,6 @@ tsts(`new`,()=>{
     const d=Day.new(11);
     assert.is(d.valueOf(),11);
     assert.is(d.toString(),'11');
-});
-tsts(`new-provide storage`,()=>{
-    const stor=new Uint8Array(Day.storageBytes);
-    const d=Day.new(12,stor);
-    assert.is(d.valueOf(),12);
 });
 
 tsts(`fromDate`,()=>{

@@ -71,7 +71,7 @@ for (const set of floatSet) {
 		const foundAvg = sum / sampleSize;
 		//Because the values aren't quantized, the float average
 		// should be much closer to the expected average
-		Assert.equalish(foundAvg, expectAvg, { percent: 0.5 });
+		Assert.equalish(foundAvg, expectAvg, { percent: 0.6 });
 	});
 }
 

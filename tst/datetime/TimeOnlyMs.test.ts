@@ -1,27 +1,22 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { TimeOnlyMs } from '../../src/datetime/TimeOnlyMs';
+import { TimeOnlyMs } from '../../src/datetime/outdex';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
 import util from 'util';
+import { WindowStr } from '../../src/primitive/WindowStr';
 
 const tsts = suite('TimeOnlyMs');
 
-const stor=new Uint8Array(TimeOnlyMs.storageBytes);
-const emptyBytes=new Uint8Array(0);
-
-
-const serSet: [number, number, number, number, boolean, string, string][] = [
-	[0, 0, 0, 0, false, '00:00:00.000', '00000000'], //min 00000 000000 000000 00000000 0 <<4
-    [0, 0, 0, 0, true, '00:00:00.000Z', '00000010'], //min 00000 000000 000000 00000000 1 <<4
-	[11, 41, 7, 543, false, '11:41:07.543', '5D23C3E0'], //01011 101001 000111 1000011111 0 <<4
-	[23, 59, 59, 999, false, '23:59:59.999', 'BF7DFCE0'], //max 10111 111011 111011 1111100111 0 <<4
-    [23, 59, 59, 999, true, '23:59:59.999Z', 'BF7DFCF0'], //max 10111 111011 111011 1111100111 1 <<4
+const serSet: [number, number, number, number,  string, string][] = [
+	[0, 0, 0, 0,  '00:00:00.000', '00000000'], //min 00000 000000 000000 00000000 0 <<4
+	[11, 41, 7, 543,  '11:41:07.543', '5D23C3E0'], //01011 101001 000111 1000011111 0 <<4
+	[23, 59, 59, 999,  '23:59:59.999', 'BF7DFCE0'], //max 10111 111011 111011 1111100111 0 <<4
 ];
-for (const [hr, mi, se, ms, utc, str, ser] of serSet) {
-	tsts(`ser(${hr} ${mi} ${se} ${ms} ${utc})`, () => {
-		var t = TimeOnlyMs.new(hr, mi, se, ms,utc);
+for (const [hr, mi, se, ms,  str, ser] of serSet) {
+	tsts(`ser(${hr} ${mi} ${se} ${ms})`, () => {
+		var t = TimeOnlyMs.new(hr, mi, se, ms);
 
 		assert.is(t.toString(), str,'toString');
 
@@ -38,7 +33,6 @@ for (const [hr, mi, se, ms, utc, str, ser] of serSet) {
 		assert.is(t.minute.valueOf(), mi, 'minute');
 		assert.is(t.second.valueOf(), se, 'second');
 		assert.is(t.millisecond.valueOf(), ms, 'millisecond');
-        assert.is(t.isUtc.valueBool(),utc,'isUtc');
 		assert.is(t.toString(), str,'toString');
 	});
 }
@@ -53,26 +47,15 @@ tsts(`deser without source data throws`, () => {
 	const br = new BitReader(bytes);
 	assert.throws(() => TimeOnlyMs.deserialize(br).validate());
 });
-tsts(`deser without storage space throws`, () => {
-	const bytes = Uint8Array.of(0xff, 0xff, 0x7e);
-	const br = new BitReader(bytes);
-	assert.throws(() => TimeOnlyMs.deserialize(br, emptyBytes).validate());
-});
 
 tsts(`new`,()=>{
-    const t=TimeOnlyMs.new(11,41,6,12,false);
+    const t=TimeOnlyMs.new(11,41,6,12);
     assert.is(t.toString(),'11:41:06.012');
     assert.is(t.hour.valueOf(),11,'hour');
     assert.is(t.minute.valueOf(), 41, 'minute');
     assert.is(t.second.valueOf(), 6, 'second');
     assert.is(t.millisecond.valueOf(), 12, 'millisecond');
-    assert.is(t.isUtc.valueBool(),false,'isUtc');
     //Value off uses base 10 shifting
-    assert.is(t.valueOf(),114106012);
-});
-tsts(`new-provide storage`,()=>{
-    const t=TimeOnlyMs.new(11,41,6,12,true,stor);
-    assert.is(t.toString(),'11:41:06.012Z');
     assert.is(t.valueOf(),114106012);
 });
 
@@ -84,24 +67,14 @@ tsts(`fromDate`,()=>{
     assert.is(t.minute.valueOf(), dt.getMinutes(), 'minute');
     assert.is(t.second.valueOf(), dt.getSeconds(), 'second');
     assert.is(t.millisecond.valueOf(), dt.getMilliseconds(), 'millisecond');
-    assert.is(t.isUtc.valueBool(),false,'isUtc');
 });
 
-tsts(`fromDateUtc`,()=>{
-    const dt=new Date();
-    const t=TimeOnlyMs.fromDateUtc(dt);
-    assert.is(t.hour.valueOf(),dt.getUTCHours(),'hour');
-    assert.is(t.minute.valueOf(), dt.getUTCMinutes(), 'minute');
-    assert.is(t.second.valueOf(), dt.getUTCSeconds(), 'second');
-    assert.is(t.millisecond.valueOf(), dt.getMilliseconds(), 'millisecond');
-    assert.is(t.isUtc.valueBool(),true);
-});
 
 const fromUnixTimeSet: [number, string, string][] = [
     //2024-01-20 07:13:30
-	[1705734810, '07:13:30.000Z', '07:13:30.000Z'],
+	[1705734810, '07:13:30.000', '07:13:30.000'],
     //2024-01-20 07:13:30.534
-	[1705734810.534, '07:13:30.534Z', '07:13:30.534Z'],
+	[1705734810.534, '07:13:30.534', '07:13:30.534'],
 ];
 for (const [epoch, expectStr, expectJson] of fromUnixTimeSet) {
 	tsts(`fromUnixTime(${epoch})`, () => {
@@ -113,9 +86,9 @@ for (const [epoch, expectStr, expectJson] of fromUnixTimeSet) {
 
 const fromUnixTimeMsSet: [number, string][] = [
     //2024-01-20 07:13:30.542
-	[1705734810542, '07:13:30.542Z'],
+	[1705734810542, '07:13:30.542'],
     //2024-01-20 07:13:30.542789
-	[1705734810542.789, '07:13:30.542Z'],
+	[1705734810542.789, '07:13:30.542'],
 ];
 for (const [epoch, expect] of fromUnixTimeMsSet) {
 	tsts(`fromUnixTimeMs(${epoch})`, () => {
@@ -125,19 +98,22 @@ for (const [epoch, expect] of fromUnixTimeMsSet) {
 }
 
 const toSecondMsSet:[number,number,number,number,string,number,number][]=[
-    [0,0,0,0,'00:00:00.000Z',0,0],
-    [7,13,30,542,'07:13:30.542Z',26010.542,26010542],
-    [7,13,30,534,'07:13:30.534Z',26010.534,26010534],
-    [23,59,59,999,'23:59:59.999Z',86399.999,86399999]
+    [0,0,0,0,'00:00:00.000',0,0],
+    [7,13,30,542,'07:13:30.542',26010.542,26010542],
+    [7,13,30,534,'07:13:30.534',26010.534,26010534],
+    [23,59,59,999,'23:59:59.999',86399.999,86399999]
 ];
 for(const [h,m,s,ms,str,seconds,milliseconds] of toSecondMsSet) {
-    const tm=TimeOnlyMs.new(h,m,s,ms,true);
+    const tm=TimeOnlyMs.new(h,m,s,ms);
     tsts(`toSeconds(${str})`,()=>{
         assert.is(tm.toString(),str);
         assert.is(tm.toSeconds(),seconds);
     });
     tsts(`toMilliseconds(${str})`,()=>{
         assert.is(tm.toMilliseconds(),milliseconds);
+    });
+    tsts(`toMicroseconds(${str})`,()=>{
+        assert.is(tm.toMicroseconds(),milliseconds*1000);
     });
     //We can back convert epoch to date with these zeroed values
     tsts(`fromUnixTime(${seconds})`,()=>{
@@ -146,6 +122,10 @@ for(const [h,m,s,ms,str,seconds,milliseconds] of toSecondMsSet) {
     })
     tsts(`fromUnixTimeMs(${milliseconds})`,()=>{
         const fr=TimeOnlyMs.fromUnixTimeMs(milliseconds);
+        assert.is(fr.toString(),str);
+    })
+    tsts(`fromUnixTimeUs(${milliseconds*1000})`,()=>{
+        const fr=TimeOnlyMs.fromUnixTimeUs(milliseconds*1000);
         assert.is(fr.toString(),str);
     })
 }
@@ -158,19 +138,6 @@ tsts(`now`,()=>{
     assert.is(t.hour.valueOf(),dt.getHours(),'hour');
     assert.is(t.minute.valueOf(), dt.getMinutes(), 'minute');
     assert.is(t.second.valueOf(), dt.getSeconds(), 'second');
-    assert.is(t.isUtc.valueBool(),false);
-    //unsafe to test microsecond
-});
-
-tsts(`nowUtc`,()=>{
-    const dt=new Date();
-    const t=TimeOnlyMs.nowUtc();
-    //This isn't a great test, but let's use a date object to compare
-    //(tiny chance of this test failing near midnight UTC)
-    assert.is(t.hour.valueOf(),dt.getUTCHours(),'hour');
-    assert.is(t.minute.valueOf(), dt.getUTCMinutes(), 'minute');
-    assert.is(t.second.valueOf(), dt.getUTCSeconds(), 'second');
-    assert.is(t.isUtc.valueBool(),true);
     //unsafe to test microsecond
 });
 
@@ -192,5 +159,71 @@ tsts('serialSizeBits',()=>{
     assert.is(bits>0 && bits<64,true);//Make sure it fits in 64 bits
 });
 
+const fromValueSet:number[]=[
+    0,//Min
+    102034567,
+    235959999,//Max
+];
+for(const src of fromValueSet) {
+    //We expect a round trip so expected=source
+    tsts(`fromValue(${src})`,()=>{
+        const t=TimeOnlyMs.fromValue(src);
+        assert.is(t.valueOf(),src);
+    });
+}
+
+tsts(`min`,()=>{
+    const to=TimeOnlyMs.min;
+    assert.is(to.valueOf(),0);
+});
+tsts(`max`,()=>{
+    const to=TimeOnlyMs.max;
+    assert.is(to.valueOf(),235959999);
+});
+
+const parseSet:[WindowStr,string,number][]=[
+    //Just numbers (assume valueOf compat)
+    [WindowStr.new('000000000'),'00:00:00.000',0],
+    [WindowStr.new('235959999 '),'23:59:59.999',0],
+    [WindowStr.new('153631123'),'15:36:31.123',0],
+
+    //Normal
+    [WindowStr.new('15:36:31.123'),'15:36:31.123',0],
+    [WindowStr.new('15: 36: 31.123'),'15:36:31.123',0],
+    [WindowStr.new('00:00:00.000'),'00:00:00.000',0],
+    [WindowStr.new('23:59:59.999'),'23:59:59.999',0],
+    [WindowStr.new('0:0:0.1'),'00:00:00.100',0],
+    [WindowStr.new('0:0:0.01'),'00:00:00.010',0],
+];
+for(const [w,expect,expectLen] of parseSet) {
+    tsts(`parse(${w.debug()})`,()=>{
+        const to=TimeOnlyMs.parse(w);
+        assert.equal(to.toString(),expect);
+        assert.is(w.length,expectLen,'remaining length');
+    });
+}
+
+const badParseSet:WindowStr[]=[
+    WindowStr.new('1536'),//Can't be short, or.. what is thi?
+    WindowStr.new('15:36:.'),//Can't be short
+    WindowStr.new('1536:31.123'),//Can't be a mix of with/without delims
+    WindowStr.new('000000000z'),//UTC not welcome here
+    WindowStr.new('15:36:31.123z'),//"
+];
+for(const w of badParseSet) {
+    tsts(`parse ${w.debug()} throws`,()=>{
+        assert.throws(()=>TimeOnlyMs.parse(w));
+    })
+}
+
+tsts(`parse-now`, () => {
+    const w=WindowStr.new('now');
+    const t=TimeOnlyMs.parse(w);
+
+    const h=t.hour; assert.is(h>=0&&h<=23,true,'hour in range');
+    const m=t.minute; assert.is(m>=0&&m<=59,true,'minute in range');
+    const s=t.second; assert.is(s>=0&&s<=59,true,'second in range');
+    const ms=t.millisecond; assert.is(ms>=0&&ms<=999,true,'millisecond in range '+ms);
+});
 
 tsts.run();

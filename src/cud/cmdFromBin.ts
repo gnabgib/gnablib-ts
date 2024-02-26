@@ -7,16 +7,16 @@ import { Plane } from './types/Plane.js';
 import { ACmdData } from './CommandData.js';
 import type { ACmd } from './ACmd.js';
 import { ACmdCtrl } from './CommandCtrl.js';
-import { DateTime } from '../primitive/datetime/DateTime.js';
+import { DateTimeLocal } from '../datetime/outdex.js';
 import { BitReader } from '../primitive/BitReader.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)
-	let s: DateTime;
+	let s: DateTimeLocal;
 	let ptr = pos;
 	const br = new BitReader(bin);
 	try {
-		s = DateTime.deserialize(br);
+		s = DateTimeLocal.deserialize(br);
 	} catch {
 		return new FromBinResult<ACmd>(
 			0,

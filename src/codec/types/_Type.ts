@@ -43,7 +43,7 @@ import type {
 	ReadonlyInt8Array,
 } from '../../primitive/ReadonlyTypedArray.js';
 import { safety } from '../../primitive/Safety.js';
-import { DateTime } from '../../primitive/datetime/DateTime.js';
+import { DateTimeLocal } from '../../datetime/outdex.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
 
@@ -644,7 +644,7 @@ export function encode(value: unknown): Uint8Array {
 	// 	ret.set(d, 1);
 	// 	return ret;
 	// }
-	if (value instanceof DateTime) {
+	if (value instanceof DateTimeLocal) {
 		const bw = new BitWriter(1 + value.serialSizeBits / 8);
 		bw.writeNumber(Type.DateTime, 8);
 		value.serialize(bw);
@@ -750,7 +750,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			if (pos + 8 > bin.length) return 'decode missing data';
 			try {
 				const br = new BitReader(bin.subarray(pos));
-				const dFrom = DateTime.deserialize(br);
+				const dFrom = DateTimeLocal.deserialize(br);
 				return new BinResult(1 + 8, dFrom);
 			} catch (e: unknown) {
 				return 'decode failed DateTime ' + (e as Error).message ?? '';
