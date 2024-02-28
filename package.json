@@ -18,7 +18,7 @@
 		"doc:watch": "npx typedoc --watch",
 		"prebuild": "rm -rf _o\\out",
 		"build": "tsc",
-		"build:full": "npm run cover & npm run cover:report & npm run doc:cover & npm run build & npm run compress",
+		"build:full": "npm run cover & npm run cover:report & npm run doc:cover & npm run build & npm run compress & npm run packgen",
 		"compress": "compress _o/out _o/dist",
 		"packgen": "node script/packageGen.js"
 	},

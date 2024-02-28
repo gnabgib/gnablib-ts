@@ -8,6 +8,7 @@ import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../primitive/interfaces/ISerializer.js';
 import { parseDec } from '../primitive/number/Int.js';
 import { Duration, DurationExact } from './Duration.js';
+import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -21,7 +22,7 @@ const secBytes = 1;
 const milliBytes = 2;
 const microBytes = 3;
 const timeMsBytes = 5; //hourBytes + minBytes + secBytes + milliBytes;
-const timeBytes = 6 ; //hourBytes + minBytes + secBytes + microBytes;
+const timeBytes = 6; //hourBytes + minBytes + secBytes + microBytes;
 
 const yearSerBits = 15; //2^15 = 32767
 const monthSerBits = 4; //2^4 = 16
@@ -68,7 +69,6 @@ class Core {
 	protected _day(p: number): number {
 		return this._stor[p] + 1;
 	}
-	//--
 	protected _hour(p: number): number {
 		return this._stor[p];
 	}
@@ -112,7 +112,6 @@ class Core {
 		ret += this._month_iso(p) + sep;
 		return ret + this._day_iso(p + monthBytes);
 	}
-	//--
 	protected _hour_iso(p: number): string {
 		const s = this._stor[p].toString();
 		return ('00' + s).substring(s.length);
@@ -151,65 +150,27 @@ class Core {
 		return ret + this._micro_iso(p + secBytes);
 	}
 
-	protected _year_ser(to: BitWriter, p: number): void {
-		to.writeNumber((this._stor[p] << 8) | this._stor[p + 1], yearSerBits);
-	}
-	protected _month_ser(to: BitWriter, p: number): void {
-		to.writeNumber(this._stor[p], monthSerBits);
-	}
-	protected _day_ser(to: BitWriter, p: number): void {
+	protected _date_ser(to: BitWriter, p: number): void {
+		to.writeNumber((this._stor[p++] << 8) | this._stor[p++], yearSerBits);
+		to.writeNumber(this._stor[p++], monthSerBits);
 		to.writeNumber(this._stor[p], daySerBits);
 	}
-	protected _date_ser(to: BitWriter, p: number): void {
-		this._year_ser(to, p);
-		p += yearBytes;
-		this._month_ser(to, p);
-		this._day_ser(to, p + monthBytes);
+	protected _timeMs_ser(to: BitWriter, p: number): void {
+		to.writeNumber(this._stor[p++], hourSerBits);
+		to.writeNumber(this._stor[p++], minSerBits);
+		to.writeNumber(this._stor[p++], secSerBits);
+		to.writeNumber((this._stor[p++] << 8) | this._stor[p], milliSerBits);
 	}
-	//--
-	protected _hour_ser(to: BitWriter, p: number): void {
-		to.writeNumber(this._stor[p], hourSerBits);
-	}
-	protected _minute_ser(to: BitWriter, p: number): void {
-		to.writeNumber(this._stor[p], minSerBits);
-	}
-	protected _second_ser(to: BitWriter, p: number): void {
-		to.writeNumber(this._stor[p], secSerBits);
-	}
-	protected _milli_ser(to: BitWriter, p: number): void {
-		to.writeNumber((this._stor[p] << 8) | this._stor[p + 1], milliSerBits);
-	}
-	protected _micro_ser(to: BitWriter, p: number): void {
+	protected _time_ser(to: BitWriter, p: number): void {
+		to.writeNumber(this._stor[p++], hourSerBits);
+		to.writeNumber(this._stor[p++], minSerBits);
+		to.writeNumber(this._stor[p++], secSerBits);
 		to.writeNumber(
-			(this._stor[p] << 16) | (this._stor[p + 1] << 8) | this._stor[p + 2],
+			(this._stor[p++] << 16) | (this._stor[p++] << 8) | this._stor[p],
 			microSerBits
 		);
 	}
-	protected _timeMs_ser(to: BitWriter, p: number): void {
-		this._hour_ser(to, p);
-		p += hourBytes;
-		this._minute_ser(to, p);
-		p += minBytes;
-		this._second_ser(to, p);
-		this._milli_ser(to, p + secBytes);
-	}
-	protected _time_ser(to: BitWriter, p: number): void {
-		this._hour_ser(to, p);
-		p += hourBytes;
-		this._minute_ser(to, p);
-		p += minBytes;
-		this._second_ser(to, p);
-		this._micro_ser(to, p + secBytes);
-	}
 
-	//protected _year_valid(p:number): void {} //NOP
-	protected _month_valid(p: number): void {
-		safe.int.lte('month', this._month(p), 12);
-	}
-	/** Can only make sure <=31, use _date_valid when possible */
-	protected _day_valid(p: number): void {
-		safe.int.lte('day', this._day(p), 31);
-	}
 	protected _date_valid(p: number): void {
 		//no validate needed for year (can't exceed with ser)
 		//no need for negative check (all uint)
@@ -221,22 +182,6 @@ class Core {
 			this._day(p + monthBytes),
 			Month.lastDay(m, this._year(p))
 		);
-	}
-	//--
-	protected _hour_valid(p: number): void {
-		safe.int.lte('hour', this._hour(p), 23);
-	}
-	protected _minute_valid(p: number): void {
-		safe.int.lte('minute', this._minute(p), 59);
-	}
-	protected _second_valid(p: number): void {
-		safe.int.lte('second', this._second(p), 59);
-	}
-	protected _milli_valid(p: number): void {
-		safe.int.lte('millisecond', this._milli(p), 999);
-	}
-	protected _micro_valid(p: number): void {
-		safe.int.lte('microsecond', this._micro(p), 999999);
 	}
 	protected _time_valid(p: number): void {
 		safe.int.lte('hour', this._hour(p), 23);
@@ -274,8 +219,7 @@ class Core {
 		const ret = CD * daysPerCD + dayOfCD - epochShift;
 		return ret;
 	}
-	/** Microseconds since midnight */
-	protected timeToMs(p: number): number {
+	protected timeToUs(p: number): number {
 		let ret = this._hour(p) * usPerHour;
 		p += hourBytes;
 		ret += this._minute(p) * usPerMin;
@@ -289,12 +233,6 @@ class Core {
 		to[p] = v >> 8;
 		to[p + 1] = v;
 	}
-	protected static writeMonth(to: Uint8Array, p: number, v: number): void {
-		to[p] = v - 1;
-	}
-	protected static writeDay(to: Uint8Array, p: number, v: number): void {
-		to[p] = v - 1;
-	}
 	protected static writeDate(
 		to: Uint8Array,
 		p: number,
@@ -304,18 +242,8 @@ class Core {
 	): void {
 		Core.writeYear(to, p, y);
 		p += yearBytes;
-		Core.writeMonth(to, p, m);
-		Core.writeDay(to, p + monthBytes, d);
-	}
-	//--
-	protected static writeHour(to: Uint8Array, p: number, v: number): void {
-		to[p] = v;
-	}
-	protected static writeMinute(to: Uint8Array, p: number, v: number): void {
-		to[p] = v;
-	}
-	protected static writeSecond(to: Uint8Array, p: number, v: number): void {
-		to[p] = v;
+		/*writeMonth*/to[p++] = m - 1;
+		/*writeDay*/to[p] = d - 1;
 	}
 	protected static writeMilli(to: Uint8Array, p: number, v: number): void {
 		to[p] = v >> 8;
@@ -334,15 +262,13 @@ class Core {
 		s: number,
 		u: number
 	): void {
-		Core.writeHour(to, pos, h);
-		pos += hourBytes;
-		Core.writeMinute(to, pos, i);
-		pos += minBytes;
-		Core.writeSecond(to, pos, s);
-		Core.writeMicro(to, pos + secBytes, u);
+		/*writeHour*/ to[pos++] = h;
+		/*writeMinute*/ to[pos++] = i;
+		/*writeSecond*/ to[pos++] = s;
+		Core.writeMicro(to, pos, u);
 	}
 
-	protected static writeYrFromDt(to: Uint8Array, p: number, dt: Date): void {
+	protected static writeYFromDt(to: Uint8Array, p: number, dt: Date): void {
 		const v = dt.getFullYear() + 10000; //Convert to holocene
 		to[p] = v >> 8;
 		to[p + 1] = v;
@@ -350,26 +276,14 @@ class Core {
 	protected static writeMoFromDt(to: Uint8Array, p: number, dt: Date): void {
 		to[p] = dt.getMonth(); //We store months 0 based too (but we don't trouble the dev with that detail)
 	}
-	protected static writeDyFromDt(to: Uint8Array, p: number, dt: Date): void {
+	protected static writeDFromDt(to: Uint8Array, p: number, dt: Date): void {
 		to[p] = dt.getDate() - 1; //We store 0 based
 	}
 	protected static writeDtFromDt(to: Uint8Array, p: number, dt: Date): void {
-		Core.writeYrFromDt(to, p, dt);
+		Core.writeYFromDt(to, p, dt);
 		p += yearBytes;
 		Core.writeMoFromDt(to, p, dt);
-		Core.writeDyFromDt(to, p + monthBytes, dt);
-	}
-	protected static writeHFromDt(to: Uint8Array, p: number, dt: Date): void {
-		const v = dt.getHours();
-		to[p] = v;
-	}
-	protected static writeMiFromDt(to: Uint8Array, p: number, dt: Date): void {
-		const v = dt.getMinutes();
-		to[p] = v;
-	}
-	protected static writeSFromDt(to: Uint8Array, p: number, dt: Date): void {
-		const v = dt.getSeconds();
-		to[p] = v;
+		Core.writeDFromDt(to, p + monthBytes, dt);
 	}
 	protected static writeMsFromDt(to: Uint8Array, p: number, dt: Date): void {
 		const v = dt.getMilliseconds();
@@ -383,80 +297,24 @@ class Core {
 		to[p + 2] = v;
 	}
 	protected static writeTFromDt(to: Uint8Array, p: number, dt: Date): void {
-		Core.writeHFromDt(to, p, dt);
-		p += hourBytes;
-		Core.writeMiFromDt(to, p, dt);
-		p += minBytes;
-		Core.writeSFromDt(to, p, dt);
-		Core.writeUsFromDt(to, p + secBytes, dt);
+		/*writeHFromDt*/ to[p++] = dt.getHours();
+		/*writeMiFromDt*/ to[p++] = dt.getMinutes();
+		/*writeSFromDt*/ to[p++] = dt.getSeconds();
+		Core.writeUsFromDt(to, p, dt);
 	}
 
-	protected static writeYrFromDtu(to: Uint8Array, p: number, dt: Date): void {
-		const v = dt.getUTCFullYear() + 10000; //Convert to holocene
-		to[p] = v >> 8;
-		to[p + 1] = v;
-	}
-	protected static writeMoFromDtu(to: Uint8Array, p: number, dt: Date): void {
-		to[p] = dt.getUTCMonth(); //We store months 0 based too (but we don't trouble the dev with that detail)
-	}
-	protected static writeDyFromDtu(to: Uint8Array, p: number, dt: Date): void {
-		to[p] = dt.getUTCDate() - 1; //We store 0 based
-	}
-	protected static writeHFromDtu(to: Uint8Array, p: number, dt: Date): void {
-		const v = dt.getUTCHours();
-		to[p] = v;
-	}
-	protected static writeMiFromDtu(to: Uint8Array, p: number, dt: Date): void {
-		const v = dt.getUTCMinutes();
-		to[p] = v;
-	}
-
-	protected static vetYear(v: number): void {
-		safe.int.inRangeInc('year', v, minIsoYear, maxIsoYear);
-	}
-	protected static vetMonth(v: number): void {
-		safe.int.inRangeInc('month', v, 1, 12);
-	}
-	protected static vetDay(v: number, max = 31): void {
-		safe.int.inRangeInc('day', v, 1, max);
-	}
 	protected static vetDate(y: number, m: number, d: number): void {
-		Core.vetYear(y);
-		Core.vetMonth(m);
-		Core.vetDay(d, Month.lastDay(m, y));
-	}
-	//--
-	protected static vetHour(v: number): void {
-		safe.int.inRangeInc('hour', v, 0, 23);
-	}
-	protected static vetMinute(v: number): void {
-		safe.int.inRangeInc('minute', v, 0, 59);
-	}
-	protected static vetSecond(v: number): void {
-		safe.int.inRangeInc('second', v, 0, 59);
-	}
-	protected static vetMilli(v: number): void {
-		safe.int.inRangeInc('millisecond', v, 0, 999);
-	}
-	protected static vetMicro(v: number): void {
-		safe.int.inRangeInc('microsecond', v, 0, 999999);
+		/*vetYear*/ safe.int.inRangeInc('year', y, minIsoYear, maxIsoYear);
+		/*vetMonth*/ safe.int.inRangeInc('month', m, 1, 12);
+		/*vetDay*/ safe.int.inRangeInc('day', d, 1, Month.lastDay(m, y));
 	}
 	protected static vetTime(h: number, i: number, s: number, u: number): void {
-		Core.vetHour(h);
-		Core.vetMinute(i);
-		Core.vetSecond(s);
-		Core.vetMicro(u);
+		/*vetHour*/ safe.int.inRangeInc('hour', h, 0, 23);
+		/*vetMinute*/ safe.int.inRangeInc('minute', i, 0, 59);
+		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
+		/*vetMicro*/ safe.int.inRangeInc('microsecond', u, 0, 999999);
 	}
 
-	protected static hrFromUnixUs(to: Uint8Array, p: number, v: number): void {
-		to[p] = (v % usPerDay) / usPerHour;
-	}
-	protected static miFromUnixUs(to: Uint8Array, p: number, v: number): void {
-		to[p] = (v % usPerHour) / usPerMin;
-	}
-	protected static sFromUnixUs(to: Uint8Array, p: number, v: number): void {
-		to[p] = (v % usPerMin) / usPerSec;
-	}
 	protected static timeMsFromUnixMs(
 		to: Uint8Array,
 		p: number,
@@ -469,30 +327,11 @@ class Core {
 		to[p] = (ms % msPerMin) / msPerSec;
 		Core.writeMilli(to, p + secBytes, ms % msPerSec);
 	}
-	protected static timeMsFromUnixUs(
-		to: Uint8Array,
-		p: number,
-		us: number
-	): void {
-		Core.hrFromUnixUs(to, p, us);
-		p += hourBytes;
-		Core.miFromUnixUs(to, p, us);
-		p += minBytes;
-		Core.sFromUnixUs(to, p, us);
-		Core.writeMilli(to, p + secBytes, (us % usPerSec) / 1000);
-	}
-	protected static timeFromUnixUs(
-		to: Uint8Array,
-		p: number,
-		source: number
-	): void {
-		Core.hrFromUnixUs(to, p, source);
-		p += hourBytes;
-		Core.miFromUnixUs(to, p, source);
-		p += minBytes;
-		Core.sFromUnixUs(to, p, source);
-		//Core.usFromUnixUs(to,p+secBytes,source);
-		Core.writeMicro(to, p + secBytes, source % usPerSec);
+	protected static timeFromUnixUs(to: Uint8Array, p: number, us: number): void {
+		/*hFromUnixUs*/ to[p++] = (us % usPerDay) / usPerHour;
+		/*miFromUnixUs*/ to[p++] = (us % usPerHour) / usPerMin;
+		/*sFromUnixUs*/ to[p++] = (us % usPerMin) / usPerSec;
+		Core.writeMicro(to, p, us % usPerSec);
 	}
 
 	//Todo convert these to using reset
@@ -982,50 +821,17 @@ class Core {
 		to[p] = v >> 8;
 		to[p + 1] = v;
 	}
-	protected static deserMonth(to: Uint8Array, p: number, src: BitReader): void {
-		//This is a raw-write (writeMonth does a value-transform)
-		const v = src.readNumber(monthSerBits);
-		to[p] = v;
-	}
-	protected static deserDay(to: Uint8Array, p: number, src: BitReader): void {
-		//This is a raw-write (writeDay does a value-transform)
-		const v = src.readNumber(daySerBits);
-		to[p] = v;
-	}
 	protected static deserDate(to: Uint8Array, p: number, src: BitReader): void {
 		Core.deserYear(to, p, src);
 		p += yearBytes;
-		Core.deserMonth(to, p, src);
-		Core.deserDay(to, p + monthBytes, src);
-	}
-	// --
-	protected static deserHour(to: Uint8Array, p: number, src: BitReader): void {
-		const v = src.readNumber(hourSerBits);
-		to[p] = v;
-	}
-	protected static deserMin(to: Uint8Array, p: number, src: BitReader): void {
-		const v = src.readNumber(minSerBits);
-		to[p] = v;
-	}
-	protected static deserSec(to: Uint8Array, p: number, src: BitReader): void {
-		const v = src.readNumber(secSerBits);
-		to[p] = v;
-	}
-	protected static deserMilli(to: Uint8Array, p: number, src: BitReader): void {
-		const v = src.readNumber(milliSerBits);
-		Core.writeMilli(to, p, v);
-	}
-	protected static deserMicro(to: Uint8Array, p: number, src: BitReader): void {
-		const v = src.readNumber(microSerBits);
-		Core.writeMicro(to, p, v);
+		/*deserMonth*/ to[p++] = src.readNumber(monthSerBits);
+		/*deserDay*/ to[p] = src.readNumber(daySerBits);
 	}
 	protected static deserTime(to: Uint8Array, p: number, src: BitReader): void {
-		Core.deserHour(to, p, src);
-		p += hourBytes;
-		Core.deserMin(to, p, src);
-		p += minBytes;
-		Core.deserSec(to, p, src);
-		Core.deserMicro(to, p + secBytes, src);
+		/*deserHour*/ to[p++] = src.readNumber(hourSerBits);
+		/*deserMin*/ to[p++] = src.readNumber(minSerBits);
+		/*deserSec*/ to[p++] = src.readNumber(secSerBits);
+		/*deserMicro*/ Core.writeMicro(to, p, src.readNumber(microSerBits));
 	}
 
 	protected static dateFromValue(to: Uint8Array, p: number, v: number): void {
@@ -1129,7 +935,10 @@ export class Year extends Core implements ISerializer {
 
 	/** Serialize into target  - 15 bits*/
 	public serialize(target: BitWriter): void {
-		this._year_ser(target, this._pos);
+		target.writeNumber(
+			(this._stor[this._pos] << 8) | this._stor[this._pos + 1],
+			yearSerBits
+		);
 	}
 
 	/** Number of bits required to serialize */
@@ -1150,7 +959,7 @@ export class Year extends Core implements ISerializer {
 	/** Create a new year in ISO601 format, range -10000 - +22767 */
 	public static new(v: number): Year {
 		const stor = new Uint8Array(yearBytes);
-		Core.vetYear(v);
+		/*vetYear*/ safe.int.inRangeInc('year', v, minIsoYear, maxIsoYear);
 		Core.writeYear(stor, 0, v);
 		return new Year(stor, 0);
 	}
@@ -1186,7 +995,7 @@ export class Year extends Core implements ISerializer {
 	 */
 	public static fromDate(dt: Date): Year {
 		const stor = new Uint8Array(yearBytes);
-		Core.writeYrFromDt(stor, 0, dt);
+		Core.writeYFromDt(stor, 0, dt);
 		return new Year(stor, 0);
 	}
 
@@ -1196,7 +1005,9 @@ export class Year extends Core implements ISerializer {
 	 */
 	public static fromDateUtc(dt: Date): Year {
 		const stor = new Uint8Array(yearBytes);
-		Core.writeYrFromDtu(stor, 0, dt);
+		const v = dt.getUTCFullYear() + 10000; //Convert to holocene
+		stor[0] = v >> 8;
+		stor[1] = v;
 		return new Year(stor, 0);
 	}
 
@@ -1220,7 +1031,7 @@ export class Year extends Core implements ISerializer {
 	public static now(): Year {
 		const now = new Date();
 		const stor = new Uint8Array(yearBytes);
-		Core.writeYrFromDt(stor, 0, now);
+		Core.writeYFromDt(stor, 0, now);
 		return new Year(stor, 0);
 	}
 
@@ -1307,7 +1118,7 @@ export class Month extends Core implements ISerializer {
 
 	/** Serialize into target  - 4 bits*/
 	public serialize(target: BitWriter): void {
-		this._month_ser(target, this._pos);
+		target.writeNumber(this._stor[this._pos], monthSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1322,7 +1133,7 @@ export class Month extends Core implements ISerializer {
 	 * @returns
 	 */
 	public validate(): Month {
-		this._month_valid(this._pos);
+		safe.int.lte('month', this._month(this._pos), 12);
 		return this;
 	}
 
@@ -1338,10 +1149,11 @@ export class Month extends Core implements ISerializer {
 
 	/** Create a new month of the year, range 1-12 */
 	public static new(v: number): Month {
-		const stor = new Uint8Array(monthBytes);
-		Core.vetMonth(v);
-		Core.writeMonth(stor, 0, v);
-		return new Month(stor, 0);
+		/*vetMonth*/ safe.int.inRangeInc('month', v, 1, 12);
+		return new Month(
+			/*writeMonth*/Uint8Array.of(v - 1),
+			0
+		);
 	}
 
 	/**
@@ -1360,7 +1172,7 @@ export class Month extends Core implements ISerializer {
 	 */
 	public static fromDateUtc(dt: Date): Month {
 		const stor = new Uint8Array(monthBytes);
-		Core.writeMoFromDtu(stor, 0, dt);
+		stor[0] = dt.getUTCMonth(); //We store months 0 based too (but we don't trouble the dev with that detail)
 		return new Month(stor, 0);
 	}
 
@@ -1398,9 +1210,10 @@ export class Month extends Core implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(src: BitReader): Month {
-		const stor = new Uint8Array(monthBytes);
-		Core.deserMonth(stor, 0, src);
-		return new Month(stor, 0);
+		return new Month(
+			Uint8Array.of(/*deserMonth*/ src.readNumber(monthSerBits)),
+			0
+		);
 	}
 
 	/**
@@ -1461,7 +1274,7 @@ export class Day extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		this._day_ser(target, this._pos);
+		target.writeNumber(this._stor[this._pos], daySerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1470,12 +1283,12 @@ export class Day extends Core implements ISerializer {
 	}
 
 	/**
-	 * Test internal state is valid, throws if it's not
+	 * Test internal state is valid (<=31), throws if it's not
 	 * You should call this after a deserialize unless you trust the source
 	 * @returns self (chainable)
 	 */
 	public validate(): Day {
-		this._day_valid(this._pos);
+		safe.int.lte('day', this._day(this._pos), 31);
 		return this;
 	}
 
@@ -1491,10 +1304,11 @@ export class Day extends Core implements ISerializer {
 
 	/** Create a new day of the month, range 1-31 */
 	public static new(v: number): Day {
-		const stor = new Uint8Array(dayBytes);
-		Core.vetDay(v);
-		Core.writeDay(stor, 0, v);
-		return new Day(stor, 0);
+		/*vetDay*/ safe.int.inRangeInc('day', v, 1, 31);
+		return new Day(
+			/*writeDay*/Uint8Array.of(v - 1),
+			0
+		)
 	}
 
 	/**
@@ -1503,7 +1317,7 @@ export class Day extends Core implements ISerializer {
 	 */
 	public static fromDate(dt: Date): Day {
 		const stor = new Uint8Array(dayBytes);
-		Core.writeDyFromDt(stor, 0, dt);
+		Core.writeDFromDt(stor, 0, dt);
 		return new Day(stor, 0);
 	}
 
@@ -1513,7 +1327,7 @@ export class Day extends Core implements ISerializer {
 	 */
 	public static fromDateUtc(dt: Date): Day {
 		const stor = new Uint8Array(dayBytes);
-		Core.writeDyFromDtu(stor, 0, dt);
+		stor[0] = dt.getUTCDate() - 1; //We store 0 based
 		return new Day(stor, 0);
 	}
 
@@ -1537,7 +1351,7 @@ export class Day extends Core implements ISerializer {
 	public static now(): Day {
 		const now = new Date();
 		const stor = new Uint8Array(dayBytes);
-		Core.writeDyFromDt(stor, 0, now);
+		Core.writeDFromDt(stor, 0, now);
 		return new Day(stor, 0);
 	}
 
@@ -1547,13 +1361,11 @@ export class Day extends Core implements ISerializer {
 	 * - There's not 5 bits remaining in $source.buffer
 	 * - There's no available $storage
 	 * It's recommended you call .validate() after
-	 * @param source Source to read bits from
+	 * @param src Source to read bits from
 	 * @returns
 	 */
-	public static deserialize(source: BitReader): Day {
-		const stor = new Uint8Array(dayBytes);
-		Core.deserDay(stor, 0, source);
-		return new Day(stor, 0);
+	public static deserialize(src: BitReader): Day {
+		return new Day(Uint8Array.of(/*deserDay*/ src.readNumber(daySerBits)), 0);
 	}
 }
 const minD = Day.new(1);
@@ -1916,7 +1728,7 @@ export class Hour extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		this._hour_ser(target, this._pos);
+		target.writeNumber(this._stor[this._pos], hourSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1930,7 +1742,7 @@ export class Hour extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Hour {
-		this._hour_valid(this._pos);
+		safe.int.lte('hour', this._hour(this._pos), 23);
 		return this;
 	}
 
@@ -1946,10 +1758,11 @@ export class Hour extends Core implements ISerializer {
 
 	/** Create a new hour, range 0-23 */
 	public static new(v: number): Hour {
-		const stor = new Uint8Array(hourBytes);
-		Core.vetHour(v);
-		Core.writeHour(stor, 0, v);
-		return new Hour(stor, 0);
+		/*vetHour*/ safe.int.inRangeInc('hour', v, 0, 23);
+		return new Hour(
+			/*writeHour*/Uint8Array.of(v),
+			0
+		)
 	}
 
 	/**
@@ -1958,7 +1771,7 @@ export class Hour extends Core implements ISerializer {
 	 */
 	public static fromDate(dt: Date): Hour {
 		const stor = new Uint8Array(hourBytes);
-		Core.writeHFromDt(stor, 0, dt);
+		/* writeHFromDt*/ stor[0] = dt.getHours();
 		return new Hour(stor, 0);
 	}
 
@@ -1967,29 +1780,27 @@ export class Hour extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Hour {
-		const stor = new Uint8Array(hourBytes);
-		Core.writeHFromDtu(stor, 0, dt);
-		return new Hour(stor, 0);
+		return new Hour(Uint8Array.of(dt.getUTCHours()), 0);
 	}
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(source: number): Hour {
 		const stor = new Uint8Array(hourBytes);
-		Core.writeHour(stor, 0, (source % sPerDay) / sPerHour);
+		stor[0] = (source % sPerDay) / sPerHour;
 		return new Hour(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(source: number): Hour {
 		const stor = new Uint8Array(hourBytes);
-		Core.writeHour(stor, 0, (source % msPerDay) / msPerHour);
+		stor[0] = (source % msPerDay) / msPerHour;
 		return new Hour(stor, 0);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(source: number): Hour {
 		const stor = new Uint8Array(hourBytes);
-		Core.writeHour(stor, 0, (source % usPerDay) / usPerHour);
+		stor[0] = (source % usPerDay) / usPerHour;
 		return new Hour(stor, 0);
 	}
 
@@ -2012,16 +1823,13 @@ export class Hour extends Core implements ISerializer {
 	public static now(): Hour {
 		const now = new Date();
 		const stor = new Uint8Array(hourBytes);
-		Core.writeHFromDt(stor, 0, now);
+		/* writeHFromDt*/ stor[0] = now.getHours();
 		return new Hour(stor, 0);
 	}
 
 	/** Create this hour (UTC) */
 	public static nowUtc(): Hour {
-		const now = new Date();
-		const stor = new Uint8Array(hourBytes);
-		Core.writeHFromDtu(stor, 0, now);
-		return new Hour(stor, 0);
+		return new Hour(Uint8Array.of(new Date().getUTCHours()), 0);
 	}
 
 	/**
@@ -2033,9 +1841,10 @@ export class Hour extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Hour {
-		const stor = new Uint8Array(hourBytes);
-		Core.deserHour(stor, 0, src);
-		return new Hour(stor, 0);
+		return new Hour(
+			Uint8Array.of(/*deserHour*/ src.readNumber(hourSerBits)),
+			0
+		);
 	}
 }
 const minH = Hour.new(0);
@@ -2077,7 +1886,7 @@ export class Minute extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		this._minute_ser(target, this._pos);
+		target.writeNumber(this._stor[this._pos], minSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2091,7 +1900,7 @@ export class Minute extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Minute {
-		this._minute_valid(this._pos);
+		safe.int.lte('minute', this._minute(this._pos), 59);
 		return this;
 	}
 
@@ -2107,10 +1916,11 @@ export class Minute extends Core implements ISerializer {
 
 	/** Create a new minute, range 0-59 */
 	public static new(v: number): Minute {
-		const stor = new Uint8Array(minBytes);
-		Core.vetMinute(v);
-		Core.writeMinute(stor, 0, v);
-		return new Minute(stor, 0);
+		/*vetMinute*/ safe.int.inRangeInc('minute', v, 0, 59);
+		return new Minute(
+			/*writeMinute*/Uint8Array.of(v),
+			0
+		)
 	}
 
 	/**
@@ -2119,7 +1929,7 @@ export class Minute extends Core implements ISerializer {
 	 */
 	public static fromDate(dt: Date): Minute {
 		const stor = new Uint8Array(minBytes);
-		Core.writeMiFromDt(stor, 0, dt);
+		/*writeMiFromDt*/ stor[0] = dt.getMinutes();
 		return new Minute(stor, 0);
 	}
 
@@ -2128,29 +1938,27 @@ export class Minute extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Minute {
-		const stor = new Uint8Array(minBytes);
-		Core.writeMiFromDtu(stor, 0, dt);
-		return new Minute(stor, 0);
+		return new Minute(Uint8Array.of(dt.getUTCMinutes()), 0);
 	}
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(src: number): Minute {
 		const stor = new Uint8Array(minBytes);
-		Core.writeMinute(stor, 0, (src % sPerHour) / 60);
+		/*writeMinute*/ stor[0] = (src % sPerHour) / 60;
 		return new Minute(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(src: number): Minute {
 		const stor = new Uint8Array(minBytes);
-		Core.writeMinute(stor, 0, (src % msPerHour) / msPerMin);
+		/*writeMinute*/ stor[0] = (src % msPerHour) / msPerMin;
 		return new Minute(stor, 0);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(src: number): Minute {
 		const stor = new Uint8Array(minBytes);
-		Core.writeMinute(stor, 0, (src % usPerHour) / usPerMin);
+		/*writeMinute*/ stor[0] = (src % usPerHour) / usPerMin;
 		return new Minute(stor, 0);
 	}
 
@@ -2173,16 +1981,13 @@ export class Minute extends Core implements ISerializer {
 	public static now(): Minute {
 		const now = new Date();
 		const stor = new Uint8Array(minBytes);
-		Core.writeMiFromDt(stor, 0, now);
+		/*writeMiFromDt*/ stor[0] = now.getMinutes();
 		return new Minute(stor, 0);
 	}
 
 	/** Create this minute (UTC) */
 	public static nowUtc(): Minute {
-		const now = new Date();
-		const stor = new Uint8Array(minBytes);
-		Core.writeMiFromDtu(stor, 0, now);
-		return new Minute(stor, 0);
+		return new Minute(Uint8Array.of(new Date().getUTCMinutes()), 0);
 	}
 
 	/**
@@ -2194,9 +1999,10 @@ export class Minute extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Minute {
-		const stor = new Uint8Array(minBytes);
-		Core.deserMin(stor, 0, src);
-		return new Minute(stor, 0);
+		return new Minute(
+			Uint8Array.of(/*deserMin*/ src.readNumber(minSerBits)),
+			0
+		);
 	}
 }
 const minMi = Minute.new(0);
@@ -2238,7 +2044,7 @@ export class Second extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		this._second_ser(target, this._pos);
+		target.writeNumber(this._stor[this._pos], secSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2252,7 +2058,7 @@ export class Second extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Second {
-		this._second_valid(this._pos);
+		safe.int.lte('second', this._second(this._pos), 59);
 		return this;
 	}
 
@@ -2268,10 +2074,11 @@ export class Second extends Core implements ISerializer {
 
 	/** Create a new second, range 0-59 */
 	public static new(v: number): Second {
-		const stor = new Uint8Array(minBytes);
-		Core.vetSecond(v);
-		Core.writeSecond(stor, 0, v);
-		return new Second(stor, 0);
+		/*vetSecond*/ safe.int.inRangeInc('second', v, 0, 59);
+		return new Second(
+			/*writeSecond*/Uint8Array.of(v),
+			0
+		);
 	}
 
 	/**
@@ -2280,7 +2087,7 @@ export class Second extends Core implements ISerializer {
 	 */
 	public static fromDate(dt: Date): Second {
 		const stor = new Uint8Array(minBytes);
-		Core.writeSFromDt(stor, 0, dt);
+		/*writeSFromDt*/ stor[0] = dt.getSeconds();
 		return new Second(stor, 0);
 	}
 
@@ -2289,21 +2096,21 @@ export class Second extends Core implements ISerializer {
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(src: number): Second {
 		const stor = new Uint8Array(minBytes);
-		Core.writeSecond(stor, 0, src % 60);
+		/*writeSecond*/ stor[0] = src % 60;
 		return new Second(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(src: number): Second {
 		const stor = new Uint8Array(minBytes);
-		Core.writeSecond(stor, 0, (src % msPerMin) / msPerSec);
+		/*writeSecond*/ stor[0] = (src % msPerMin) / msPerSec;
 		return new Second(stor, 0);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(src: number): Second {
 		const stor = new Uint8Array(minBytes);
-		Core.writeSecond(stor, 0, (src % usPerMin) / usPerSec);
+		/*writeSecond*/ stor[0] = (src % usPerMin) / usPerSec;
 		return new Second(stor, 0);
 	}
 
@@ -2324,9 +2131,8 @@ export class Second extends Core implements ISerializer {
 
 	/** Current second */
 	public static now(): Second {
-		const now = new Date();
 		const stor = new Uint8Array(minBytes);
-		Core.writeSFromDt(stor, 0, now);
+		/*writeSFromDt*/ stor[0] = new Date().getSeconds();
 		return new Second(stor, 0);
 	}
 
@@ -2341,9 +2147,10 @@ export class Second extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Second {
-		const stor = new Uint8Array(minBytes);
-		Core.deserSec(stor, 0, src);
-		return new Second(stor, 0);
+		return new Second(
+			Uint8Array.of(/*deserSec*/ src.readNumber(secSerBits)),
+			0
+		);
 	}
 }
 const minS = Second.new(0);
@@ -2386,7 +2193,10 @@ export class Millisecond extends Core implements ISerializer {
 
 	/** Serialize into target  - 10 bits*/
 	public serialize(target: BitWriter): void {
-		this._milli_ser(target, this._pos);
+		target.writeNumber(
+			(this._stor[this._pos] << 8) | this._stor[this._pos + 1],
+			milliSerBits
+		);
 	}
 
 	/** Number of bits required to serialize */
@@ -2400,7 +2210,7 @@ export class Millisecond extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Millisecond {
-		this._milli_valid(this._pos);
+		safe.int.lte('millisecond', this._milli(this._pos), 999);
 		return this;
 	}
 
@@ -2417,7 +2227,7 @@ export class Millisecond extends Core implements ISerializer {
 	/** Create a new Millisecond, range 0-999 */
 	public static new(v: number): Millisecond {
 		const stor = new Uint8Array(milliBytes);
-		Core.vetMilli(v);
+		/*vetMilli*/ safe.int.inRangeInc('millisecond', v, 0, 999);
 		Core.writeMilli(stor, 0, v);
 		return new Millisecond(stor, 0);
 	}
@@ -2498,7 +2308,7 @@ export class Millisecond extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Millisecond {
 		const stor = new Uint8Array(milliBytes);
-		Core.deserMilli(stor, 0, src);
+		/*deserMilli*/ Core.writeMilli(stor, 0, src.readNumber(milliSerBits));
 		return new Millisecond(stor, 0);
 	}
 }
@@ -2550,7 +2360,12 @@ export class Microsecond extends Core implements ISerializer {
 
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
-		this._micro_ser(target, this._pos);
+		target.writeNumber(
+			(this._stor[this._pos] << 16) |
+				(this._stor[this._pos + 1] << 8) |
+				this._stor[this._pos + 2],
+			microSerBits
+		);
 	}
 
 	/** Number of bits required to serialize */
@@ -2564,7 +2379,7 @@ export class Microsecond extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Microsecond {
-		this._micro_valid(this._pos);
+		safe.int.lte('microsecond', this._micro(this._pos), 999999);
 		return this;
 	}
 
@@ -2581,7 +2396,7 @@ export class Microsecond extends Core implements ISerializer {
 	/** Create a new Microsecond, range 0-999999 */
 	public static new(v: number): Microsecond {
 		const stor = new Uint8Array(microBytes);
-		Core.vetMicro(v);
+		/*vetMicro*/ safe.int.inRangeInc('microsecond', v, 0, 999999);
 		Core.writeMicro(stor, 0, v);
 		return new Microsecond(stor, 0);
 	}
@@ -2664,7 +2479,7 @@ export class Microsecond extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Microsecond {
 		const stor = new Uint8Array(microBytes);
-		Core.deserMicro(stor, 0, src);
+		/*deserMicro*/ Core.writeMicro(stor, 0, src.readNumber(microSerBits));
 		return new Microsecond(stor, 0);
 	}
 }
@@ -2733,17 +2548,17 @@ export class TimeOnly extends Core implements ISerializer {
 
 	/** Microseconds (since midnight) */
 	toMicroseconds(): number {
-		return this.timeToMs(this._pos);
+		return this.timeToUs(this._pos);
 	}
 
 	/** Milliseconds (since midnight) value can be floating point (us component)*/
 	toMilliseconds(): number {
-		return this.timeToMs(this._pos) / msPerSec;
+		return this.timeToUs(this._pos) / 1000;
 	}
 
 	/** Seconds (since midnight) value can be floating point (us component)*/
 	toSeconds(): number {
-		return this.timeToMs(this._pos) / usPerSec;
+		return this.timeToUs(this._pos) / usPerSec;
 	}
 
 	/**
@@ -3057,15 +2872,16 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param ms Milliseconds 0-999
 	 */
 	public static new(h: number, i: number, s: number, ms: number): TimeOnlyMs {
-		Core.vetTime(h, i, s, ms);
+		/*vetHour*/ safe.int.inRangeInc('hour', h, 0, 23);
+		/*vetMinute*/ safe.int.inRangeInc('minute', i, 0, 59);
+		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
+		/*vetMilli*/ safe.int.inRangeInc('millisecond', ms, 0, 999);
 		const stor = new Uint8Array(timeMsBytes);
 		let pos = 0;
-		Core.writeHour(stor, pos, h);
-		pos += hourBytes;
-		Core.writeMinute(stor, pos, i);
-		pos += minBytes;
-		Core.writeSecond(stor, pos, s);
-		Core.writeMilli(stor, pos + secBytes, ms);
+		stor[pos++] = h;
+		/*writeMinute*/ stor[pos++] = i;
+		/*writeSecond*/ stor[pos++] = s;
+		Core.writeMilli(stor, pos, ms);
 		return new TimeOnlyMs(stor, 0);
 	}
 
@@ -3082,18 +2898,16 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		v = (v - s) / 100;
 		const i = v % 100;
 		v = (v - i) / 100;
-		Core.vetHour(v);
-		Core.vetMinute(i);
-		Core.vetSecond(s);
-		Core.vetMilli(ms);
+		/*vetHour*/ safe.int.inRangeInc('hour', v, 0, 23);
+		/*vetMinute*/ safe.int.inRangeInc('minute', i, 0, 59);
+		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
+		/*vetMilli*/ safe.int.inRangeInc('millisecond', ms, 0, 999);
 
 		let pos = 0;
-		Core.writeHour(stor, pos, v);
-		pos += hourBytes;
-		Core.writeMinute(stor, pos, i);
-		pos += minBytes;
-		Core.writeSecond(stor, pos, s);
-		Core.writeMilli(stor, pos + secBytes, ms);
+		stor[pos++] = v;
+		/*writeMinute*/ stor[pos++] = i;
+		/*writeSecond*/ stor[pos++] = s;
+		Core.writeMilli(stor, pos, ms);
 		return new TimeOnlyMs(stor, 0);
 	}
 
@@ -3104,7 +2918,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 */
 	public static fromUnixTimeUs(us: number): TimeOnlyMs {
 		const stor = new Uint8Array(timeMsBytes);
-		Core.timeMsFromUnixUs(stor, 0, us);
+		Core.timeMsFromUnixMs(stor, 0, us / 1000);
 		return new TimeOnlyMs(stor, 0);
 	}
 
@@ -3137,7 +2951,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	public static fromDate(date: Date): TimeOnlyMs {
 		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
 		const stor = new Uint8Array(timeMsBytes);
-		Core.timeMsFromUnixUs(stor, 0, dms * 1000);
+		Core.timeMsFromUnixMs(stor, 0, dms);
 		return new TimeOnlyMs(stor, 0);
 	}
 
@@ -3157,12 +2971,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 			input.shrink(3);
 			const now = new Date();
 			let p = 0;
-			Core.writeHFromDt(stor, p, now);
-			p += hourBytes;
-			Core.writeMiFromDt(stor, p, now);
-			p += minBytes;
-			Core.writeSFromDt(stor, p, now);
-			Core.writeMsFromDt(stor, p + secBytes, now);
+			/*writeHFromDt*/ stor[p++] = now.getHours();
+			/*writeMiFromDt*/ stor[p++] = now.getMinutes();
+			/*writeSFromDt*/ stor[p++] = now.getSeconds();
+			Core.writeMsFromDt(stor, p, now);
 			return new TimeOnlyMs(stor, 0);
 		}
 
@@ -3239,13 +3051,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	public static deserialize(src: BitReader): TimeOnlyMs {
 		//Keep the memory contiguous
 		const stor = new Uint8Array(timeMsBytes);
-		let p = 0;
-		Core.deserHour(stor, p, src);
-		p += hourBytes;
-		Core.deserMin(stor, p, src);
-		p += minBytes;
-		Core.deserSec(stor, p, src);
-		Core.deserMilli(stor, p + secBytes, src);
+		/*deserHour*/ stor[0] = src.readNumber(hourSerBits);
+		/*deserMin*/ stor[1] = src.readNumber(minSerBits);
+		/*deserSec*/ stor[2] = src.readNumber(secSerBits);
+		/*deserMilli*/ Core.writeMilli(stor, 3, src.readNumber(milliSerBits));
 		return new TimeOnlyMs(stor, 0);
 	}
 }
@@ -3322,7 +3131,7 @@ class DateTimeShared extends Core {
 	toUnixTime(): number {
 		return (
 			super.toUnixDays(this._pos) * sPerDay +
-			this.timeToMs(this._pos + dateBytes) / usPerSec
+			this.timeToUs(this._pos + dateBytes) / usPerSec
 		);
 	}
 
@@ -3330,7 +3139,7 @@ class DateTimeShared extends Core {
 	toUnixTimeMs(): number {
 		return (
 			super.toUnixDays(this._pos) * msPerDay +
-			this.timeToMs(this._pos + dateBytes) / msPerSec
+			this.timeToUs(this._pos + dateBytes) / 1000
 		);
 	}
 
@@ -3469,7 +3278,7 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 */
 	public add(du: Duration): DateTimeLocal;
 	public add(du: DurationExact | Duration): DateTimeLocal {
-		let miso = this.timeToMs(this._pos + dateBytes) % usPerHour;
+		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
 		let dh = 0;
 
 		const stor = new Uint8Array(dateBytes + timeBytes);
@@ -3699,7 +3508,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	toDate(): Date {
 		return new Date(
 			super.toUnixDays(this._pos) * msPerDay +
-				this.timeToMs(this._pos + dateBytes) / msPerSec
+				this.timeToUs(this._pos + dateBytes) / 1000
 		);
 	}
 
