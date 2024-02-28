@@ -437,6 +437,9 @@ const badParseSet: WindowStr[] = [
 	WindowStr.new('2023-01-31T0203:04.567890'), //missing third last time delim
 	WindowStr.new('2023-0131T02:03:04.567890'), //missing second date delim
 	WindowStr.new('202301-31T02:03:04.567890'), //missing first date delim
+	WindowStr.new('20010229235959999999'),//Day invalid in date
+	WindowStr.new('20010203245959999999'),//Hour invalid in time
+
 ];
 for (const w of badParseSet) {
 	tsts(`parse ${w.debug()} throws`, () => {

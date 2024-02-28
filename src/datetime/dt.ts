@@ -8,7 +8,7 @@ import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../primitive/interfaces/ISerializer.js';
 import { parseDec } from '../primitive/number/Int.js';
 import { Duration, DurationExact } from './Duration.js';
-import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
+import { AtMostError } from '../error/AtMostError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -242,8 +242,8 @@ class Core {
 	): void {
 		Core.writeYear(to, p, y);
 		p += yearBytes;
-		/*writeMonth*/to[p++] = m - 1;
-		/*writeDay*/to[p] = d - 1;
+		/*writeMonth*/ to[p++] = m - 1;
+		/*writeDay*/ to[p] = d - 1;
 	}
 	protected static writeMilli(to: Uint8Array, p: number, v: number): void {
 		to[p] = v >> 8;
@@ -296,12 +296,6 @@ class Core {
 		to[p + 1] = v >> 8;
 		to[p + 2] = v;
 	}
-	protected static writeTFromDt(to: Uint8Array, p: number, dt: Date): void {
-		/*writeHFromDt*/ to[p++] = dt.getHours();
-		/*writeMiFromDt*/ to[p++] = dt.getMinutes();
-		/*writeSFromDt*/ to[p++] = dt.getSeconds();
-		Core.writeUsFromDt(to, p, dt);
-	}
 
 	protected static vetDate(y: number, m: number, d: number): void {
 		/*vetYear*/ safe.int.inRangeInc('year', y, minIsoYear, maxIsoYear);
@@ -334,39 +328,30 @@ class Core {
 		Core.writeMicro(to, p, us % usPerSec);
 	}
 
-	//Todo convert these to using reset
 	protected static parseYear(
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			Core.writeYrFromDt(to, p, new Date());
-			return;
-		}
-
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
 		//Optional leading +-, one or more digits, optional trailing space, nothing else
-		const r = input.match(/^([+-])?(\d+)\s*$/);
+		const r = input.match(/^([+-])?(\d+)$/);
 		if (r !== null) {
 			const [, sign, digits] = r;
 			if (strict) {
-				if (digits.length > 4 && sign == undefined)
-					throw new ContentError(
-						'expecting >4 digits to be signed',
+				if (
+					digits.length > 5 ||
+					(digits.length == 5 && sign == undefined) ||
+					digits.length < 4
+				) {
+					reset();
+					return new ContentError(
+						'expecting 4 digits zero padded or 5 digits with mandatory sign',
 						'input',
 						input
 					);
-				if (digits.length < 4)
-					throw new ContentError(
-						'expecting 4 digit integer-string',
-						'input',
-						input
-					);
+				}
 			}
 			let intVal = parseDec(digits);
 			if (!isNaN(intVal)) {
@@ -374,33 +359,27 @@ class Core {
 					input.shrink(1);
 					if (sign === '-') intVal = 0 - intVal;
 				}
-				Core.vetYear(intVal);
-				Core.writeYear(to, p, intVal);
-				input.shrink(digits.length);
-				return;
+				if (intVal >= minIsoYear && intVal <= maxIsoYear) {
+					input.shrink(digits.length);
+					Core.writeYear(to, p, intVal);
+					return;
+				}
 			}
 		}
-		throw new ContentError('expecting integer-string', 'year', input);
+		reset();
+		return new ContentError('expecting signed integer-string', 'year', input);
 	}
 	protected static parseMonth(
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			Core.writeMoFromDt(to, p, new Date());
-			return;
-		}
-
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
 		//Three or more letters (including accented letters), or one or more digits.
 		//Either with optional trailing whitespace
 		const r = input.match(
-			/^(?:([\p{Alphabetic}\p{Mark}\p{Join_Control}]{3,})|(\d+))\s*$/u
+			/^(?:([\p{Alphabetic}\p{Mark}\p{Join_Control}]{3,})|(\d+))$/u
 		);
 		if (r !== null) {
 			const [, mon, int] = r;
@@ -409,13 +388,14 @@ class Core {
 				const unixMs = Date.parse(mon + ' 16, 2000');
 				if (!Number.isNaN(unixMs)) {
 					input.shrink(mon.length);
-					Core.writeMonth(to, p, new Date(unixMs).getMonth() + 1);
+					/*writeMonth*/ to[p] = new Date(unixMs).getMonth();
 					return;
 				}
 			} else {
 				if (strict) {
 					if (int.length != 2) {
-						throw new ContentError(
+						reset();
+						return new ContentError(
 							'expecting 2 digit unsigned integer-string',
 							'month',
 							input
@@ -423,15 +403,16 @@ class Core {
 					}
 				}
 				const intVal = parseDec(int);
-				Core.vetMonth(intVal);
-				Core.writeMonth(to, p, intVal);
-				input.shrink(int.length);
-				return;
+				if (intVal >= 1 && intVal <= 12) {
+					/*writeMonth*/ to[p] = intVal - 1;
+					input.shrink(int.length);
+					return;
+				}
 			}
 		}
-
-		throw new ContentError(
-			'expecting unsigned integer-string, or short-form-month',
+		reset();
+		return new ContentError(
+			'expecting unsigned integer-string, or short-form month',
 			'month',
 			input
 		);
@@ -440,74 +421,80 @@ class Core {
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			Core.writeDyFromDt(to, p, new Date());
-			return;
-		}
-
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
-		const r = input.match(/^(\d+)\s*$/);
+		const r = input.match(/^(\d+)$/);
 		if (r !== null) {
 			const [, digits] = r;
 			if (strict) {
-				if (digits.length != 2)
-					throw new ContentError(
+				if (digits.length != 2) {
+					reset();
+					return new ContentError(
 						'expecting 2 digit unsigned integer-string',
 						'day',
 						input
 					);
+				}
 			}
 			const intVal = parseDec(digits);
-			Core.vetDay(intVal);
-			Core.writeDay(to, p, intVal);
-			input.shrink(digits.length);
-			return;
+			if (intVal >= 1 && intVal <= 31) {
+				input.shrink(digits.length);
+				/*writeDay*/ to[p] = intVal - 1;
+				return;
+			}
 		}
-		throw new ContentError(
+		reset();
+		return new ContentError(
 			'expecting 1-2 digit unsigned integer-string',
 			'day',
 			input
 		);
 	}
+	/** input.test(/^[-+]?\d{8,9}$/) */
+	protected static parseDateUndelim(
+		to: Uint8Array,
+		p: number,
+		input: WindowStr,
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
+		let e = Core.parseYear(to, p, input.left(input.length - 4), strict, reset);
+		if (e) return e;
+		/*_year*/ const y = ((to[p++] << 8) | to[p++]) - 10000;
+
+		e = Core.parseMonth(to, p, input.span(input.length - 4, 2), strict, reset);
+		if (e) return e;
+		/*_month*/ const m = to[p++] + 1;
+
+		e = Core.parseDay(to, p, input.right(2), strict, reset);
+		if (e) return e;
+		/*_day*/ const d = to[p] + 1;
+
+		//Check for day invariance
+		const dim = Month.lastDay(m, y);
+		if (d > dim) return new AtMostError('day', d, dim);
+
+		input.shrink(input.length);
+		return;
+	}
 	protected static parseDate(
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			const now = new Date();
-			Core.writeDtFromDt(to, p, now);
-			return;
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
+		//If it's an optional sign followed by 8-9 digits assume it's an un-delimited date
+		if (input.test(/^[-+]?\d{8,9}$/)) {
+			return Core.parseDateUndelim(to, p, input, strict, reset);
 		}
 
-		//If it's an optional sign followed by 8-9 digits assume it's an undelimitered date
-		if (input.test(/^[-+]?\d{8,9}\s*$/)) {
-			input.trimEnd();
-			Core.parseYear(to, p, input.left(input.length - 4), strict);
-			Core.parseMonth(
-				to,
-				p + yearBytes,
-				input.span(input.length - 4, 2),
-				strict
-			);
-			Core.parseDay(to, p + yearBytes + monthBytes, input.right(2), strict);
-			input.shrink(input.length);
-			return;
-		}
-
-		//Dash, slash, dot (germany?) separated allowed
+		//Otherwise assumed delimited date
+		let e: Error | undefined = undefined;
 		let delim1: number;
+		//Dash, slash, dot (germany?) separated allowed
 		if (!strict) {
 			delim1 = input.indexOfAny(['-', '/', '.'], 1);
 		} else {
@@ -520,100 +507,105 @@ class Core {
 		//Make sure second delim matches first, and there is one
 		const delim2 = input.indexOf(delim, delim1 + 1);
 		if (delim2 > 0) {
-			//Prevent partial parsing (that throws) from consuming the input
-			Core.parseYear(to, p, input.left(delim1), strict);
-			Core.parseMonth(
+			e = Core.parseYear(to, p, input.left(delim1).trimEnd(), strict, reset);
+			if (e) return e;
+			input.shrink(delim1 + 1);
+			/*_year*/ const y = ((to[p++] << 8) | to[p++]) - 10000;
+
+			e = Core.parseMonth(
 				to,
-				p + yearBytes,
-				input.span(delim1 + 1, delim2 - delim1 - 1),
-				strict
+				p,
+				input
+					.left(delim2 - delim1 - 1)
+					.trimStart()
+					.trimEnd(),
+				strict,
+				reset
 			);
-			Core.parseDay(
-				to,
-				p + yearBytes + monthBytes,
-				input.span(delim2 + 1),
-				strict
-			);
+			if (e) return e;
+			input.shrink(delim2 - delim1);
+			/*_month*/ const m = to[p++] + 1;
+
+			e = Core.parseDay(to, p, input.trimStart().trimEnd(), strict, reset);
+			if (e) return e;
+			/*_day*/ const d = to[p] + 1;
+
+			//Check for day invariance
+			const dim = Month.lastDay(m, y);
+			if (d > dim) return new AtMostError('day', d, dim);
+
 			input.shrink(input.length);
 			return;
 		}
 
-		throw new ContentError(
+		reset();
+		return new ContentError(
 			`Expecting 8-9 digit ymd (with optional sign), or ${delim} delimited date`,
 			'date',
 			input
 		);
 	}
-	//--
 	protected static parseHour(
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			Core.writeHFromDt(to, p, new Date());
-			return;
-		}
-
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
-		const r = input.match(/^(\d+)\s*$/);
+		const r = input.match(/^(\d+)$/);
 		if (r !== null) {
 			const [, digits] = r;
 			if (strict) {
-				if (digits.length != 2)
-					throw new ContentError(
+				if (digits.length != 2) {
+					reset();
+					return new ContentError(
 						'expecting 2 digit unsigned integer-string',
 						'hour',
 						input
 					);
+				}
 			}
 			const intVal = parseDec(digits);
-			Core.vetHour(intVal);
-			Core.writeHour(to, p, intVal);
-			input.shrink(digits.length);
-			return;
+			if (intVal >= 0 && intVal <= 23) {
+				input.shrink(digits.length);
+				/*writeHour*/ to[p] = intVal;
+				return;
+			}
 		}
-		throw new ContentError('expecting unsigned integer-string', 'hour', input);
+		reset();
+		return new ContentError('expecting unsigned integer-string', 'hour', input);
 	}
 	protected static parseMinute(
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			Core.writeMiFromDt(to, p, new Date());
-			return;
-		}
-
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
-		const r = input.match(/^(\d+)\s*$/);
+		const r = input.match(/^(\d+)$/);
 		if (r !== null) {
 			const [, digits] = r;
 			if (strict) {
-				if (digits.length != 2)
-					throw new ContentError(
+				if (digits.length != 2) {
+					reset();
+					return new ContentError(
 						'expecting 2 digit unsigned integer-string',
 						'minute',
 						input
 					);
+				}
 			}
 			const intVal = parseDec(digits);
-			Core.vetMinute(intVal);
-			Core.writeMinute(to, p, intVal);
-			input.shrink(digits.length);
-			return;
+			if (intVal >= 0 && intVal <= 59) {
+				input.shrink(digits.length);
+				/*writeMinute*/ to[p] = intVal;
+				return;
+			}
 		}
-		throw new ContentError(
+		reset();
+		return new ContentError(
 			'expecting unsigned integer-string',
 			'minute',
 			input
@@ -623,64 +615,53 @@ class Core {
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			const utcNow = performance.timeOrigin + performance.now();
-			//No need for offset since there's no TZ off by seconds (yet?)
-			Core.writeSecond(to, p, (utcNow / msPerSec) % 60);
-			return;
-		}
-
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
-		const r = input.match(/^(\d+)\s*$/);
+		const r = input.match(/^(\d+)$/);
 		if (r !== null) {
 			const [, digits] = r;
 			if (strict) {
-				if (digits.length != 2)
-					throw new ContentError(
+				if (digits.length != 2) {
+					reset();
+					return new ContentError(
 						'expecting 2 digit unsigned integer-string',
-						'hour',
+						'second',
 						input
 					);
+				}
 			}
 			const intVal = parseDec(digits);
-			Core.vetSecond(intVal);
-			Core.writeSecond(to, p, intVal);
-			input.shrink(digits.length);
-			return;
+			if (intVal >= 0 && intVal <= 59) {
+				input.shrink(digits.length);
+				/*writeSecond*/ to[p] = intVal;
+				return;
+			}
 		}
-		throw new ContentError('expecting unsigned integer-string', 'hour', input);
+		reset();
+		return new ContentError(
+			'expecting unsigned integer-string',
+			'second',
+			input
+		);
 	}
 	protected static parseMilli(
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
 		strict: boolean,
-		left: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			const utcNow = performance.timeOrigin + performance.now();
-			//No need for offset since there's no TZ off by milliseconds
-			Core.writeMilli(to, p, utcNow % msPerSec);
-			return;
-		}
-
+		left: boolean,
+		reset: () => void
+	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
-		const r = input.match(/^(\d+)\s*$/);
+		const r = input.match(/^(\d+)$/);
 		if (r !== null) {
 			const [, digits] = r;
 			let effDigits = digits;
 			if (strict && digits.length != 3) {
-				throw new ContentError(
+				reset();
+				return new ContentError(
 					'expecting 3 digit unsigned integer-string',
 					'millisecond',
 					input
@@ -691,12 +672,14 @@ class Core {
 			}
 
 			const intVal = parseDec(effDigits);
-			Core.vetMilli(intVal);
-			Core.writeMilli(to, p, intVal);
-			input.shrink(digits.length);
-			return;
+			if (intVal >= 0 && intVal <= 999) {
+				input.shrink(digits.length);
+				Core.writeMilli(to, p, intVal);
+				return;
+			}
 		}
-		throw new ContentError(
+		reset();
+		return new ContentError(
 			'expecting unsigned integer-string',
 			'millisecond',
 			input
@@ -707,26 +690,17 @@ class Core {
 		p: number,
 		input: WindowStr,
 		strict: boolean,
-		left: boolean
-	): void {
-		input.trimStart();
-
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			const utcNow = performance.timeOrigin + performance.now();
-			//No need for offset since there's no TZ off by milliseconds
-			Core.writeMicro(to, p, utcNow % usPerSec);
-			return;
-		}
-
+		left: boolean,
+		reset: () => void
+	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
-		const r = input.match(/^(\d+)\s*$/);
+		const r = input.match(/^(\d+)$/);
 		if (r !== null) {
 			const [, digits] = r;
 			let effDigits = digits;
 			if (strict && digits.length != 6) {
-				throw new ContentError(
+				reset();
+				return new ContentError(
 					'expecting 6 digit unsigned integer-string',
 					'microsecond',
 					input
@@ -737,84 +711,125 @@ class Core {
 			}
 
 			const intVal = parseDec(effDigits);
-			Core.vetMicro(intVal);
-			Core.writeMicro(to, p, intVal);
-			input.shrink(digits.length);
-			return;
+			if (intVal >= 0 && intVal <= 999999) {
+				input.shrink(digits.length);
+				Core.writeMicro(to, p, intVal);
+				return;
+			}
 		}
-		throw new ContentError(
+		reset();
+		return new ContentError(
 			'expecting unsigned integer-string',
 			'microsecond',
 			input
 		);
 	}
+	protected static parseTimeUndelim(
+		to: Uint8Array,
+		p: number,
+		input: WindowStr,
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
+		let e = Core.parseHour(to, p, input.left(2), strict, reset);
+		if (e) return e;
+		p += hourBytes;
+
+		e = Core.parseMinute(to, p, input.span(2, 2), strict, reset);
+		if (e) return e;
+		p += minBytes;
+
+		e = Core.parseSecond(to, p, input.span(4, 2), strict, reset);
+		if (e) return e;
+		p += secBytes;
+
+		e = Core.parseMicro(to, p, input.span(6, 6), strict, false, reset);
+		//because parseTime and DateTime*.parse will only call this with
+		// exactly 12 digits, it's impossible to get an invalid micro (they
+		// must be 6 digits, and all values are welcome).  But! We'll leave
+		// this check here incase the interface changes in the future
+		if (e) return e;
+
+		input.shrink(input.length);
+		return;
+	}
 	protected static parseTime(
 		to: Uint8Array,
 		p: number,
 		input: WindowStr,
-		strict: boolean
-	): void {
-		input.trimStart();
+		strict: boolean,
+		reset: () => void
+	): Error | undefined {
+		let e: Error | undefined = undefined;
 
-		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
-			input.shrink(3);
-			const now = new Date();
-			Core.writeTFromDt(to, p, now);
-			return;
-		}
-
-		//If it's 12 digits assume it's an undelimitered time
-		if (input.test(/^\d{12}\s*$/)) {
-			input.trimEnd();
-			Core.parseHour(to, p, input.left(2), strict);
-			p += hourBytes;
-			Core.parseMinute(to, p, input.span(2, 2), strict);
-			p += minBytes;
-			Core.parseSecond(to, p, input.span(4, 2), strict);
-			p += secBytes;
-			Core.parseMicro(to, p, input.span(6, 6), strict, false);
-			input.shrink(input.length);
-			return;
+		//If it's 12 digits assume it's an un-delimited time
+		if (input.test(/^\d{12}$/)) {
+			return Core.parseTimeUndelim(to, p, input, strict, reset);
 		}
 
 		const delim1 = input.indexOf(':');
 		const delim2 = input.indexOf(':', delim1 + 1);
 		const delim3 = input.indexOf('.', delim2 + 1);
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
-			Core.parseHour(to, p, input.left(delim1), strict);
-			p += hourBytes;
-			Core.parseMinute(
+			e = Core.parseHour(
 				to,
 				p,
-				input.span(delim1 + 1, delim2 - delim1 - 1),
-				strict
-			);
-			p += minBytes;
-			Core.parseSecond(
-				to,
-				p,
-				input.span(delim2 + 1, delim3 - delim2 - 1),
-				strict
-			);
-			p += secBytes;
-			Core.parseMicro(
-				to,
-				p,
-				input.span(delim3 + 1, input.length - delim3 - 1),
+				input.left(delim1).trimStart().trimEnd(),
 				strict,
-				true
+				reset
 			);
+			if (e) return e;
+			p += hourBytes;
+
+			e = Core.parseMinute(
+				to,
+				p,
+				input
+					.span(delim1 + 1, delim2 - delim1 - 1)
+					.trimStart()
+					.trimEnd(),
+				strict,
+				reset
+			);
+			if (e) return e;
+			p += minBytes;
+
+			e = Core.parseSecond(
+				to,
+				p,
+				input
+					.span(delim2 + 1, delim3 - delim2 - 1)
+					.trimStart()
+					.trimEnd(),
+				strict,
+				reset
+			);
+			if (e) return e;
+			p += secBytes;
+
+			e = Core.parseMicro(
+				to,
+				p,
+				input
+					.span(delim3 + 1, input.length - delim3 - 1)
+					.trimStart()
+					.trimEnd(),
+				strict,
+				true,
+				reset
+			);
+			if (e) return e;
+
 			input.shrink(input.length);
 			return;
 		}
-		throw new ContentError(
+		reset();
+		return new ContentError(
 			`Expecting hh:mm:ss.uuuuuu, or hhmmssuuuuuu`,
 			'time',
 			input
 		);
 	}
-
 	protected static deserYear(to: Uint8Array, p: number, src: BitReader): void {
 		//This is a raw-write (writeYear does a value-transform)
 		const v = src.readNumber(yearSerBits);
@@ -1023,7 +1038,18 @@ export class Year extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): Year {
 		const stor = new Uint8Array(yearBytes);
-		Core.parseYear(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart();
+		input.trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			Core.writeYFromDt(stor, 0, new Date());
+		} else {
+			const e = Core.parseYear(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
 		return new Year(stor, 0);
 	}
 
@@ -1150,10 +1176,7 @@ export class Month extends Core implements ISerializer {
 	/** Create a new month of the year, range 1-12 */
 	public static new(v: number): Month {
 		/*vetMonth*/ safe.int.inRangeInc('month', v, 1, 12);
-		return new Month(
-			/*writeMonth*/Uint8Array.of(v - 1),
-			0
-		);
+		return new Month(/*writeMonth*/ Uint8Array.of(v - 1), 0);
 	}
 
 	/**
@@ -1188,7 +1211,17 @@ export class Month extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): Month {
 		const stor = new Uint8Array(monthBytes);
-		Core.parseMonth(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			Core.writeMoFromDt(stor, 0, new Date());
+		} else {
+			const e = Core.parseMonth(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
 		return new Month(stor, 0);
 	}
 
@@ -1305,10 +1338,7 @@ export class Day extends Core implements ISerializer {
 	/** Create a new day of the month, range 1-31 */
 	public static new(v: number): Day {
 		/*vetDay*/ safe.int.inRangeInc('day', v, 1, 31);
-		return new Day(
-			/*writeDay*/Uint8Array.of(v - 1),
-			0
-		)
+		return new Day(/*writeDay*/ Uint8Array.of(v - 1), 0);
 	}
 
 	/**
@@ -1343,7 +1373,17 @@ export class Day extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): Day {
 		const stor = new Uint8Array(dayBytes);
-		Core.parseDay(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			Core.writeDFromDt(stor, 0, new Date());
+		} else {
+			const e = Core.parseDay(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
 		return new Day(stor, 0);
 	}
 
@@ -1648,7 +1688,29 @@ export class DateOnly extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): DateOnly {
 		const stor = new Uint8Array(dateBytes);
-		Core.parseDate(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+		//let e: Error | undefined = undefined;
+
+		//If content starts with "now" and optionally followed by whitespace - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			Core.writeDtFromDt(stor, 0, new Date());
+		} else {
+			const e = Core.parseDate(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
+
+		// if (input.test(/^[-+]?\d{8,9}$/)) {
+		// 	e = Core.parseDateUndelim(stor, 0, input, strict, reset);
+		// 	if (e) throw e;
+		// 	input.shrink(input.length);
+
+		// 	//Otherwise assumed delimited date
+		// } else {
+		// 	e = Core.parseDateDelim(stor, 0, input, strict, reset);
+		// 	if (e) throw e;
+		// }
 		return new DateOnly(stor, 0);
 	}
 
@@ -1759,10 +1821,7 @@ export class Hour extends Core implements ISerializer {
 	/** Create a new hour, range 0-23 */
 	public static new(v: number): Hour {
 		/*vetHour*/ safe.int.inRangeInc('hour', v, 0, 23);
-		return new Hour(
-			/*writeHour*/Uint8Array.of(v),
-			0
-		)
+		return new Hour(/*writeHour*/ Uint8Array.of(v), 0);
 	}
 
 	/**
@@ -1815,7 +1874,17 @@ export class Hour extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): Hour {
 		const stor = new Uint8Array(hourBytes);
-		Core.parseHour(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			/* writeHFromDt*/ stor[0] = new Date().getHours();
+		} else {
+			const e = Core.parseHour(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
 		return new Hour(stor, 0);
 	}
 
@@ -1917,10 +1986,7 @@ export class Minute extends Core implements ISerializer {
 	/** Create a new minute, range 0-59 */
 	public static new(v: number): Minute {
 		/*vetMinute*/ safe.int.inRangeInc('minute', v, 0, 59);
-		return new Minute(
-			/*writeMinute*/Uint8Array.of(v),
-			0
-		)
+		return new Minute(/*writeMinute*/ Uint8Array.of(v), 0);
 	}
 
 	/**
@@ -1973,7 +2039,18 @@ export class Minute extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): Minute {
 		const stor = new Uint8Array(minBytes);
-		Core.parseMinute(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart();
+		input.trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			/*writeMiFromDt*/ stor[0] = new Date().getMinutes();
+		} else {
+			const e = Core.parseMinute(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
 		return new Minute(stor, 0);
 	}
 
@@ -2075,10 +2152,7 @@ export class Second extends Core implements ISerializer {
 	/** Create a new second, range 0-59 */
 	public static new(v: number): Second {
 		/*vetSecond*/ safe.int.inRangeInc('second', v, 0, 59);
-		return new Second(
-			/*writeSecond*/Uint8Array.of(v),
-			0
-		);
+		return new Second(/*writeSecond*/ Uint8Array.of(v), 0);
 	}
 
 	/**
@@ -2125,7 +2199,19 @@ export class Second extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): Second {
 		const stor = new Uint8Array(minBytes);
-		Core.parseSecond(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			const utcNow = performance.timeOrigin + performance.now();
+			//No need for offset since there's no TZ off by seconds (yet?)
+			/*writeSecond*/ stor[0] = (utcNow / msPerSec) % 60;
+		} else {
+			const e = Core.parseSecond(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
 		return new Second(stor, 0);
 	}
 
@@ -2284,7 +2370,19 @@ export class Millisecond extends Core implements ISerializer {
 		left = false
 	): Millisecond {
 		const stor = new Uint8Array(milliBytes);
-		Core.parseMilli(stor, 0, input, strict, left);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			const utcNow = performance.timeOrigin + performance.now();
+			//No need for offset since there's no TZ off by milliseconds
+			Core.writeMilli(stor, 0, utcNow % msPerSec);
+		} else {
+			const e = Core.parseMilli(stor, 0, input, strict, left, reset);
+			if (e) throw e;
+		}
 		return new Millisecond(stor, 0);
 	}
 
@@ -2455,7 +2553,19 @@ export class Microsecond extends Core implements ISerializer {
 		left = false
 	): Microsecond {
 		const stor = new Uint8Array(microBytes);
-		Core.parseMicro(stor, 0, input, strict, left);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			const utcNow = performance.timeOrigin + performance.now();
+			//No need for offset since there's no TZ off by microseconds
+			Core.writeMicro(stor, 0, utcNow % usPerSec);
+		} else {
+			const e = Core.parseMicro(stor, 0, input, strict, left, reset);
+			if (e) throw e;
+		}
 		return new Microsecond(stor, 0);
 	}
 
@@ -2686,7 +2796,20 @@ export class TimeOnly extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnly {
 		const stor = new Uint8Array(timeBytes);
-		Core.parseTime(stor, 0, input, strict);
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
+
+		//If content is "now" - run now macro
+		if (input.toString().toLowerCase() == 'now') {
+			input.shrink(3);
+			const utcNow = performance.timeOrigin + performance.now();
+			const utcDt = new Date(utcNow);
+			const offset = utcDt.getTimezoneOffset() * 60000;
+			Core.timeFromUnixUs(stor, 0, (utcNow - offset) * 1000);
+		} else {
+			const e = Core.parseTime(stor, 0, input, strict, reset);
+			if (e) throw e;
+		}
 		return new TimeOnly(stor, 0);
 	}
 
@@ -2963,31 +3086,37 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnlyMs {
 		const stor = new Uint8Array(timeMsBytes);
+		const reset = input.getReset();
 		let p = 0;
-		input.trimStart();
+		input.trimStart().trimEnd();
 
 		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
+		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			const now = new Date();
-			let p = 0;
-			/*writeHFromDt*/ stor[p++] = now.getHours();
-			/*writeMiFromDt*/ stor[p++] = now.getMinutes();
-			/*writeSFromDt*/ stor[p++] = now.getSeconds();
-			Core.writeMsFromDt(stor, p, now);
-			return new TimeOnlyMs(stor, 0);
+			return TimeOnlyMs.now();
 		}
 
-		//If it's 12 digits assume it's an undelimitered time
-		if (input.test(/^\d{9}\s*$/)) {
-			input.trimEnd();
-			Core.parseHour(stor, p, input.left(2), strict);
+		let e: Error | undefined = undefined;
+
+		//If it's 9 digits assume it's an un-delimited time
+		if (input.test(/^\d{9}$/)) {
+			e = Core.parseHour(stor, p, input.left(2), strict, reset);
+			if (e) throw e;
 			p += hourBytes;
-			Core.parseMinute(stor, p, input.span(2, 2), strict);
+
+			e = Core.parseMinute(stor, p, input.span(2, 2), strict, reset);
+			if (e) throw e;
 			p += minBytes;
-			Core.parseSecond(stor, p, input.span(4, 2), strict);
+
+			e = Core.parseSecond(stor, p, input.span(4, 2), strict, reset);
+			if (e) throw e;
 			p += secBytes;
-			Core.parseMilli(stor, p, input.span(6, 3), strict, false);
+
+			e = Core.parseMilli(stor, p, input.span(6, 3), strict, false, reset);
+			//This can't generate an error because it already has to be 3 digits (because of test
+			// above) and it can be any 3 digit value (0-999)
+			//if (e) throw e;
+
 			input.shrink(input.length);
 			return new TimeOnlyMs(stor, 0);
 		}
@@ -2996,29 +3125,49 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		const delim2 = input.indexOf(':', delim1 + 1);
 		const delim3 = input.indexOf('.', delim2 + 1);
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
-			Core.parseHour(stor, p, input.left(delim1), strict);
+			e = Core.parseHour(stor, p, input.left(delim1), strict, reset);
+			if (e) throw e;
 			p += hourBytes;
-			Core.parseMinute(
+
+			e = Core.parseMinute(
 				stor,
 				p,
-				input.span(delim1 + 1, delim2 - delim1 - 1),
-				strict
-			);
-			p += minBytes;
-			Core.parseSecond(
-				stor,
-				p,
-				input.span(delim2 + 1, delim3 - delim2 - 1),
-				strict
-			);
-			p += secBytes;
-			Core.parseMilli(
-				stor,
-				p,
-				input.span(delim3 + 1, input.length - delim3 - 1),
+				input
+					.span(delim1 + 1, delim2 - delim1 - 1)
+					.trimStart()
+					.trimEnd(),
 				strict,
-				true
+				reset
 			);
+			if (e) throw e;
+			p += minBytes;
+
+			e = Core.parseSecond(
+				stor,
+				p,
+				input
+					.span(delim2 + 1, delim3 - delim2 - 1)
+					.trimStart()
+					.trimEnd(),
+				strict,
+				reset
+			);
+			if (e) throw e;
+			p += secBytes;
+
+			e = Core.parseMilli(
+				stor,
+				p,
+				input
+					.span(delim3 + 1, input.length - delim3 - 1)
+					.trimStart()
+					.trimEnd(),
+				strict,
+				true,
+				reset
+			);
+			if (e) throw e;
+
 			input.shrink(input.length);
 			return new TimeOnlyMs(stor, 0);
 		}
@@ -3413,41 +3562,59 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	public static now(): DateTimeLocal {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		const utcNow = performance.timeOrigin + performance.now();
+		let now = performance.timeOrigin + performance.now();
 		//Calculate the offset to get it in local time
-		const utcDt = new Date(utcNow);
+		const utcDt = new Date(now);
 		const offset = utcDt.getTimezoneOffset() * msPerMin;
-		return DateTimeLocal.fromUnixTimeMs(utcNow - offset);
+		now -= offset;
+
+		const stor = new Uint8Array(dateBytes + timeBytes);
+		Core.dateFromUnixDays(stor, 0, now / msPerDay);
+		Core.timeFromUnixUs(stor, dateBytes, now * 1000);
+		return new DateTimeLocal(stor, 0);
 	}
 
 	public static parse(input: WindowStr, strict = false): DateTimeLocal {
-		const stor = new Uint8Array(dateBytes + timeBytes);
-		input.trimStart();
+		const reset = input.getReset();
+		input.trimStart().trimEnd();
 
 		//If content starts with "now" and optionally followed by whitespace - run now macro
-		if (input.test(/^now\s*$/i)) {
+		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			const now = new Date();
-			Core.writeDtFromDt(stor, 0, now);
-			Core.writeTFromDt(stor, dateBytes, now);
-			return new DateTimeLocal(stor, 0);
+			return DateTimeLocal.now();
 		}
 
-		//If it's 20-21 digits, with optional leading sign, tailing z assume it's an undelimitered dateTime
-		const r = input.match(/^([-+]?\d{8,9})\d{12}\s*$/);
-		if (r !== null) {
-			const [, dt] = r;
-			//console.log(dt);
-			Core.parseDate(stor, 0, input.span(0, dt.length), strict);
-			Core.parseTime(stor, dateBytes, input.span(dt.length), strict);
+		const stor = new Uint8Array(dateBytes + timeBytes);
+		let e: Error | undefined = undefined;
+
+		//If it's 20-21 digits, with optional leading sign, tailing z assume it's an un-delimited dateTime
+		if (input.test(/^[-+]?\d{20,21}$/)) {
+			e = Core.parseDateUndelim(
+				stor,
+				0,
+				input.left(input.length - 12),
+				strict,
+				reset
+			);
+			if (e) throw e;
+			input.shrink(input.length - 12);
+
+			e = Core.parseTimeUndelim(stor, dateBytes, input, strict, reset);
+			if (e) throw e;
+
 			input.shrink(input.length);
 			return new DateTimeLocal(stor, 0);
 		}
 
 		const tPos = input.indexOfAny(['t', 'T']);
 		if (tPos > 0) {
-			Core.parseDate(stor, 0, input.span(0, tPos), strict);
-			Core.parseTime(stor, dateBytes, input.span(tPos + 1), strict);
+			e = Core.parseDate(stor, 0, input.left(tPos), strict, reset);
+			if (e) throw e;
+			input.shrink(tPos + 1);
+
+			e = Core.parseTime(stor, dateBytes, input, strict, reset);
+			if (e) throw e;
+
 			input.shrink(input.length);
 			return new DateTimeLocal(stor, 0);
 		}
@@ -3633,16 +3800,17 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	}
 
 	public static parse(input: WindowStr, strict = false): DateTimeUtc {
-		const stor = new Uint8Array(dateBytes + timeBytes);
 		const reset = input.getReset();
-		input.trimStart();
-		input.trimEnd();
+		input.trimStart().trimEnd();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
-			input.shrink(input.length);
+			input.shrink(3);
 			return DateTimeUtc.now();
 		}
+
+		const stor = new Uint8Array(dateBytes + timeBytes);
+		let e: Error | undefined = undefined;
 
 		const zPos = input.lastIndexOfAny(['z', 'Z']);
 		let hasZ = false;
@@ -3651,13 +3819,21 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 			hasZ = true;
 		}
 
-		//If it's 20-21 digits, with optional leading sign, tailing z assume it's an undelimitered dateTime
-		const r = input.match(/^([-+]?\d{8,9})\d{12}$/);
-		if (r !== null) {
-			const [, dt] = r;
-			//console.log(dt);
-			Core.parseDate(stor, 0, input.span(0, dt.length), strict);
-			Core.parseTime(stor, dateBytes, input.span(dt.length), strict);
+		//If it's 20-21 digits, with optional leading sign, tailing z assume it's an un-delimited dateTime
+		if (input.test(/^[-+]?\d{20,21}$/)) {
+			e = Core.parseDateUndelim(
+				stor,
+				0,
+				input.left(input.length - 12),
+				strict,
+				reset
+			);
+			if (e) throw e;
+			input.shrink(input.length - 12);
+
+			e = Core.parseTimeUndelim(stor, dateBytes, input, strict, reset);
+			if (e) throw e;
+
 			input.shrink(input.length);
 			return new DateTimeUtc(stor, 0);
 		}
@@ -3665,13 +3841,13 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 		const tPos = input.indexOfAny(['t', 'T']);
 		//z is required if strict
 		if (tPos > 0 && (hasZ || !strict)) {
-			Core.parseDate(stor, 0, input.span(0, tPos), strict);
-			Core.parseTime(
-				stor,
-				dateBytes,
-				input.span(tPos + 1, input.length - tPos - 1),
-				strict
-			);
+			e = Core.parseDate(stor, 0, input.left(tPos), strict, reset);
+			if (e) throw e;
+			input.shrink(tPos + 1);
+
+			e = Core.parseTime(stor, dateBytes, input, strict, reset);
+			if (e) throw e;
+
 			input.shrink(input.length);
 			return new DateTimeUtc(stor, 0);
 		}

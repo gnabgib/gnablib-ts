@@ -146,15 +146,15 @@ const parseSet:[WindowStr,number,number][]=[
     [WindowStr.new('0222'),222,0],
     [WindowStr.new('2222'),2222,0],
     //Doesn't consume trailing whitespace:
-    [WindowStr.new(' +22222 '),22222,1],
-    [WindowStr.new('0002\t\t'),2,2],
+    [WindowStr.new(' +22222 '),22222,0],
+    [WindowStr.new('0002\t\t'),2,0],
     [WindowStr.new('20240208',0,4),2024,0],
     
     //Note: This could fail at the end of the year :|
     [WindowStr.new('now'),new Date().getFullYear(),0],
     [WindowStr.new('NOW'),new Date().getFullYear(),0],//Why are you yelling?
     [WindowStr.new(' now'),new Date().getFullYear(),0],
-    [WindowStr.new(' now '),new Date().getFullYear(),1],//Trailing whitespace not removed
+    [WindowStr.new(' now '),new Date().getFullYear(),0],//Trailing whitespace not removed
 ];
 for (const [w,expect,expectLen] of parseSet) {
     tsts(`parse(${w.debug()})`,()=>{
@@ -233,5 +233,6 @@ tsts(`max`,()=>{
     const y=Year.max;
     assert.is(y.valueOf(),22767);
 });
+
 
 tsts.run();

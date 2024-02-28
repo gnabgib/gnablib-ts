@@ -149,7 +149,7 @@ const parseSet: [WindowStr, number, number][] = [
 	[WindowStr.new('October'), 10, 0],
 	[WindowStr.new('November'), 11, 0],
 	[WindowStr.new('December'), 12, 0],
-	[WindowStr.new(' December '), 12, 1], //Trailing space not consumed
+	[WindowStr.new(' December '), 12, 0],
 
 	[WindowStr.new('20240208', 4, 2), 2, 0],
 
@@ -157,12 +157,12 @@ const parseSet: [WindowStr, number, number][] = [
 	//[WindowStr.new('février'),2,0],
 
 	//Can be space padded
-	[WindowStr.new(' 1 '), 1, 1],
+	[WindowStr.new(' 1 '), 1, 0],
 
 	//Note: Could fail at the end of the month :|
 	[WindowStr.new('now'), new Date().getMonth() + 1, 0],
 	[WindowStr.new('NOW'), new Date().getMonth() + 1, 0],
-	[WindowStr.new(' NoW '), new Date().getMonth() + 1, 1], //Leading space is trimmed, but not trailing
+	[WindowStr.new(' NoW '), new Date().getMonth() + 1, 0],
 ];
 for (const [w, expect, expectLen] of parseSet) {
 	tsts(`parse(${w.debug()})`, () => {

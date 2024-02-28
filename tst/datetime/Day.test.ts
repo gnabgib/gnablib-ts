@@ -137,12 +137,12 @@ const parseSet:[WindowStr,number,number][]=[
     [WindowStr.new('31'),31,0],
     //Doesn't have to be zero padded
     [WindowStr.new('2'),2,0],
-    [WindowStr.new(' 2 '),2,1],//Trailing isn't removed
+    [WindowStr.new(' 2 '),2,0],//Trailing isn't removed
     [WindowStr.new('20240208',6),8,0],
 
     //Note: This could fail at the end of the year :|
     [WindowStr.new('now'),new Date().getDate(),0],
-    [WindowStr.new('nOW '),new Date().getDate(),1],
+    [WindowStr.new('nOW '),new Date().getDate(),0],
     
 ];
 for (const [w,expect,expectLen] of parseSet) {

@@ -234,6 +234,9 @@ const badParseSet:WindowStr[]=[
     WindowStr.new('1536:31.123456'),//Can't be a mix of with/without delims
     WindowStr.new('000000000000z'),//UTC not welcome here
     WindowStr.new('15:36:31.123456z'),//"
+    WindowStr.new('250000000000'),//Invalid hour component
+    WindowStr.new('006000000000'),//Invalid min component
+    WindowStr.new('000060000000'),//Invalid sec component
 ];
 for(const w of badParseSet) {
     tsts(`parse ${w.debug()} throws`,()=>{

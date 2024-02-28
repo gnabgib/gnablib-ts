@@ -92,7 +92,7 @@ const parseSet:[WindowStr,number,number][]=[
     [WindowStr.new('010'),10,0],
     [WindowStr.new('999'),999,0],
     
-    [WindowStr.new(' 17 '),17,1],//Trailing space not consumed
+    [WindowStr.new(' 17 '),17,0],
     [WindowStr.new('0999'),999,0],//Leading zero ok
 ];
 for (const [w,expect,rem] of parseSet) {

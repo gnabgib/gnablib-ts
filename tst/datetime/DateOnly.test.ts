@@ -357,6 +357,11 @@ for(const w of badParseStrictSet) {
 const badParseSet:WindowStr[]=[
     WindowStr.new('2024-01/02'),//Can't have mixed delims
     WindowStr.new('2024 01 02'),//Spaces are not valid delims (because we support spaces in the parts)
+	WindowStr.new('400000101'),//Year out of range
+	WindowStr.new('20011301'),//Month out of range
+	WindowStr.new('20011232'),//Day out of range
+	WindowStr.new('20010229'),//Invariant day
+	WindowStr.new('2001-02-29'),//"
 ];
 for(const w of badParseSet) {
     tsts(`parse ${w.debug()} throws`,()=>{
