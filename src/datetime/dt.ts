@@ -14,13 +14,14 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const yearBytes = 2;
 const monthBytes = 1;
 const dayBytes = 1;
-const dateBytes = yearBytes + monthBytes + dayBytes; //4
+const dateBytes = 4; //yearBytes + monthBytes + dayBytes;
 const hourBytes = 1;
 const minBytes = 1;
 const secBytes = 1;
 const milliBytes = 2;
 const microBytes = 3;
-const timeBytes = hourBytes + minBytes + secBytes + microBytes; //6
+const timeMsBytes = 5; //hourBytes + minBytes + secBytes + milliBytes;
+const timeBytes = 6 ; //hourBytes + minBytes + secBytes + microBytes;
 
 const yearSerBits = 15; //2^15 = 32767
 const monthSerBits = 4; //2^4 = 16
@@ -1146,13 +1147,9 @@ export class Year extends Core implements ISerializer {
 		return `Year(${this.toString()})`;
 	}
 
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(yearBytes);
-	}
-
 	/** Create a new year in ISO601 format, range -10000 - +22767 */
 	public static new(v: number): Year {
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		Core.vetYear(v);
 		Core.writeYear(stor, 0, v);
 		return new Year(stor, 0);
@@ -1164,7 +1161,7 @@ export class Year extends Core implements ISerializer {
 	 * @param ad True=Anno Domini(AD)/Common Era(CE), False=Before Chris(BC)/Before common era (BCE)
 	 */
 	public static newGregorian(year: number, ad = true): Year {
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		if (ad) {
 			safe.int.inRangeInc('year', year, 1, maxIsoYear);
 			Core.writeYear(stor, 0, year);
@@ -1178,7 +1175,7 @@ export class Year extends Core implements ISerializer {
 	/** Create a new year in Holocene format, range 0 - 32767*/
 	public static newHolocene(year: number): Year {
 		safe.int.inRangeInc('year', year, 0, maxHeYear);
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		Core.writeYear(stor, 0, year - 10000);
 		return new Year(stor, 0);
 	}
@@ -1188,7 +1185,7 @@ export class Year extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Year {
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		Core.writeYrFromDt(stor, 0, dt);
 		return new Year(stor, 0);
 	}
@@ -1198,7 +1195,7 @@ export class Year extends Core implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Year {
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		Core.writeYrFromDtu(stor, 0, dt);
 		return new Year(stor, 0);
 	}
@@ -1214,7 +1211,7 @@ export class Year extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Year {
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		Core.parseYear(stor, 0, input, strict);
 		return new Year(stor, 0);
 	}
@@ -1222,7 +1219,7 @@ export class Year extends Core implements ISerializer {
 	/** Create this year (local) */
 	public static now(): Year {
 		const now = new Date();
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		Core.writeYrFromDt(stor, 0, now);
 		return new Year(stor, 0);
 	}
@@ -1264,7 +1261,7 @@ export class Year extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static deserialize(src: BitReader): Year {
-		const stor = Year.setupStor();
+		const stor = new Uint8Array(yearBytes);
 		Core.deserYear(stor, 0, src);
 		return new Year(stor, 0);
 	}
@@ -1339,14 +1336,9 @@ export class Month extends Core implements ISerializer {
 		return `Month(${this.toString()})`;
 	}
 
-	/** If storage empty, builds new, or vets it's the right size */
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(monthBytes);
-	}
-
 	/** Create a new month of the year, range 1-12 */
 	public static new(v: number): Month {
-		const stor = Month.setupStor();
+		const stor = new Uint8Array(monthBytes);
 		Core.vetMonth(v);
 		Core.writeMonth(stor, 0, v);
 		return new Month(stor, 0);
@@ -1357,7 +1349,7 @@ export class Month extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Month {
-		const stor = Month.setupStor();
+		const stor = new Uint8Array(monthBytes);
 		Core.writeMoFromDt(stor, 0, dt);
 		return new Month(stor, 0);
 	}
@@ -1367,7 +1359,7 @@ export class Month extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Month {
-		const stor = Month.setupStor();
+		const stor = new Uint8Array(monthBytes);
 		Core.writeMoFromDtu(stor, 0, dt);
 		return new Month(stor, 0);
 	}
@@ -1383,7 +1375,7 @@ export class Month extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Month {
-		const stor = Month.setupStor();
+		const stor = new Uint8Array(monthBytes);
 		Core.parseMonth(stor, 0, input, strict);
 		return new Month(stor, 0);
 	}
@@ -1391,7 +1383,7 @@ export class Month extends Core implements ISerializer {
 	/** Create this year (local) */
 	public static now(): Month {
 		const now = new Date();
-		const stor = Month.setupStor();
+		const stor = new Uint8Array(monthBytes);
 		Core.writeMoFromDt(stor, 0, now);
 		return new Month(stor, 0);
 	}
@@ -1406,7 +1398,7 @@ export class Month extends Core implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(src: BitReader): Month {
-		const stor = Month.setupStor();
+		const stor = new Uint8Array(monthBytes);
 		Core.deserMonth(stor, 0, src);
 		return new Month(stor, 0);
 	}
@@ -1497,14 +1489,9 @@ export class Day extends Core implements ISerializer {
 		return `DayOfMonth(${this.toString()})`;
 	}
 
-	/** If storage empty, builds new, or vets it's the right size */
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(dayBytes);
-	}
-
 	/** Create a new day of the month, range 1-31 */
 	public static new(v: number): Day {
-		const stor = Day.setupStor();
+		const stor = new Uint8Array(dayBytes);
 		Core.vetDay(v);
 		Core.writeDay(stor, 0, v);
 		return new Day(stor, 0);
@@ -1515,7 +1502,7 @@ export class Day extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Day {
-		const stor = Day.setupStor();
+		const stor = new Uint8Array(dayBytes);
 		Core.writeDyFromDt(stor, 0, dt);
 		return new Day(stor, 0);
 	}
@@ -1525,7 +1512,7 @@ export class Day extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Day {
-		const stor = Day.setupStor();
+		const stor = new Uint8Array(dayBytes);
 		Core.writeDyFromDtu(stor, 0, dt);
 		return new Day(stor, 0);
 	}
@@ -1541,7 +1528,7 @@ export class Day extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Day {
-		const stor = Day.setupStor();
+		const stor = new Uint8Array(dayBytes);
 		Core.parseDay(stor, 0, input, strict);
 		return new Day(stor, 0);
 	}
@@ -1549,7 +1536,7 @@ export class Day extends Core implements ISerializer {
 	/** Create this day of the month (local) */
 	public static now(): Day {
 		const now = new Date();
-		const stor = Day.setupStor();
+		const stor = new Uint8Array(dayBytes);
 		Core.writeDyFromDt(stor, 0, now);
 		return new Day(stor, 0);
 	}
@@ -1564,7 +1551,7 @@ export class Day extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static deserialize(source: BitReader): Day {
-		const stor = Day.setupStor();
+		const stor = new Uint8Array(dayBytes);
 		Core.deserDay(stor, 0, source);
 		return new Day(stor, 0);
 	}
@@ -1707,7 +1694,7 @@ export class DateOnly extends Core implements ISerializer {
 	 * @pure
 	 */
 	public addSafe(days: number): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, super.toUnixDays(this._pos) + (days | 0));
 		return new DateOnly(stor, 0);
 	}
@@ -1754,13 +1741,9 @@ export class DateOnly extends Core implements ISerializer {
 			this._day(this._pos + yearBytes + monthBytes),
 			Month.lastDay(mv, yv)
 		);
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.writeDate(stor, 0, yv, mv, dv);
 		return new DateOnly(stor, 0);
-	}
-
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(dateBytes); //4
 	}
 
 	/**
@@ -1770,8 +1753,8 @@ export class DateOnly extends Core implements ISerializer {
 	 * @param d range 1 - 31
 	 */
 	public static new(y: number, m: number, d: number): DateOnly {
+		const stor = new Uint8Array(dateBytes);
 		Core.vetDate(y, m, d);
-		const stor = DateOnly.setupStor();
 		Core.writeDate(stor, 0, y, m, d);
 		return new DateOnly(stor, 0);
 	}
@@ -1793,13 +1776,13 @@ export class DateOnly extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static fromValue(v: number): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromValue(stor, 0, v);
 		return new DateOnly(stor, 0);
 	}
 
 	public static fromUnixDays(source: number): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, source);
 		return new DateOnly(stor, 0);
 	}
@@ -1810,7 +1793,7 @@ export class DateOnly extends Core implements ISerializer {
 	 */
 	public static fromDate(date: Date): DateOnly {
 		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, dms / msPerDay);
 		return new DateOnly(stor, 0);
 	}
@@ -1820,7 +1803,7 @@ export class DateOnly extends Core implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(date: Date): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, date.valueOf() / msPerDay);
 		return new DateOnly(stor, 0);
 	}
@@ -1830,7 +1813,7 @@ export class DateOnly extends Core implements ISerializer {
 	 * *NOTE*: Unix time is always in UTC, depending on your timezone this may differ from local
 	 * */
 	public static fromUnixTime(source: number): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, source / sPerDay);
 		return new DateOnly(stor, 0);
 	}
@@ -1840,7 +1823,7 @@ export class DateOnly extends Core implements ISerializer {
 	 * *NOTE*: Unix time is always in UTC, depending on your timezone this may differ from local
 	 */
 	public static fromUnixTimeMs(source: number): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, source / msPerDay);
 		return new DateOnly(stor, 0);
 	}
@@ -1852,7 +1835,7 @@ export class DateOnly extends Core implements ISerializer {
 	 * @param storage
 	 */
 	public static parse(input: WindowStr, strict = false): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.parseDate(stor, 0, input, strict);
 		return new DateOnly(stor, 0);
 	}
@@ -1863,7 +1846,7 @@ export class DateOnly extends Core implements ISerializer {
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const n = new Date();
 		const dms = n.valueOf() - n.getTimezoneOffset() * msPerMin;
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, dms / msPerDay);
 		return new DateOnly(stor, 0);
 	}
@@ -1873,13 +1856,13 @@ export class DateOnly extends Core implements ISerializer {
 		//Note we depend on JS Date here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const n = new Date();
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.dateFromUnixDays(stor, 0, n.valueOf() / msPerDay);
 		return new DateOnly(stor, 0);
 	}
 
 	public static deserialize(source: BitReader): DateOnly {
-		const stor = DateOnly.setupStor();
+		const stor = new Uint8Array(dateBytes);
 		Core.deserDate(stor, 0, source);
 		return new DateOnly(stor, 0);
 	}
@@ -1961,14 +1944,9 @@ export class Hour extends Core implements ISerializer {
 		return `HourOfDay(${this.toString()})`;
 	}
 
-	/** If storage empty, builds new, or vets it's the right size */
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(hourBytes);
-	}
-
 	/** Create a new hour, range 0-23 */
 	public static new(v: number): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.vetHour(v);
 		Core.writeHour(stor, 0, v);
 		return new Hour(stor, 0);
@@ -1979,7 +1957,7 @@ export class Hour extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.writeHFromDt(stor, 0, dt);
 		return new Hour(stor, 0);
 	}
@@ -1989,28 +1967,28 @@ export class Hour extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.writeHFromDtu(stor, 0, dt);
 		return new Hour(stor, 0);
 	}
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(source: number): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.writeHour(stor, 0, (source % sPerDay) / sPerHour);
 		return new Hour(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(source: number): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.writeHour(stor, 0, (source % msPerDay) / msPerHour);
 		return new Hour(stor, 0);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(source: number): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.writeHour(stor, 0, (source % usPerDay) / usPerHour);
 		return new Hour(stor, 0);
 	}
@@ -2025,7 +2003,7 @@ export class Hour extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.parseHour(stor, 0, input, strict);
 		return new Hour(stor, 0);
 	}
@@ -2033,7 +2011,7 @@ export class Hour extends Core implements ISerializer {
 	/** Create this hour (local) */
 	public static now(): Hour {
 		const now = new Date();
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.writeHFromDt(stor, 0, now);
 		return new Hour(stor, 0);
 	}
@@ -2041,7 +2019,7 @@ export class Hour extends Core implements ISerializer {
 	/** Create this hour (UTC) */
 	public static nowUtc(): Hour {
 		const now = new Date();
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.writeHFromDtu(stor, 0, now);
 		return new Hour(stor, 0);
 	}
@@ -2055,7 +2033,7 @@ export class Hour extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Hour {
-		const stor = Hour.setupStor();
+		const stor = new Uint8Array(hourBytes);
 		Core.deserHour(stor, 0, src);
 		return new Hour(stor, 0);
 	}
@@ -2127,14 +2105,9 @@ export class Minute extends Core implements ISerializer {
 		return `Minute(${this.toString()})`;
 	}
 
-	/** If storage empty, builds new, or vets it's the right size */
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(minBytes);
-	}
-
 	/** Create a new minute, range 0-59 */
 	public static new(v: number): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.vetMinute(v);
 		Core.writeMinute(stor, 0, v);
 		return new Minute(stor, 0);
@@ -2145,7 +2118,7 @@ export class Minute extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeMiFromDt(stor, 0, dt);
 		return new Minute(stor, 0);
 	}
@@ -2155,28 +2128,28 @@ export class Minute extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeMiFromDtu(stor, 0, dt);
 		return new Minute(stor, 0);
 	}
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(src: number): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeMinute(stor, 0, (src % sPerHour) / 60);
 		return new Minute(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(src: number): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeMinute(stor, 0, (src % msPerHour) / msPerMin);
 		return new Minute(stor, 0);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(src: number): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeMinute(stor, 0, (src % usPerHour) / usPerMin);
 		return new Minute(stor, 0);
 	}
@@ -2191,7 +2164,7 @@ export class Minute extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.parseMinute(stor, 0, input, strict);
 		return new Minute(stor, 0);
 	}
@@ -2199,7 +2172,7 @@ export class Minute extends Core implements ISerializer {
 	/** Create this minute (local) */
 	public static now(): Minute {
 		const now = new Date();
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeMiFromDt(stor, 0, now);
 		return new Minute(stor, 0);
 	}
@@ -2207,7 +2180,7 @@ export class Minute extends Core implements ISerializer {
 	/** Create this minute (UTC) */
 	public static nowUtc(): Minute {
 		const now = new Date();
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeMiFromDtu(stor, 0, now);
 		return new Minute(stor, 0);
 	}
@@ -2221,7 +2194,7 @@ export class Minute extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Minute {
-		const stor = Minute.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.deserMin(stor, 0, src);
 		return new Minute(stor, 0);
 	}
@@ -2293,14 +2266,9 @@ export class Second extends Core implements ISerializer {
 		return `Second(${this.toString()})`;
 	}
 
-	/** If storage empty, builds new, or vets it's the right size */
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(minBytes);
-	}
-
 	/** Create a new second, range 0-59 */
 	public static new(v: number): Second {
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.vetSecond(v);
 		Core.writeSecond(stor, 0, v);
 		return new Second(stor, 0);
@@ -2311,7 +2279,7 @@ export class Second extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Second {
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeSFromDt(stor, 0, dt);
 		return new Second(stor, 0);
 	}
@@ -2320,21 +2288,21 @@ export class Second extends Core implements ISerializer {
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(src: number): Second {
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeSecond(stor, 0, src % 60);
 		return new Second(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(src: number): Second {
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeSecond(stor, 0, (src % msPerMin) / msPerSec);
 		return new Second(stor, 0);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(src: number): Second {
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeSecond(stor, 0, (src % usPerMin) / usPerSec);
 		return new Second(stor, 0);
 	}
@@ -2349,7 +2317,7 @@ export class Second extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Second {
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.parseSecond(stor, 0, input, strict);
 		return new Second(stor, 0);
 	}
@@ -2357,7 +2325,7 @@ export class Second extends Core implements ISerializer {
 	/** Current second */
 	public static now(): Second {
 		const now = new Date();
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.writeSFromDt(stor, 0, now);
 		return new Second(stor, 0);
 	}
@@ -2373,7 +2341,7 @@ export class Second extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Second {
-		const stor = Second.setupStor();
+		const stor = new Uint8Array(minBytes);
 		Core.deserSec(stor, 0, src);
 		return new Second(stor, 0);
 	}
@@ -2446,13 +2414,9 @@ export class Millisecond extends Core implements ISerializer {
 		return `Millisecond(${this.toString()})`;
 	}
 
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(milliBytes);
-	}
-
 	/** Create a new Millisecond, range 0-999 */
 	public static new(v: number): Millisecond {
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.vetMilli(v);
 		Core.writeMilli(stor, 0, v);
 		return new Millisecond(stor, 0);
@@ -2464,7 +2428,7 @@ export class Millisecond extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Millisecond {
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.writeMsFromDt(stor, 0, dt);
 		return new Millisecond(stor, 0);
 	}
@@ -2473,21 +2437,21 @@ export class Millisecond extends Core implements ISerializer {
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(s: number): Millisecond {
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.writeMilli(stor, 0, (s * msPerSec) % msPerSec);
 		return new Millisecond(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(ms: number): Millisecond {
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.writeMilli(stor, 0, ms % msPerSec);
 		return new Millisecond(stor, 0);
 	}
 
 	/** Create from millisecond since UNIX epoch */
 	public static fromUnixTimeUs(us: number): Millisecond {
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.writeMilli(stor, 0, (us / 1000) % msPerSec);
 		return new Millisecond(stor, 0);
 	}
@@ -2509,7 +2473,7 @@ export class Millisecond extends Core implements ISerializer {
 		strict = false,
 		left = false
 	): Millisecond {
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.parseMilli(stor, 0, input, strict, left);
 		return new Millisecond(stor, 0);
 	}
@@ -2517,7 +2481,7 @@ export class Millisecond extends Core implements ISerializer {
 	/** Create this millisecond */
 	public static now(): Millisecond {
 		const now = performance.timeOrigin + performance.now();
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.writeMilli(stor, 0, now % msPerSec);
 		return new Millisecond(stor, 0);
 	}
@@ -2533,7 +2497,7 @@ export class Millisecond extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Millisecond {
-		const stor = Millisecond.setupStor();
+		const stor = new Uint8Array(milliBytes);
 		Core.deserMilli(stor, 0, src);
 		return new Millisecond(stor, 0);
 	}
@@ -2614,13 +2578,9 @@ export class Microsecond extends Core implements ISerializer {
 		return `Microsecond(${this.toString()})`;
 	}
 
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(microBytes);
-	}
-
 	/** Create a new Microsecond, range 0-999999 */
 	public static new(v: number): Microsecond {
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.vetMicro(v);
 		Core.writeMicro(stor, 0, v);
 		return new Microsecond(stor, 0);
@@ -2634,7 +2594,7 @@ export class Microsecond extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Microsecond {
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.writeUsFromDt(stor, 0, dt);
 		return new Microsecond(stor, 0);
 	}
@@ -2643,21 +2603,21 @@ export class Microsecond extends Core implements ISerializer {
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(s: number): Microsecond {
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.writeMicro(stor, 0, (s * usPerSec) % usPerSec);
 		return new Microsecond(stor, 0);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(ms: number): Microsecond {
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.writeMicro(stor, 0, (ms % msPerSec) * 1000);
 		return new Microsecond(stor, 0);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(us: number): Microsecond {
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.writeMicro(stor, 0, us % usPerSec);
 		return new Microsecond(stor, 0);
 	}
@@ -2679,7 +2639,7 @@ export class Microsecond extends Core implements ISerializer {
 		strict = false,
 		left = false
 	): Microsecond {
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.parseMicro(stor, 0, input, strict, left);
 		return new Microsecond(stor, 0);
 	}
@@ -2687,7 +2647,7 @@ export class Microsecond extends Core implements ISerializer {
 	/** Create this microsecond */
 	public static now(): Microsecond {
 		const now = performance.timeOrigin + performance.now();
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.writeMicro(stor, 0, (now * 1000) % usPerSec);
 		return new Microsecond(stor, 0);
 	}
@@ -2703,7 +2663,7 @@ export class Microsecond extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Microsecond {
-		const stor = Microsecond.setupStor();
+		const stor = new Uint8Array(microBytes);
 		Core.deserMicro(stor, 0, src);
 		return new Microsecond(stor, 0);
 	}
@@ -2832,10 +2792,6 @@ export class TimeOnly extends Core implements ISerializer {
 		return `TimeOnly(${this.toString()})`;
 	}
 
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(timeBytes); //6
-	}
-
 	/**
 	 * Create a new time
 	 * @param h Hours 0-23
@@ -2844,8 +2800,8 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param u Microseconds 0-999999
 	 */
 	public static new(h: number, i: number, s: number, u: number): TimeOnly {
+		const stor = new Uint8Array(timeBytes);
 		Core.vetTime(h, i, s, u);
-		const stor = TimeOnly.setupStor();
 		Core.writeTime(stor, 0, h, i, s, u);
 		return new TimeOnly(stor, 0);
 	}
@@ -2856,7 +2812,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static fromValue(v: number): TimeOnly {
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.timeFromValue(stor, 0, v);
 		return new TimeOnly(stor, 0);
 	}
@@ -2867,7 +2823,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param source Number of microseconds since midnight (if floating point it'll be truncated)
 	 */
 	public static fromUnixTimeUs(source: number): TimeOnly {
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.timeFromUnixUs(stor, 0, source);
 		return new TimeOnly(stor, 0);
 	}
@@ -2878,7 +2834,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param source Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTimeMs(source: number): TimeOnly {
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.timeFromUnixUs(stor, 0, source * 1000);
 		return new TimeOnly(stor, 0);
 	}
@@ -2889,7 +2845,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param source Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTime(source: number): TimeOnly {
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.timeFromUnixUs(stor, 0, source * 1000000);
 		return new TimeOnly(stor, 0);
 	}
@@ -2902,7 +2858,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 */
 	public static fromDate(date: Date): TimeOnly {
 		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.timeFromUnixUs(stor, 0, dms * 1000);
 		return new TimeOnly(stor, 0);
 	}
@@ -2914,7 +2870,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param storage
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnly {
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.parseTime(stor, 0, input, strict);
 		return new TimeOnly(stor, 0);
 	}
@@ -2925,7 +2881,7 @@ export class TimeOnly extends Core implements ISerializer {
 		//Calculate the offset to get it in local time
 		const utcDt = new Date(utcNow);
 		const offset = utcDt.getTimezoneOffset() * 60000;
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.timeFromUnixUs(stor, 0, (utcNow - offset) * 1000);
 		return new TimeOnly(stor, 0);
 	}
@@ -2940,7 +2896,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 */
 	public static deserialize(source: BitReader): TimeOnly {
 		//Keep the memory contiguous
-		const stor = TimeOnly.setupStor();
+		const stor = new Uint8Array(timeBytes);
 		Core.deserTime(stor, 0, source);
 		return new TimeOnly(stor, 0);
 	}
@@ -2954,7 +2910,7 @@ const maxT = TimeOnly.new(23, 59, 59, 999999);
  */
 export class TimeOnlyMs extends Core implements ISerializer {
 	/**Number of bytes required to store this data */
-	static readonly storageBytes = hourBytes + minBytes + secBytes + milliBytes; //5
+	static readonly storageBytes = timeMsBytes; //5
 
 	/**Number of bits required to serialize this data */
 	static readonly serialBits =
@@ -3093,10 +3049,6 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		return `TimeOnlyMs(${this.toString()})`;
 	}
 
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(hourBytes + minBytes + secBytes + milliBytes); //5
-	}
-
 	/**
 	 * Create a new time
 	 * @param h Hours 0-23
@@ -3106,7 +3058,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 */
 	public static new(h: number, i: number, s: number, ms: number): TimeOnlyMs {
 		Core.vetTime(h, i, s, ms);
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		let pos = 0;
 		Core.writeHour(stor, pos, h);
 		pos += hourBytes;
@@ -3123,7 +3075,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static fromValue(v: number): TimeOnlyMs {
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		const ms = v % 1000;
 		v = (v - ms) / 1000;
 		const s = v % 100;
@@ -3151,7 +3103,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param us Number of microseconds since midnight (if floating point it'll be truncated)
 	 */
 	public static fromUnixTimeUs(us: number): TimeOnlyMs {
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		Core.timeMsFromUnixUs(stor, 0, us);
 		return new TimeOnlyMs(stor, 0);
 	}
@@ -3162,7 +3114,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param ms Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTimeMs(ms: number): TimeOnlyMs {
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		Core.timeMsFromUnixMs(stor, 0, ms);
 		return new TimeOnlyMs(stor, 0);
 	}
@@ -3173,7 +3125,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param s Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTime(s: number): TimeOnlyMs {
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		Core.timeMsFromUnixMs(stor, 0, s * msPerSec);
 		return new TimeOnlyMs(stor, 0);
 	}
@@ -3184,7 +3136,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 */
 	public static fromDate(date: Date): TimeOnlyMs {
 		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		Core.timeMsFromUnixUs(stor, 0, dms * 1000);
 		return new TimeOnlyMs(stor, 0);
 	}
@@ -3196,7 +3148,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param storage
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnlyMs {
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		let p = 0;
 		input.trimStart();
 
@@ -3271,7 +3223,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		//Calculate the offset to get it in local time
 		const utcDt = new Date(utcNow);
 		const offset = utcDt.getTimezoneOffset() * 60000;
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		Core.timeMsFromUnixMs(stor, 0, utcNow - offset);
 		return new TimeOnlyMs(stor, 0);
 	}
@@ -3286,7 +3238,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): TimeOnlyMs {
 		//Keep the memory contiguous
-		const stor = TimeOnlyMs.setupStor();
+		const stor = new Uint8Array(timeMsBytes);
 		let p = 0;
 		Core.deserHour(stor, p, src);
 		p += hourBytes;
@@ -3399,10 +3351,6 @@ class DateTimeShared extends Core {
 			secSerBits +
 			microSerBits
 		);
-	}
-
-	protected static setupStor(): Uint8Array {
-		return new Uint8Array(dateBytes + timeBytes); //10
 	}
 }
 
@@ -3524,7 +3472,7 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 		let miso = this.timeToMs(this._pos + dateBytes) % usPerHour;
 		let dh = 0;
 
-		const stor = DateTimeLocal.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		if (du instanceof DurationExact) {
 			dh = this.toUnixDays(this._pos) * 24 + this.hour;
 			const [, ddh, dmiso] = du.toYmDhMiso();
@@ -3602,14 +3550,14 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	): DateTimeLocal {
 		Core.vetDate(y, m, d);
 		Core.vetTime(h, i, s, u);
-		const stor = DateTimeLocal.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.writeDate(stor, 0, y, m, d);
 		Core.writeTime(stor, dateBytes, h, i, s, u);
 		return new DateTimeLocal(stor, 0);
 	}
 
 	public static fromValue(v: string): DateTimeLocal {
-		const stor = DateTimeLocal.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		const dt = parseDec(v.substring(0, v.length - 12));
 		const tm = parseDec(v.substring(v.length - 12));
 		Core.dateFromValue(stor, 0, dt);
@@ -3634,7 +3582,7 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 * @param src Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTimeMs(src: number): DateTimeLocal {
-		const stor = DateTimeLocal.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.dateFromUnixDays(stor, 0, src / msPerDay);
 		Core.timeFromUnixUs(stor, dateBytes, src * 1000);
 		return new DateTimeLocal(stor, 0);
@@ -3646,7 +3594,7 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 * @param src Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTime(src: number): DateTimeLocal {
-		const stor = DateTimeLocal.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.dateFromUnixDays(stor, 0, src / sPerDay);
 		Core.timeFromUnixUs(stor, dateBytes, src * 1000000);
 		return new DateTimeLocal(stor, 0);
@@ -3664,7 +3612,7 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	}
 
 	public static parse(input: WindowStr, strict = false): DateTimeLocal {
-		const stor = DateTimeLocal.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		input.trimStart();
 
 		//If content starts with "now" and optionally followed by whitespace - run now macro
@@ -3703,7 +3651,7 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	}
 
 	public static deserialize(source: BitReader): DateTimeLocal {
-		const stor = DateTimeLocal.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.deserDate(stor, 0, source);
 		Core.deserTime(stor, dateBytes, source);
 		return new DateTimeLocal(stor, 0);
@@ -3811,16 +3759,16 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 		s: number,
 		u: number
 	): DateTimeUtc {
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.vetDate(y, m, d);
 		Core.vetTime(h, i, s, u);
-		const stor = DateTimeUtc.setupStor();
 		Core.writeDate(stor, 0, y, m, d);
 		Core.writeTime(stor, dateBytes, h, i, s, u);
 		return new DateTimeUtc(stor, 0);
 	}
 
 	public static fromValue(v: string): DateTimeUtc {
-		const stor = DateTimeUtc.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		const dt = parseDec(v.substring(0, v.length - 12));
 		const tm = parseDec(v.substring(v.length - 12));
 		Core.dateFromValue(stor, 0, dt);
@@ -3836,7 +3784,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	public static fromDate(date: Date): DateTimeUtc {
 		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		const stor = DateTimeUtc.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.dateFromUnixDays(stor, 0, dms / msPerDay);
 		Core.timeFromUnixUs(stor, dateBytes, dms * 1000);
 		return new DateTimeUtc(stor, 0);
@@ -3848,7 +3796,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 * @param src Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTimeMs(src: number): DateTimeUtc {
-		const stor = DateTimeUtc.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.dateFromUnixDays(stor, 0, src / msPerDay);
 		Core.timeFromUnixUs(stor, dateBytes, src * 1000);
 		return new DateTimeUtc(stor, 0);
@@ -3860,7 +3808,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 * @param src Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTime(src: number): DateTimeUtc {
-		const stor = DateTimeUtc.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.dateFromUnixDays(stor, 0, src / sPerDay);
 		Core.timeFromUnixUs(stor, dateBytes, src * 1000000);
 		return new DateTimeUtc(stor, 0);
@@ -3869,14 +3817,14 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	/** Create this date-time (UTC) */
 	public static now(): DateTimeUtc {
 		const utcNow = performance.timeOrigin + performance.now();
-		const stor = DateTimeUtc.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.dateFromUnixDays(stor, 0, utcNow / msPerDay);
 		Core.timeFromUnixUs(stor, dateBytes, utcNow * 1000);
 		return new DateTimeUtc(stor, 0);
 	}
 
 	public static parse(input: WindowStr, strict = false): DateTimeUtc {
-		const stor = DateTimeUtc.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		const reset = input.getReset();
 		input.trimStart();
 		input.trimEnd();
@@ -3928,7 +3876,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	}
 
 	public static deserialize(source: BitReader): DateTimeUtc {
-		const stor = DateTimeUtc.setupStor();
+		const stor = new Uint8Array(dateBytes + timeBytes);
 		Core.deserDate(stor, 0, source);
 		Core.deserTime(stor, dateBytes, source);
 		return new DateTimeUtc(stor, 0);

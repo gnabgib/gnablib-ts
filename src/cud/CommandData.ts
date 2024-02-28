@@ -2,7 +2,7 @@
 
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { intExt } from '../primitive/IntExt.js';
-import { DateTimeLocal } from '../datetime/outdex.js';
+import { DateTimeLocal } from '../datetime/dt.js';
 import { ACmd } from './ACmd.js';
 import { ColValue } from './ColValue.js';
 import type { TableName } from './TableName.js';

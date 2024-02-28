@@ -2,7 +2,7 @@
 
 import { BitWriter } from '../primitive/BitWriter.js';
 import { intExt } from '../primitive/IntExt.js';
-import { DateTimeLocal } from '../datetime/outdex.js';
+import { DateTimeLocal } from '../datetime/dt.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
 import type { Plane } from './types/Plane.js';

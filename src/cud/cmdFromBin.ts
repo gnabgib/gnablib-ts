@@ -7,7 +7,7 @@ import { Plane } from './types/Plane.js';
 import { ACmdData } from './CommandData.js';
 import type { ACmd } from './ACmd.js';
 import { ACmdCtrl } from './CommandCtrl.js';
-import { DateTimeLocal } from '../datetime/outdex.js';
+import { DateTimeLocal } from '../datetime/dt.js';
 import { BitReader } from '../primitive/BitReader.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {

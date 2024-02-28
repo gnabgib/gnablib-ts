@@ -7,7 +7,7 @@ import { Uint64 } from '../primitive/Uint64.js';
 import { Int64 } from '../primitive/Int64.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { asBE } from '../endian/platform.js';
-import { DateTimeLocal } from '../datetime/outdex.js';
+import { DateTimeLocal } from '../datetime/dt.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 
 /**

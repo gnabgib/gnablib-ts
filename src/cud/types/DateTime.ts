@@ -5,7 +5,7 @@ import { ColType } from './ColType.js';
 import { ACudColType } from './CudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { DateTimeLocal } from '../../datetime/outdex.js';
+import { DateTimeLocal } from '../../datetime/dt.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
 

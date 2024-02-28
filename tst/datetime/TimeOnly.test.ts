@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { TimeOnly } from '../../src/datetime/outdex';
+import { TimeOnly } from '../../src/datetime/dt';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';

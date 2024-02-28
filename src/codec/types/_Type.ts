@@ -43,7 +43,7 @@ import type {
 	ReadonlyInt8Array,
 } from '../../primitive/ReadonlyTypedArray.js';
 import { safety } from '../../primitive/Safety.js';
-import { DateTimeLocal } from '../../datetime/outdex.js';
+import { DateTimeLocal } from '../../datetime/dt.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
 

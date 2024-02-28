@@ -25,11 +25,11 @@
  * - {@link datetime.DurationExact DurationExact} Range 0 - 134117046d
  */
 //Dates
-export { Year, Month, Day } from './outdex.js';
+export { Year, Month, Day } from './dt.js';
 //Time
-export { Hour, Minute, Second, Millisecond, Microsecond } from './outdex.js';
+export { Hour, Minute, Second, Millisecond, Microsecond } from './dt.js';
 //Aggregates
-export { DateOnly, TimeOnly, TimeOnlyMs, DateTimeLocal, DateTimeUtc } from './outdex.js';
+export { DateOnly, TimeOnly, TimeOnlyMs, DateTimeLocal, DateTimeUtc } from './dt.js';
 //Durations
 export { DurationExact, Duration } from './Duration.js';
 //Interfaces

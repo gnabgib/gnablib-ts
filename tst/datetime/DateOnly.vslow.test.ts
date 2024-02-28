@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { DateOnly } from '../../src/datetime/DateOnly';
+import { Month, DateOnly } from '../../src/datetime/dt';
 
 const tsts = suite('DateOnly.vslow');
 
@@ -16,13 +16,12 @@ const tsts = suite('DateOnly.vslow');
 // -> looks like 1/year is a nice speed:output balance
 
 let expDep = -4371953;
-const stor = new Uint8Array(DateOnly.storageBytes);
 for (let y = -10000; y <= 22767; y++) {
     tsts(`days(${expDep})`, () => {
         for (let m = 1; m <= 12; m++) {
-            const dim = DateOnly.daysInMonth(y, m);
+            const dim = Month.lastDay(m,y);
             for (let d = 1; d <= dim; d++) {
-                const dep = DateOnly.new(y, m, d, stor).toUnixDays();
+                const dep = DateOnly.new(y, m, d).toUnixDays();
                 assert.is(dep, expDep);
                 expDep = dep + 1;
             }

@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { DateOnly, Month } from '../../src/datetime/outdex';
-//import { DateOnly } from '../../src/datetime/DateOnly';
+import { DateOnly, Month } from '../../src/datetime/dt';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';

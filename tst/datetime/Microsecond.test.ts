@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Microsecond } from '../../src/datetime/outdex';
+import { Microsecond } from '../../src/datetime/dt';
 import util from 'util';
 import { WindowStr } from '../../src/primitive/WindowStr';
 import { BitReader } from '../../src/primitive/BitReader';
