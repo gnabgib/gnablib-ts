@@ -463,12 +463,14 @@ class Core {
 		let e = Core.parseYear(to, p, input.left(input.length - 4), strict, reset);
 		if (e) return e;
 		/*_year*/ const y = ((to[p++] << 8) | to[p++]) - 10000;
+		input.shrink(input.length-4);
 
-		e = Core.parseMonth(to, p, input.span(input.length - 4, 2), strict, reset);
+		e = Core.parseMonth(to, p, input.left(2), strict, reset);
 		if (e) return e;
 		/*_month*/ const m = to[p++] + 1;
+		input.shrink(2);
 
-		e = Core.parseDay(to, p, input.right(2), strict, reset);
+		e = Core.parseDay(to, p, input, strict, reset);
 		if (e) return e;
 		/*_day*/ const d = to[p] + 1;
 
@@ -505,28 +507,19 @@ class Core {
 			delim = input.charAt(delim1);
 		}
 		//Make sure second delim matches first, and there is one
-		const delim2 = input.indexOf(delim, delim1 + 1);
+		const delim2 = input.indexOf(delim, delim1 + 1) - delim1 - 1;
 		if (delim2 > 0) {
 			e = Core.parseYear(to, p, input.left(delim1).trimEnd(), strict, reset);
 			if (e) return e;
 			input.shrink(delim1 + 1);
 			/*_year*/ const y = ((to[p++] << 8) | to[p++]) - 10000;
 
-			e = Core.parseMonth(
-				to,
-				p,
-				input
-					.left(delim2 - delim1 - 1)
-					.trimStart()
-					.trimEnd(),
-				strict,
-				reset
-			);
+			e = Core.parseMonth(to, p, input.left(delim2).trim(), strict, reset);
 			if (e) return e;
-			input.shrink(delim2 - delim1);
+			input.shrink(delim2 + 1);
 			/*_month*/ const m = to[p++] + 1;
 
-			e = Core.parseDay(to, p, input.trimStart().trimEnd(), strict, reset);
+			e = Core.parseDay(to, p, input.trim(), strict, reset);
 			if (e) return e;
 			/*_day*/ const d = to[p] + 1;
 
@@ -734,16 +727,19 @@ class Core {
 		let e = Core.parseHour(to, p, input.left(2), strict, reset);
 		if (e) return e;
 		p += hourBytes;
+		input.shrink(2);
 
-		e = Core.parseMinute(to, p, input.span(2, 2), strict, reset);
+		e = Core.parseMinute(to, p, input.left(2), strict, reset);
 		if (e) return e;
 		p += minBytes;
+		input.shrink(2);
 
-		e = Core.parseSecond(to, p, input.span(4, 2), strict, reset);
+		e = Core.parseSecond(to, p, input.left(2), strict, reset);
 		if (e) return e;
 		p += secBytes;
+		input.shrink(2);
 
-		e = Core.parseMicro(to, p, input.span(6, 6), strict, false, reset);
+		e = Core.parseMicro(to, p, input, strict, false, reset);
 		//because parseTime and DateTime*.parse will only call this with
 		// exactly 12 digits, it's impossible to get an invalid micro (they
 		// must be 6 digits, and all values are welcome).  But! We'll leave
@@ -768,56 +764,27 @@ class Core {
 		}
 
 		const delim1 = input.indexOf(':');
-		const delim2 = input.indexOf(':', delim1 + 1);
-		const delim3 = input.indexOf('.', delim2 + 1);
+		let delim2 = input.indexOf(':', delim1 + 1);
+		let delim3 = input.indexOf('.', delim2 + 1);
+		delim3 -= delim2 + 1;
+		delim2 -= delim1 + 1;
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
-			e = Core.parseHour(
-				to,
-				p,
-				input.left(delim1).trimStart().trimEnd(),
-				strict,
-				reset
-			);
+			e = Core.parseHour(to, p, input.left(delim1).trim(), strict, reset);
 			if (e) return e;
 			p += hourBytes;
+			input.shrink(delim1 + 1);
 
-			e = Core.parseMinute(
-				to,
-				p,
-				input
-					.span(delim1 + 1, delim2 - delim1 - 1)
-					.trimStart()
-					.trimEnd(),
-				strict,
-				reset
-			);
+			e = Core.parseMinute(to, p, input.left(delim2).trim(), strict, reset);
 			if (e) return e;
 			p += minBytes;
+			input.shrink(delim2 + 1);
 
-			e = Core.parseSecond(
-				to,
-				p,
-				input
-					.span(delim2 + 1, delim3 - delim2 - 1)
-					.trimStart()
-					.trimEnd(),
-				strict,
-				reset
-			);
+			e = Core.parseSecond(to, p, input.left(delim3).trim(), strict, reset);
 			if (e) return e;
 			p += secBytes;
+			input.shrink(delim3 + 1);
 
-			e = Core.parseMicro(
-				to,
-				p,
-				input
-					.span(delim3 + 1, input.length - delim3 - 1)
-					.trimStart()
-					.trimEnd(),
-				strict,
-				true,
-				reset
-			);
+			e = Core.parseMicro(to, p, input.trim(), strict, true, reset);
 			if (e) return e;
 
 			input.shrink(input.length);
@@ -1039,8 +1006,7 @@ export class Year extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): Year {
 		const stor = new Uint8Array(yearBytes);
 		const reset = input.getReset();
-		input.trimStart();
-		input.trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -1212,7 +1178,7 @@ export class Month extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): Month {
 		const stor = new Uint8Array(monthBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -1374,7 +1340,7 @@ export class Day extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): Day {
 		const stor = new Uint8Array(dayBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -1689,8 +1655,7 @@ export class DateOnly extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): DateOnly {
 		const stor = new Uint8Array(dateBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
-		//let e: Error | undefined = undefined;
+		input.trim();
 
 		//If content starts with "now" and optionally followed by whitespace - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -1700,17 +1665,6 @@ export class DateOnly extends Core implements ISerializer {
 			const e = Core.parseDate(stor, 0, input, strict, reset);
 			if (e) throw e;
 		}
-
-		// if (input.test(/^[-+]?\d{8,9}$/)) {
-		// 	e = Core.parseDateUndelim(stor, 0, input, strict, reset);
-		// 	if (e) throw e;
-		// 	input.shrink(input.length);
-
-		// 	//Otherwise assumed delimited date
-		// } else {
-		// 	e = Core.parseDateDelim(stor, 0, input, strict, reset);
-		// 	if (e) throw e;
-		// }
 		return new DateOnly(stor, 0);
 	}
 
@@ -1875,7 +1829,7 @@ export class Hour extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): Hour {
 		const stor = new Uint8Array(hourBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -2040,8 +1994,7 @@ export class Minute extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): Minute {
 		const stor = new Uint8Array(minBytes);
 		const reset = input.getReset();
-		input.trimStart();
-		input.trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -2200,7 +2153,7 @@ export class Second extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): Second {
 		const stor = new Uint8Array(minBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -2371,7 +2324,7 @@ export class Millisecond extends Core implements ISerializer {
 	): Millisecond {
 		const stor = new Uint8Array(milliBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -2554,7 +2507,7 @@ export class Microsecond extends Core implements ISerializer {
 	): Microsecond {
 		const stor = new Uint8Array(microBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -2797,7 +2750,7 @@ export class TimeOnly extends Core implements ISerializer {
 	public static parse(input: WindowStr, strict = false): TimeOnly {
 		const stor = new Uint8Array(timeBytes);
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -3088,7 +3041,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		const stor = new Uint8Array(timeMsBytes);
 		const reset = input.getReset();
 		let p = 0;
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content starts with "now" and optionally followed by whitespace - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -3103,16 +3056,19 @@ export class TimeOnlyMs extends Core implements ISerializer {
 			e = Core.parseHour(stor, p, input.left(2), strict, reset);
 			if (e) throw e;
 			p += hourBytes;
+			input.shrink(2);
 
-			e = Core.parseMinute(stor, p, input.span(2, 2), strict, reset);
+			e = Core.parseMinute(stor, p, input.left(2), strict, reset);
 			if (e) throw e;
 			p += minBytes;
+			input.shrink(2);
 
-			e = Core.parseSecond(stor, p, input.span(4, 2), strict, reset);
+			e = Core.parseSecond(stor, p, input.left(2), strict, reset);
 			if (e) throw e;
 			p += secBytes;
+			input.shrink(2);
 
-			e = Core.parseMilli(stor, p, input.span(6, 3), strict, false, reset);
+			e = Core.parseMilli(stor, p, input, strict, false, reset);
 			//This can't generate an error because it already has to be 3 digits (because of test
 			// above) and it can be any 3 digit value (0-999)
 			//if (e) throw e;
@@ -3122,50 +3078,26 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		}
 
 		const delim1 = input.indexOf(':');
-		const delim2 = input.indexOf(':', delim1 + 1);
-		const delim3 = input.indexOf('.', delim2 + 1);
+		let delim2 = input.indexOf(':', delim1 + 1);
+		const delim3 = input.indexOf('.', delim2 + 1)- delim2 - 1;
+		delim2 = delim2 - delim1 - 1;
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
 			e = Core.parseHour(stor, p, input.left(delim1), strict, reset);
 			if (e) throw e;
 			p += hourBytes;
+			input.shrink(delim1 + 1);
 
-			e = Core.parseMinute(
-				stor,
-				p,
-				input
-					.span(delim1 + 1, delim2 - delim1 - 1)
-					.trimStart()
-					.trimEnd(),
-				strict,
-				reset
-			);
+			e = Core.parseMinute(stor, p, input.left(delim2).trim(), strict, reset);
 			if (e) throw e;
 			p += minBytes;
+			input.shrink(delim2 + 1);
 
-			e = Core.parseSecond(
-				stor,
-				p,
-				input
-					.span(delim2 + 1, delim3 - delim2 - 1)
-					.trimStart()
-					.trimEnd(),
-				strict,
-				reset
-			);
+			e = Core.parseSecond(stor, p, input.left(delim3).trim(), strict, reset);
 			if (e) throw e;
 			p += secBytes;
+			input.shrink(delim3 + 1);
 
-			e = Core.parseMilli(
-				stor,
-				p,
-				input
-					.span(delim3 + 1, input.length - delim3 - 1)
-					.trimStart()
-					.trimEnd(),
-				strict,
-				true,
-				reset
-			);
+			e = Core.parseMilli(stor, p, input.trim(), strict, true, reset);
 			if (e) throw e;
 
 			input.shrink(input.length);
@@ -3576,7 +3508,7 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 
 	public static parse(input: WindowStr, strict = false): DateTimeLocal {
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content starts with "now" and optionally followed by whitespace - run now macro
 		if (input.toString().toLowerCase() == 'now') {
@@ -3801,7 +3733,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 
 	public static parse(input: WindowStr, strict = false): DateTimeUtc {
 		const reset = input.getReset();
-		input.trimStart().trimEnd();
+		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {

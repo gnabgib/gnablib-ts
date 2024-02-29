@@ -383,6 +383,34 @@ export class WindowStr {
 		);
 	}
 
+	trim(chars?:string[]):WindowStr {
+		if (!chars) chars = WHITESPACE;
+		restart: while (this._len > 0) {
+			for (const c of chars) {
+				if (this._src.startsWith(c, this._start)) {
+					this._start += c.length;
+					this._len -= c.length;
+					//Restart the search at the new start
+					continue restart;
+				}
+			}
+			//No match - done here
+			break;
+		}
+		restart: while (this._len > 0) {
+			for (const c of chars) {
+				if (this._src.endsWith(c, this._start + this._len)) {
+					this._len -= c.length;
+					//Restart the search at the new end
+					continue restart;
+				}
+			}
+			//No match - done here
+			break;
+		}
+		return this;
+	}
+
 	/**
 	 * Remove `chars` from the end of the window, by decreasing the size of the window.
 	 * This mutates internal state.
@@ -396,7 +424,7 @@ export class WindowStr {
 		if (!chars) chars = WHITESPACE;
 		restart: while (this._len > 0) {
 			for (const c of chars) {
-				if (this.endsWith(c)) {
+				if (this._src.endsWith(c, this._start + this._len)) {
 					this._len -= c.length;
 					if (--limit == 0) break restart;
 					//Restart the search at the new end
@@ -444,7 +472,7 @@ export class WindowStr {
 		if (!chars) chars = WHITESPACE;
 		restart: while (this._len > 0) {
 			for (const c of chars) {
-				if (this.startsWith(c)) {
+				if (this._src.startsWith(c, this._start)) {
 					this._start += c.length;
 					this._len -= c.length;
 					if (--limit == 0) break restart;

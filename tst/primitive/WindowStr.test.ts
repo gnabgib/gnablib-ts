@@ -263,6 +263,7 @@ const lastIndexOfAnySet:[WindowStr,string[],number|undefined,number][]=[
 	[WindowStr.new('Hello',1,3),['he','HE'],,-1],
 	[WindowStr.new('lolo',0,3),['lo'],,0],
 	[WindowStr.new('lolo',0,3),['lo','ol'],,1],
+	[WindowStr.new('lolo'),['lo'],3,0],
 ];
 for(const [w,searches,length,expect] of lastIndexOfAnySet) {
 	tsts(`${w.debug()}.lastIndexOfAny([${searches}],${length})`,()=>{
@@ -512,6 +513,22 @@ const trimEndSet:[WindowStr,string[]|undefined,number|undefined,string][]=[
 for(const [w,chars,limit,expect] of trimEndSet) {
 	tsts(`${w.debug()}.trimEnd(,${limit})`,()=>{
 		const res=w.trimEnd(chars,limit);
+		assert.is(res,w,'Mutates state');
+		assert.is(res.toString(),expect);
+	})
+}
+
+const trimSet:[WindowStr,string[]|undefined,string][]=[
+	[WindowStr.new(' a '),,'a'],
+	[WindowStr.new('  a'),,'a'],
+	[WindowStr.new('a  '),,'a'],
+	[WindowStr.new('\ta\tb\t'),,'a\tb'],
+	[WindowStr.new('abba'),['a'],'bb'],
+	[WindowStr.new('abba'),['a','b'],''],
+];
+for(const [w,chars,expect] of trimSet) {
+	tsts(`${w.debug()}.trim()`,()=>{
+		const res=w.trim(chars);
 		assert.is(res,w,'Mutates state');
 		assert.is(res.toString(),expect);
 	})
