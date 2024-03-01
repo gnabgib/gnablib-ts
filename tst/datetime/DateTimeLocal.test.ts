@@ -298,15 +298,6 @@ for (const [sVal,duParts,expect] of addDvSet) {
 // 	//console.log(`start=${start.toString()} end=${end.toString()}`);
 // });
 
-// tsts(`asLocal`, () => {
-// 	const start = DateTimeLocal.nowUtc();
-// 	//A test that doesn't fail can't do much more than confirm that isUtc toggles
-// 	assert.is(start.isUtc, true);
-// 	const end = start.asLocal();
-// 	assert.is(end.isUtc, false);
-// 	//console.log(`start=${start.toString()} end=${end.toString()}`);
-// });
-
 const parseSet: [WindowStr, string, number][] = [
 	//Just numbers (assume valueOf compat, but notice the extra z part)
 	[WindowStr.new('-100000101000000000000'), '-10000-01-01T00:00:00.000000', 0], //min

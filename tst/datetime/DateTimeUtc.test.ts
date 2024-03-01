@@ -6,6 +6,8 @@ import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
 import util from 'util';
 import { WindowStr } from '../../src/primitive/WindowStr';
+import { IDurationExactParts, IDurationParts } from '../../src/datetime/interfaces/IDurationParts';
+import { Duration, DurationExact } from '../../src/datetime/Duration';
 
 const tsts = suite('DateTimeUtc');
 
@@ -241,32 +243,53 @@ for(const sVal of fromValueSet) {
 	});    
 }
 
-// const addSafeSet: [string, number, number, number, number, number, string][] = [
-// 	['20230131020304567890', 1, 0, 0, 0, 0, '20230201020304567890'],
-// 	['20230131020304567890', 0, 1, 0, 0, 0, '20230131030304567890'],
-// 	['20230131020304567890', 0, 22, 0, 0, 0, '20230201000304567890'],
-// 	['20230131020304567890', 0, 0, 1, 0, 0, '20230131020404567890'],
-// 	['20230131020304567890', 0, 0, 57, 0, 0, '20230131030004567890'],
-// 	['20230131020304567890', 0, 0, 0, 1, 0, '20230131020305567890'],
-// 	['20230131020304567890', 0, 0, 0, 56, 0, '20230131020400567890'],
-// 	['20230131020304567890', 0, 0, 0, 0, 1, '20230131020304567891'],
-// 	['20230131020304567890', 0, 0, 0, 0, 432110, '20230131020305000000'],
-// ];
-// for (const [sVal, d, h, m, s, us, expect] of addSafeSet) {
-// 	tsts(`(${sVal}).addSafe(${d} ${h} ${m} ${s} ${us})`, () => {
-// 		const dto = DateTimeLocal.fromValue(sVal);
-// 		assert.is(dto.addSafe({ d, h, m, s, us }).valueOf(), expect);
-// 	});
-// }
+const addDeSet:[string,IDurationExactParts,string][]=[
+	['20230131'+'020304567890', {d:1}, '20230201020304567890'],
+	['20230131'+'020304567890', {h:1}, '20230131030304567890'],
+	['20230131'+'020304567890', {h:22}, '20230201000304567890'],
+	['20230131'+'020304567890', {i:1}, '20230131020404567890'],
+	['20230131'+'020304567890', {i:57}, '20230131030004567890'],
+	['20230131'+'020304567890', {s:1}, '20230131020305567890'],
+	['20230131'+'020304567890', {s:56}, '20230131020400567890'],
+	['20230131'+'020304567890', {us:1}, '20230131020304567891'],
+	['20230131'+'020304567890', {us:432110}, '20230131020305000000'],
+	['20000101'+'010203456789',{d:1000},'20020927010203456789'],
+	['20000101'+'010203456789',{i:59},'20000101020103456789'],
+];
+for (const [sVal, duParts, expect] of addDeSet) {
+	const dto = DateTimeUtc.fromValue(sVal);
+	const du=DurationExact.new(duParts);
+	tsts(`(${dto}).add(${du})`, () => {
+		assert.is(dto.add(du).valueOf(), expect);
+	});
+}
 
-// tsts(`asUtc`, () => {
-// 	const start = DateTimeLocal.now();
-// 	//A test that doesn't fail can't do much more than confirm that isUtc toggles
-// 	assert.is(start.isUtc, false);
-// 	const end = start.asUtc();
-// 	assert.is(end.isUtc, true);
-// 	//console.log(`start=${start.toString()} end=${end.toString()}`);
-// });
+const addDvSet:[string,IDurationParts,string][]=[
+	['20240229'+'020304567890', {y:1}, '20250228020304567890'],
+	['20240229'+'020304567890', {y:4}, '20280229020304567890'],
+	['20240229'+'020304567890', {m:1}, '20240329020304567890'],
+	['20240131'+'020304567890', {m:1}, '20240229020304567890'],
+	['20230131'+'020304567890', {m:1,d:1}, '20230301020304567890'],
+	['20240131'+'020304567890', {m:1,d:1}, '20240301020304567890'],
+	['20240501'+'020304567890', {m:1.5}, '20240616020304567890'],// 50% of June's 30d = 15d
+	['20240101'+'020304567890', {m:1.5}, '20240215020304567890'],
+	['20240131'+'020304567890', {m:1.5}, '20240314020304567890'],// +1m=feb, 50%*29d = 14d
+	['20230131'+'020304567890', {m:1}, '20230228020304567890'],
+	['20230131'+'020304567890', {y:1}, '20240131020304567890'],
+	['20230131'+'230000000000', {h:1}, '20230201000000000000'],
+	['20230131'+'230000000000', {m:1,h:1}, '20230301000000000000'],
+	['20240131'+'230000000000', {m:1,h:1}, '20240301000000000000'],
+	['20000101'+'010203456789',{d:1000},'20020927010203456789'],
+	['20000101'+'010203456789',{i:59},'20000101020103456789'],
+];
+for (const [sVal,duParts,expect] of addDvSet) {
+	const dto = DateTimeUtc.fromValue(sVal);
+	const du=Duration.new(duParts);
+	tsts(`(${dto}).add(${du})`, () => {
+		assert.is(dto.add(du).valueOf(), expect);
+	});
+}
+
 
 // tsts(`asLocal`, () => {
 // 	const start = DateTimeLocal.nowUtc();
@@ -277,17 +300,6 @@ for(const sVal of fromValueSet) {
 // 	//console.log(`start=${start.toString()} end=${end.toString()}`);
 // });
 
-// const addSet: [string, number, number, string][] = [
-// 	['20230131020304567890', 0, 1, '20230228020304567890'],
-// 	['20240131020304567890', 0, 1, '20240229020304567890'],
-// 	['20230131020304567890', 1, 0, '20240131020304567890'],
-// ];
-// for (const [sVal, yAdd, mAdd, expect] of addSet) {
-// 	tsts(`(${sVal}).add(${yAdd} ${mAdd})`, () => {
-// 		const dto = DateTimeLocal.fromValue(sVal);
-// 		assert.is(dto.add(yAdd, mAdd).valueOf(), expect);
-// 	});
-// }
 
 const parseSet: [WindowStr, string, number][] = [
 	//Just numbers (assume valueOf compat, but notice the extra z part)

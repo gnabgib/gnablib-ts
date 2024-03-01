@@ -463,7 +463,7 @@ class Core {
 		let e = Core.parseYear(to, p, input.left(input.length - 4), strict, reset);
 		if (e) return e;
 		/*_year*/ const y = ((to[p++] << 8) | to[p++]) - 10000;
-		input.shrink(input.length-4);
+		input.shrink(input.length - 4);
 
 		e = Core.parseMonth(to, p, input.left(2), strict, reset);
 		if (e) return e;
@@ -3079,7 +3079,7 @@ export class TimeOnlyMs extends Core implements ISerializer {
 
 		const delim1 = input.indexOf(':');
 		let delim2 = input.indexOf(':', delim1 + 1);
-		const delim3 = input.indexOf('.', delim2 + 1)- delim2 - 1;
+		const delim3 = input.indexOf('.', delim2 + 1) - delim2 - 1;
 		delim2 = delim2 - delim1 - 1;
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
 			e = Core.parseHour(stor, p, input.left(delim1), strict, reset);
@@ -3644,7 +3644,105 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 		return `DateTimeUtc(${this.toString()})`;
 	}
 
-	//addSafe, add
+	/**
+	 * Add an exact duration to this date, returns a new object.
+	 *
+	 * @param du Days/Hours/Minutes/Seconds/Microseconds to add
+	 * @returns New DateTime (UTC)
+	 * @pure
+	 */
+	public add(du: DurationExact): DateTimeUtc;
+	/**
+	 * Add a duration to this date, elements are added in order:
+	 * Years, months, days, hours, minutes, seconds, microseconds.
+	 *
+	 * After years+months are added, the day may be corrected down
+	 * (due to months having different lengths).
+	 *
+	 * After years+whole months are added, the fraction is truncated to
+	 * days (only) based on the resulting month's length.  ie. It's assumed 1/2
+	 * a month from January 1st (31d) is January 16th, not January 16th at midday.
+	 * This might be most unexpected at when the fraction is in February since half
+	 * is only 14 days, while all other months are 15 (because the fraction is truncated).
+	 * If you'd rather month-fractions are standardized, move the fraction to days
+	 * based on a standard like eg 1m=30d
+	 *
+	 * Note:
+	 * 12*30d months = 360d
+	 * 12*31d months = 372d
+	 *
+	 * Examples:
+	 * 2024-02-29 +1y = 2024-02-28 (note the day correction)
+	 * 2024-02-29 +4y = 2028-02-29
+	 * 2024-02-29 +1m = 2024-03-29
+	 * 2024-01-31 +1m = 2024-02-29
+	 * 2023-01-31 +1m1d = 2024-03-01
+	 * 2024-01-31 +1m1d = 2024-03-01
+	 * 2024-05-01 +1.5m = 2024-06-16 (50% of June's 30d = 15d)
+	 * 2024-01-01 +1.5m = 2024-02-15
+	 * 2024-01-31 +1.5m = 2024-03-14 (+1m=feb, 50%*29d = 14d,)
+	 * @param du
+	 * @pure
+	 */
+	public add(du: Duration): DateTimeUtc;
+	public add(du: DurationExact | Duration): DateTimeUtc {
+		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
+		let dh = 0;
+
+		const stor = new Uint8Array(dateBytes + timeBytes);
+		if (du instanceof DurationExact) {
+			dh = this.toUnixDays(this._pos) * 24 + this.hour;
+			const [, ddh, dmiso] = du.toYmDhMiso();
+			dh += ddh;
+			miso += dmiso;
+
+			if (miso >= usPerHour) {
+				dh += 1;
+				miso -= usPerHour;
+			}
+
+			Core.dateFromUnixDays(stor, 0, (dh / 24) | 0);
+		} else {
+			let ym = this._year(this._pos) * 12 + this._month(this._pos + yearBytes);
+			let d = this._day(this._pos + yearBytes + monthBytes);
+
+			const [dym, ddh, dmiso] = du.toYmDhMiso();
+			ym += dym;
+			let y = (ym / 12) | 0;
+			ym -= y * 12;
+			let m = ym | 0;
+			ym -= m;
+
+			let dim = Month.lastDay(m, y);
+			//Correct to the last day for the target month
+			if (d >= dim) d = dim;
+
+			//Add fraction months
+			d += (dim * ym) | 0;
+			//Convert to dh
+			dh = d * 24 + this._hour(this._pos + dateBytes);
+			dh += ddh;
+			miso += dmiso;
+			if (miso >= usPerHour) {
+				dh += 1;
+				miso -= usPerHour;
+			}
+			//dh can be vastly bigger than a month so we have to while this
+			while (dh >= dim * 24 + 23) {
+				m += 1;
+				if (m > 12) {
+					y += 1;
+					m = 1;
+				}
+				dh -= dim * 24;
+				dim = Month.lastDay(m, y);
+			}
+			Core.writeDate(stor, 0, y, m, (dh / 24) | 0);
+		}
+		const us = miso + (dh % 24) * usPerHour;
+		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
+		return new DateTimeUtc(stor, 0);
+	}
 	//asUtc|asLocal tbd
 
 	/**
