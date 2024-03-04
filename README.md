@@ -198,6 +198,7 @@ Name|Capacities|Optional parameters
 - Hour, Minute, Second, Millisecond, Microsecond
 - DateTimeLocal, DateTimeUtc, DateOnly, TimeOnly
 - Duration, DurationExact
+- DateTimeLocal|DateTimeUtc +- Duration|DurationExact -> DateTimeLocal|DateTimeUtc
 
 ### Error Correction Codes
 

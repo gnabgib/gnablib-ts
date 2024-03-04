@@ -3242,6 +3242,135 @@ class DateTimeShared extends Core {
 			microSerBits
 		);
 	}
+
+	protected _addDe(de: DurationExact, stor: Uint8Array): void {
+		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
+		let dh = this.toUnixDays(this._pos) * 24 + this.hour;
+		const [, ddh, dmiso] = de.toYmDhMiso();
+		dh += ddh;
+		miso += dmiso;
+
+		if (miso >= usPerHour) {
+			dh += 1;
+			miso -= usPerHour;
+		}
+
+		Core.dateFromUnixDays(stor, 0, (dh / 24) | 0);
+		const us = miso + (dh % 24) * usPerHour;
+		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
+	}
+	protected _addDv(du: Duration, stor: Uint8Array): void {
+		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
+		let y = this._year(this._pos);
+		let m = this._month(this._pos + yearBytes);
+		let d = this._day(this._pos + yearBytes + monthBytes);
+
+		const [dy, dm, ddh, dmiso] = du.toYMDhMiso();
+		y += dy;
+		m += dm;
+		if (m > 12) {
+			y += 1;
+			m -= 12;
+		}
+
+		let dim = Month.lastDay(m | 0, y);
+		//Correct to the last day for the target month
+		if (d > dim) d = dim;
+
+		//Add fraction months, to the nearest day
+		d += (dim * (m % 1)) | 0;
+		m |= 0;
+		//Convert to dh
+		let dh = d * 24 + this._hour(this._pos + dateBytes);
+		dh += ddh;
+		miso += dmiso;
+		if (miso >= usPerHour) {
+			dh += 1;
+			miso -= usPerHour;
+		}
+		//dh can be vastly bigger than a month so we have to while this
+		while (dh >= dim * 24 + 23) {
+			m += 1;
+			if (m > 12) {
+				y += 1;
+				m = 1;
+			}
+			dh -= dim * 24;
+			dim = Month.lastDay(m, y);
+		}
+		Core.writeDate(stor, 0, y, m, (dh / 24) | 0);
+		const us = miso + (dh % 24) * usPerHour;
+		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
+	}
+	protected _subDe(du: DurationExact, stor: Uint8Array): void {
+		const hmiso = this.timeToUs(this._pos + dateBytes);
+		let miso = hmiso % usPerHour;
+		let dh = (hmiso / usPerHour) | 0;
+		dh += this.toUnixDays(this._pos) * 24;
+		const [, ddh, dmiso] = du.toYmDhMiso();
+		dh -= ddh;
+		miso -= dmiso;
+
+		if (miso < 0) {
+			dh -= 1;
+			miso += usPerHour;
+		}
+
+		Core.dateFromUnixDays(stor, 0, (dh / 24) | 0);
+		const us = miso + (dh % 24) * usPerHour;
+		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
+	}
+	protected _subDv(du: Duration, stor: Uint8Array): void {
+		const hmiso = this.timeToUs(this._pos + dateBytes);
+		let miso = hmiso % usPerHour;
+		let dh = (hmiso / usPerHour) | 0;
+
+		let y = this._year(this._pos);
+		let m = this._month(this._pos + yearBytes);
+		let d = this._day(this._pos + yearBytes + monthBytes);
+
+		const [dy, dm, ddh, dmiso] = du.toYMDhMiso();
+
+		y -= dy;
+		m -= dm;
+		let mFrac = m % 1;
+		m = Math.ceil(m);
+		if (m < 1) {
+			y -= 1;
+			m += 12;
+			//The fraction will also be negative, correct that
+			mFrac = 0 - mFrac;
+		}
+
+		let dim = Month.lastDay(m, y);
+		//Correct to the last day for the target month
+		if (d > dim) d = dim;
+
+		//Sub fraction months, to the nearest day - we need to
+		// invert the fraction since this is counting back from the end
+		if (mFrac > 0) d -= (dim * (1 - mFrac)) | 0;
+		//Convert to dh
+		dh += (d - 1) * 24;
+		dh -= ddh;
+		miso -= dmiso;
+		if (miso < 0) {
+			dh -= 1;
+			miso += usPerHour;
+		}
+		//dh can be vastly bigger than a month so we have to while this
+		while (dh < 0) {
+			m -= 1;
+			if (m < 1) {
+				y -= 1;
+				m = 12;
+			}
+			dim = Month.lastDay(m, y);
+			dh += dim * 24;
+		}
+		Core.writeDate(stor, 0, y, m, (1 + dh / 24) | 0);
+		const us = miso + (dh % 24) * usPerHour;
+		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
+	}
 }
 
 /**
@@ -3355,68 +3484,59 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 * 2024-05-01 +1.5m = 2024-06-16 (50% of June's 30d = 15d)
 	 * 2024-01-01 +1.5m = 2024-02-15
 	 * 2024-01-31 +1.5m = 2024-03-14 (+1m=feb, 50%*29d = 14d,)
-	 * @param du
+	 * @returns New DateTime (local)
+	 * @pure
 	 */
 	public add(du: Duration): DateTimeLocal;
 	public add(du: DurationExact | Duration): DateTimeLocal {
-		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
-		let dh = 0;
-
 		const stor = new Uint8Array(dateBytes + timeBytes);
 		if (du instanceof DurationExact) {
-			dh = this.toUnixDays(this._pos) * 24 + this.hour;
-			const [, ddh, dmiso] = du.toYmDhMiso();
-			dh += ddh;
-			miso += dmiso;
-
-			if (miso >= usPerHour) {
-				dh += 1;
-				miso -= usPerHour;
-			}
-
-			Core.dateFromUnixDays(stor, 0, (dh / 24) | 0);
+			this._addDe(du, stor);
 		} else {
-			let ym = this._year(this._pos) * 12 + this._month(this._pos + yearBytes);
-			let d = this._day(this._pos + yearBytes + monthBytes);
-
-			const [dym, ddh, dmiso] = du.toYmDhMiso();
-			ym += dym;
-			let y = (ym / 12) | 0;
-			ym -= y * 12;
-			let m = ym | 0;
-			ym -= m;
-
-			let dim = Month.lastDay(m, y);
-			//Correct to the last day for the target month
-			if (d >= dim) d = dim;
-
-			//Add fraction months
-			d += (dim * ym) | 0;
-			//Convert to dh
-			dh = d * 24 + this._hour(this._pos + dateBytes);
-			dh += ddh;
-			miso += dmiso;
-			if (miso >= usPerHour) {
-				dh += 1;
-				miso -= usPerHour;
-			}
-			//dh can be vastly bigger than a month so we have to while this
-			while (dh >= dim * 24 + 23) {
-				m += 1;
-				if (m > 12) {
-					y += 1;
-					m = 1;
-				}
-				dh -= dim * 24;
-				dim = Month.lastDay(m, y);
-			}
-			Core.writeDate(stor, 0, y, m, (dh / 24) | 0);
+			this._addDv(du, stor);
 		}
-		const us = miso + (dh % 24) * usPerHour;
-		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
 		return new DateTimeLocal(stor, 0);
 	}
-	//asUtc|asLocal tbd
+
+	/**
+	 * Subtract an exact duration from this date, returns a new object.  Days
+	 * are *always* 24 hours (ie no)
+	 * @returns New DateTime (local)
+	 * @pure
+	 */
+	public sub(du: DurationExact): DateTimeLocal;
+	/**
+	 * Subtract a duration from this date.  Elements are subtracted in order:
+	 * Years, months, days, hours, minutes ,seconds, microseconds.
+	 *
+	 * After years+months, the day may be corrected down
+	 * (due to months having different lengths)
+	 *
+	 * Once whole months are subtracted, any fraction is converted to days (only),
+	 * based on the months length of the date at that point.  It is assumed 1/2
+	 * a month back from January 31st (31d) is January 16th, not January 15th at
+	 * midday.  This might be most unexpected when the fraction is in February since
+	 * half is only 14 days, while all others are 15. If you'd rather month-fractions
+	 * are standardized, move the fraction to days based on a standard like 1m=30d
+	 * @returns New DateTime (local)
+	 * @pure
+	 */
+	public sub(du: Duration): DateTimeLocal;
+	public sub(du: DurationExact | Duration): DateTimeLocal {
+		const stor = new Uint8Array(dateBytes + timeBytes);
+		if (du instanceof DurationExact) {
+			this._subDe(du, stor);
+		} else {
+			this._subDv(du, stor);
+		}
+		return new DateTimeLocal(stor, 0);
+	}
+	// /**
+	//  * Convert this into UTC time, using *current* (server) running information
+	//  * on how far away UTC is.  If "local" was created on another machine, which might
+	//  * have had different rules, this is useless
+	//  */
+	// public asUtc():DateTimeUtc {}
 
 	/**
 	 * Create a new DateTime
@@ -3686,61 +3806,45 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	public add(du: Duration): DateTimeUtc;
 	public add(du: DurationExact | Duration): DateTimeUtc {
-		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
-		let dh = 0;
-
 		const stor = new Uint8Array(dateBytes + timeBytes);
 		if (du instanceof DurationExact) {
-			dh = this.toUnixDays(this._pos) * 24 + this.hour;
-			const [, ddh, dmiso] = du.toYmDhMiso();
-			dh += ddh;
-			miso += dmiso;
-
-			if (miso >= usPerHour) {
-				dh += 1;
-				miso -= usPerHour;
-			}
-
-			Core.dateFromUnixDays(stor, 0, (dh / 24) | 0);
+			this._addDe(du, stor);
 		} else {
-			let ym = this._year(this._pos) * 12 + this._month(this._pos + yearBytes);
-			let d = this._day(this._pos + yearBytes + monthBytes);
-
-			const [dym, ddh, dmiso] = du.toYmDhMiso();
-			ym += dym;
-			let y = (ym / 12) | 0;
-			ym -= y * 12;
-			let m = ym | 0;
-			ym -= m;
-
-			let dim = Month.lastDay(m, y);
-			//Correct to the last day for the target month
-			if (d >= dim) d = dim;
-
-			//Add fraction months
-			d += (dim * ym) | 0;
-			//Convert to dh
-			dh = d * 24 + this._hour(this._pos + dateBytes);
-			dh += ddh;
-			miso += dmiso;
-			if (miso >= usPerHour) {
-				dh += 1;
-				miso -= usPerHour;
-			}
-			//dh can be vastly bigger than a month so we have to while this
-			while (dh >= dim * 24 + 23) {
-				m += 1;
-				if (m > 12) {
-					y += 1;
-					m = 1;
-				}
-				dh -= dim * 24;
-				dim = Month.lastDay(m, y);
-			}
-			Core.writeDate(stor, 0, y, m, (dh / 24) | 0);
+			this._addDv(du, stor);
 		}
-		const us = miso + (dh % 24) * usPerHour;
-		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
+		return new DateTimeUtc(stor, 0);
+	}
+	/**
+	 * Subtract an exact duration from this date, returns a new object.  Days
+	 * are *always* 24 hours (ie no)
+	 * @returns New DateTime (UTC)
+	 * @pure
+	 */
+	public sub(du: DurationExact): DateTimeUtc;
+	/**
+	 * Subtract a duration from this date.  Elements are subtracted in order:
+	 * Years, months, days, hours, minutes ,seconds, microseconds.
+	 *
+	 * After years+months, the day may be corrected down
+	 * (due to months having different lengths)
+	 *
+	 * Once whole months are subtracted, any fraction is converted to days (only),
+	 * based on the months length of the date at that point.  It is assumed 1/2
+	 * a month back from January 31st (31d) is January 16th, not January 15th at
+	 * midday.  This might be most unexpected when the fraction is in February since
+	 * half is only 14 days, while all others are 15. If you'd rather month-fractions
+	 * are standardized, move the fraction to days based on a standard like 1m=30d
+	 * @returns New DateTime (UTC)
+	 * @pure
+	 */
+	public sub(du: Duration): DateTimeUtc;
+	public sub(du: DurationExact | Duration): DateTimeUtc {
+		const stor = new Uint8Array(dateBytes + timeBytes);
+		if (du instanceof DurationExact) {
+			this._subDe(du, stor);
+		} else {
+			this._subDv(du, stor);
+		}
 		return new DateTimeUtc(stor, 0);
 	}
 	//asUtc|asLocal tbd

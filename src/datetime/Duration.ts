@@ -793,13 +793,15 @@ export class Duration extends ADurationCore implements ISerializer {
 
 	/**
 	 * Extract this duration as a 3-integer array:
-	 * - Years & months in months (y*12+m) - float (0 - 4406400)
+	 * - Years - integer (0 - 367200)
+	 * - Months - float (0 - ~11.999)
 	 * - Days & hours in hours (d*24+h) - int (0 - 3506328)
 	 * - Minutes, seconds & micros ((m*60+s)*1000000+u) - u32 (0 - 3599999999)
 	 */
-	public toYmDhMiso(): [number, number, number] {
+	public toYMDhMiso(): [number, number, number, number] {
 		return [
-			this.year * 12 + this.month,
+			this.year,
+			this.month,
 			this.day * hPerDay + this._storage[this._hPos],
 			this._storage[this._hPos + 1] * usPerMin +
 				this._storage[this._hPos + 2] * usPerSec +
