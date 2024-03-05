@@ -3382,6 +3382,87 @@ class DateTimeShared extends Core {
 		//Equal!
 		return eq;
 	}
+
+	protected diff(erl: DateTimeShared): Duration {
+		if (erl.gt(this)) return erl.diff(this);
+
+		let y = this._year(this._pos) - erl._year(erl._pos);
+		let m =
+			this._month(this._pos + yearBytes) - erl._month(erl._pos + yearBytes);
+		let d =
+			this._day(this._pos + yearBytes + monthBytes) -
+			erl._day(erl._pos + yearBytes + monthBytes);
+		let h = this._hour(this._pos + dateBytes) - erl._hour(erl._pos + dateBytes);
+		let i =
+			this._minute(this._pos + dateBytes + hourBytes) -
+			erl._minute(erl._pos + dateBytes + hourBytes);
+		let s =
+			this._second(this._pos + dateBytes + hourBytes + minBytes) -
+			erl._second(erl._pos + dateBytes + hourBytes + minBytes);
+		let us =
+			this._micro(this._pos + dateBytes + hourBytes + minBytes + secBytes) -
+			erl._micro(erl._pos + dateBytes + hourBytes + minBytes + secBytes);
+		if (us < 0) {
+			us += usPerSec;
+			s -= 1;
+		}
+		if (s < 0) {
+			s += 60;
+			i -= 1;
+		}
+		if (i < 0) {
+			i += 60;
+			h -= 1;
+		}
+		if (h < 0) {
+			h += 24;
+			d -= 1;
+		}
+		if (d < 0) {
+			d += Month.lastDay(erl._month(erl._pos + yearBytes), erl._year(erl._pos));
+			m -= 1;
+		}
+		if (m < 0) {
+			m += 12;
+			y -= 1;
+		}
+		//y can't be <0 (starting gt)
+		return Duration.new({ y, m, d, h, i, s, us });
+	}
+
+	protected diffExact(erl: DateTimeShared): DurationExact {
+		if (erl.gt(this)) return erl.diffExact(this);
+
+		let d = this.toUnixDays(this._pos) - erl.toUnixDays(erl._pos);
+		let h = this._hour(this._pos + dateBytes) - erl._hour(erl._pos + dateBytes);
+		let i =
+			this._minute(this._pos + dateBytes + hourBytes) -
+			erl._minute(erl._pos + dateBytes + hourBytes);
+		let s =
+			this._second(this._pos + dateBytes + hourBytes + minBytes) -
+			erl._second(erl._pos + dateBytes + hourBytes + minBytes);
+		let us =
+			this._micro(this._pos + dateBytes + hourBytes + minBytes + secBytes) -
+			erl._micro(erl._pos + dateBytes + hourBytes + minBytes + secBytes);
+		if (us < 0) {
+			us += usPerSec;
+			s -= 1;
+		}
+		if (s < 0) {
+			s += 60;
+			i -= 1;
+		}
+		if (i < 0) {
+			i += 60;
+			h -= 1;
+		}
+		if (h < 0) {
+			h += 24;
+			d -= 1;
+		}
+		//d can't be <0 (starting gt)
+		return DurationExact.new({ d, h, i, s, us });
+	}
 }
 
 /**
@@ -3543,10 +3624,27 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 		return new DateTimeLocal(stor, 0);
 	}
 
-	// public diff(dt:DateTimeLocal):Duration {
-	// 	if (dt.gt(this)) return dt.diff(this);
-	// 	//dt is *not* larger (might be equal)
-	// }
+	/**
+	 * Get the duration between this date-time and `earlier`, duration will contain years
+	 * and months when durations are that large.
+	 *
+	 * **Note**: If `earlier>this` arguments will be inverted (Durations can only be positive)
+	 * @pure
+	 */
+	public diff(earlier: DateTimeLocal): Duration {
+		return super.diff(earlier);
+	}
+
+	/**
+	 * Get the exact duration between this date-time and `earlier`, duration will be composed
+	 * of days and smaller units only.
+	 *
+	 * **Note**: If `earlier>this` arguments will be inverted (Durations can only be positive)
+	 * @pure
+	 */
+	public diffExact(earlier: DateTimeLocal): DurationExact {
+		return super.diffExact(earlier);
+	}
 
 	/**
 	 * Whether this is greater than `other`
@@ -3902,6 +4000,29 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	public gte(other: DateTimeUtc): boolean {
 		return super.gt(other, true);
+	}
+
+	/**
+	 * Get the duration between this date-time and `earlier`, duration will contain years
+	 * and months when durations are that large.
+	 *
+	 * **Note**: If `earlier>this` arguments will be inverted (Durations can only be positive)
+	 * @pure
+	 */
+	public diff(earlier: DateTimeUtc): Duration {
+		return super.diff(earlier);
+	}
+
+	/**
+	 * Get the exact duration between this date-time and `earlier`, duration will be composed
+	 * of days and smaller units only.
+	 *
+	 * **Note**: If `earlier>this` arguments will be inverted (Durations can only be positive)
+	 * @pure
+	 */
+
+	public diffExact(earlier: DateTimeUtc): DurationExact {
+		return super.diffExact(earlier);
 	}
 
 	/**
