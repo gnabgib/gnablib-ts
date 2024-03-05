@@ -3371,6 +3371,17 @@ class DateTimeShared extends Core {
 		const us = miso + (dh % 24) * usPerHour;
 		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
 	}
+
+	protected gt(dt: DateTimeShared, eq = false): boolean {
+		for (let i = 0; i < dateBytes + timeBytes; i++) {
+			const t = this._stor[this._pos + i];
+			const o = dt._stor[dt._pos + i];
+			if (t > o) return true;
+			if (t < o) return false;
+		}
+		//Equal!
+		return eq;
+	}
 }
 
 /**
@@ -3531,6 +3542,31 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 		}
 		return new DateTimeLocal(stor, 0);
 	}
+
+	// public diff(dt:DateTimeLocal):Duration {
+	// 	if (dt.gt(this)) return dt.diff(this);
+	// 	//dt is *not* larger (might be equal)
+	// }
+
+	/**
+	 * Whether this is greater than `other`
+	 * @param other
+	 * @returns True - this is greater, false-this is less or equal
+	 * @pure
+	 */
+	public gt(other: DateTimeLocal): boolean {
+		return super.gt(other);
+	}
+
+	/**
+	 * Whether this is greater than or equal `other`
+	 * @param other
+	 * @pure
+	 */
+	public gte(other: DateTimeLocal): boolean {
+		return super.gt(other, true);
+	}
+
 	// /**
 	//  * Convert this into UTC time, using *current* (server) running information
 	//  * on how far away UTC is.  If "local" was created on another machine, which might
@@ -3848,6 +3884,25 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 		return new DateTimeUtc(stor, 0);
 	}
 	//asUtc|asLocal tbd
+
+	/**
+	 * Whether this is greater than `other`
+	 * @param other
+	 * @returns True - this is greater, false-this is less or equal
+	 * @pure
+	 */
+	public gt(other: DateTimeUtc): boolean {
+		return super.gt(other);
+	}
+
+	/**
+	 * Whether this is greater than or equal `other`
+	 * @param other
+	 * @pure
+	 */
+	public gte(other: DateTimeUtc): boolean {
+		return super.gt(other, true);
+	}
 
 	/**
 	 * Create a new DateTime

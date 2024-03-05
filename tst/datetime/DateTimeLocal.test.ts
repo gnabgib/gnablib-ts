@@ -344,6 +344,47 @@ for (const [sVal,duParts,expect] of subDvSet) {
 	});
 }
 
+const eqSet:[string,string][]=[
+	['20240228'+'020304567890','20240228'+'020304567890'],
+];
+const gtSet:[string,string][]=[
+	['20250228'+'020304567890','20240228'+'020304567890'],//1y
+	['20240328'+'020304567890','20240228'+'020304567890'],//1m
+	['20240229'+'020304567890','20240228'+'020304567890'],//1d
+	['20240228'+'030304567890','20240228'+'020304567890'],//1h
+	['20240228'+'020404567890','20240228'+'020304567890'],//1i
+	['20240228'+'020305567890','20240228'+'020304567890'],//1s
+	['20240228'+'020304667890','20240228'+'020304567890'],
+	['20240228'+'020304568890','20240228'+'020304567890'],
+	['20240228'+'020304567891','20240228'+'020304567890'],
+];
+for(const [a,b] of eqSet) {
+	const dta=DateTimeLocal.fromValue(a);
+	const dtb=DateTimeLocal.fromValue(b);
+	tsts(`${dta}>${dtb}`, () => {
+		assert.is(dta.gt(dtb),false);
+	});
+	tsts(`${dta}>=${dtb}`, () => {
+		assert.is(dta.gte(dtb),true);
+	});
+	tsts(`${dtb}<${dta}`, () => {
+		assert.is(dtb.gt(dta),false);
+	});
+}
+for(const [a,b] of gtSet) {
+	const dta=DateTimeLocal.fromValue(a);
+	const dtb=DateTimeLocal.fromValue(b);
+	tsts(`${dta}>${dtb}`, () => {
+		assert.is(dta.gt(dtb),true);
+	});
+	tsts(`${dta}>=${dtb}`, () => {
+		assert.is(dta.gte(dtb),true);
+	});
+	tsts(`${dtb}<${dta}`, () => {
+		assert.is(dtb.gt(dta),false);
+	});
+}
+
 // tsts(`asUtc`, () => {
 // 	const start = DateTimeLocal.now();
 // 	//A test that doesn't fail can't do much more than confirm that isUtc toggles
