@@ -198,7 +198,9 @@ Name|Capacities|Optional parameters
 - Hour, Minute, Second, Millisecond, Microsecond
 - DateTimeLocal, DateTimeUtc, DateOnly, TimeOnly
 - Duration, DurationExact
-- DateTimeLocal|DateTimeUtc +- Duration|DurationExact -> DateTimeLocal|DateTimeUtc
+- DateTime*.lt|lte|eq|gt|gte|neq - Compare two date-times
+- DateTime*.add|sub - Add or subtract Duration|DurationExact from a date-time
+- DateTime*.diff|diffExact - Get the difference between two dates in y/m/d/h/* or d/h/*
 
 ### Error Correction Codes
 

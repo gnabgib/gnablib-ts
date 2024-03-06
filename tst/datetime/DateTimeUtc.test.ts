@@ -361,14 +361,23 @@ const gtSet:[string,string][]=[
 for(const [a,b] of eqSet) {
 	const dta=DateTimeUtc.fromValue(a);
 	const dtb=DateTimeUtc.fromValue(b);
-	tsts(`${dta}>${dtb}`, () => {
+	tsts(`! ${dta}>${dtb}`, () => {
 		assert.is(dta.gt(dtb),false);
 	});
 	tsts(`${dta}>=${dtb}`, () => {
 		assert.is(dta.gte(dtb),true);
 	});
-	tsts(`${dtb}<${dta}`, () => {
-		assert.is(dtb.gt(dta),false);
+	tsts(`! ${dta}<${dtb}`, () => {
+		assert.is(dta.lt(dtb),false);
+	});
+	tsts(`${dta}<=${dtb}`, () => {
+		assert.is(dta.lte(dtb),true);
+	});
+	tsts(`${dta}==${dtb}`, () => {
+		assert.is(dta.eq(dtb),true);
+	});
+	tsts(`! ${dta}!=${dtb}`, () => {
+		assert.is(dta.neq(dtb),false);
 	});
 }
 for(const [a,b] of gtSet) {
@@ -380,8 +389,17 @@ for(const [a,b] of gtSet) {
 	tsts(`${dta}>=${dtb}`, () => {
 		assert.is(dta.gte(dtb),true);
 	});
-	tsts(`${dtb}<${dta}`, () => {
-		assert.is(dtb.gt(dta),false);
+	tsts(`! ${dta}<${dtb}`, () => {
+		assert.is(dta.lt(dtb),false);
+	});
+	tsts(`! ${dta}<=${dtb}`, () => {
+		assert.is(dta.lte(dtb),false);
+	});
+	tsts(`! ${dta}==${dtb}`, () => {
+		assert.is(dta.eq(dtb),false);
+	});
+	tsts(`${dta}!=${dtb}`, () => {
+		assert.is(dta.neq(dtb),true);
 	});
 }
 

@@ -3372,21 +3372,36 @@ class DateTimeShared extends Core {
 		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
 	}
 
-	/** Because this treats all `dt` the same, careful with confusing types in public implementations */
-	protected gt(dt: DateTimeShared, eq = false): boolean {
+	/**
+	 * !danger Because this treats all `dt` the same, careful with confusing types in public implementations
+	 * !danger You can call this with wicked invariants.  There are only 6 valid entries:
+	 * ```
+	 * >  true,false,false
+	 * >= true,false,true
+	 * <  false,true,false //Can also be achieved with !>=
+	 * <= false,true,true //Can also be achieved with !>
+	 * == false,false,true
+	 * != true,true,false //Can also be achieved with !==, but this fast-exits
+	 * ```
+	 * @param other
+	 * @param gt
+	 * @param lt
+	 * @param eq
+	 * @returns
+	 */
+	protected cmp<T>(other: DateTimeShared, gt: T, lt: T, eq: T): T {
 		for (let i = 0; i < dateBytes + timeBytes; i++) {
 			const t = this._stor[this._pos + i];
-			const o = dt._stor[dt._pos + i];
-			if (t > o) return true;
-			if (t < o) return false;
+			const o = other._stor[other._pos + i];
+			if (t > o) return gt;
+			if (t < o) return lt;
 		}
-		//Equal!
 		return eq;
 	}
 
 	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
 	protected diff(erl: DateTimeShared): Duration {
-		if (erl.gt(this)) return erl.diff(this);
+		if (erl.cmp(this, true, false, false)) return erl.diff(this);
 
 		let y = this._year(this._pos) - erl._year(erl._pos);
 		let m =
@@ -3434,7 +3449,7 @@ class DateTimeShared extends Core {
 
 	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
 	protected diffExact(erl: DateTimeShared): DurationExact {
-		if (erl.gt(this)) return erl.diffExact(this);
+		if (erl.cmp(this, true, false, false)) return erl.diffExact(this);
 
 		let d = this.toUnixDays(this._pos) - erl.toUnixDays(erl._pos);
 		let h = this._hour(this._pos + dateBytes) - erl._hour(erl._pos + dateBytes);
@@ -3651,21 +3666,50 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 
 	/**
 	 * Whether this is greater than `other`
-	 * @param other
-	 * @returns True - this is greater, false-this is less or equal
 	 * @pure
 	 */
 	public gt(other: DateTimeLocal): boolean {
-		return super.gt(other);
+		return super.cmp(other, true, false, false);
 	}
 
 	/**
 	 * Whether this is greater than or equal `other`
-	 * @param other
 	 * @pure
 	 */
 	public gte(other: DateTimeLocal): boolean {
-		return super.gt(other, true);
+		return super.cmp(other, true, false, true);
+	}
+
+	/**
+	 * Whether this is less than `other`
+	 * @pure
+	 */
+	public lt(other: DateTimeLocal): boolean {
+		return super.cmp(other, false, true, false);
+	}
+
+	/**
+	 * Whether this is less than or equal `other`
+	 * @pure
+	 */
+	public lte(other: DateTimeLocal): boolean {
+		return super.cmp(other, false, true, true);
+	}
+
+	/**
+	 * Whether this is equal to `other`
+	 * @pure
+	 */
+	public eq(other: DateTimeLocal): boolean {
+		return super.cmp(other, false, false, true);
+	}
+
+	/**
+	 * Whether this is not equal to `other`
+	 * @pure
+	 */
+	public neq(other: DateTimeLocal): boolean {
+		return super.cmp(other, true, true, false);
 	}
 
 	// /**
@@ -3993,7 +4037,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 * @pure
 	 */
 	public gt(other: DateTimeUtc): boolean {
-		return super.gt(other);
+		return super.cmp(other, true, false, false);
 	}
 
 	/**
@@ -4002,7 +4046,39 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 * @pure
 	 */
 	public gte(other: DateTimeUtc): boolean {
-		return super.gt(other, true);
+		return super.cmp(other, true, false, true);
+	}
+
+	/**
+	 * Whether this is less than `other`
+	 * @pure
+	 */
+	public lt(other: DateTimeUtc): boolean {
+		return super.cmp(other, false, true, false);
+	}
+
+	/**
+	 * Whether this is less than or equal `other`
+	 * @pure
+	 */
+	public lte(other: DateTimeUtc): boolean {
+		return super.cmp(other, false, true, true);
+	}
+
+	/**
+	 * Whether this is equal to `other`
+	 * @pure
+	 */
+	public eq(other: DateTimeUtc): boolean {
+		return super.cmp(other, false, false, true);
+	}
+
+	/**
+	 * Whether this is not equal to `other`
+	 * @pure
+	 */
+	public neq(other: DateTimeUtc): boolean {
+		return super.cmp(other, true, true, false);
 	}
 
 	/**
