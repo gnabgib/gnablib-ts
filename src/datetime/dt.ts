@@ -3246,7 +3246,7 @@ class DateTimeShared extends Core {
 	protected _addDe(de: DurationExact, stor: Uint8Array): void {
 		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
 		let dh = this.toUnixDays(this._pos) * 24 + this.hour;
-		const [, ddh, dmiso] = de.toYmDhMiso();
+		const [ddh, dmiso] = de.toDhMiso();
 		dh += ddh;
 		miso += dmiso;
 
@@ -3307,7 +3307,7 @@ class DateTimeShared extends Core {
 		let miso = hmiso % usPerHour;
 		let dh = (hmiso / usPerHour) | 0;
 		dh += this.toUnixDays(this._pos) * 24;
-		const [, ddh, dmiso] = du.toYmDhMiso();
+		const [ddh, dmiso] = du.toDhMiso();
 		dh -= ddh;
 		miso -= dmiso;
 
@@ -3372,6 +3372,7 @@ class DateTimeShared extends Core {
 		Core.timeFromUnixUs(stor, 0 + dateBytes, us);
 	}
 
+	/** Because this treats all `dt` the same, careful with confusing types in public implementations */
 	protected gt(dt: DateTimeShared, eq = false): boolean {
 		for (let i = 0; i < dateBytes + timeBytes; i++) {
 			const t = this._stor[this._pos + i];
@@ -3383,6 +3384,7 @@ class DateTimeShared extends Core {
 		return eq;
 	}
 
+	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
 	protected diff(erl: DateTimeShared): Duration {
 		if (erl.gt(this)) return erl.diff(this);
 
@@ -3430,6 +3432,7 @@ class DateTimeShared extends Core {
 		return Duration.new({ y, m, d, h, i, s, us });
 	}
 
+	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
 	protected diffExact(erl: DateTimeShared): DurationExact {
 		if (erl.gt(this)) return erl.diffExact(this);
 

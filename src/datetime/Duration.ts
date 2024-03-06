@@ -376,13 +376,11 @@ export class DurationExact extends ADurationCore implements ISerializer {
 
 	/**
 	 * Extract this duration as a 3-integer array:
-	 * - Years & months in months (y*12+m) - always 0 for DurationExact
 	 * - Days & hours in hours (d*24+h) - u32 (0 - 3218809104)
 	 * - Minutes, seconds & micros ((m*60+s)*1000000+u) - u32 (0 - 3599999999)
 	 */
-	public toYmDhMiso(): [number, number, number] {
+	public toDhMiso(): [number, number] {
 		return [
-			0,
 			this.day * hPerDay + this._storage[this._hPos],
 			this._storage[this._hPos + 1] * usPerMin +
 				this._storage[this._hPos + 2] * usPerSec +
@@ -430,8 +428,8 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 * @pure
 	 */
 	public add(de: DurationExact): DurationExact {
-		let [, dh, misu] = this.toYmDhMiso();
-		const [, odh, omisu] = de.toYmDhMiso();
+		let [dh, misu] = this.toDhMiso();
+		const [odh, omisu] = de.toDhMiso();
 		dh += odh;
 		misu += omisu;
 
@@ -462,8 +460,8 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 * @pure
 	 */
 	public sub(de: DurationExact): DurationExact {
-		let [, dh, misu] = this.toYmDhMiso();
-		const [, odh, omisu] = de.toYmDhMiso();
+		let [dh, misu] = this.toDhMiso();
+		const [odh, omisu] = de.toDhMiso();
 		dh -= odh;
 		misu -= omisu;
 		if (misu < 0) {
