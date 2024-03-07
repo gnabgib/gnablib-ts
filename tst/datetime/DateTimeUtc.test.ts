@@ -420,7 +420,7 @@ const diffSet:[string,string,string][]=[
 for(const [a,b,du] of diffSet) {
 	const dta=DateTimeUtc.fromValue(a);
 	const dtb=DateTimeUtc.fromValue(b);
-	tsts(`${dta} -  ${dtb}`,()=>{
+	tsts(`v ${dta} -  ${dtb}`,()=>{
 		const diff=dta.diff(dtb);
 		assert.equal(diff.toString(),du);
 	});
@@ -449,7 +449,7 @@ const diffExactSet:[string,string,string][]=[
 for(const [a,b,du] of diffExactSet) {
 	const dta=DateTimeUtc.fromValue(a);
 	const dtb=DateTimeUtc.fromValue(b);
-	tsts(`${dta} -  ${dtb}`,()=>{
+	tsts(`e ${dta} -  ${dtb}`,()=>{
 		const diff=dta.diffExact(dtb);
 		assert.equal(diff.toString(),du);
 	});

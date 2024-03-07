@@ -12,8 +12,8 @@ import { AtMostError } from '../error/AtMostError.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
-// date: [y][y][m][d]
-// time: [h][i][s][u][u][u]
+// date: [d][m][y][Y]
+// time: [u][u][U][s][i][h]
 const yearBytes = 2;
 const monthBytes = 1;
 const dayBytes = 1;
@@ -25,15 +25,20 @@ const milliBytes = 2;
 const microBytes = 3;
 const timeMsBytes = 5; //hourBytes + minBytes + secBytes + milliBytes;
 const timeBytes = 6; //hourBytes + minBytes + secBytes + microBytes;
+const dtBytes = 10; //dateBytes + timeBytes
+const dt_to_pos = 0;
+const dt_do_pos = timeBytes;
 
 const yearSerBits = 15; //2^15 = 32767
 const monthSerBits = 4; //2^4 = 16
 const daySerBits = 5; //2^5 = 32
+const dateSerBits = 24; //yearSerBits + monthSerBits + daySerBits
 const hourSerBits = 5; //2^5 = 32
 const minSerBits = 6; //2^6 = 64
 const secSerBits = 6; //2^6 = 64
 const milliSerBits = 10; //2^10 = 1024
 const microSerBits = 20; //2^20 = 1048576
+const timeSerBits = 37; //hourSerBits + minSerBits + secSerBits + microSerBits 5+6+6+20
 
 const minIsoYear = -10000;
 const maxHeYear = 32767; //0x7fff
@@ -54,41 +59,133 @@ const DIM = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; //Days in month
 const daysPerCD = 146097; //CD=400y (400 is CD in roman numerals)
 const epochShift = 719468; //Amount of days to shift a CD segment to make the epoch 0
 
+function rYear(d: DataView, p: number): number {
+	return d.getUint16(p, true) - 10000;
+}
+function wYear(d: DataView, p: number, v: number): void {
+	d.setUint16(p, v + 10000, true);
+}
+function rMonth(d: DataView, p: number): number {
+	return d.getUint8(p) + 1;
+}
+function wMonth(d: DataView, p: number, v: number): void {
+	d.setUint8(p, v - 1);
+}
+function rDay(d: DataView, p: number): number {
+	return d.getUint8(p) + 1;
+}
+function wDay(d: DataView, p: number, v: number): void {
+	d.setUint8(p, v - 1);
+}
+function wDate(v: DataView, p: number, y: number, m: number, d: number): void {
+	wDay(v, p, d);
+	wMonth(v, p + 1, m);
+	wYear(v, p + 2, y);
+}
+function rDate(v: DataView, p: number): [number, number, number] {
+	return [rYear(v, p + 2), rMonth(v, p + 1), rDay(v, p)];
+}
+function serDate(d: DataView, p: number, to: BitWriter): void {
+	to.writeNumber(/*rawYear*/ d.getUint16(p + 2, true), yearSerBits);
+	to.writeNumber(/*rawMonth*/ d.getUint8(p + 1), monthSerBits);
+	to.writeNumber(/*rawDay*/ d.getUint8(p), daySerBits);
+}
+function deserDate(to: DataView, p: number, src: BitReader): void {
+	/*deserYear*/ to.setUint16(p + 2, src.readNumber(yearSerBits), true);
+	/*deserMonth*/ to.setUint8(p + 1, src.readNumber(monthSerBits));
+	/*deserDay*/ to.setUint8(p, src.readNumber(daySerBits));
+}
+
+function rHour(d: DataView, p: number): number {
+	return d.getUint8(p);
+}
+function wHour(d: DataView, p: number, v: number): void {
+	d.setUint8(p, v);
+}
+function rMin(d: DataView, p: number): number {
+	return d.getUint8(p);
+}
+function wMin(d: DataView, p: number, v: number): void {
+	d.setUint8(p, v);
+}
+function rSec(d: DataView, p: number): number {
+	return d.getUint8(p);
+}
+function wSec(d: DataView, p: number, v: number): void {
+	d.setUint8(p, v);
+}
+function rMilli(d: DataView, p: number): number {
+	return d.getUint16(p, true);
+}
+function wMilli(d: DataView, p: number, v: number): void {
+	d.setUint16(p, v, true);
+}
+function rMicro(d: DataView, p: number): number {
+	return d.getUint8(p++) | (d.getUint16(p, true) << 8);
+}
+function wMicro(d: DataView, p: number, v: number): void {
+	d.setUint8(p, v);
+	d.setUint16(p + 1, v >> 8, true);
+}
+
+function rTimeMs(v: DataView, p: number): [number, number, number, number] {
+	return [rHour(v, p + 4), rMin(v, p + 3), rSec(v, p + 2), rMilli(v, p)];
+}
+function wTimeMs(
+	v: DataView,
+	p: number,
+	h: number,
+	i: number,
+	s: number,
+	ms: number
+): void {
+	wMilli(v, p, ms);
+	wSec(v, p + 2, s);
+	wMin(v, p + 3, i);
+	wHour(v, p + 4, h);
+}
+function rTime(v: DataView, p: number): [number, number, number, number] {
+	return [rHour(v, p + 5), rMin(v, p + 4), rSec(v, p + 3), rMicro(v, p)];
+}
+function wTime(
+	v: DataView,
+	p: number,
+	h: number,
+	i: number,
+	s: number,
+	us: number
+): void {
+	wMicro(v, p, us);
+	wSec(v, p + 3, s);
+	wMin(v, p + 4, i);
+	wHour(v, p + 5, h);
+}
+function serTime(d: DataView, p: number, to: BitWriter): void {
+	to.writeNumber(/*rawHour*/ d.getUint8(p + 5), hourSerBits);
+	to.writeNumber(/*rawMin*/ d.getUint8(p + 4), minSerBits);
+	to.writeNumber(/*rawSec*/ d.getUint8(p + 3), secSerBits);
+	to.writeNumber(
+		/*rawUs*/ d.getUint8(p) | (d.getUint16(p + 1, true) << 8),
+		microSerBits
+	);
+}
+function deserTime(to: DataView, p: number, src: BitReader): void {
+	/*deserHour*/ to.setUint8(p + 5, src.readNumber(hourSerBits));
+	/*deserMin*/ to.setUint8(p + 4, src.readNumber(minSerBits));
+	/*deserSec*/ to.setUint8(p + 3, src.readNumber(secSerBits));
+	/*deserMicro*/ wMicro(to, p, src.readNumber(microSerBits));
+}
+
 //There's definitely some entangled intent here, but we get to reuse code at the
 // component/rollup(date|time)/double rollup (datetime) by sharing a core
 class Core {
 	protected constructor(
 		protected readonly _d: DataView,
-		protected readonly _pos: number
+		protected readonly _pos = 0
 	) {}
 
-	protected _year(p: number): number {
-		return this._d.getUint16(p, true) - 10000;
-	}
-	protected _month(p: number): number {
-		return this._d.getUint8(p) + 1;
-	}
-	protected _day(p: number): number {
-		return this._d.getUint8(p) + 1;
-	}
-	protected _hour(p: number): number {
-		return this._d.getUint8(p);
-	}
-	protected _minute(p: number): number {
-		return this._d.getUint8(p);
-	}
-	protected _second(p: number): number {
-		return this._d.getUint8(p);
-	}
-	protected _milli(p: number): number {
-		return this._d.getUint16(p, true);
-	}
-	protected _micro(p: number): number {
-		return this._d.getUint8(p++) | (this._d.getUint16(p, true) << 8);
-	}
-
 	protected _year_iso(p: number): string {
-		let v = /*_year*/ this._d.getUint16(p, true) - 10000;
+		let v = rYear(this._d, p);
 		let sign = '';
 		if (v > 9999) {
 			sign = '+';
@@ -101,43 +198,40 @@ class Core {
 		return sign + r;
 	}
 	protected _month_iso(p: number): string {
-		const s = /*_month*/ (this._d.getUint8(p) + 1).toString();
+		const s = rMonth(this._d, p).toString();
 		return ('00' + s).substring(s.length);
 	}
 	protected _day_iso(p: number): string {
-		const s = /*_day*/ (this._d.getUint8(p) + 1).toString();
+		const s = rDay(this._d, p).toString();
 		return ('00' + s).substring(s.length);
 	}
 	protected _date_iso(p: number, sep: string): string {
 		return (
-			this._year_iso(p) +
+			this._year_iso(p + 2) +
 			sep +
-			this._month_iso(p + 2) +
+			this._month_iso(p + 1) +
 			sep +
-			this._day_iso(p + 3)
+			this._day_iso(p)
 		);
 	}
 	protected _hour_iso(p: number): string {
-		const s = /*_hour*/ this._d.getUint8(p).toString();
+		const s = rHour(this._d, p).toString();
 		return ('00' + s).substring(s.length);
 	}
 	protected _minute_iso(p: number): string {
-		const s = /*_minute*/ this._d.getUint8(p).toString();
+		const s = rMin(this._d, p).toString();
 		return ('00' + s).substring(s.length);
 	}
 	protected _second_iso(p: number): string {
-		const s = /*_second*/ this._d.getUint8(p).toString();
+		const s = rSec(this._d, p).toString();
 		return ('00' + s).substring(s.length);
 	}
 	protected _milli_iso(p: number): string {
-		const v = /*_milli*/ this._d.getUint16(p, true);
-		const s = v.toString();
+		const s = rMilli(this._d, p).toString();
 		return ('000' + s).substring(s.length);
 	}
 	protected _micro_iso(p: number): string {
-		const v =
-			/*_micro*/ this._d.getUint8(p++) | (this._d.getUint16(p, true) << 8);
-		const s = v.toString();
+		const s = rMicro(this._d, p).toString();
 		return ('000000' + s).substring(s.length);
 	}
 	protected _time_iso(p: number, sep: boolean): string {
@@ -147,59 +241,37 @@ class Core {
 			sep1 = ':';
 			sep2 = '.';
 		}
-		let ret = this._hour_iso(p) + sep1;
-		p += hourBytes;
-		ret += this._minute_iso(p) + sep1;
-		p += minBytes;
-		ret += this._second_iso(p) + sep2;
-		return ret + this._micro_iso(p + secBytes);
-	}
-
-	protected _date_ser(to: BitWriter, p: number): void {
-		to.writeNumber(this._d.getUint16(p, true), yearSerBits);
-		to.writeNumber(this._d.getUint8(p + 2), monthSerBits);
-		to.writeNumber(this._d.getUint8(p + 3), daySerBits);
-	}
-	protected _timeMs_ser(to: BitWriter, p: number): void {
-		to.writeNumber(this._d.getUint8(p), hourSerBits);
-		to.writeNumber(this._d.getUint8(p + 1), minSerBits);
-		to.writeNumber(this._d.getUint8(p + 2), secSerBits);
-		to.writeNumber(this._d.getUint16(p + 3, true), milliSerBits);
-	}
-	protected _time_ser(to: BitWriter, p: number): void {
-		to.writeNumber(this._d.getUint8(p), hourSerBits);
-		to.writeNumber(this._d.getUint8(p + 1), minSerBits);
-		to.writeNumber(this._d.getUint8(p + 2), secSerBits);
-		to.writeNumber(
-			this._d.getUint8(p + 3) | (this._d.getUint16(p + 4, true) << 8),
-			microSerBits
+		return (
+			this._hour_iso(p + 5) +
+			sep1 +
+			this._minute_iso(p + 4) +
+			sep1 +
+			this._second_iso(p + 3) +
+			sep2 +
+			this._micro_iso(p)
 		);
 	}
 
 	protected _date_valid(p: number): void {
 		//no validate needed for year (can't exceed with ser)
+		const [y, m, d] = rDate(this._d, p);
 		//no need for negative check (all uint)
-		p += yearBytes;
-		const m = this._month(p);
 		safe.int.lte('month', m, 12);
-		safe.int.lte(
-			'day',
-			this._day(p + monthBytes),
-			Month.lastDay(m, this._year(p))
-		);
+		safe.int.lte('day', d, Month.lastDay(m, y));
 	}
+
 	protected _time_valid(p: number): void {
-		safe.int.lte('hour', this._hour(p), 23);
-		safe.int.lte('minute', this._minute(p + 1), 59);
-		safe.int.lte('second', this._second(p + 2), 59);
-		safe.int.lte('microsecond', this._micro(p + 3), 999999);
+		const [h, i, s, u] = rTime(this._d, p);
+		safe.int.lte('hour', h, 23);
+		safe.int.lte('minute', i, 59);
+		safe.int.lte('second', s, 59);
+		safe.int.lte('microsecond', u, 999999);
 	}
 
 	/** Days since the Unix epoch (1970-01-01) */
 	protected toUnixDays(p: number): number {
-		let yv = this._year(p);
-		let mv = this._month(p + 2);
-		const dv = this._day(p + 3);
+		// eslint-disable-next-line prefer-const
+		let [yv, mv, dv] = rDate(this._d, p);
 		//Move so 1-March first day of year (28/29-Feb last)
 		if (mv > 2) {
 			mv -= 3;
@@ -220,75 +292,10 @@ class Core {
 		const ret = CD * daysPerCD + dayOfCD - epochShift;
 		return ret;
 	}
+
 	protected timeToUs(p: number): number {
-		return (
-			this._hour(p) * usPerHour +
-			this._minute(p + 1) * usPerMin +
-			this._second(p + 2) * usPerSec +
-			this._micro(p + 3)
-		);
-	}
-
-	protected static writeYear(to: DataView, p: number, v: number): void {
-		//todo remove this
-		to.setUint16(p, v + 10000, true);
-	}
-	protected static writeDate(
-		to: DataView,
-		p: number,
-		y: number,
-		m: number,
-		d: number
-	): void {
-		/*writeYear*/ to.setUint16(p, y + 10000, true);
-		/*writeMonth*/ to.setUint8(p + 2, m - 1);
-		/*writeDay*/ to.setUint8(p + 3, d - 1);
-	}
-	protected static writeMilli(to: DataView, p: number, v: number): void {
-		//todo remove this
-		to.setUint16(p, v, true);
-	}
-	protected static writeMicro(to: DataView, p: number, v: number): void {
-		//todo remove this?
-		to.setUint8(p, v);
-		to.setUint16(p + 1, v >> 8, true);
-	}
-	protected static writeTime(
-		to: DataView,
-		p: number,
-		h: number,
-		i: number,
-		s: number,
-		u: number
-	): void {
-		/*writeHour*/ to.setUint8(p, h);
-		/*writeMinute*/ to.setUint8(p + 1, i);
-		/*writeSecond*/ to.setUint8(p + 2, s);
-		Core.writeMicro(to, p + 3, u);
-	}
-
-	protected static writeYFromDt(to: DataView, p: number, dt: Date): void {
-		const v = dt.getFullYear() + 10000; //Convert to holocene
-		to.setUint16(p, v, true);
-	}
-	protected static writeMoFromDt(to: DataView, p: number, dt: Date): void {
-		to.setUint8(p, dt.getMonth()); //We store months 0 based too (but we don't trouble the dev with that detail)
-	}
-	protected static writeDFromDt(to: DataView, p: number, dt: Date): void {
-		to.setUint8(p, dt.getDate() - 1); //We store 0 based
-	}
-	protected static writeDtFromDt(to: DataView, p: number, dt: Date): void {
-		Core.writeYFromDt(to, p, dt);
-		Core.writeMoFromDt(to, p + 2, dt);
-		Core.writeDFromDt(to, p + 3, dt);
-	}
-	protected static writeMsFromDt(to: DataView, p: number, dt: Date): void {
-		to.setUint16(p, dt.getMilliseconds(), true);
-	}
-	protected static writeUsFromDt(to: DataView, p: number, dt: Date): void {
-		const v = dt.getMilliseconds() * 1000;
-		to.setUint8(p, v);
-		to.setUint16(p + 1, v >> 8, true);
+		const [h, i, s, u] = rTime(this._d, p);
+		return h * usPerHour + i * usPerMin + s * usPerSec + u;
 	}
 
 	protected static vetDate(y: number, m: number, d: number): void {
@@ -301,19 +308,6 @@ class Core {
 		/*vetMinute*/ safe.int.inRangeInc('minute', i, 0, 59);
 		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
 		/*vetMicro*/ safe.int.inRangeInc('microsecond', u, 0, 999999);
-	}
-
-	protected static timeMsFromUnixMs(to: DataView, p: number, ms: number): void {
-		/*writeHour*/ to.setUint8(p, (ms % msPerDay) / msPerHour);
-		/*writeMin*/ to.setUint8(p + 1, (ms % msPerHour) / msPerMin);
-		/*writeSec*/ to.setUint8(p + 2, (ms % msPerMin) / msPerSec);
-		Core.writeMilli(to, p + 3, ms % msPerSec);
-	}
-	protected static timeFromUnixUs(to: DataView, p: number, us: number): void {
-		/*writeHour*/ to.setUint8(p, (us % usPerDay) / usPerHour);
-		/*writeMin*/ to.setUint8(p + 1, (us % usPerHour) / usPerMin);
-		/*writeSec*/ to.setUint8(p + 2, (us % usPerMin) / usPerSec);
-		Core.writeMicro(to, p + 3, us % usPerSec);
 	}
 
 	protected static parseYear(
@@ -349,7 +343,7 @@ class Core {
 				}
 				if (intVal >= minIsoYear && intVal <= maxIsoYear) {
 					input.shrink(digits.length);
-					Core.writeYear(to, p, intVal);
+					wYear(to, p, intVal);
 					return;
 				}
 			}
@@ -376,7 +370,7 @@ class Core {
 				const unixMs = Date.parse(mon + ' 16, 2000');
 				if (!Number.isNaN(unixMs)) {
 					input.shrink(mon.length);
-					/*writeMonth*/ to.setUint8(p, new Date(unixMs).getMonth());
+					wMonth(to, p, new Date(unixMs).getMonth() + 1);
 					return;
 				}
 			} else {
@@ -392,7 +386,7 @@ class Core {
 				}
 				const intVal = parseDec(int);
 				if (intVal >= 1 && intVal <= 12) {
-					/*writeMonth*/ to.setUint8(p, intVal - 1);
+					wMonth(to, p, intVal);
 					input.shrink(int.length);
 					return;
 				}
@@ -448,23 +442,25 @@ class Core {
 		strict: boolean,
 		reset: () => void
 	): Error | undefined {
-		let e = Core.parseYear(to, p, input.left(input.length - 4), strict, reset);
+		let e = Core.parseYear(
+			to,
+			p + 2,
+			input.left(input.length - 4),
+			strict,
+			reset
+		);
 		if (e) return e;
-		/*_year*/ const y = to.getUint16(p, true) - 10000;
 		input.shrink(input.length - 4);
-		p += 2;
 
-		e = Core.parseMonth(to, p, input.left(2), strict, reset);
+		e = Core.parseMonth(to, p + 1, input.left(2), strict, reset);
 		if (e) return e;
-		/*_month*/ const m = to.getUint8(p) + 1;
 		input.shrink(2);
-		p += 1;
 
 		e = Core.parseDay(to, p, input, strict, reset);
 		if (e) return e;
-		/*_day*/ const d = to.getUint8(p) + 1;
 
 		//Check for day invariance
+		const [y, m, d] = rDate(to, p);
 		const dim = Month.lastDay(m, y);
 		if (d > dim) return new AtMostError('day', d, dim);
 
@@ -499,23 +495,25 @@ class Core {
 		//Make sure second delim matches first, and there is one
 		const delim2 = input.indexOf(delim, delim1 + 1) - delim1 - 1;
 		if (delim2 > 0) {
-			e = Core.parseYear(to, p, input.left(delim1).trimEnd(), strict, reset);
+			e = Core.parseYear(
+				to,
+				p + 2,
+				input.left(delim1).trimEnd(),
+				strict,
+				reset
+			);
 			if (e) return e;
 			input.shrink(delim1 + 1);
-			/*_year*/ const y = to.getUint16(p, true) - 10000;
-			p += 2;
 
-			e = Core.parseMonth(to, p, input.left(delim2).trim(), strict, reset);
+			e = Core.parseMonth(to, p + 1, input.left(delim2).trim(), strict, reset);
 			if (e) return e;
 			input.shrink(delim2 + 1);
-			/*_month*/ const m = to.getUint8(p) + 1;
-			p += 1;
 
 			e = Core.parseDay(to, p, input.trim(), strict, reset);
 			if (e) return e;
-			/*_day*/ const d = to.getUint8(p) + 1;
 
 			//Check for day invariance
+			const [y, m, d] = rDate(to, p);
 			const dim = Month.lastDay(m, y);
 			if (d > dim) return new AtMostError('day', d, dim);
 
@@ -659,7 +657,7 @@ class Core {
 			const intVal = parseDec(effDigits);
 			if (intVal >= 0 && intVal <= 999) {
 				input.shrink(digits.length);
-				Core.writeMilli(to, p, intVal);
+				wMilli(to, p, intVal);
 				return;
 			}
 		}
@@ -698,7 +696,7 @@ class Core {
 			const intVal = parseDec(effDigits);
 			if (intVal >= 0 && intVal <= 999999) {
 				input.shrink(digits.length);
-				Core.writeMicro(to, p, intVal);
+				wMicro(to, p, intVal);
 				return;
 			}
 		}
@@ -716,20 +714,17 @@ class Core {
 		strict: boolean,
 		reset: () => void
 	): Error | undefined {
-		let e = Core.parseHour(to, p, input.left(2), strict, reset);
+		let e = Core.parseHour(to, p + 5, input.left(2), strict, reset);
 		if (e) return e;
 		input.shrink(2);
-		p += 1;
 
-		e = Core.parseMinute(to, p, input.left(2), strict, reset);
+		e = Core.parseMinute(to, p + 4, input.left(2), strict, reset);
 		if (e) return e;
 		input.shrink(2);
-		p += 1;
 
-		e = Core.parseSecond(to, p, input.left(2), strict, reset);
+		e = Core.parseSecond(to, p + 3, input.left(2), strict, reset);
 		if (e) return e;
 		input.shrink(2);
-		p += 1;
 
 		e = Core.parseMicro(to, p, input, strict, false, reset);
 		//because parseTime and DateTime*.parse will only call this with
@@ -761,20 +756,17 @@ class Core {
 		delim3 -= delim2 + 1;
 		delim2 -= delim1 + 1;
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
-			e = Core.parseHour(to, p, input.left(delim1).trim(), strict, reset);
+			e = Core.parseHour(to, p + 5, input.left(delim1).trim(), strict, reset);
 			if (e) return e;
 			input.shrink(delim1 + 1);
-			p += 1;
 
-			e = Core.parseMinute(to, p, input.left(delim2).trim(), strict, reset);
+			e = Core.parseMinute(to, p + 4, input.left(delim2).trim(), strict, reset);
 			if (e) return e;
 			input.shrink(delim2 + 1);
-			p += 1;
 
-			e = Core.parseSecond(to, p, input.left(delim3).trim(), strict, reset);
+			e = Core.parseSecond(to, p + 3, input.left(delim3).trim(), strict, reset);
 			if (e) return e;
 			input.shrink(delim3 + 1);
-			p += 1;
 
 			e = Core.parseMicro(to, p, input.trim(), strict, true, reset);
 			if (e) return e;
@@ -789,22 +781,6 @@ class Core {
 			input
 		);
 	}
-	protected static deserYear(to: DataView, p: number, src: BitReader): void {
-		//This is a raw-write (writeYear does a value-transform)
-		const v = src.readNumber(yearSerBits);
-		to.setUint16(p, v, true);
-	}
-	protected static deserDate(to: DataView, p: number, src: BitReader): void {
-		Core.deserYear(to, p, src);
-		/*deserMonth*/ to.setUint8(p + 2, src.readNumber(monthSerBits));
-		/*deserDay*/ to.setUint8(p + 3, src.readNumber(daySerBits));
-	}
-	protected static deserTime(to: DataView, p: number, src: BitReader): void {
-		/*deserHour*/ to.setUint8(p, src.readNumber(hourSerBits));
-		/*deserMin*/ to.setUint8(p + 1, src.readNumber(minSerBits));
-		/*deserSec*/ to.setUint8(p + 2, src.readNumber(secSerBits));
-		/*deserMicro*/ Core.writeMicro(to, p + 3, src.readNumber(microSerBits));
-	}
 
 	protected static dateFromValue(to: DataView, p: number, v: number): void {
 		const d = v % 100;
@@ -812,7 +788,7 @@ class Core {
 		const m = v % 100;
 		v = (v - m) / 100;
 		Core.vetDate(v, m, d);
-		Core.writeDate(to, p, v, m, d);
+		wDate(to, p, v, m, d);
 	}
 	protected static timeFromValue(to: DataView, p: number, v: number): void {
 		const u = v % 1000000;
@@ -822,7 +798,7 @@ class Core {
 		const i = v % 100;
 		v = (v - i) / 100;
 		Core.vetTime(v, i, s, u);
-		Core.writeTime(to, p, v, i, s, u);
+		wTime(to, p, v, i, s, u);
 	}
 
 	protected static dateFromUnixDays(
@@ -851,7 +827,7 @@ class Core {
 		const d = dayOfYear + 1 - (((153 * mp + 2) / 5) | 0); // [1 - 31]
 		const m = mp < 10 ? mp + 3 : mp - 9; // [1 - 12]
 		if (m <= 2) y += 1;
-		Core.writeDate(to, p, y, m, d);
+		wDate(to, p, y, m, d);
 	}
 }
 
@@ -884,7 +860,7 @@ export class Year extends Core implements ISerializer {
 
 	/** Year, not zero padded, sign only on negative */
 	public toString(): string {
-		return /*_year*/ (this._d.getUint16(this._pos, true) - 10000).toString();
+		return rYear(this._d, this._pos).toString();
 	}
 
 	/** Year ISO8601, zero padded if >-1000,<1000, includes sign if >4 digits */
@@ -894,17 +870,20 @@ export class Year extends Core implements ISerializer {
 
 	/** Year in ISO8601 as an integer (0=1BC, -10000=10001BC, 2024=2024AD) */
 	toJSON(): number {
-		return this._d.getUint16(this._pos, true) - 10000;
+		return rYear(this._d, this._pos);
 	}
 
 	/** Year in ISO8601 as an integer (0=1BC, -10000=10001BC, 2024=2024AD) */
 	public valueOf(): number {
-		return this._d.getUint16(this._pos, true) - 10000;
+		return rYear(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 15 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._d.getUint16(this._pos, true), yearSerBits);
+		target.writeNumber(
+			/*rawYear*/ this._d.getUint16(this._pos, true),
+			yearSerBits
+		);
 	}
 
 	/** Number of bits required to serialize */
@@ -919,15 +898,15 @@ export class Year extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `Year(${this.toString()})`;
+		return `Year(${rYear(this._d, this._pos)})`;
 	}
 
 	/** Create a new year in ISO601 format, range -10000 - +22767 */
 	public static new(v: number): Year {
-		const d = new DataView(new ArrayBuffer(yearBytes));
 		/*vetYear*/ safe.int.inRangeInc('year', v, minIsoYear, maxIsoYear);
-		Core.writeYear(d, 0, v);
-		return new Year(d, 0);
+		const dv = new DataView(new ArrayBuffer(yearBytes));
+		wYear(dv, 0, v);
+		return new Year(dv);
 	}
 
 	/**
@@ -936,23 +915,23 @@ export class Year extends Core implements ISerializer {
 	 * @param ad True=Anno Domini(AD)/Common Era(CE), False=Before Chris(BC)/Before common era (BCE)
 	 */
 	public static newGregorian(year: number, ad = true): Year {
-		const d = new DataView(new ArrayBuffer(yearBytes));
+		const dv = new DataView(new ArrayBuffer(yearBytes));
 		if (ad) {
 			safe.int.inRangeInc('year', year, 1, maxIsoYear);
-			Core.writeYear(d, 0, year);
+			wYear(dv, 0, year);
 		} else {
 			safe.int.inRangeInc('-year', year, 1, 10001);
-			Core.writeYear(d, 0, 1 - year);
+			wYear(dv, 0, 1 - year);
 		}
-		return new Year(d, 0);
+		return new Year(dv);
 	}
 
 	/** Create a new year in Holocene format, range 0 - 32767*/
 	public static newHolocene(year: number): Year {
 		safe.int.inRangeInc('year', year, 0, maxHeYear);
-		const d = new DataView(new ArrayBuffer(yearBytes));
-		/*writeYear*/ d.setUint16(0, year, true);
-		return new Year(d, 0);
+		const dv = new DataView(new ArrayBuffer(yearBytes));
+		wYear(dv, 0, year - 10000);
+		return new Year(dv);
 	}
 
 	/**
@@ -960,10 +939,9 @@ export class Year extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Year {
-		const d = new DataView(new ArrayBuffer(yearBytes));
-
-		Core.writeYFromDt(d, 0, dt);
-		return new Year(d, 0);
+		const dv = new DataView(new ArrayBuffer(yearBytes));
+		wYear(dv, 0, dt.getFullYear());
+		return new Year(dv);
 	}
 
 	/**
@@ -971,9 +949,9 @@ export class Year extends Core implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Year {
-		const d = new DataView(new ArrayBuffer(yearBytes));
-		Core.writeYFromDt(d, 0, dt);
-		return new Year(d, 0);
+		const dv = new DataView(new ArrayBuffer(yearBytes));
+		wYear(dv, 0, dt.getUTCFullYear());
+		return new Year(dv);
 	}
 
 	/**
@@ -987,29 +965,26 @@ export class Year extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Year {
-		const d = new DataView(new ArrayBuffer(yearBytes));
-
+		const dv = new DataView(new ArrayBuffer(yearBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			Core.writeYFromDt(d, 0, new Date());
+			wYear(dv, 0, new Date().getFullYear());
 		} else {
-			const e = Core.parseYear(d, 0, input, strict, reset);
+			const e = Core.parseYear(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new Year(d, 0);
+		return new Year(dv);
 	}
 
 	/** Create this year (local) */
 	public static now(): Year {
-		const now = new Date();
-		const d = new DataView(new ArrayBuffer(yearBytes));
-
-		Core.writeYFromDt(d, 0, now);
-		return new Year(d, 0);
+		const dv = new DataView(new ArrayBuffer(yearBytes));
+		wYear(dv, 0, new Date().getFullYear());
+		return new Year(dv);
 	}
 
 	/**
@@ -1049,9 +1024,9 @@ export class Year extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static deserialize(src: BitReader): Year {
-		const d = new DataView(new ArrayBuffer(yearBytes));
-		Core.deserYear(d, 0, src);
-		return new Year(d, 0);
+		const dv = new DataView(new ArrayBuffer(yearBytes));
+		/*deserYear*/ dv.setUint16(0, src.readNumber(yearSerBits), true);
+		return new Year(dv);
 	}
 }
 const minY = Year.newHolocene(0);
@@ -1075,7 +1050,7 @@ export class Month extends Core implements ISerializer {
 
 	/** Month, not zero padded (1 - 12)*/
 	public toString(): string {
-		return /*_month*/ (this._d.getUint8(this._pos) + 1).toString();
+		return rMonth(this._d, this._pos).toString();
 	}
 
 	/** Month ISO8601, zero padded (01-12) */
@@ -1085,12 +1060,12 @@ export class Month extends Core implements ISerializer {
 
 	/** Month ISO8601 as an integer (1=January, 12=December) */
 	toJSON(): number {
-		return /*_month*/ this._d.getUint8(this._pos) + 1;
+		return rMonth(this._d, this._pos);
 	}
 
 	/** Month ISO8601 as an integer (1=January, 12=December) */
 	public valueOf(): number {
-		return /*_month*/ this._d.getUint8(this._pos) + 1;
+		return rMonth(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 4 bits*/
@@ -1110,7 +1085,7 @@ export class Month extends Core implements ISerializer {
 	 * @returns
 	 */
 	public validate(): Month {
-		safe.int.lte('month', this._month(this._pos), 12);
+		safe.int.lte('month', rMonth(this._d, this._pos), 12);
 		return this;
 	}
 
@@ -1121,15 +1096,15 @@ export class Month extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `Month(${this.toString()})`;
+		return `Month(${rMonth(this._d, this._pos)})`;
 	}
 
 	/** Create a new month of the year, range 1-12 */
 	public static new(v: number): Month {
 		/*vetMonth*/ safe.int.inRangeInc('month', v, 1, 12);
-		const d = new DataView(new ArrayBuffer(monthBytes));
-		d.setUint8(0, v - 1);
-		return new Month(d, 0);
+		const dv = new DataView(new ArrayBuffer(monthBytes));
+		wMonth(dv, 0, v);
+		return new Month(dv);
 	}
 
 	/**
@@ -1137,9 +1112,9 @@ export class Month extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Month {
-		const d = new DataView(new ArrayBuffer(monthBytes));
-		Core.writeMoFromDt(d, 0, dt);
-		return new Month(d, 0);
+		const dv = new DataView(new ArrayBuffer(monthBytes));
+		wMonth(dv, 0, dt.getMonth() + 1);
+		return new Month(dv);
 	}
 
 	/**
@@ -1147,9 +1122,9 @@ export class Month extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Month {
-		const d = new DataView(new ArrayBuffer(monthBytes));
-		d.setUint8(0, dt.getUTCMonth()); //We store months 0 based too (but we don't trouble the dev with that detail)
-		return new Month(d, 0);
+		const dv = new DataView(new ArrayBuffer(monthBytes));
+		wMonth(dv, 0, dt.getUTCMonth() + 1);
+		return new Month(dv);
 	}
 
 	/**
@@ -1163,27 +1138,26 @@ export class Month extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Month {
-		const d = new DataView(new ArrayBuffer(monthBytes));
+		const dv = new DataView(new ArrayBuffer(monthBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			Core.writeMoFromDt(d, 0, new Date());
+			wMonth(dv, 0, new Date().getMonth() + 1);
 		} else {
-			const e = Core.parseMonth(d, 0, input, strict, reset);
+			const e = Core.parseMonth(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new Month(d, 0);
+		return new Month(dv);
 	}
 
 	/** Create this year (local) */
 	public static now(): Month {
-		const now = new Date();
-		const d = new DataView(new ArrayBuffer(monthBytes));
-		Core.writeMoFromDt(d, 0, now);
-		return new Month(d, 0);
+		const dv = new DataView(new ArrayBuffer(monthBytes));
+		wMonth(dv, 0, new Date().getMonth() + 1);
+		return new Month(dv);
 	}
 
 	/**
@@ -1196,9 +1170,9 @@ export class Month extends Core implements ISerializer {
 	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(src: BitReader): Month {
-		const d = new DataView(new ArrayBuffer(monthBytes));
-		/*deserMonth*/ d.setUint8(0, src.readNumber(monthSerBits));
-		return new Month(d, 0);
+		const dv = new DataView(new ArrayBuffer(monthBytes));
+		/*deserMonth*/ dv.setUint8(0, src.readNumber(monthSerBits));
+		return new Month(dv);
 	}
 
 	/**
@@ -1239,7 +1213,7 @@ export class Day extends Core implements ISerializer {
 
 	/** Day, not zero padded (1 - 31) */
 	public toString(): string {
-		return /*_day*/ (this._d.getUint8(this._pos) + 1).toString();
+		return rDay(this._d, this._pos).toString();
 	}
 
 	/** Day ISO8601, zero padded (01-31) */
@@ -1249,12 +1223,12 @@ export class Day extends Core implements ISerializer {
 
 	/** Day of the month ISO8601 as a number (1-31) */
 	toJSON(): number {
-		return /*_day*/ this._d.getUint8(this._pos) + 1;
+		return rDay(this._d, this._pos);
 	}
 
 	/** Day of the month ISO8601 as a number (1-31) */
 	public valueOf(): number {
-		return /*_day*/ this._d.getUint8(this._pos) + 1;
+		return rDay(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 5 bits*/
@@ -1273,7 +1247,7 @@ export class Day extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Day {
-		safe.int.lte('day', this._day(this._pos), 31);
+		safe.int.lte('day', rDay(this._d, this._pos), 31);
 		return this;
 	}
 
@@ -1284,15 +1258,15 @@ export class Day extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `DayOfMonth(${this.toString()})`;
+		return `DayOfMonth(${rDay(this._d, this._pos)})`;
 	}
 
 	/** Create a new day of the month, range 1-31 */
 	public static new(v: number): Day {
 		/*vetDay*/ safe.int.inRangeInc('day', v, 1, 31);
-		const d = new DataView(new ArrayBuffer(dayBytes));
-		/*writeDay*/ d.setUint8(0, v - 1);
-		return new Day(d, 0);
+		const dv = new DataView(new ArrayBuffer(dayBytes));
+		wDay(dv, 0, v);
+		return new Day(dv);
 	}
 
 	/**
@@ -1300,9 +1274,9 @@ export class Day extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Day {
-		const d = new DataView(new ArrayBuffer(dayBytes));
-		Core.writeDFromDt(d, 0, dt);
-		return new Day(d, 0);
+		const dv = new DataView(new ArrayBuffer(dayBytes));
+		wDay(dv, 0, dt.getDate());
+		return new Day(dv);
 	}
 
 	/**
@@ -1310,9 +1284,9 @@ export class Day extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Day {
-		const d = new DataView(new ArrayBuffer(dayBytes));
-		/*writeDay*/ d.setUint8(0, dt.getUTCDate() - 1);
-		return new Day(d, 0);
+		const dv = new DataView(new ArrayBuffer(dayBytes));
+		wDay(dv, 0, dt.getUTCDate());
+		return new Day(dv);
 	}
 
 	/**
@@ -1326,27 +1300,26 @@ export class Day extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Day {
-		const d = new DataView(new ArrayBuffer(dayBytes));
+		const dv = new DataView(new ArrayBuffer(dayBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			Core.writeDFromDt(d, 0, new Date());
+			wDay(dv, 0, new Date().getDate());
 		} else {
-			const e = Core.parseDay(d, 0, input, strict, reset);
+			const e = Core.parseDay(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new Day(d, 0);
+		return new Day(dv);
 	}
 
 	/** Create this day of the month (local) */
 	public static now(): Day {
-		const now = new Date();
-		const d = new DataView(new ArrayBuffer(dayBytes));
-		Core.writeDFromDt(d, 0, now);
-		return new Day(d, 0);
+		const dv = new DataView(new ArrayBuffer(dayBytes));
+		wDay(dv, 0, new Date().getDate());
+		return new Day(dv);
 	}
 
 	/**
@@ -1359,9 +1332,9 @@ export class Day extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static deserialize(src: BitReader): Day {
-		const d = new DataView(new ArrayBuffer(dayBytes));
-		/*deserDay*/ d.setUint8(0, src.readNumber(daySerBits));
-		return new Day(d, 0);
+		const dv = new DataView(new ArrayBuffer(dayBytes));
+		/*deserDay*/ dv.setUint8(0, src.readNumber(daySerBits));
+		return new Day(dv);
 	}
 }
 const minD = Day.new(1);
@@ -1371,7 +1344,7 @@ export class DateOnly extends Core implements ISerializer {
 	/**Number of bytes required to store this data */
 	static readonly storageBytes = dateBytes; //4
 	/**Number of bits required to serialize this data */
-	static readonly serialBits = yearSerBits + monthSerBits + daySerBits; //24
+	static readonly serialBits = dateSerBits; //24
 
 	/** Minimum date = -10000-01-01 */
 	static get min(): DateOnly {
@@ -1384,15 +1357,15 @@ export class DateOnly extends Core implements ISerializer {
 
 	/** Years (-10000 - +22767) ISO8601 */
 	get year(): number {
-		return this._year(this._pos);
+		return rYear(this._d, this._pos + 2);
 	}
 	/** Months (1-12) */
 	get month(): number {
-		return this._month(this._pos + 2);
+		return rMonth(this._d, this._pos + 1);
 	}
 	/** Days (1-31) */
 	get day(): number {
-		return this._day(this._pos + 3);
+		return rDay(this._d, this._pos);
 	}
 
 	/**
@@ -1424,11 +1397,8 @@ export class DateOnly extends Core implements ISerializer {
 	 * date-math. (eg when crossing daylight savings time boundaries).
 	 */
 	toDate(): Date {
-		return new Date(
-			this._year(this._pos),
-			/*fucks sake JS*/ this._month(this._pos + 2) - 1,
-			this._day(this._pos + 3)
-		);
+		const [y, m, d] = rDate(this._d, this._pos);
+		return new Date(y, /*fucks sake JS*/ m - 1, d);
 	}
 
 	/** Days since the Unix epoch (1970-01-01) */
@@ -1453,24 +1423,18 @@ export class DateOnly extends Core implements ISerializer {
 	 * you can do <, >, = comparisons
 	 */
 	public valueOf(): number {
-		const y = this._year(this._pos) * 10000;
-		return y < 0
-			? y -
-					this._month(this._pos + yearBytes) * 100 -
-					this._day(this._pos + yearBytes + monthBytes)
-			: y +
-					this._month(this._pos + yearBytes) * 100 +
-					this._day(this._pos + yearBytes + monthBytes);
+		const [y, m, d] = rDate(this._d, this._pos);
+		return y < 0 ? y * 10000 - m * 100 - d : y * 10000 + m * 100 + d;
 	}
 
 	/** Serialize into target  - 24 bits*/
-	public serialize(target: BitWriter): void {
-		this._date_ser(target, this._pos);
+	public serialize(to: BitWriter): void {
+		serDate(this._d, this._pos, to);
 	}
 
 	/** Number of bits required to serialize */
 	get serialSizeBits(): number {
-		return yearSerBits + monthSerBits + daySerBits;
+		return dateSerBits;
 	}
 
 	/**
@@ -1490,7 +1454,7 @@ export class DateOnly extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `DateOnly(${this.toString()})`;
+		return `DateOnly(${this._date_iso(this._pos, '-')})`;
 	}
 
 	/**
@@ -1502,9 +1466,9 @@ export class DateOnly extends Core implements ISerializer {
 	 * @pure
 	 */
 	public addSafe(days: number): DateOnly {
-		const d = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(d, 0, super.toUnixDays(this._pos) + (days | 0));
-		return new DateOnly(d, 0);
+		const dv = new DataView(new ArrayBuffer(dateBytes));
+		Core.dateFromUnixDays(dv, 0, super.toUnixDays(this._pos) + (days | 0));
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1528,30 +1492,29 @@ export class DateOnly extends Core implements ISerializer {
 	 * @example
 	 * Feb 29 + 1y1m = Mar 29 //Feb29->Mar29. If there was 2 stage validation Feb29->Feb28->Mar28
 	 *
-	 * @param y Integer, if float will be truncated
-	 * @param m
+	 * @param ys Integer, if float will be truncated
+	 * @param ms
 	 * @param d
 	 *
 	 * @pure
 	 */
-	public add(y: number, m = 0): DateOnly {
+	public add(ys: number, ms = 0): DateOnly {
 		let monthAdd = 0;
 		//By collecting and distributing we normalize high m or m/y sign mismatch
 		// (eg +1-4 == +8)
-		if (y) monthAdd += (y | 0) * 12;
-		if (m) monthAdd += m | 0;
+		if (ys) monthAdd += (ys | 0) * 12;
+		if (ms) monthAdd += ms | 0;
 		const yearAdd = (monthAdd / 12) | 0;
 		monthAdd %= 12;
 
-		const yv = this._year(this._pos) + yearAdd;
-		const mv = this._month(this._pos + yearBytes) + monthAdd;
-		const dv = Math.min(
-			this._day(this._pos + yearBytes + monthBytes),
-			Month.lastDay(mv, yv)
-		);
-		const d = new DataView(new ArrayBuffer(dateBytes));
-		Core.writeDate(d, 0, yv, mv, dv);
-		return new DateOnly(d, 0);
+		let [y, m, d] = rDate(this._d, this._pos);
+		y += yearAdd;
+		m += monthAdd;
+		const dim = Month.lastDay(m, y);
+		if (d > dim) d = dim;
+		const dv = new DataView(new ArrayBuffer(dateBytes));
+		wDate(dv, 0, y, m, d);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1563,8 +1526,8 @@ export class DateOnly extends Core implements ISerializer {
 	public static new(y: number, m: number, d: number): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
 		Core.vetDate(y, m, d);
-		Core.writeDate(dv, 0, y, m, d);
-		return new DateOnly(dv, 0);
+		wDate(dv, 0, y, m, d);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1586,13 +1549,13 @@ export class DateOnly extends Core implements ISerializer {
 	public static fromValue(v: number): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
 		Core.dateFromValue(dv, 0, v);
-		return new DateOnly(dv, 0);
+		return new DateOnly(dv);
 	}
 
-	public static fromUnixDays(source: number): DateOnly {
+	public static fromUnixDays(d: number): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(dv, 0, source);
-		return new DateOnly(dv, 0);
+		Core.dateFromUnixDays(dv, 0, d);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1600,10 +1563,10 @@ export class DateOnly extends Core implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date): DateOnly {
-		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+		const ms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(dv, 0, dms / msPerDay);
-		return new DateOnly(dv, 0);
+		Core.dateFromUnixDays(dv, 0, ms / msPerDay);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1613,7 +1576,7 @@ export class DateOnly extends Core implements ISerializer {
 	public static fromDateUtc(date: Date): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
 		Core.dateFromUnixDays(dv, 0, date.valueOf() / msPerDay);
-		return new DateOnly(dv, 0);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1623,7 +1586,7 @@ export class DateOnly extends Core implements ISerializer {
 	public static fromUnixTime(source: number): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
 		Core.dateFromUnixDays(dv, 0, source / sPerDay);
-		return new DateOnly(dv, 0);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1633,7 +1596,7 @@ export class DateOnly extends Core implements ISerializer {
 	public static fromUnixTimeMs(source: number): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
 		Core.dateFromUnixDays(dv, 0, source / msPerDay);
-		return new DateOnly(dv, 0);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1650,12 +1613,13 @@ export class DateOnly extends Core implements ISerializer {
 		//If content starts with "now" and optionally followed by whitespace - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			Core.writeDtFromDt(dv, 0, new Date());
+			const dt = new Date();
+			wDate(dv, 0, dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
 		} else {
 			const e = Core.parseDate(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new DateOnly(dv, 0);
+		return new DateOnly(dv);
 	}
 
 	/** Create this date (local) */
@@ -1663,26 +1627,26 @@ export class DateOnly extends Core implements ISerializer {
 		//Note we depend on JS Date here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
 		const n = new Date();
-		const dms = n.valueOf() - n.getTimezoneOffset() * msPerMin;
+		const ms = n.valueOf() - n.getTimezoneOffset() * msPerMin;
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(dv, 0, dms / msPerDay);
-		return new DateOnly(dv, 0);
+		Core.dateFromUnixDays(dv, 0, ms / msPerDay);
+		return new DateOnly(dv);
 	}
 
 	/** Create this date (UTC) */
 	public static nowUtc(): DateOnly {
 		//Note we depend on JS Date here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		const n = new Date();
+		const ms = new Date().valueOf();
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(dv, 0, n.valueOf() / msPerDay);
-		return new DateOnly(dv, 0);
+		Core.dateFromUnixDays(dv, 0, ms / msPerDay);
+		return new DateOnly(dv);
 	}
 
-	public static deserialize(source: BitReader): DateOnly {
+	public static deserialize(src: BitReader): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.deserDate(dv, 0, source);
-		return new DateOnly(dv, 0);
+		deserDate(dv, 0, src);
+		return new DateOnly(dv);
 	}
 
 	/**
@@ -1714,7 +1678,7 @@ export class Hour extends Core implements ISerializer {
 
 	/** Hour, not zero padded (0-23) */
 	public toString(): string {
-		return this._d.getUint8(this._pos).toString();
+		return rHour(this._d, this._pos).toString();
 	}
 
 	/** Hour, zero padded (01-23) */
@@ -1724,12 +1688,12 @@ export class Hour extends Core implements ISerializer {
 
 	/** Hour as a number (0-23) */
 	toJSON(): number {
-		return this._d.getUint8(this._pos);
+		return rHour(this._d, this._pos);
 	}
 
 	/** Hour as a number (0-23) */
 	public valueOf(): number {
-		return this._d.getUint8(this._pos);
+		return rHour(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 5 bits*/
@@ -1748,7 +1712,7 @@ export class Hour extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Hour {
-		safe.int.lte('hour', this._hour(this._pos), 23);
+		safe.int.lte('hour', rHour(this._d, this._pos), 23);
 		return this;
 	}
 
@@ -1759,15 +1723,15 @@ export class Hour extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `HourOfDay(${this.toString()})`;
+		return `HourOfDay(${rHour(this._d, this._pos)})`;
 	}
 
 	/** Create a new hour, range 0-23 */
 	public static new(v: number): Hour {
 		/*vetHour*/ safe.int.inRangeInc('hour', v, 0, 23);
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		/*writeHour*/ d.setUint8(0, v);
-		return new Hour(d, 0);
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, v);
+		return new Hour(dv);
 	}
 
 	/**
@@ -1775,9 +1739,9 @@ export class Hour extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		/* writeHFromDt*/ d.setUint8(0, dt.getHours());
-		return new Hour(d, 0);
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, dt.getHours());
+		return new Hour(dv);
 	}
 
 	/**
@@ -1785,30 +1749,30 @@ export class Hour extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		/* writeHFromDt*/ d.setUint8(0, dt.getUTCHours());
-		return new Hour(d, 0);
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, dt.getUTCHours());
+		return new Hour(dv);
 	}
 
 	/** Create from seconds since UNIX epoch */
-	public static fromUnixTime(source: number): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		d.setUint8(0, (source % sPerDay) / sPerHour);
-		return new Hour(d, 0);
+	public static fromUnixTime(s: number): Hour {
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, (s % sPerDay) / sPerHour);
+		return new Hour(dv);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
-	public static fromUnixTimeMs(source: number): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		d.setUint8(0, (source % msPerDay) / msPerHour);
-		return new Hour(d, 0);
+	public static fromUnixTimeMs(ms: number): Hour {
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, (ms % msPerDay) / msPerHour);
+		return new Hour(dv);
 	}
 
 	/** Create from microseconds since UNIX epoch */
-	public static fromUnixTimeUs(source: number): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		d.setUint8(0, (source % usPerDay) / usPerHour);
-		return new Hour(d, 0);
+	public static fromUnixTimeUs(us: number): Hour {
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, (us % usPerDay) / usPerHour);
+		return new Hour(dv);
 	}
 
 	/**
@@ -1821,33 +1785,33 @@ export class Hour extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
+		const dv = new DataView(new ArrayBuffer(hourBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			/* writeHFromDt*/ d.setUint8(0, new Date().getHours());
+			wHour(dv, 0, new Date().getHours());
 		} else {
-			const e = Core.parseHour(d, 0, input, strict, reset);
+			const e = Core.parseHour(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new Hour(d, 0);
+		return new Hour(dv);
 	}
 
 	/** Create this hour (local) */
 	public static now(): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		/* writeHFromDt*/ d.setUint8(0, new Date().getHours());
-		return new Hour(d, 0);
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, new Date().getHours());
+		return new Hour(dv);
 	}
 
 	/** Create this hour (UTC) */
 	public static nowUtc(): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		/* writeHFromDt*/ d.setUint8(0, new Date().getUTCHours());
-		return new Hour(d, 0);
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, new Date().getUTCHours());
+		return new Hour(dv);
 	}
 
 	/**
@@ -1859,9 +1823,9 @@ export class Hour extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Hour {
-		const d = new DataView(new ArrayBuffer(hourBytes));
-		d.setUint8(0, src.readNumber(hourSerBits));
-		return new Hour(d, 0);
+		const dv = new DataView(new ArrayBuffer(hourBytes));
+		wHour(dv, 0, src.readNumber(hourSerBits));
+		return new Hour(dv);
 	}
 }
 const minH = Hour.new(0);
@@ -1884,7 +1848,7 @@ export class Minute extends Core implements ISerializer {
 
 	/** Minute, not zero padded (0-59) */
 	public toString(): string {
-		return /*_minute*/ this._d.getUint8(this._pos).toString();
+		return rMin(this._d, this._pos).toString();
 	}
 	/** Minute, Zero padded (00-59) */
 	public toIsoString(): string {
@@ -1893,17 +1857,17 @@ export class Minute extends Core implements ISerializer {
 
 	/** Minute as an integer (0-59) */
 	toJSON(): number {
-		return /*_minute*/ this._d.getUint8(this._pos);
+		return rMin(this._d, this._pos);
 	}
 
 	/** Minute as an integer (0-59) */
 	public valueOf(): number {
-		return /*_minute*/ this._d.getUint8(this._pos);
+		return rMin(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(/*_minute*/ this._d.getUint8(this._pos), minSerBits);
+		target.writeNumber(rMin(this._d, this._pos), minSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1917,7 +1881,7 @@ export class Minute extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Minute {
-		safe.int.lte('minute', /*_minute*/ this._d.getUint8(this._pos), 59);
+		safe.int.lte('minute', rMin(this._d, this._pos), 59);
 		return this;
 	}
 
@@ -1928,15 +1892,15 @@ export class Minute extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `Minute(${this.toString()})`;
+		return `Minute(${rMin(this._d, this._pos)})`;
 	}
 
 	/** Create a new minute, range 0-59 */
 	public static new(v: number): Minute {
 		/*vetMinute*/ safe.int.inRangeInc('minute', v, 0, 59);
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMinute*/ d.setUint8(0, v);
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, v);
+		return new Minute(dv);
 	}
 
 	/**
@@ -1944,9 +1908,9 @@ export class Minute extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMiFromDt*/ d.setUint8(0, dt.getMinutes());
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, dt.getMinutes());
+		return new Minute(dv);
 	}
 
 	/**
@@ -1954,30 +1918,30 @@ export class Minute extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMiFromDt*/ d.setUint8(0, dt.getUTCMinutes());
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, dt.getUTCMinutes());
+		return new Minute(dv);
 	}
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(src: number): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMinute*/ d.setUint8(0, (src % sPerHour) / 60);
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, (src % sPerHour) / 60);
+		return new Minute(dv);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(src: number): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMinute*/ d.setUint8(0, (src % msPerHour) / msPerMin);
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, (src % msPerHour) / msPerMin);
+		return new Minute(dv);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(src: number): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMinute*/ d.setUint8(0, (src % usPerHour) / usPerMin);
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, (src % usPerHour) / usPerMin);
+		return new Minute(dv);
 	}
 
 	/**
@@ -1990,34 +1954,33 @@ export class Minute extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
+		const dv = new DataView(new ArrayBuffer(minBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			/*writeMiFromDt*/ d.setUint8(0, new Date().getMinutes());
+			wMin(dv, 0, new Date().getMinutes());
 		} else {
-			const e = Core.parseMinute(d, 0, input, strict, reset);
+			const e = Core.parseMinute(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new Minute(d, 0);
+		return new Minute(dv);
 	}
 
 	/** Create this minute (local) */
 	public static now(): Minute {
-		const now = new Date();
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMiFromDt*/ d.setUint8(0, now.getMinutes());
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, new Date().getMinutes());
+		return new Minute(dv);
 	}
 
 	/** Create this minute (UTC) */
 	public static nowUtc(): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*writeMiFromDt*/ d.setUint8(0, new Date().getMinutes());
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, new Date().getUTCMinutes());
+		return new Minute(dv);
 	}
 
 	/**
@@ -2029,9 +1992,9 @@ export class Minute extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Minute {
-		const d = new DataView(new ArrayBuffer(minBytes));
-		/*deserMin*/ d.setUint8(0, src.readNumber(minSerBits));
-		return new Minute(d, 0);
+		const dv = new DataView(new ArrayBuffer(minBytes));
+		wMin(dv, 0, src.readNumber(minSerBits));
+		return new Minute(dv);
 	}
 }
 const minMi = Minute.new(0);
@@ -2054,7 +2017,7 @@ export class Second extends Core implements ISerializer {
 
 	/** Second, not zero padded (0-59) */
 	public toString(): string {
-		return this._d.getUint8(this._pos).toString();
+		return rSec(this._d, this._pos).toString();
 	}
 	/** Second, Zero padded (00-59) */
 	public toIsoString(): string {
@@ -2063,17 +2026,17 @@ export class Second extends Core implements ISerializer {
 
 	/** As an integer (0-59) */
 	toJSON(): number {
-		return this._d.getUint8(this._pos);
+		return rSec(this._d, this._pos);
 	}
 
 	/** As an integer (0-59) */
 	public valueOf(): number {
-		return this._d.getUint8(this._pos);
+		return rSec(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._d.getUint8(this._pos), secSerBits);
+		target.writeNumber(rSec(this._d, this._pos), secSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2087,7 +2050,7 @@ export class Second extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Second {
-		safe.int.lte('second', this._second(this._pos), 59);
+		safe.int.lte('second', rSec(this._d, this._pos), 59);
 		return this;
 	}
 
@@ -2098,15 +2061,15 @@ export class Second extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `Second(${this.toString()})`;
+		return `Second(${rSec(this._d, this._pos)})`;
 	}
 
 	/** Create a new second, range 0-59 */
 	public static new(v: number): Second {
 		/*vetSecond*/ safe.int.inRangeInc('second', v, 0, 59);
-		const d = new DataView(new ArrayBuffer(secBytes));
-		/*writeSecond*/ d.setUint8(0, v);
-		return new Second(d, 0);
+		const dv = new DataView(new ArrayBuffer(secBytes));
+		wSec(dv, 0, v);
+		return new Second(dv);
 	}
 
 	/**
@@ -2114,32 +2077,32 @@ export class Second extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Second {
-		const d = new DataView(new ArrayBuffer(secBytes));
-		/*writeSFromDt*/ d.setUint8(0, dt.getSeconds());
-		return new Second(d, 0);
+		const dv = new DataView(new ArrayBuffer(secBytes));
+		wSec(dv, 0, dt.getSeconds());
+		return new Second(dv);
 	}
 
 	//fromDateUtc makes no sense
 
 	/** Create from seconds since UNIX epoch */
-	public static fromUnixTime(src: number): Second {
-		const d = new DataView(new ArrayBuffer(secBytes));
-		/*writeSFromDt*/ d.setUint8(0, src % 60);
-		return new Second(d, 0);
+	public static fromUnixTime(s: number): Second {
+		const dv = new DataView(new ArrayBuffer(secBytes));
+		wSec(dv, 0, s % 60);
+		return new Second(dv);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(src: number): Second {
-		const d = new DataView(new ArrayBuffer(secBytes));
-		/*writeSecond*/ d.setUint8(0, (src % msPerMin) / msPerSec);
-		return new Second(d, 0);
+		const dv = new DataView(new ArrayBuffer(secBytes));
+		wSec(dv, 0, (src % msPerMin) / msPerSec);
+		return new Second(dv);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(src: number): Second {
-		const d = new DataView(new ArrayBuffer(secBytes));
-		/*writeSecond*/ d.setUint8(0, (src % usPerMin) / usPerSec);
-		return new Second(d, 0);
+		const dv = new DataView(new ArrayBuffer(secBytes));
+		wSec(dv, 0, (src % usPerMin) / usPerSec);
+		return new Second(dv);
 	}
 
 	/**
@@ -2152,28 +2115,28 @@ export class Second extends Core implements ISerializer {
 	 * - The content of $input isn't valid
 	 */
 	public static parse(input: WindowStr, strict = false): Second {
-		const d = new DataView(new ArrayBuffer(secBytes));
+		const dv = new DataView(new ArrayBuffer(secBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			const utcNow = performance.timeOrigin + performance.now();
+			const ms = performance.timeOrigin + performance.now();
 			//No need for offset since there's no TZ off by seconds (yet?)
-			/*writeSecond*/ d.setUint8(0, (utcNow / msPerSec) % 60);
+			wSec(dv, 0, (ms / msPerSec) % 60);
 		} else {
-			const e = Core.parseSecond(d, 0, input, strict, reset);
+			const e = Core.parseSecond(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new Second(d, 0);
+		return new Second(dv);
 	}
 
 	/** Current second */
 	public static now(): Second {
-		const d = new DataView(new ArrayBuffer(secBytes));
-		/*writeSFromDt*/ d.setUint8(0, new Date().getSeconds());
-		return new Second(d, 0);
+		const dv = new DataView(new ArrayBuffer(secBytes));
+		wSec(dv, 0, new Date().getSeconds());
+		return new Second(dv);
 	}
 
 	//nowUtc makes no sense: there's no TZ that's off by seconds
@@ -2187,9 +2150,9 @@ export class Second extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Second {
-		const d = new DataView(new ArrayBuffer(secBytes));
-		d.setUint8(0, /*deserSec*/ src.readNumber(secSerBits));
-		return new Second(d, 0);
+		const dv = new DataView(new ArrayBuffer(secBytes));
+		wSec(dv, 0, src.readNumber(secSerBits));
+		return new Second(dv);
 	}
 }
 const minS = Second.new(0);
@@ -2212,12 +2175,12 @@ export class Millisecond extends Core implements ISerializer {
 
 	/** Value as an integer (0-999999) */
 	public valueOf(): number {
-		return this._d.getUint16(this._pos, true);
+		return rMilli(this._d, this._pos);
 	}
 
 	/** Millisecond, not zero padded (0-999) */
 	public toString(): string {
-		return this._d.getUint16(this._pos, true).toString();
+		return rMilli(this._d, this._pos).toString();
 	}
 
 	/** Millisecond, zero padded (000-999)*/
@@ -2227,12 +2190,12 @@ export class Millisecond extends Core implements ISerializer {
 
 	/** Value as an integer (0-999) */
 	toJSON(): number {
-		return this._d.getUint16(this._pos, true);
+		return rMilli(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 10 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._d.getUint16(this._pos, true), milliSerBits);
+		target.writeNumber(rMilli(this._d, this._pos), milliSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2246,7 +2209,7 @@ export class Millisecond extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Millisecond {
-		safe.int.lte('millisecond', this._milli(this._pos), 999);
+		safe.int.lte('millisecond', rMilli(this._d, this._pos), 999);
 		return this;
 	}
 
@@ -2257,15 +2220,15 @@ export class Millisecond extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `Millisecond(${this.toString()})`;
+		return `Millisecond(${rMilli(this._d, this._pos)})`;
 	}
 
 	/** Create a new Millisecond, range 0-999 */
 	public static new(v: number): Millisecond {
 		/*vetMilli*/ safe.int.inRangeInc('millisecond', v, 0, 999);
-		const d = new DataView(new ArrayBuffer(milliBytes));
-		/*writeMilli*/ d.setUint16(0, v, true);
-		return new Millisecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(milliBytes));
+		wMilli(dv, 0, v);
+		return new Millisecond(dv);
 	}
 
 	/**
@@ -2274,32 +2237,32 @@ export class Millisecond extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Millisecond {
-		const d = new DataView(new ArrayBuffer(milliBytes));
-		Core.writeMsFromDt(d, 0, dt);
-		return new Millisecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(milliBytes));
+		wMilli(dv, 0, dt.getMilliseconds());
+		return new Millisecond(dv);
 	}
 
 	//no sense: fromDateUtc
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(s: number): Millisecond {
-		const d = new DataView(new ArrayBuffer(milliBytes));
-		/*writeMilli*/ d.setUint16(0, (s * msPerSec) % msPerSec, true);
-		return new Millisecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(milliBytes));
+		wMilli(dv, 0, (s * msPerSec) % msPerSec);
+		return new Millisecond(dv);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(ms: number): Millisecond {
-		const d = new DataView(new ArrayBuffer(milliBytes));
-		/*writeMilli*/ d.setUint16(0, ms % msPerSec, true);
-		return new Millisecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(milliBytes));
+		wMilli(dv, 0, ms % msPerSec);
+		return new Millisecond(dv);
 	}
 
 	/** Create from millisecond since UNIX epoch */
 	public static fromUnixTimeUs(us: number): Millisecond {
-		const d = new DataView(new ArrayBuffer(milliBytes));
-		/*writeMilli*/ d.setUint16(0, (us / 1000) % msPerSec, true);
-		return new Millisecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(milliBytes));
+		wMilli(dv, 0, (us / 1000) % msPerSec);
+		return new Millisecond(dv);
 	}
 
 	/**
@@ -2319,29 +2282,29 @@ export class Millisecond extends Core implements ISerializer {
 		strict = false,
 		left = false
 	): Millisecond {
-		const d = new DataView(new ArrayBuffer(milliBytes));
+		const dv = new DataView(new ArrayBuffer(milliBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			const utcNow = performance.timeOrigin + performance.now();
+			const ms = performance.timeOrigin + performance.now();
 			//No need for offset since there's no TZ off by milliseconds
-			Core.writeMilli(d, 0, utcNow % msPerSec);
+			wMilli(dv, 0, ms % msPerSec);
 		} else {
-			const e = Core.parseMilli(d, 0, input, strict, left, reset);
+			const e = Core.parseMilli(dv, 0, input, strict, left, reset);
 			if (e) throw e;
 		}
-		return new Millisecond(d, 0);
+		return new Millisecond(dv);
 	}
 
 	/** Create this millisecond */
 	public static now(): Millisecond {
-		const now = performance.timeOrigin + performance.now();
-		const d = new DataView(new ArrayBuffer(milliBytes));
-		/*writeMilli*/ d.setUint16(0, now % msPerSec, true);
-		return new Millisecond(d, 0);
+		const ms = performance.timeOrigin + performance.now();
+		const dv = new DataView(new ArrayBuffer(milliBytes));
+		wMilli(dv, 0, ms % msPerSec);
+		return new Millisecond(dv);
 	}
 
 	//nowUtc makes no sense: there's no TZ that's off by milliseconds
@@ -2355,9 +2318,9 @@ export class Millisecond extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Millisecond {
-		const d = new DataView(new ArrayBuffer(milliBytes));
-		/*deserMilli*/ Core.writeMilli(d, 0, src.readNumber(milliSerBits));
-		return new Millisecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(milliBytes));
+		wMilli(dv, 0, src.readNumber(milliSerBits));
+		return new Millisecond(dv);
 	}
 }
 const minMs = Millisecond.new(0);
@@ -2380,15 +2343,12 @@ export class Microsecond extends Core implements ISerializer {
 
 	/** Value as an integer (0-999999) */
 	public valueOf(): number {
-		return (
-			this._d.getUint8(this._pos) |
-			(this._d.getUint16(this._pos + 1, true) << 8)
-		);
+		return rMicro(this._d, this._pos);
 	}
 
 	/** Microsecond, not zero padded (0-999999) */
 	public toString(): string {
-		return this.valueOf().toString();
+		return rMicro(this._d, this._pos).toString();
 	}
 
 	/** Microsecond, zero padded (000000-999999)*/
@@ -2398,19 +2358,12 @@ export class Microsecond extends Core implements ISerializer {
 
 	/** Value as an integer (0-999999) */
 	toJSON(): number {
-		return (
-			this._d.getUint8(this._pos) |
-			(this._d.getUint16(this._pos + 1, true) << 8)
-		);
+		return rMicro(this._d, this._pos);
 	}
 
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(
-			this._d.getUint8(this._pos) |
-				(this._d.getUint16(this._pos + 1, true) << 8),
-			microSerBits
-		);
+		target.writeNumber(rMicro(this._d, this._pos), microSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2424,7 +2377,7 @@ export class Microsecond extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Microsecond {
-		safe.int.lte('microsecond', this._micro(this._pos), 999999);
+		safe.int.lte('microsecond', rMicro(this._d, this._pos), 999999);
 		return this;
 	}
 
@@ -2435,15 +2388,15 @@ export class Microsecond extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `Microsecond(${this.toString()})`;
+		return `Microsecond(${rMicro(this._d, this._pos)})`;
 	}
 
 	/** Create a new Microsecond, range 0-999999 */
 	public static new(v: number): Microsecond {
 		/*vetMicro*/ safe.int.inRangeInc('microsecond', v, 0, 999999);
-		const d = new DataView(new ArrayBuffer(microBytes));
-		Core.writeMicro(d, 0, v);
-		return new Microsecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(microBytes));
+		wMicro(dv, 0, v);
+		return new Microsecond(dv);
 	}
 
 	/**
@@ -2454,32 +2407,32 @@ export class Microsecond extends Core implements ISerializer {
 	 * @param dt Value used as source
 	 */
 	public static fromDate(dt: Date): Microsecond {
-		const d = new DataView(new ArrayBuffer(microBytes));
-		Core.writeUsFromDt(d, 0, dt);
-		return new Microsecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(microBytes));
+		wMicro(dv, 0, dt.getMilliseconds() * 1000);
+		return new Microsecond(dv);
 	}
 
 	//no sense: fromDateUtc
 
 	/** Create from seconds since UNIX epoch */
 	public static fromUnixTime(s: number): Microsecond {
-		const d = new DataView(new ArrayBuffer(microBytes));
-		Core.writeMicro(d, 0, (s * usPerSec) % usPerSec);
-		return new Microsecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(microBytes));
+		wMicro(dv, 0, (s * usPerSec) % usPerSec);
+		return new Microsecond(dv);
 	}
 
 	/** Create from milliseconds since UNIX epoch */
 	public static fromUnixTimeMs(ms: number): Microsecond {
-		const d = new DataView(new ArrayBuffer(microBytes));
-		Core.writeMicro(d, 0, (ms % msPerSec) * 1000);
-		return new Microsecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(microBytes));
+		wMicro(dv, 0, (ms % msPerSec) * 1000);
+		return new Microsecond(dv);
 	}
 
 	/** Create from microseconds since UNIX epoch */
 	public static fromUnixTimeUs(us: number): Microsecond {
-		const d = new DataView(new ArrayBuffer(microBytes));
-		Core.writeMicro(d, 0, us % usPerSec);
-		return new Microsecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(microBytes));
+		wMicro(dv, 0, us % usPerSec);
+		return new Microsecond(dv);
 	}
 
 	/**
@@ -2499,7 +2452,7 @@ export class Microsecond extends Core implements ISerializer {
 		strict = false,
 		left = false
 	): Microsecond {
-		const d = new DataView(new ArrayBuffer(microBytes));
+		const dv = new DataView(new ArrayBuffer(microBytes));
 		const reset = input.getReset();
 		input.trim();
 
@@ -2508,20 +2461,20 @@ export class Microsecond extends Core implements ISerializer {
 			input.shrink(3);
 			const utcNow = performance.timeOrigin + performance.now();
 			//No need for offset since there's no TZ off by microseconds
-			Core.writeMicro(d, 0, utcNow % usPerSec);
+			wMicro(dv, 0, utcNow % usPerSec);
 		} else {
-			const e = Core.parseMicro(d, 0, input, strict, left, reset);
+			const e = Core.parseMicro(dv, 0, input, strict, left, reset);
 			if (e) throw e;
 		}
-		return new Microsecond(d, 0);
+		return new Microsecond(dv);
 	}
 
 	/** Create this microsecond */
 	public static now(): Microsecond {
-		const now = performance.timeOrigin + performance.now();
-		const d = new DataView(new ArrayBuffer(microBytes));
-		Core.writeMicro(d, 0, (now * 1000) % usPerSec);
-		return new Microsecond(d, 0);
+		const ms = performance.timeOrigin + performance.now();
+		const dv = new DataView(new ArrayBuffer(microBytes));
+		wMicro(dv, 0, (ms * 1000) % usPerSec);
+		return new Microsecond(dv);
 	}
 
 	//nowUtc makes no sense: there's no TZ that's off by microseconds
@@ -2535,9 +2488,9 @@ export class Microsecond extends Core implements ISerializer {
 	 * @param src Source to read bits from
 	 */
 	public static deserialize(src: BitReader): Microsecond {
-		const d = new DataView(new ArrayBuffer(microBytes));
-		/*deserMicro*/ Core.writeMicro(d, 0, src.readNumber(microSerBits));
-		return new Microsecond(d, 0);
+		const dv = new DataView(new ArrayBuffer(microBytes));
+		wMicro(dv, 0, src.readNumber(microSerBits));
+		return new Microsecond(dv);
 	}
 }
 const minUs = Microsecond.new(0);
@@ -2553,8 +2506,7 @@ export class TimeOnly extends Core implements ISerializer {
 	/**Number of bytes required to store this data */
 	static readonly storageBytes = timeBytes; //6
 	/**Number of bits required to serialize this data */
-	static readonly serialBits =
-		hourSerBits + minSerBits + secSerBits + microSerBits; //37
+	static readonly serialBits = timeSerBits; //37
 
 	/** Minimum time = 00:00:00.000000 */
 	static get min(): TimeOnly {
@@ -2567,19 +2519,19 @@ export class TimeOnly extends Core implements ISerializer {
 
 	/** Hours (0-23) */
 	get hour(): number {
-		return this._hour(this._pos);
+		return rHour(this._d, this._pos + 5);
 	}
 	/** Minutes (0-59) */
 	get minute(): number {
-		return this._minute(this._pos + hourBytes);
+		return rMin(this._d, this._pos + 4);
 	}
 	/** Seconds (0-59) */
 	get second(): number {
-		return this._second(this._pos + hourBytes + minBytes);
+		return rSec(this._d, this._pos + 3);
 	}
 	/** Microseconds (0-999999) */
 	get microsecond(): number {
-		return this._micro(this._pos + hourBytes + minBytes + secBytes);
+		return rMicro(this._d, this._pos);
 	}
 
 	/**
@@ -2588,7 +2540,7 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param [sep=true] Include separators (default) or not
 	 */
 	public toString(sep = true): string {
-		return this._time_iso(this._pos, sep);
+		return super._time_iso(this._pos, sep);
 	}
 
 	/**
@@ -2600,22 +2552,22 @@ export class TimeOnly extends Core implements ISerializer {
 		// Using a number (like valueOf), or encoded serialized bytes, would decrease the JSON
 		// size but is no longer *human readable*.  This mistake is made in some libraries
 		// serializing date and time in unix-time
-		return this._time_iso(this._pos, true);
+		return super._time_iso(this._pos, true);
 	}
 
 	/** Microseconds (since midnight) */
 	toMicroseconds(): number {
-		return this.timeToUs(this._pos);
+		return super.timeToUs(this._pos);
 	}
 
 	/** Milliseconds (since midnight) value can be floating point (us component)*/
 	toMilliseconds(): number {
-		return this.timeToUs(this._pos) / 1000;
+		return super.timeToUs(this._pos) / 1000;
 	}
 
 	/** Seconds (since midnight) value can be floating point (us component)*/
 	toSeconds(): number {
-		return this.timeToUs(this._pos) / usPerSec;
+		return super.timeToUs(this._pos) / usPerSec;
 	}
 
 	/**
@@ -2625,23 +2577,18 @@ export class TimeOnly extends Core implements ISerializer {
 	 * But you can do <, >, = comparisons
 	 */
 	public valueOf(): number {
-		let pos = this._pos;
-		let ret = this._hour(pos) * 10000000000;
-		pos += hourBytes;
-		ret += this._minute(pos) * 100000000;
-		pos += minBytes;
-		ret += this._second(pos) * 1000000;
-		return ret + this._micro(pos + secBytes);
+		const [h, i, s, u] = rTime(this._d, this._pos);
+		return h * 10000000000 + i * 100000000 + s * 1000000 + u;
 	}
 
 	/** Serialize into target  - 38 bits*/
-	public serialize(target: BitWriter): void {
-		this._time_ser(target, this._pos);
+	public serialize(to: BitWriter): void {
+		serTime(this._d, this._pos, to);
 	}
 
 	/** Number of bits required to serialize */
 	get serialSizeBits(): number {
-		return hourSerBits + minSerBits + secSerBits + microSerBits;
+		return timeSerBits;
 	}
 
 	/**
@@ -2661,7 +2608,7 @@ export class TimeOnly extends Core implements ISerializer {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `TimeOnly(${this.toString()})`;
+		return `TimeOnly(${this._time_iso(this._pos, true)})`;
 	}
 
 	/**
@@ -2672,10 +2619,10 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param u Microseconds 0-999999
 	 */
 	public static new(h: number, i: number, s: number, u: number): TimeOnly {
-		const d = new DataView(new ArrayBuffer(timeBytes));
 		Core.vetTime(h, i, s, u);
-		Core.writeTime(d, 0, h, i, s, u);
-		return new TimeOnly(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		wTime(dv, 0, h, i, s, u);
+		return new TimeOnly(dv);
 	}
 
 	/**
@@ -2684,42 +2631,63 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @returns
 	 */
 	public static fromValue(v: number): TimeOnly {
-		const d = new DataView(new ArrayBuffer(timeBytes));
-		Core.timeFromValue(d, 0, v);
-		return new TimeOnly(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		Core.timeFromValue(dv, 0, v);
+		return new TimeOnly(dv);
 	}
 
 	/**
 	 * Create a time from microseconds since Unix epoch
 	 *
-	 * @param source Number of microseconds since midnight (if floating point it'll be truncated)
+	 * @param us Number of microseconds since midnight (if floating point it'll be truncated)
 	 */
-	public static fromUnixTimeUs(source: number): TimeOnly {
-		const d = new DataView(new ArrayBuffer(timeBytes));
-		Core.timeFromUnixUs(d, 0, source);
-		return new TimeOnly(d, 0);
+	public static fromUnixTimeUs(us: number): TimeOnly {
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		wTime(
+			dv,
+			0,
+			(us % usPerDay) / usPerHour,
+			(us % usPerHour) / usPerMin,
+			(us % usPerMin) / usPerSec,
+			us % usPerSec
+		);
+		return new TimeOnly(dv);
 	}
 
 	/**
 	 * Create a time from float milliseconds since UNIX epoch aka unix time
 	 *
-	 * @param source Unix time at millisecond accuracy, may include floating point (for higher resolution)
+	 * @param ms Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
-	public static fromUnixTimeMs(source: number): TimeOnly {
-		const d = new DataView(new ArrayBuffer(timeBytes));
-		Core.timeFromUnixUs(d, 0, source * 1000);
-		return new TimeOnly(d, 0);
+	public static fromUnixTimeMs(ms: number): TimeOnly {
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		wTime(
+			dv,
+			0,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		return new TimeOnly(dv);
 	}
 
 	/**
 	 * Create a time from float seconds since UNIX epoch aka unix time
 	 *
-	 * @param source Unix time at second accuracy, may include floating point (for higher resolution)
+	 * @param s Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
-	public static fromUnixTime(source: number): TimeOnly {
-		const d = new DataView(new ArrayBuffer(timeBytes));
-		Core.timeFromUnixUs(d, 0, source * 1000000);
-		return new TimeOnly(d, 0);
+	public static fromUnixTime(s: number): TimeOnly {
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		wTime(
+			dv,
+			0,
+			(s % sPerDay) / sPerHour,
+			(s % sPerHour) / 60,
+			s % 60,
+			(s * usPerSec) % usPerSec
+		);
+		return new TimeOnly(dv);
 	}
 
 	/**
@@ -2729,10 +2697,17 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date): TimeOnly {
-		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		const d = new DataView(new ArrayBuffer(timeBytes));
-		Core.timeFromUnixUs(d, 0, dms * 1000);
-		return new TimeOnly(d, 0);
+		const ms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		wTime(
+			dv,
+			0,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		return new TimeOnly(dv);
 	}
 
 	/**
@@ -2742,33 +2717,47 @@ export class TimeOnly extends Core implements ISerializer {
 	 * @param storage
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnly {
-		const d = new DataView(new ArrayBuffer(timeBytes));
+		const dv = new DataView(new ArrayBuffer(timeBytes));
 		const reset = input.getReset();
 		input.trim();
 
 		//If content is "now" - run now macro
 		if (input.toString().toLowerCase() == 'now') {
 			input.shrink(3);
-			const utcNow = performance.timeOrigin + performance.now();
-			const utcDt = new Date(utcNow);
-			const offset = utcDt.getTimezoneOffset() * 60000;
-			Core.timeFromUnixUs(d, 0, (utcNow - offset) * 1000);
+			let ms = performance.timeOrigin + performance.now();
+			const utcDt = new Date(ms);
+			ms -= utcDt.getTimezoneOffset() * msPerMin;
+			wTime(
+				dv,
+				0,
+				(ms % msPerDay) / msPerHour,
+				(ms % msPerHour) / msPerMin,
+				(ms % msPerMin) / msPerSec,
+				(ms * 1000) % usPerSec
+			);
 		} else {
-			const e = Core.parseTime(d, 0, input, strict, reset);
+			const e = Core.parseTime(dv, 0, input, strict, reset);
 			if (e) throw e;
 		}
-		return new TimeOnly(d, 0);
+		return new TimeOnly(dv);
 	}
 
 	/** Create time from this point in (local) time */
 	public static now(): TimeOnly {
-		const utcNow = performance.timeOrigin + performance.now();
+		let ms = performance.timeOrigin + performance.now();
 		//Calculate the offset to get it in local time
-		const utcDt = new Date(utcNow);
-		const offset = utcDt.getTimezoneOffset() * 60000;
-		const d = new DataView(new ArrayBuffer(timeBytes));
-		Core.timeFromUnixUs(d, 0, (utcNow - offset) * 1000);
-		return new TimeOnly(d, 0);
+		const utcDt = new Date(ms);
+		ms -= utcDt.getTimezoneOffset() * msPerMin;
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		wTime(
+			dv,
+			0,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		return new TimeOnly(dv);
 	}
 
 	/**
@@ -2777,13 +2766,13 @@ export class TimeOnly extends Core implements ISerializer {
 	 * - There's not 38 bits remaining in $source.buffer
 	 * - There's no available $storage
 	 * It's recommended you call .validate() after
-	 * @param source Source to read bits from
+	 * @param src Source to read bits from
 	 */
-	public static deserialize(source: BitReader): TimeOnly {
+	public static deserialize(src: BitReader): TimeOnly {
 		//Keep the memory contiguous
-		const d = new DataView(new ArrayBuffer(timeBytes));
-		Core.deserTime(d, 0, source);
-		return new TimeOnly(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeBytes));
+		deserTime(dv, 0, src);
+		return new TimeOnly(dv);
 	}
 }
 const minT = TimeOnly.new(0, 0, 0, 0);
@@ -2812,19 +2801,19 @@ export class TimeOnlyMs extends Core implements ISerializer {
 
 	/** Hours (0-23) */
 	get hour(): number {
-		return this._hour(this._pos);
+		return rHour(this._d, this._pos + 4);
 	}
 	/** Minutes (0-59) */
 	get minute(): number {
-		return this._minute(this._pos + hourBytes);
+		return rMin(this._d, this._pos + 3);
 	}
 	/** Seconds (0-59) */
 	get second(): number {
-		return this._second(this._pos + hourBytes + minBytes);
+		return rSec(this._d, this._pos + 2);
 	}
 	/** Milliseconds (0-999) */
 	get millisecond(): number {
-		return this._milli(this._pos + hourBytes + minBytes + secBytes);
+		return rMilli(this._d, this._pos);
 	}
 
 	/**
@@ -2838,13 +2827,15 @@ export class TimeOnlyMs extends Core implements ISerializer {
 			sep1 = ':';
 			sep2 = '.';
 		}
-		let p = this._pos;
-		let ret = this._hour_iso(p) + sep1;
-		p += hourBytes;
-		ret += this._minute_iso(p) + sep1;
-		p += minBytes;
-		ret += this._second_iso(p) + sep2;
-		return ret + this._milli_iso(p + secBytes);
+		return (
+			this._hour_iso(this._pos + 4) +
+			sep1 +
+			this._minute_iso(this._pos + 3) +
+			sep1 +
+			this._second_iso(this._pos + 2) +
+			sep2 +
+			this._milli_iso(this._pos)
+		);
 	}
 
 	/**
@@ -2857,29 +2848,20 @@ export class TimeOnlyMs extends Core implements ISerializer {
 
 	/** Microseconds (since midnight) */
 	toMicroseconds(): number {
-		let p = this._pos;
-		let ret = this._hour(p) * usPerHour;
-		p += hourBytes;
-		ret += this._minute(p) * usPerMin;
-		p += minBytes;
-		ret += this._second(p) * usPerSec;
-		return ret + this._milli(p + secBytes) * 1000;
+		const [h, i, s, ms] = rTimeMs(this._d, this._pos);
+		return h * usPerHour + i * usPerMin + s * usPerSec + ms * 1000;
 	}
 
 	/** Milliseconds (since midnight) value can be floating point (us component)*/
 	toMilliseconds(): number {
-		let p = this._pos;
-		let ret = this._hour(p) * msPerHour;
-		p += hourBytes;
-		ret += this._minute(p) * msPerMin;
-		p += minBytes;
-		ret += this._second(p) * msPerSec;
-		return ret + this._milli(p + secBytes);
+		const [h, i, s, ms] = rTimeMs(this._d, this._pos);
+		return h * msPerHour + i * msPerMin + s * msPerSec + ms;
 	}
 
 	/** Seconds (since midnight) value can be floating point (us component)*/
 	toSeconds(): number {
-		return this.toMilliseconds() / 1000;
+		const [h, i, s, ms] = rTimeMs(this._d, this._pos);
+		return h * sPerHour + i * 60 + s + ms / 1000;
 	}
 
 	/**
@@ -2888,18 +2870,16 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * But you can do <, >, = comparisons
 	 */
 	public valueOf(): number {
-		let pos = this._pos;
-		let ret = this._hour(pos) * 10000000;
-		pos += hourBytes;
-		ret += this._minute(pos) * 100000;
-		pos += minBytes;
-		ret += this._second(pos) * 1000;
-		return ret + this._milli(pos + secBytes);
+		const [h, i, s, ms] = rTimeMs(this._d, this._pos);
+		return h * 10000000 + i * 100000 + s * 1000 + ms;
 	}
 
 	/** Serialize into target  - 28 bits*/
-	public serialize(target: BitWriter): void {
-		this._timeMs_ser(target, this._pos);
+	public serialize(to: BitWriter): void {
+		to.writeNumber(rHour(this._d, this._pos + 4), hourSerBits);
+		to.writeNumber(rMin(this._d, this._pos + 3), minSerBits);
+		to.writeNumber(rSec(this._d, this._pos + 2), secSerBits);
+		to.writeNumber(rMilli(this._d, this._pos), milliSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2913,14 +2893,11 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): TimeOnlyMs {
-		let p = this._pos;
-		safe.int.lte('hour', this._hour(p), 23);
-		p += hourBytes;
-		safe.int.lte('minute', this._minute(p), 59);
-		p += minBytes;
-		safe.int.lte('second', this._second(p), 59);
-		p += secBytes;
-		safe.int.lte('millisecond', this._milli(p), 999);
+		const [h, i, s, ms] = rTimeMs(this._d, this._pos);
+		safe.int.lte('hour', h, 23);
+		safe.int.lte('minute', i, 59);
+		safe.int.lte('second', s, 59);
+		safe.int.lte('millisecond', ms, 999);
 		return this;
 	}
 
@@ -2947,12 +2924,9 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
 		/*vetMilli*/ safe.int.inRangeInc('millisecond', ms, 0, 999);
 
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		/*writeHour*/ d.setUint8(0, h);
-		/*writeMinute*/ d.setUint8(1, i);
-		/*writeSecond*/ d.setUint8(2, s);
-		Core.writeMilli(d, 3, ms);
-		return new TimeOnlyMs(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		wTimeMs(dv, 0, h, i, s, ms);
+		return new TimeOnlyMs(dv);
 	}
 
 	/**
@@ -2972,12 +2946,9 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
 		/*vetMilli*/ safe.int.inRangeInc('millisecond', ms, 0, 999);
 
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		/*writeHour*/ d.setUint8(0, v);
-		/*writeMinute*/ d.setUint8(1, i);
-		/*writeSecond*/ d.setUint8(2, s);
-		Core.writeMilli(d, 3, ms);
-		return new TimeOnlyMs(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		wTimeMs(dv, 0, v, i, s, ms);
+		return new TimeOnlyMs(dv);
 	}
 
 	/**
@@ -2986,9 +2957,16 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param us Number of microseconds since midnight (if floating point it'll be truncated)
 	 */
 	public static fromUnixTimeUs(us: number): TimeOnlyMs {
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		Core.timeMsFromUnixMs(d, 0, us / 1000);
-		return new TimeOnlyMs(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		wTimeMs(
+			dv,
+			0,
+			(us % usPerDay) / usPerHour,
+			(us % usPerHour) / usPerMin,
+			(us % usPerMin) / usPerSec,
+			(us / 1000) % 1000
+		);
+		return new TimeOnlyMs(dv);
 	}
 
 	/**
@@ -2997,9 +2975,16 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param ms Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTimeMs(ms: number): TimeOnlyMs {
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		Core.timeMsFromUnixMs(d, 0, ms);
-		return new TimeOnlyMs(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		wTimeMs(
+			dv,
+			0,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			ms % msPerSec
+		);
+		return new TimeOnlyMs(dv);
 	}
 
 	/**
@@ -3008,9 +2993,16 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param s Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
 	public static fromUnixTime(s: number): TimeOnlyMs {
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		Core.timeMsFromUnixMs(d, 0, s * msPerSec);
-		return new TimeOnlyMs(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		wTimeMs(
+			dv,
+			0,
+			(s % sPerDay) / sPerHour,
+			(s % sPerHour) / 60,
+			s % 60,
+			(s * 1000) % 1000
+		);
+		return new TimeOnlyMs(dv);
 	}
 
 	/**
@@ -3018,10 +3010,17 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date): TimeOnlyMs {
-		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		Core.timeMsFromUnixMs(d, 0, dms);
-		return new TimeOnlyMs(d, 0);
+		const ms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		wTimeMs(
+			dv,
+			0,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			ms % msPerSec
+		);
+		return new TimeOnlyMs(dv);
 	}
 
 	/**
@@ -3031,9 +3030,8 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param storage
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnlyMs {
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
 		const reset = input.getReset();
-		let p = 0;
 		input.trim();
 
 		//If content starts with "now" and optionally followed by whitespace - run now macro
@@ -3046,28 +3044,25 @@ export class TimeOnlyMs extends Core implements ISerializer {
 
 		//If it's 9 digits assume it's an un-delimited time
 		if (input.test(/^\d{9}$/)) {
-			e = Core.parseHour(d, p, input.left(2), strict, reset);
+			e = Core.parseHour(dv, 4, input.left(2), strict, reset);
 			if (e) throw e;
 			input.shrink(2);
-			p += hourBytes;
 
-			e = Core.parseMinute(d, p, input.left(2), strict, reset);
+			e = Core.parseMinute(dv, 3, input.left(2), strict, reset);
 			if (e) throw e;
 			input.shrink(2);
-			p += minBytes;
 
-			e = Core.parseSecond(d, p, input.left(2), strict, reset);
+			e = Core.parseSecond(dv, 2, input.left(2), strict, reset);
 			if (e) throw e;
 			input.shrink(2);
-			p += secBytes;
 
-			e = Core.parseMilli(d, p, input, strict, false, reset);
+			e = Core.parseMilli(dv, 0, input, strict, false, reset);
 			//This can't generate an error because it already has to be 3 digits (because of test
 			// above) and it can be any 3 digit value (0-999)
 			//if (e) throw e;
 
 			input.shrink(input.length);
-			return new TimeOnlyMs(d, 0);
+			return new TimeOnlyMs(dv);
 		}
 
 		const delim1 = input.indexOf(':');
@@ -3075,26 +3070,23 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		const delim3 = input.indexOf('.', delim2 + 1) - delim2 - 1;
 		delim2 = delim2 - delim1 - 1;
 		if (delim1 > 0 && delim2 > 0 && delim3 > 0) {
-			e = Core.parseHour(d, p, input.left(delim1), strict, reset);
+			e = Core.parseHour(dv, 4, input.left(delim1), strict, reset);
 			if (e) throw e;
 			input.shrink(delim1 + 1);
-			p += hourBytes;
 
-			e = Core.parseMinute(d, p, input.left(delim2).trim(), strict, reset);
+			e = Core.parseMinute(dv, 3, input.left(delim2).trim(), strict, reset);
 			if (e) throw e;
 			input.shrink(delim2 + 1);
-			p += minBytes;
 
-			e = Core.parseSecond(d, p, input.left(delim3).trim(), strict, reset);
+			e = Core.parseSecond(dv, 2, input.left(delim3).trim(), strict, reset);
 			if (e) throw e;
 			input.shrink(delim3 + 1);
-			p += secBytes;
 
-			e = Core.parseMilli(d, p, input.trim(), strict, true, reset);
+			e = Core.parseMilli(dv, 0, input.trim(), strict, true, reset);
 			if (e) throw e;
 
 			input.shrink(input.length);
-			return new TimeOnlyMs(d, 0);
+			return new TimeOnlyMs(dv);
 		}
 		throw new ContentError(
 			`Expecting hh:mm:ss.###, or hhmmss###`,
@@ -3105,13 +3097,20 @@ export class TimeOnlyMs extends Core implements ISerializer {
 
 	/** Create time from this point in (local) time */
 	public static now(): TimeOnlyMs {
-		const utcNow = performance.timeOrigin + performance.now();
+		let ms = performance.timeOrigin + performance.now();
 		//Calculate the offset to get it in local time
-		const utcDt = new Date(utcNow);
-		const offset = utcDt.getTimezoneOffset() * 60000;
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		Core.timeMsFromUnixMs(d, 0, utcNow - offset);
-		return new TimeOnlyMs(d, 0);
+		const utcDt = new Date(ms);
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		ms -= utcDt.getTimezoneOffset() * msPerMin;
+		wTimeMs(
+			dv,
+			0,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			ms % msPerSec
+		);
+		return new TimeOnlyMs(dv);
 	}
 
 	/**
@@ -3124,12 +3123,16 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): TimeOnlyMs {
 		//Keep the memory contiguous
-		const d = new DataView(new ArrayBuffer(timeMsBytes));
-		/*deserHour*/ d.setUint8(0, src.readNumber(hourSerBits));
-		/*deserMin*/ d.setUint8(1, src.readNumber(minSerBits));
-		/*deserSec*/ d.setUint8(2, src.readNumber(secSerBits));
-		/*deserMilli*/ Core.writeMilli(d, 3, src.readNumber(milliSerBits));
-		return new TimeOnlyMs(d, 0);
+		const dv = new DataView(new ArrayBuffer(timeMsBytes));
+		wTimeMs(
+			dv,
+			0,
+			src.readNumber(hourSerBits),
+			src.readNumber(minSerBits),
+			src.readNumber(secSerBits),
+			src.readNumber(milliSerBits)
+		);
+		return new TimeOnlyMs(dv);
 	}
 }
 const minTMs = TimeOnlyMs.new(0, 0, 0, 0);
@@ -3137,44 +3140,37 @@ const maxTMs = TimeOnlyMs.new(23, 59, 59, 999);
 
 class DateTimeShared extends Core {
 	/**Number of bytes required to store this data */
-	static readonly storageBytes = dateBytes + timeBytes; //10
+	static readonly storageBytes = dtBytes; //10
 	/**Number of bits required to serialize this data */
-	static readonly serialBits =
-		yearSerBits +
-		monthSerBits +
-		daySerBits +
-		hourSerBits +
-		minSerBits +
-		secSerBits +
-		microSerBits; //61
+	static readonly serialBits = dateSerBits + timeSerBits; //61
 
 	/** Years (-10000 - +22767) ISO8601 */
 	get year(): number {
-		return this._year(this._pos);
+		return rYear(this._d, this._pos + dt_do_pos + 2);
 	}
 	/** Months (1-12) */
 	get month(): number {
-		return this._month(this._pos + yearBytes);
+		return rMonth(this._d, this._pos + dt_do_pos + 1);
 	}
 	/** Days (1-31) */
 	get day(): number {
-		return this._day(this._pos + yearBytes + monthBytes);
+		return rDay(this._d, this._pos + dt_do_pos);
 	}
 	/** Hours (0-23) */
 	get hour(): number {
-		return this._hour(this._pos + dateBytes);
+		return rHour(this._d, this._pos + dt_to_pos + 5);
 	}
 	/** Minutes (0-59) */
 	get minute(): number {
-		return this._minute(this._pos + dateBytes + hourBytes);
+		return rMin(this._d, this._pos + dt_to_pos + 4);
 	}
 	/** Seconds (0-59) */
 	get second(): number {
-		return this._second(this._pos + dateBytes + hourBytes + minBytes);
+		return rSec(this._d, this._pos + dt_to_pos + 3);
 	}
 	/** Microseconds (0-999999) */
 	get microsecond(): number {
-		return this._micro(this._pos + dateBytes + hourBytes + minBytes + secBytes);
+		return rMicro(this._d, this._pos + dt_to_pos);
 	}
 
 	/**
@@ -3183,9 +3179,9 @@ class DateTimeShared extends Core {
 	 */
 	public toString(dateTimeSep = 'T'): string {
 		return (
-			this._date_iso(this._pos, '-') +
+			this._date_iso(this._pos + dt_do_pos, '-') +
 			dateTimeSep +
-			this._time_iso(this._pos + dateBytes, true)
+			this._time_iso(this._pos + dt_to_pos, true)
 		);
 	}
 
@@ -3195,50 +3191,42 @@ class DateTimeShared extends Core {
 	 */
 	toJSON(): string {
 		return (
-			this._date_iso(this._pos, '-') +
+			this._date_iso(this._pos + dt_do_pos, '-') +
 			'T' +
-			this._time_iso(this._pos + dateBytes, true)
+			this._time_iso(this._pos + dt_to_pos, true)
 		);
 	}
 
 	/** Seconds since the Unix epoch aka unix time */
 	toUnixTime(): number {
 		return (
-			super.toUnixDays(this._pos) * sPerDay +
-			this.timeToUs(this._pos + dateBytes) / usPerSec
+			super.toUnixDays(this._pos + dt_do_pos) * sPerDay +
+			super.timeToUs(this._pos + dt_to_pos) / usPerSec
 		);
 	}
 
 	/** Milliseconds since the Unix epoch aka unix time (compatible with `Date` constructor) */
 	toUnixTimeMs(): number {
 		return (
-			super.toUnixDays(this._pos) * msPerDay +
-			this.timeToUs(this._pos + dateBytes) / 1000
+			super.toUnixDays(this._pos + dt_do_pos) * msPerDay +
+			super.timeToUs(this._pos + dt_to_pos) / 1000
 		);
 	}
 
 	/** Serialize into target*/
-	public serialize(target: BitWriter): void {
-		this._date_ser(target, this._pos);
-		this._time_ser(target, this._pos + dateBytes);
+	public serialize(to: BitWriter): void {
+		serDate(this._d, this._pos + dt_do_pos, to);
+		serTime(this._d, this._pos + dt_to_pos, to);
 	}
 
 	/** Number of bits required to serialize */
 	get serialSizeBits(): number {
-		return (
-			yearSerBits +
-			monthSerBits +
-			daySerBits +
-			hourSerBits +
-			minSerBits +
-			secSerBits +
-			microSerBits
-		);
+		return dateSerBits + timeSerBits;
 	}
 
-	protected _addDe(de: DurationExact, d: DataView): void {
-		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
-		let dh = this.toUnixDays(this._pos) * 24 + this.hour;
+	protected _addDe(de: DurationExact, dv: DataView): void {
+		let miso = super.timeToUs(this._pos + dt_to_pos) % usPerHour;
+		let dh = super.toUnixDays(this._pos + dt_do_pos) * 24 + this.hour;
 		const [ddh, dmiso] = de.toDhMiso();
 		dh += ddh;
 		miso += dmiso;
@@ -3248,15 +3236,20 @@ class DateTimeShared extends Core {
 			miso -= usPerHour;
 		}
 
-		Core.dateFromUnixDays(d, 0, (dh / 24) | 0);
 		const us = miso + (dh % 24) * usPerHour;
-		Core.timeFromUnixUs(d, 0 + dateBytes, us);
+		wTime(
+			dv,
+			dt_to_pos,
+			(us % usPerDay) / usPerHour,
+			(us % usPerHour) / usPerMin,
+			(us % usPerMin) / usPerSec,
+			us % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, (dh / 24) | 0);
 	}
 	protected _addDv(du: Duration, dv: DataView): void {
-		let miso = this.timeToUs(this._pos + dateBytes) % usPerHour;
-		let y = this._year(this._pos);
-		let m = this._month(this._pos + yearBytes);
-		let d = this._day(this._pos + yearBytes + monthBytes);
+		let miso = super.timeToUs(this._pos + dt_to_pos) % usPerHour;
+		let [y, m, d] = rDate(this._d, this._pos + dt_do_pos);
 
 		const [dy, dm, ddh, dmiso] = du.toYMDhMiso();
 		y += dy;
@@ -3274,7 +3267,7 @@ class DateTimeShared extends Core {
 		d += (dim * (m % 1)) | 0;
 		m |= 0;
 		//Convert to dh
-		let dh = d * 24 + this._hour(this._pos + dateBytes);
+		let dh = d * 24 + rHour(this._d, this._pos + dt_to_pos + 5);
 		dh += ddh;
 		miso += dmiso;
 		if (miso >= usPerHour) {
@@ -3291,15 +3284,22 @@ class DateTimeShared extends Core {
 			dh -= dim * 24;
 			dim = Month.lastDay(m, y);
 		}
-		Core.writeDate(dv, 0, y, m, (dh / 24) | 0);
 		const us = miso + (dh % 24) * usPerHour;
-		Core.timeFromUnixUs(dv, 0 + dateBytes, us);
+		wTime(
+			dv,
+			dt_to_pos,
+			(us % usPerDay) / usPerHour,
+			(us % usPerHour) / usPerMin,
+			(us % usPerMin) / usPerSec,
+			us % usPerSec
+		);
+		wDate(dv, dt_do_pos, y, m, (dh / 24) | 0);
 	}
 	protected _subDe(du: DurationExact, dv: DataView): void {
-		const hmiso = this.timeToUs(this._pos + dateBytes);
+		const hmiso = super.timeToUs(this._pos + dt_to_pos);
 		let miso = hmiso % usPerHour;
 		let dh = (hmiso / usPerHour) | 0;
-		dh += this.toUnixDays(this._pos) * 24;
+		dh += super.toUnixDays(this._pos + dt_do_pos) * 24;
 		const [ddh, dmiso] = du.toDhMiso();
 		dh -= ddh;
 		miso -= dmiso;
@@ -3309,18 +3309,23 @@ class DateTimeShared extends Core {
 			miso += usPerHour;
 		}
 
-		Core.dateFromUnixDays(dv, 0, (dh / 24) | 0);
 		const us = miso + (dh % 24) * usPerHour;
-		Core.timeFromUnixUs(dv, 0 + dateBytes, us);
+		wTime(
+			dv,
+			dt_to_pos,
+			(us % usPerDay) / usPerHour,
+			(us % usPerHour) / usPerMin,
+			(us % usPerMin) / usPerSec,
+			us % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, (dh / 24) | 0);
 	}
 	protected _subDv(du: Duration, dv: DataView): void {
-		const hmiso = this.timeToUs(this._pos + dateBytes);
+		const hmiso = super.timeToUs(this._pos + dt_to_pos);
 		let miso = hmiso % usPerHour;
 		let dh = (hmiso / usPerHour) | 0;
 
-		let y = this._year(this._pos);
-		let m = this._month(this._pos + yearBytes);
-		let d = this._day(this._pos + yearBytes + monthBytes);
+		let [y, m, d] = rDate(this._d, this._pos + dt_do_pos);
 
 		const [dy, dm, ddh, dmiso] = du.toYMDhMiso();
 
@@ -3360,9 +3365,16 @@ class DateTimeShared extends Core {
 			dim = Month.lastDay(m, y);
 			dh += dim * 24;
 		}
-		Core.writeDate(dv, 0, y, m, (1 + dh / 24) | 0);
 		const us = miso + (dh % 24) * usPerHour;
-		Core.timeFromUnixUs(dv, 0 + dateBytes, us);
+		wTime(
+			dv,
+			dt_to_pos,
+			(us % usPerDay) / usPerHour,
+			(us % usPerHour) / usPerMin,
+			(us % usPerMin) / usPerSec,
+			us % usPerSec
+		);
+		wDate(dv, dt_do_pos, y, m, (1 + dh / 24) | 0);
 	}
 
 	/**
@@ -3383,62 +3395,46 @@ class DateTimeShared extends Core {
 	 * @returns
 	 */
 	protected cmp<T>(other: DateTimeShared, gt: T, lt: T, eq: T): T {
-		//todo: fix this.. it's complicated.. yy dm ih su~ u_u?
-		// date: [y][y][m][d]
-		// time: [h][i][s][u][u][u]
+		// time: [u][u][U][s][i][h]
+		// date: [d][m][y][Y]
+		// Because this is full LE, we need to check the last pair first (u16)
+		// followed by the two u32. 6 comparisons vs 20 is worth it
 
-		const t16 = this._d.getUint16(this._pos, true);
-		const o16 = other._d.getUint16(other._pos, true);
+		//Last pair (yY)
+		const t16 = this._d.getUint16(this._pos + 8, true);
+		const o16 = other._d.getUint16(other._pos + 8, true);
 		if (t16 > o16) return gt;
 		if (t16 < o16) return lt;
 
-		for (let i = 2; i <= 6; i++) {
-			const t8 = this._d.getUint8(this._pos + i);
-			const o8 = other._d.getUint8(other._pos + i);
-			if (t8 > o8) return gt;
-			if (t8 < o8) return lt;
-		}
+		//Last quad (ihdm)
+		let t32 = this._d.getUint32(this._pos + 4, true);
+		let o32 = other._d.getUint32(other._pos + 4, true);
+		if (t32 > o32) return gt;
+		if (t32 < o32) return lt;
 
-		const t24 =
-			this._d.getUint8(this._pos + 7) |
-			(this._d.getUint16(this._pos + 8, true) << 8);
-		const o24 =
-			other._d.getUint8(other._pos + 7) |
-			(other._d.getUint16(other._pos + 8, true) << 8);
-		if (t24 > o24) return gt;
-		if (t24 < o24) return lt;
+		//First quad (uuUs)
+		t32 = this._d.getUint32(this._pos, true);
+		o32 = other._d.getUint32(other._pos, true);
+		if (t32 > o32) return gt;
+		if (t32 < o32) return lt;
+
 		return eq;
-
-		//No longer works because LE y & u
-		// for (let i = 0; i < dateBytes + timeBytes; i++) {
-		// 	const t = this._stor[this._pos + i];
-		// 	const o = other._stor[other._pos + i];
-		// 	if (t > o) return gt;
-		// 	if (t < o) return lt;
-		// }
-		// return eq;
 	}
 
-	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
-	protected diff(erl: DateTimeShared): Duration {
-		if (erl.cmp(this, true, false, false)) return erl.diff(this);
+	private static _diff(lt: DateTimeShared, erl: DateTimeShared): Duration {
+		let [y, m, d] = rDate(lt._d, lt._pos + dt_do_pos);
+		const [ey, em, ed] = rDate(erl._d, erl._pos + dt_do_pos);
+		y -= ey;
+		m -= em;
+		d -= ed;
 
-		let y = this._year(this._pos) - erl._year(erl._pos);
-		let m =
-			this._month(this._pos + yearBytes) - erl._month(erl._pos + yearBytes);
-		let d =
-			this._day(this._pos + yearBytes + monthBytes) -
-			erl._day(erl._pos + yearBytes + monthBytes);
-		let h = this._hour(this._pos + dateBytes) - erl._hour(erl._pos + dateBytes);
-		let i =
-			this._minute(this._pos + dateBytes + hourBytes) -
-			erl._minute(erl._pos + dateBytes + hourBytes);
-		let s =
-			this._second(this._pos + dateBytes + hourBytes + minBytes) -
-			erl._second(erl._pos + dateBytes + hourBytes + minBytes);
-		let us =
-			this._micro(this._pos + dateBytes + hourBytes + minBytes + secBytes) -
-			erl._micro(erl._pos + dateBytes + hourBytes + minBytes + secBytes);
+		let [h, i, s, us] = rTime(lt._d, lt._pos + dt_to_pos);
+		const [eh, ei, es, eus] = rTime(erl._d, erl._pos + dt_to_pos);
+		h -= eh;
+		i -= ei;
+		s -= es;
+		us -= eus;
+
 		if (us < 0) {
 			us += usPerSec;
 			s -= 1;
@@ -3456,7 +3452,7 @@ class DateTimeShared extends Core {
 			d -= 1;
 		}
 		if (d < 0) {
-			d += Month.lastDay(erl._month(erl._pos + yearBytes), erl._year(erl._pos));
+			d += Month.lastDay(em, ey);
 			m -= 1;
 		}
 		if (m < 0) {
@@ -3466,22 +3462,20 @@ class DateTimeShared extends Core {
 		//y can't be <0 (starting gt)
 		return Duration.new({ y, m, d, h, i, s, us });
 	}
+	private static _diffExact(
+		lt: DateTimeShared,
+		erl: DateTimeShared
+	): DurationExact {
+		let d =
+			lt.toUnixDays(lt._pos + dt_do_pos) - erl.toUnixDays(erl._pos + dt_do_pos);
 
-	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
-	protected diffExact(erl: DateTimeShared): DurationExact {
-		if (erl.cmp(this, true, false, false)) return erl.diffExact(this);
+		let [h, i, s, us] = rTime(lt._d, lt._pos + dt_to_pos);
+		const [eh, ei, es, eus] = rTime(erl._d, erl._pos + dt_to_pos);
+		h -= eh;
+		i -= ei;
+		s -= es;
+		us -= eus;
 
-		let d = this.toUnixDays(this._pos) - erl.toUnixDays(erl._pos);
-		let h = this._hour(this._pos + dateBytes) - erl._hour(erl._pos + dateBytes);
-		let i =
-			this._minute(this._pos + dateBytes + hourBytes) -
-			erl._minute(erl._pos + dateBytes + hourBytes);
-		let s =
-			this._second(this._pos + dateBytes + hourBytes + minBytes) -
-			erl._second(erl._pos + dateBytes + hourBytes + minBytes);
-		let us =
-			this._micro(this._pos + dateBytes + hourBytes + minBytes + secBytes) -
-			erl._micro(erl._pos + dateBytes + hourBytes + minBytes + secBytes);
 		if (us < 0) {
 			us += usPerSec;
 			s -= 1;
@@ -3500,6 +3494,19 @@ class DateTimeShared extends Core {
 		}
 		//d can't be <0 (starting gt)
 		return DurationExact.new({ d, h, i, s, us });
+	}
+	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
+	protected diff(erl: DateTimeShared): Duration {
+		if (erl.cmp(this, true, false, false))
+			return DateTimeShared._diff(erl, this);
+		return DateTimeShared._diff(this, erl);
+	}
+
+	/** Because this treats all `erl` the same, careful with confusing types in public implementations */
+	protected diffExact(erl: DateTimeShared): DurationExact {
+		if (erl.cmp(this, true, false, false))
+			return DateTimeShared._diffExact(erl, this);
+		return DateTimeShared._diffExact(this, erl);
 	}
 }
 
@@ -3532,15 +3539,9 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 * *Note*: `Date` only supports millisecond resolution so accuracy will be lost
 	 */
 	toDate(): Date {
-		return new Date(
-			this.year,
-			/*fucks sake JS*/ this.month - 1,
-			this.day,
-			this.hour,
-			this.minute,
-			this.second,
-			this.microsecond / 1000
-		);
+		const [y, m, d] = rDate(this._d, this._pos + dt_do_pos);
+		const [h, i, s, us] = rTime(this._d, this._pos + dt_to_pos);
+		return new Date(y, /*fucks sake JS*/ m - 1, d, h, i, s, us / 1000);
 	}
 
 	/**
@@ -3549,8 +3550,8 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 */
 	public valueOf(): string {
 		return (
-			this._date_iso(this._pos, '') +
-			this._time_iso(this._pos + dateBytes, false)
+			this._date_iso(this._pos + dt_do_pos, '') +
+			this._time_iso(this._pos + dt_to_pos, false)
 		);
 	}
 
@@ -3560,8 +3561,8 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): DateTimeLocal {
-		this._date_valid(this._pos);
-		this._time_valid(this._pos + dateBytes);
+		this._time_valid(this._pos + dt_to_pos);
+		this._date_valid(this._pos + dt_do_pos);
 		return this;
 	}
 
@@ -3619,13 +3620,13 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 */
 	public add(du: Duration): DateTimeLocal;
 	public add(du: DurationExact | Duration): DateTimeLocal {
-		const d = new DataView(new ArrayBuffer(dateBytes + timeBytes));
+		const dv = new DataView(new ArrayBuffer(dtBytes));
 		if (du instanceof DurationExact) {
-			this._addDe(du, d);
+			this._addDe(du, dv);
 		} else {
-			this._addDv(du, d);
+			this._addDv(du, dv);
 		}
-		return new DateTimeLocal(d, 0);
+		return new DateTimeLocal(dv);
 	}
 
 	/**
@@ -3653,13 +3654,13 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 */
 	public sub(du: Duration): DateTimeLocal;
 	public sub(du: DurationExact | Duration): DateTimeLocal {
-		const d = new DataView(new ArrayBuffer(dateBytes + timeBytes));
+		const dv = new DataView(new ArrayBuffer(dtBytes));
 		if (du instanceof DurationExact) {
-			this._subDe(du, d);
+			this._subDe(du, dv);
 		} else {
-			this._subDv(du, d);
+			this._subDv(du, dv);
 		}
-		return new DateTimeLocal(d, 0);
+		return new DateTimeLocal(dv);
 	}
 
 	/**
@@ -3761,19 +3762,19 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	): DateTimeLocal {
 		Core.vetDate(y, m, d);
 		Core.vetTime(h, i, s, u);
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.writeDate(dv, 0, y, m, d);
-		Core.writeTime(dv, dateBytes, h, i, s, u);
-		return new DateTimeLocal(dv, 0);
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(dv, dt_to_pos, h, i, s, u);
+		wDate(dv, dt_do_pos, y, m, d);
+		return new DateTimeLocal(dv);
 	}
 
 	public static fromValue(v: string): DateTimeLocal {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
 		const dt = parseDec(v.substring(0, v.length - 12));
 		const tm = parseDec(v.substring(v.length - 12));
-		Core.dateFromValue(dv, 0, dt);
-		Core.timeFromValue(dv, dateBytes, tm);
-		return new DateTimeLocal(dv, 0);
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		Core.timeFromValue(dv, dt_to_pos, tm);
+		Core.dateFromValue(dv, dt_do_pos, dt);
+		return new DateTimeLocal(dv);
 	}
 
 	/**
@@ -3783,48 +3784,68 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date): DateTimeLocal {
-		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		return DateTimeLocal.fromUnixTimeMs(dms);
+		const ms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+		return DateTimeLocal.fromUnixTimeMs(ms);
 	}
 
 	/**
 	 * Create a date-time from float milliseconds since UNIX epoch aka unix time
 	 *
-	 * @param src Unix time at millisecond accuracy, may include floating point (for higher resolution)
+	 * @param ms Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
-	public static fromUnixTimeMs(src: number): DateTimeLocal {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.dateFromUnixDays(dv, 0, src / msPerDay);
-		Core.timeFromUnixUs(dv, dateBytes, src * 1000);
-		return new DateTimeLocal(dv, 0);
+	public static fromUnixTimeMs(ms: number): DateTimeLocal {
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(
+			dv,
+			dt_to_pos,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, ms / msPerDay);
+		return new DateTimeLocal(dv);
 	}
 
 	/**
 	 * Create a date-time from float seconds since UNIX epoch aka unix time
 	 *
-	 * @param src Unix time at second accuracy, may include floating point (for higher resolution)
+	 * @param s Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
-	public static fromUnixTime(src: number): DateTimeLocal {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.dateFromUnixDays(dv, 0, src / sPerDay);
-		Core.timeFromUnixUs(dv, dateBytes, src * 1000000);
-		return new DateTimeLocal(dv, 0);
+	public static fromUnixTime(s: number): DateTimeLocal {
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(
+			dv,
+			dt_to_pos,
+			(s % sPerDay) / sPerHour,
+			(s % sPerHour) / 60,
+			s % 60,
+			(s * usPerSec) % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, s / sPerDay);
+		return new DateTimeLocal(dv);
 	}
 
 	/** Create this date-time */
 	public static now(): DateTimeLocal {
 		//Note we depend on JS performance here to catch a point in time
 		//(rather than relying on each component's now() method which could cause inconsistency)
-		let now = performance.timeOrigin + performance.now();
+		let ms = performance.timeOrigin + performance.now();
 		//Calculate the offset to get it in local time
-		const utcDt = new Date(now);
-		const offset = utcDt.getTimezoneOffset() * msPerMin;
-		now -= offset;
+		const utcDt = new Date(ms);
+		ms -= utcDt.getTimezoneOffset() * msPerMin;
 
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.dateFromUnixDays(dv, 0, now / msPerDay);
-		Core.timeFromUnixUs(dv, dateBytes, now * 1000);
-		return new DateTimeLocal(dv, 0);
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(
+			dv,
+			dt_to_pos,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, ms / msPerDay);
+		return new DateTimeLocal(dv);
 	}
 
 	public static parse(input: WindowStr, strict = false): DateTimeLocal {
@@ -3837,14 +3858,14 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 			return DateTimeLocal.now();
 		}
 
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
+		const dv = new DataView(new ArrayBuffer(dtBytes));
 		let e: Error | undefined = undefined;
 
 		//If it's 20-21 digits, with optional leading sign, tailing z assume it's an un-delimited dateTime
 		if (input.test(/^[-+]?\d{20,21}$/)) {
 			e = Core.parseDateUndelim(
 				dv,
-				0,
+				dt_do_pos,
 				input.left(input.length - 12),
 				strict,
 				reset
@@ -3852,24 +3873,24 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 			if (e) throw e;
 			input.shrink(input.length - 12);
 
-			e = Core.parseTimeUndelim(dv, dateBytes, input, strict, reset);
+			e = Core.parseTimeUndelim(dv, dt_to_pos, input, strict, reset);
 			if (e) throw e;
 
 			input.shrink(input.length);
-			return new DateTimeLocal(dv, 0);
+			return new DateTimeLocal(dv);
 		}
 
 		const tPos = input.indexOfAny(['t', 'T']);
 		if (tPos > 0) {
-			e = Core.parseDate(dv, 0, input.left(tPos), strict, reset);
+			e = Core.parseDate(dv, dt_do_pos, input.left(tPos), strict, reset);
 			if (e) throw e;
 			input.shrink(tPos + 1);
 
-			e = Core.parseTime(dv, dateBytes, input, strict, reset);
+			e = Core.parseTime(dv, dt_to_pos, input, strict, reset);
 			if (e) throw e;
 
 			input.shrink(input.length);
-			return new DateTimeLocal(dv, 0);
+			return new DateTimeLocal(dv);
 		}
 
 		throw new ContentError(
@@ -3879,11 +3900,11 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 		);
 	}
 
-	public static deserialize(source: BitReader): DateTimeLocal {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.deserDate(dv, 0, source);
-		Core.deserTime(dv, dateBytes, source);
-		return new DateTimeLocal(dv, 0);
+	public static deserialize(src: BitReader): DateTimeLocal {
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		deserDate(dv, dt_do_pos, src);
+		deserTime(dv, dt_to_pos, src);
+		return new DateTimeLocal(dv);
 	}
 }
 const minDTL = DateTimeLocal.new(minIsoYear, 1, 1, 0, 0, 0, 0);
@@ -3913,9 +3934,9 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	public toString(dateTimeSep = 'T'): string {
 		return (
-			this._date_iso(this._pos, '-') +
+			this._date_iso(this._pos + dt_do_pos, '-') +
 			dateTimeSep +
-			this._time_iso(this._pos + dateBytes, true) +
+			this._time_iso(this._pos + dt_to_pos, true) +
 			'Z'
 		);
 	}
@@ -3927,8 +3948,8 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	toDate(): Date {
 		return new Date(
-			super.toUnixDays(this._pos) * msPerDay +
-				this.timeToUs(this._pos + dateBytes) / 1000
+			super.toUnixDays(this._pos + dt_do_pos) * msPerDay +
+				this.timeToUs(this._pos + dt_to_pos) / 1000
 		);
 	}
 
@@ -3939,8 +3960,8 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	public valueOf(): string {
 		return (
-			this._date_iso(this._pos, '') +
-			this._time_iso(this._pos + dateBytes, false)
+			this._date_iso(this._pos + dt_do_pos, '') +
+			this._time_iso(this._pos + dt_to_pos, false)
 		);
 	}
 
@@ -3950,8 +3971,8 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): DateTimeUtc {
-		this._date_valid(this._pos);
-		this._time_valid(this._pos + dateBytes);
+		this._time_valid(this._pos + dt_to_pos);
+		this._date_valid(this._pos + dt_do_pos);
 		return this;
 	}
 
@@ -4007,13 +4028,13 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	public add(du: Duration): DateTimeUtc;
 	public add(du: DurationExact | Duration): DateTimeUtc {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
+		const dv = new DataView(new ArrayBuffer(dtBytes));
 		if (du instanceof DurationExact) {
 			this._addDe(du, dv);
 		} else {
 			this._addDv(du, dv);
 		}
-		return new DateTimeUtc(dv, 0);
+		return new DateTimeUtc(dv);
 	}
 	/**
 	 * Subtract an exact duration from this date, returns a new object.  Days
@@ -4040,13 +4061,13 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 */
 	public sub(du: Duration): DateTimeUtc;
 	public sub(du: DurationExact | Duration): DateTimeUtc {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
+		const dv = new DataView(new ArrayBuffer(dtBytes));
 		if (du instanceof DurationExact) {
 			this._subDe(du, dv);
 		} else {
 			this._subDv(du, dv);
 		}
-		return new DateTimeUtc(dv, 0);
+		return new DateTimeUtc(dv);
 	}
 	//asUtc|asLocal tbd
 
@@ -4146,19 +4167,19 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	): DateTimeUtc {
 		Core.vetDate(y, m, d);
 		Core.vetTime(h, i, s, u);
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.writeDate(dv, 0, y, m, d);
-		Core.writeTime(dv, dateBytes, h, i, s, u);
-		return new DateTimeUtc(dv, 0);
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(dv, dt_to_pos, h, i, s, u);
+		wDate(dv, dt_do_pos, y, m, d);
+		return new DateTimeUtc(dv);
 	}
 
 	public static fromValue(v: string): DateTimeUtc {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
 		const dt = parseDec(v.substring(0, v.length - 12));
 		const tm = parseDec(v.substring(v.length - 12));
-		Core.dateFromValue(dv, 0, dt);
-		Core.timeFromValue(dv, dateBytes, tm);
-		return new DateTimeUtc(dv, 0);
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		Core.timeFromValue(dv, dt_to_pos, tm);
+		Core.dateFromValue(dv, dt_do_pos, dt);
+		return new DateTimeUtc(dv);
 	}
 
 	/**
@@ -4168,44 +4189,72 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 * @param date Value used as source
 	 */
 	public static fromDate(date: Date): DateTimeUtc {
-		const dms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.dateFromUnixDays(dv, 0, dms / msPerDay);
-		Core.timeFromUnixUs(dv, dateBytes, dms * 1000);
-		return new DateTimeUtc(dv, 0);
+		const ms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(
+			dv,
+			dt_to_pos,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, ms / msPerDay);
+		return new DateTimeUtc(dv);
 	}
 
 	/**
 	 * Create a date-time from float milliseconds since UNIX epoch aka unix time
 	 *
-	 * @param src Unix time at millisecond accuracy, may include floating point (for higher resolution)
+	 * @param ms Unix time at millisecond accuracy, may include floating point (for higher resolution)
 	 */
-	public static fromUnixTimeMs(src: number): DateTimeUtc {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.dateFromUnixDays(dv, 0, src / msPerDay);
-		Core.timeFromUnixUs(dv, dateBytes, src * 1000);
-		return new DateTimeUtc(dv, 0);
+	public static fromUnixTimeMs(ms: number): DateTimeUtc {
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(
+			dv,
+			dt_to_pos,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, ms / msPerDay);
+		return new DateTimeUtc(dv);
 	}
 
 	/**
 	 * Create a date-time from float seconds since UNIX epoch aka unix time
 	 *
-	 * @param src Unix time at second accuracy, may include floating point (for higher resolution)
+	 * @param s Unix time at second accuracy, may include floating point (for higher resolution)
 	 */
-	public static fromUnixTime(src: number): DateTimeUtc {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.dateFromUnixDays(dv, 0, src / sPerDay);
-		Core.timeFromUnixUs(dv, dateBytes, src * 1000000);
-		return new DateTimeUtc(dv, 0);
+	public static fromUnixTime(s: number): DateTimeUtc {
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(
+			dv,
+			dt_to_pos,
+			(s % sPerDay) / sPerHour,
+			(s % sPerHour) / 60,
+			s % 60,
+			(s * usPerSec) % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, s / sPerDay);
+		return new DateTimeUtc(dv);
 	}
 
 	/** Create this date-time (UTC) */
 	public static now(): DateTimeUtc {
-		const utcNow = performance.timeOrigin + performance.now();
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.dateFromUnixDays(dv, 0, utcNow / msPerDay);
-		Core.timeFromUnixUs(dv, dateBytes, utcNow * 1000);
-		return new DateTimeUtc(dv, 0);
+		const ms = performance.timeOrigin + performance.now();
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		wTime(
+			dv,
+			dt_to_pos,
+			(ms % msPerDay) / msPerHour,
+			(ms % msPerHour) / msPerMin,
+			(ms % msPerMin) / msPerSec,
+			(ms * 1000) % usPerSec
+		);
+		Core.dateFromUnixDays(dv, dt_do_pos, ms / msPerDay);
+		return new DateTimeUtc(dv);
 	}
 
 	public static parse(input: WindowStr, strict = false): DateTimeUtc {
@@ -4218,7 +4267,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 			return DateTimeUtc.now();
 		}
 
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
+		const dv = new DataView(new ArrayBuffer(dtBytes));
 		let e: Error | undefined = undefined;
 
 		const zPos = input.lastIndexOfAny(['z', 'Z']);
@@ -4232,7 +4281,7 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 		if (input.test(/^[-+]?\d{20,21}$/)) {
 			e = Core.parseDateUndelim(
 				dv,
-				0,
+				dt_do_pos,
 				input.left(input.length - 12),
 				strict,
 				reset
@@ -4240,25 +4289,25 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 			if (e) throw e;
 			input.shrink(input.length - 12);
 
-			e = Core.parseTimeUndelim(dv, dateBytes, input, strict, reset);
+			e = Core.parseTimeUndelim(dv, dt_to_pos, input, strict, reset);
 			if (e) throw e;
 
 			input.shrink(input.length);
-			return new DateTimeUtc(dv, 0);
+			return new DateTimeUtc(dv);
 		}
 
 		const tPos = input.indexOfAny(['t', 'T']);
 		//z is required if strict
 		if (tPos > 0 && (hasZ || !strict)) {
-			e = Core.parseDate(dv, 0, input.left(tPos), strict, reset);
+			e = Core.parseDate(dv, dt_do_pos, input.left(tPos), strict, reset);
 			if (e) throw e;
 			input.shrink(tPos + 1);
 
-			e = Core.parseTime(dv, dateBytes, input, strict, reset);
+			e = Core.parseTime(dv, dt_to_pos, input, strict, reset);
 			if (e) throw e;
 
 			input.shrink(input.length);
-			return new DateTimeUtc(dv, 0);
+			return new DateTimeUtc(dv);
 		}
 
 		reset();
@@ -4269,11 +4318,11 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 		);
 	}
 
-	public static deserialize(source: BitReader): DateTimeUtc {
-		const dv = new DataView(new ArrayBuffer(dateBytes + timeBytes));
-		Core.deserDate(dv, 0, source);
-		Core.deserTime(dv, dateBytes, source);
-		return new DateTimeUtc(dv, 0);
+	public static deserialize(src: BitReader): DateTimeUtc {
+		const dv = new DataView(new ArrayBuffer(dtBytes));
+		deserDate(dv, dt_do_pos, src);
+		deserTime(dv, dt_to_pos, src);
+		return new DateTimeUtc(dv);
 	}
 }
 const minDTU = DateTimeUtc.new(minIsoYear, 1, 1, 0, 0, 0, 0);
