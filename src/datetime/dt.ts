@@ -58,12 +58,13 @@ const usPerSec = 1000000;
 const DIM = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; //Days in month, note it's offset for 1 idx
 const daysPerCD = 146097; //CD=400y (400 is CD in roman numerals)
 const epochShift = 719468; //Amount of days to shift a CD segment to make the epoch 0
+const LE = true; //littleEndian (in DataView, which most platforms are, so beneficial)
 
 function rYear(d: DataView, p: number): number {
-	return d.getUint16(p, true) - 10000;
+	return d.getUint16(p, LE) - 10000;
 }
 function wYear(d: DataView, p: number, v: number): void {
-	d.setUint16(p, v + 10000, true);
+	d.setUint16(p, v + 10000, LE);
 }
 function rMonth(d: DataView, p: number): number {
 	return d.getUint8(p) + 1;
@@ -86,14 +87,14 @@ function rDate(v: DataView, p: number): [number, number, number] {
 	return [rYear(v, p + 2), rMonth(v, p + 1), rDay(v, p)];
 }
 function serDate(d: DataView, p: number, to: BitWriter): void {
-	to.writeNumber(/*rawYear*/ d.getUint16(p + 2, true), yearSerBits);
-	to.writeNumber(/*rawMonth*/ d.getUint8(p + 1), monthSerBits);
 	to.writeNumber(/*rawDay*/ d.getUint8(p), daySerBits);
+	to.writeNumber(/*rawMonth*/ d.getUint8(p + 1), monthSerBits);
+	to.writeNumber(/*rawYear*/ d.getUint16(p + 2, LE), yearSerBits);
 }
 function deserDate(to: DataView, p: number, src: BitReader): void {
-	/*deserYear*/ to.setUint16(p + 2, src.readNumber(yearSerBits), true);
-	/*deserMonth*/ to.setUint8(p + 1, src.readNumber(monthSerBits));
 	/*deserDay*/ to.setUint8(p, src.readNumber(daySerBits));
+	/*deserMonth*/ to.setUint8(p + 1, src.readNumber(monthSerBits));
+	/*deserYear*/ to.setUint16(p + 2, src.readNumber(yearSerBits), LE);
 }
 
 function rHour(d: DataView, p: number): number {
@@ -115,17 +116,17 @@ function wSec(d: DataView, p: number, v: number): void {
 	d.setUint8(p, v);
 }
 function rMilli(d: DataView, p: number): number {
-	return d.getUint16(p, true);
+	return d.getUint16(p, LE);
 }
 function wMilli(d: DataView, p: number, v: number): void {
-	d.setUint16(p, v, true);
+	d.setUint16(p, v, LE);
 }
 function rMicro(d: DataView, p: number): number {
-	return d.getUint8(p++) | (d.getUint16(p, true) << 8);
+	return d.getUint16(p, LE) | (d.getUint8(p + 2) << 16);
 }
 function wMicro(d: DataView, p: number, v: number): void {
-	d.setUint8(p, v);
-	d.setUint16(p + 1, v >> 8, true);
+	d.setUint16(p, v, LE);
+	d.setUint8(p + 2, v >> 16);
 }
 
 function rTimeMs(v: DataView, p: number): [number, number, number, number] {
@@ -161,19 +162,19 @@ function wTime(
 	wHour(v, p + 5, h);
 }
 function serTime(d: DataView, p: number, to: BitWriter): void {
-	to.writeNumber(/*rawHour*/ d.getUint8(p + 5), hourSerBits);
-	to.writeNumber(/*rawMin*/ d.getUint8(p + 4), minSerBits);
-	to.writeNumber(/*rawSec*/ d.getUint8(p + 3), secSerBits);
 	to.writeNumber(
-		/*rawUs*/ d.getUint8(p) | (d.getUint16(p + 1, true) << 8),
+		/*rawUs*/ d.getUint16(p, LE) | (d.getUint8(p + 2) << 16),
 		microSerBits
 	);
+	to.writeNumber(/*rawSec*/ d.getUint8(p + 3), secSerBits);
+	to.writeNumber(/*rawMin*/ d.getUint8(p + 4), minSerBits);
+	to.writeNumber(/*rawHour*/ d.getUint8(p + 5), hourSerBits);
 }
 function deserTime(to: DataView, p: number, src: BitReader): void {
-	/*deserHour*/ to.setUint8(p + 5, src.readNumber(hourSerBits));
-	/*deserMin*/ to.setUint8(p + 4, src.readNumber(minSerBits));
-	/*deserSec*/ to.setUint8(p + 3, src.readNumber(secSerBits));
 	/*deserMicro*/ wMicro(to, p, src.readNumber(microSerBits));
+	/*deserSec*/ to.setUint8(p + 3, src.readNumber(secSerBits));
+	/*deserMin*/ to.setUint8(p + 4, src.readNumber(minSerBits));
+	/*deserHour*/ to.setUint8(p + 5, src.readNumber(hourSerBits));
 }
 
 //There's definitely some entangled intent here, but we get to reuse code at the
@@ -881,7 +882,7 @@ export class Year extends Core implements ISerializer {
 	/** Serialize into target  - 15 bits*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(
-			/*rawYear*/ this._d.getUint16(this._pos, true),
+			/*rawYear*/ this._d.getUint16(this._pos, LE),
 			yearSerBits
 		);
 	}
@@ -1025,7 +1026,7 @@ export class Year extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Year {
 		const dv = new DataView(new ArrayBuffer(yearBytes));
-		/*deserYear*/ dv.setUint16(0, src.readNumber(yearSerBits), true);
+		/*deserYear*/ dv.setUint16(0, src.readNumber(yearSerBits), LE);
 		return new Year(dv);
 	}
 }
@@ -2876,15 +2877,15 @@ export class TimeOnlyMs extends Core implements ISerializer {
 
 	/** Serialize into target  - 28 bits*/
 	public serialize(to: BitWriter): void {
-		to.writeNumber(rHour(this._d, this._pos + 4), hourSerBits);
-		to.writeNumber(rMin(this._d, this._pos + 3), minSerBits);
-		to.writeNumber(rSec(this._d, this._pos + 2), secSerBits);
 		to.writeNumber(rMilli(this._d, this._pos), milliSerBits);
+		to.writeNumber(rSec(this._d, this._pos + 2), secSerBits);
+		to.writeNumber(rMin(this._d, this._pos + 3), minSerBits);
+		to.writeNumber(rHour(this._d, this._pos + 4), hourSerBits);
 	}
 
 	/** Number of bits required to serialize */
 	get serialSizeBits(): number {
-		return hourSerBits + minSerBits + secSerBits + milliSerBits;
+		return timeSerBits - 10;
 	}
 
 	/**
@@ -3124,14 +3125,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	public static deserialize(src: BitReader): TimeOnlyMs {
 		//Keep the memory contiguous
 		const dv = new DataView(new ArrayBuffer(timeMsBytes));
-		wTimeMs(
-			dv,
-			0,
-			src.readNumber(hourSerBits),
-			src.readNumber(minSerBits),
-			src.readNumber(secSerBits),
-			src.readNumber(milliSerBits)
-		);
+		wMilli(dv, 0, src.readNumber(milliSerBits));
+		/*deserSec*/ dv.setUint8(2, src.readNumber(secSerBits));
+		/*deserMin*/ dv.setUint8(3, src.readNumber(minSerBits));
+		/*deserHour*/ dv.setUint8(4, src.readNumber(hourSerBits));
 		return new TimeOnlyMs(dv);
 	}
 }
@@ -3401,20 +3398,20 @@ class DateTimeShared extends Core {
 		// followed by the two u32. 6 comparisons vs 20 is worth it
 
 		//Last pair (yY)
-		const t16 = this._d.getUint16(this._pos + 8, true);
-		const o16 = other._d.getUint16(other._pos + 8, true);
+		const t16 = this._d.getUint16(this._pos + 8, LE);
+		const o16 = other._d.getUint16(other._pos + 8, LE);
 		if (t16 > o16) return gt;
 		if (t16 < o16) return lt;
 
 		//Last quad (ihdm)
-		let t32 = this._d.getUint32(this._pos + 4, true);
-		let o32 = other._d.getUint32(other._pos + 4, true);
+		let t32 = this._d.getUint32(this._pos + 4, LE);
+		let o32 = other._d.getUint32(other._pos + 4, LE);
 		if (t32 > o32) return gt;
 		if (t32 < o32) return lt;
 
 		//First quad (uuUs)
-		t32 = this._d.getUint32(this._pos, true);
-		o32 = other._d.getUint32(other._pos, true);
+		t32 = this._d.getUint32(this._pos, LE);
+		o32 = other._d.getUint32(other._pos, LE);
 		if (t32 > o32) return gt;
 		if (t32 < o32) return lt;
 

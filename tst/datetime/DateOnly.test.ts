@@ -11,9 +11,9 @@ const tsts = suite('DateOnly');
 
 const serSet: [number, number, number, string, string, string][] = [
 	[-10000, 1, 1, '-10000-01-01', '000000', '-100000101'], //Yep, the null date, also min
-	[1952, 12, 31, '1952-12-31', '5D617E', '19521231'], //010111010110000 1011 11110
-	[2024, 1, 14, '2024-01-14', '5DF00D', '20240114'], //010111011111000 0000 01101
-	[22767, 12, 31, '+22767-12-31', 'FFFF7E', '227671231'], //max
+	[1952, 12, 31, '1952-12-31', 'F5AEB0', '19521231'], //11110 1011 010111010110000
+	[2024, 1, 14, '2024-01-14', '682EF8', '20240114'], //01101 0000 010111011111000
+	[22767, 12, 31, '+22767-12-31', 'F5FFFF', '227671231'], //max=11110 1011 111111111111111
 ];
 for (const [yr, mo, da, str, serStr, jsonStr] of serSet) {
 	tsts(`ser(${yr} ${mo} ${da})`, () => {
@@ -43,7 +43,7 @@ for (const [yr, mo, da, str, serStr, jsonStr] of serSet) {
 	});
 }
 
-tsts(`deser with invalid source value (FFFFFFFF) throws`, () => {
+tsts(`deser with invalid source value (FFFFFF) throws`, () => {
 	const bytes = Uint8Array.of(0xff, 0xff, 0xff);
 	const br = new BitReader(bytes);
 	assert.throws(() => DateOnly.deserialize(br).validate());
