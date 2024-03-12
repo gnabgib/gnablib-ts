@@ -1,7 +1,7 @@
 # gnablib
 
-Cryptography and verification, encoding and extended types. The tools you need for any project.
-Zero dependencies, provenance signing, TypeScript typing.  Build applications for the web, Node or Deno.
+A lean, zero dependency library to provide a useful base for your project.  Checksums, cryptography, codecs, date-times,
+error-checking-codes, logging, pseudorandom number generation.  The tools you need for any project.  Secure build pipeline, provenance signed and typed.
 
 [![CI](https://github.com/gnabgib/gnablib-ts/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/gnabgib/gnablib-ts/actions)
 [![NPM ver](https://img.shields.io/npm/v/gnablib?color=33cd56&logo=npm)](https://www.npmjs.com/package/gnablib)

@@ -1,7 +1,7 @@
 {
 	"name": "gnablib",
 	"version": "0.4.33",
-	"description": "A zero dependency library, with provenance, TypeScript/JavaScript applications.",
+	"description": "A lean, zero dependency library to provide a useful base for your project.",
 	"type": "module",
 	"scripts": {
 		"preversion": "npm run test:deep",
@@ -20,7 +20,8 @@
 		"build": "tsc",
 		"build:full": "npm run cover & npm run cover:report & npm run doc:cover & npm run build & npm run compress & npm run packgen",
 		"compress": "compress _o/out _o/dist",
-		"packgen": "node script/packageGen.js"
+		"packgen": "node script/packageGen.js",
+		"bench": "node script/bench.js -r bench"
 	},
 	"engines": {
 		"node": ">=15.3.0"
@@ -293,6 +294,7 @@
 	"devDependencies": {
 		"@types/node": "^20.11.24",
 		"@typescript-eslint/eslint-plugin": "^7.1.1",
+		"esbuild": "^0.20.1",
 		"terser": "^5.28.1",
 		"tsm": "^2.3.0",
 		"typescript": "^5.3.3",
@@ -310,6 +312,7 @@
 		"devDependencies": {
 			"@types/node": null,
 			"@typescript-eslint/eslint-plugin": null,
+			"esbuild": null,
 			"terser": null
 		},
 		"optDevDependencies": null,
@@ -327,7 +330,8 @@
 			"prebuild": null,
 			"build:full": null,
 			"compress": null,
-			"packgen": null
+			"packgen": null,
+			"bench": null
 		}
 	}
 }

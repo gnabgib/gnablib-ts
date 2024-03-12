@@ -211,10 +211,4 @@ tsts(`max`,()=>{
     assert.is(d.valueOf(),31);
 });
 
-// tsts('general',()=>{
-//     const dt=Day.now();
-//     console.log(dt);
-//     console.log(Object.prototype.toString.call(dt));
-// });
-
 tsts.run();

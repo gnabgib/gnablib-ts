@@ -108,7 +108,7 @@ export class NullError extends TypeError {
 	 * @param noun 
 	 */
 	constructor(readonly noun?: string) {
-		super((noun ? `${noun} ` : '') + `annot be null`);
+		super((noun ? `${noun} ` : '') + `cannot be null`);
 	}
 }
 
@@ -119,4 +119,14 @@ export class NotSupportedError extends TypeError {
 	constructor(reason?:string) {
 		super(reason??"Not supported");
 	}
+}
+
+export function callFrom(stack:string|undefined,back=1):string|undefined {
+	if (!stack) return;
+	const lines=stack.split(/\r?\n/);
+	let ptr=0;
+	if (lines[0].startsWith('Error')) ptr++;
+	ptr+=back;
+	//todo: further norm (first line=Error when v8/chrome)
+	return lines[ptr];
 }
