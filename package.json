@@ -40,6 +40,10 @@
 			"types": "./_o/type/checksum/index.d.ts",
 			"default": "./_o/dist/checksum/index.js"
 		},
+		"./cli": {
+			"types": "./_o/type/cli/index.d.ts",
+			"default": "./_o/dist/cli/index.js"
+		},
 		"./codec": {
 			"types": "./_o/type/codec/index.d.ts",
 			"default": "./_o/dist/codec/index.js"
@@ -115,6 +119,10 @@
 		"./regexp": {
 			"types": "./_o/type/regexp/index.d.ts",
 			"default": "./_o/dist/regexp/index.js"
+		},
+		"./stacktrace":{
+			"types": "./_o/type/stacktrace/index.d.ts",
+			"default": "./_o/dist/stacktrace/index.js"
 		},
 		"./prng": {
 			"types": "./_o/type/prnd/index.d.ts",
@@ -279,7 +287,12 @@
 		"TimeOnly",
 		"DateTime",
 		"Duration",
-		"DurationExact"
+		"DurationExact",
+		"argv",
+		"args",
+    	"arguments",
+		"stacktrace",
+		"debug"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

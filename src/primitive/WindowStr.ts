@@ -4,7 +4,7 @@ import { somewhatSafe as safe } from '../safe/index.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'WindowStr';
 const NOT_FOUND = -1;
-const WHITESPACE = [' ', '\t', '\n', '\v', '\f', '\r'];
+const WHITESPACE = [' ', '\t', '\n', '\r', '\v', '\f'];
 // file deepcode ignore BadWrapperObjectCreation: <please specify a reason of ignoring this>
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -258,12 +258,15 @@ export class WindowStr {
 	 * a multi-step parse that fails at a later step.  Like a transaction that auto-
 	 * commits
 	 */
-	getReset(): () => void {
+	getReset(): () => [number,number] {
 		const s = this._start;
 		const l = this._len;
 		return () => {
+			const sd=this._start-s;
+			const ld=this._len+this._start;
 			this._start = s;
 			this._len = l;
+			return [sd,ld];
 		};
 	}
 

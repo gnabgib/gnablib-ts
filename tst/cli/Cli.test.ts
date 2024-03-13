@@ -10,8 +10,6 @@ tsts('version',()=>{
     assert.equal(d.version(),'Version: 0\n');
     d.ver('eleventy');
     assert.equal(d.version(),'Version: eleventy\n');
-    //console.log(d.version());
-    //.v(process.env.npm_package_version);
 });
 
 tsts('set version twice fails',()=>{
@@ -54,7 +52,7 @@ tsts('flag(key) after final fails',()=>{
     const d=new Cli('eg','Example cli');
     assert.equal(d.flag('key','descr',false,'k').hasError,false);
     d.help();
-    assert.equal(d.flag('okey','descr',false,'k').hasError,true);
+    assert.equal(d.flag('okay','descr',false,'k').hasError,true);
 });
 
 tsts('flag(_key) fails',()=>{
@@ -117,25 +115,33 @@ tsts('parse(-r) fails',()=>{
     assert.equal(d.hasError,true);
 });
 
-tsts('parse(--help)',()=>{
+tsts('parse(--help) valid',()=>{
     const d=new Cli('eg','Example cli').parse(0,['--help']);
     assert.equal(d.value('help'),true);
 });
 
-tsts('parse(--please) fails',()=>{
+tsts('parse unknown option fails',()=>{
     const d=new Cli('eg','Example cli').parse(0,['--please']);
     assert.equal(d.hasError,true);
 });
 
-tsts('parse(unknown) fails',()=>{
+tsts('parse unknown argument fails',()=>{
     const d=new Cli('eg','Example cli').parse(0,['unknown']);
     assert.equal(d.hasError,true);
 });
 
-tsts('parse(one)',()=>{
+tsts('parse known argument updates value',()=>{
     const d=new Cli('eg','Example cli').require('something','a value').parse(0,['one']);
     assert.equal(d.value('something'),'one');
 });
+
+tsts('parse without required arg fails',()=>{
+    const d=new Cli('eg','Example cli')
+        .require('something','a value')
+        .parse(0,[]);
+    
+    assert.equal(d.hasError,true,'hasError');
+})
 
 tsts('error.ifComplete',()=>{
     let err=false;
@@ -174,6 +180,14 @@ tsts('version.ifComplete',()=>{
         .ifComplete(()=>{});
     assert.equal(log,true,'logged');
 });
+
+// tsts('general',()=>{
+//     const d=new Cli('eg','Example cli')
+//         .ver(1).ver(2)
+//         //.require('farts','everyone needs')
+//         .parse(0,['-h'])
+//         .ifComplete(()=>{});
+// })
 
 
 
