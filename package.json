@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.4.34",
+	"version": "0.4.35",
 	"description": "A lean, zero dependency library to provide a useful base for your project.",
 	"type": "module",
 	"scripts": {
@@ -120,7 +120,7 @@
 			"types": "./_o/type/regexp/index.d.ts",
 			"default": "./_o/dist/regexp/index.js"
 		},
-		"./stacktrace":{
+		"./stacktrace": {
 			"types": "./_o/type/stacktrace/index.d.ts",
 			"default": "./_o/dist/stacktrace/index.js"
 		},
@@ -290,7 +290,7 @@
 		"DurationExact",
 		"argv",
 		"args",
-    	"arguments",
+		"arguments",
 		"stacktrace",
 		"debug"
 	],
