@@ -1,5 +1,4 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
-
 import { WindowStr } from '../primitive/WindowStr.js';
 import { ParseProblem } from '../error/ParseProblem.js';
 import { StackEntry } from './StackEntry.js';

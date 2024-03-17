@@ -120,9 +120,9 @@
 			"types": "./_o/type/regexp/index.d.ts",
 			"default": "./_o/dist/regexp/index.js"
 		},
-		"./stacktrace": {
-			"types": "./_o/type/stacktrace/index.d.ts",
-			"default": "./_o/dist/stacktrace/index.js"
+		"./runtime": {
+			"types": "./_o/type/runtime/index.d.ts",
+			"default": "./_o/dist/runtime/index.js"
 		},
 		"./prng": {
 			"types": "./_o/type/prnd/index.d.ts",
@@ -131,10 +131,6 @@
 		"./test": {
 			"types": "./_o/type/test/index.d.ts",
 			"default": "./_o/dist/test/index.js"
-		},
-		"./tty": {
-			"types": "./_o/type/tty/index.d.ts",
-			"default": "./_o/dist/tty/index.js"
 		},
 		"./nb/*": {
 			"types": "./_o/type/*.d.ts",

@@ -1,7 +1,23 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { safety } from '../primitive/Safety.js';
 import { stringExt } from '../primitive/StringExt.js';
+import { config } from '../runtime/Config.js';
+
+config
+	.define('color',true)
+	.importEnv('NO_COLOR',(v,set)=>{
+		//If NO_COLOR is defined and not empty string https://no-color.org/
+		if (v!==undefined && v.length > 0) set(false);
+	})
+	.importEnv('NODE_DISABLE_COLORS',(v,set)=>{
+		//v can be undefined, as in defined env exits, but it's not defined (diff from no env)
+		//https://nodejs.org/api/cli.html#node_disable_colors1
+		if (v === '1') set(false);
+	})
+	.importEnv('TERM', (v, set) => {
+		if (v === 'dumb') set(false);
+	});
 
 //[ANSI escape code](https://en.wikipedia.org/wiki/ANSI_escape_code)
 //[ECMA-48](https://www.ecma-international.org/publications-and-standards/standards/ecma-48/)
@@ -9,12 +25,9 @@ import { stringExt } from '../primitive/StringExt.js';
 //[Terminals that support colours](https://github.com/termstandard/colors)
 // -xterm, alacritty, mosh, putty, mobaxterm, cmd, powershell, xterm.js, iTerm2
 
-let NODE_DISABLE_COLORS, NO_COLOR, TERM;
-if (typeof process !== 'undefined') {
-	({ NODE_DISABLE_COLORS, NO_COLOR, TERM } = process.env || {});
-}
 //NO_COLOR: https://no-color.org/ (either not present, or empty string)
-const enabled=!NODE_DISABLE_COLORS && NO_COLOR == undefined && TERM !== 'dumb';
+const enabled=config.getBool('color');
+//!NODE_DISABLE_COLORS && NO_COLOR == undefined && TERM !== 'dumb';
 //?Support FORCE_COLOR (https://nodejs.org/api/cli.html#force_color1-2-3)
 // - It has some implied colorspace abilities (empty/1-16color, 2-256, 3-16M, undefined=ignore)
 

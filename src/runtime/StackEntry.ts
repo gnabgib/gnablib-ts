@@ -1,10 +1,13 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
-
 import { WindowStr } from '../primitive/WindowStr.js';
-import { Color, tty } from '../tty/index.js';
+import { Color, Underline, reset } from '../cli/tty.js';
 import { ParseProblem } from '../error/ParseProblem.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const b = Color.cyan.now();
+const g = Color.grey24(16).now() + Underline.single.now();
+const y = Color.yellow.now();
+const d = reset(); //Use reset rather than default color to clear underline too
 
 export class StackEntry {
 	constructor(
@@ -30,14 +33,16 @@ export class StackEntry {
 
 	/** Describe this entry (with TTY colors by default) */
 	toString(color = true): string {
-		if (color) {
-			return (
-				tty`${Color.cyan}${this.method} ${Color.grey24(16)}${this.file}` +
-				tty`:${Color.yellow}${this.line}${Color.default}:${Color.yellow}${this.char}`
-			);
-		} else {
-			return `${this.method} ${this.file}:${this.line}:${this.char}`;
-		}
+		if (color) return this.inColor();
+		return `${this.method} ${this.file}:${this.line},${this.char}`;
+	}
+
+	inColor(): string {
+		//Note we're managing color and style ourselves, so we have to remember reset ${d}
+		return (
+			`${b}${this.method} ${g}${this.file}${d}` +
+			`:${y}${this.line}${d},${y}${this.char}${d}`
+		);
 	}
 
 	/** @hidden */
@@ -47,7 +52,7 @@ export class StackEntry {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return this.toString();
+		return this.inColor();
 	}
 
 	/** Parse a v8/Chrome/Node/Chromium/IE(?)/Opera/Brave line into an entry (or return problem) */

@@ -2,82 +2,58 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { ParseProblem } from '../../src/error/ParseProblem';
 import util from 'util';
+import { config } from '../config';
 
 const tsts = suite('ParseProblem');
-//While these are rigid we need to make sure the error message is reasonable
+const DEMO=false || config.getBool('demo');
 
-tsts(`build`, () => {
+const buildSet:[string,string,string|undefined,number|undefined,number|undefined,string][]=[
+    ['$noun','$reason',undefined,undefined,undefined,'Invalid $noun, $reason'],
+    ['$noun','$reason','$content',undefined,undefined,'Invalid $noun, $reason; \'$content\''],
+    ['$noun','$reason','$content',0,undefined,'Invalid $noun, $reason\n  \'$content\':0'],//end->1
+    ['$noun','$reason','$content',0,1,'Invalid $noun, $reason\n  \'$content\':0-1'],
+    ['$noun','$reason','$content',0,2,'Invalid $noun, $reason\n  \'$content\':0-2'],
+    //Not great signatures:
+    ['$noun','$reason','$content',undefined,1,'Invalid $noun, $reason\n  \'$content\':0-1'],//start->0
+    ['$noun','$reason','$content',undefined,2,'Invalid $noun, $reason\n  \'$content\':0-2'],//start->0
+    ['$noun','$reason',undefined,0,undefined,'Invalid $noun, $reason :0'],
+    ['$noun','$reason',undefined,0,2,'Invalid $noun, $reason :0-2'],
+];
+let i=0;
+for(const [noun,reason,content,start,end,expect] of buildSet) {
+    tsts(`build[${i++}]`,()=>{
+        //@ts-expect-error (yes content/start/end being undefinable is counter to sigs, but handled in code)
+        const p=new ParseProblem(noun,reason,content,start,end);
+        assert.is(p.noun,noun);
+        assert.is(p.reason,reason);
+        assert.is(p.content,content);
+        //assert.is(p.start,start); - we can't test this without redefining since start will be set to 0 when st
+        //assert.is(p.end,end); - we can't test this without redefining end since it'll be set to start+1
+        assert.is(p.toString(),expect);
+        p.inColor();//Just for coverage
+    })
+}
+
+tsts(`coverage`, () => {
 	const p = new ParseProblem('$noun', '$reason');
 	assert.is(p.name, 'ParseProblem', 'name');
 	const str = Object.prototype.toString.call(p);
 	assert.is(str.indexOf('ParseProblem') > 0, true);
-
-	assert.is(p.noun, '$noun');
-    assert.is(p.reason, '$reason');
-    assert.is(p.toString(),'Invalid $noun, $reason')
-    p.inColor();//Just for coverage
     util.inspect(p);//Just for coverage
 });
 
-tsts(`build(str,str,str)`,()=>{
-    const p=new ParseProblem('$noun','$reason','$content');
-	assert.is(p.noun, '$noun');
-    assert.is(p.reason, '$reason');
-    assert.is(p.content, '$content');
-    assert.is(p.toString(),'Invalid $noun, $reason\n  \'$content\'')
-    p.inColor();//Just for coverage
-});
-
-tsts(`build(str,str,str,num)`,()=>{
-    const p=new ParseProblem('$noun','$reason','$content',0);
-	assert.is(p.noun, '$noun');
-    assert.is(p.reason, '$reason');
-    assert.is(p.content, '$content');
-    assert.is(p.start, 0);
-    assert.is(p.toString(),'Invalid $noun, $reason\n  \'$content\':0')
-    p.inColor();//Just for coverage
-});
-
-tsts(`build(str,str,str,num,num)`,()=>{
-    const p=new ParseProblem('$noun','$reason','$content',0,1);
-	assert.is(p.noun, '$noun');
-    assert.is(p.reason, '$reason');
-    assert.is(p.content, '$content');
-    assert.is(p.start, 0);
-    assert.is(p.end, 1);
-    assert.is(p.toString(),'Invalid $noun, $reason\n  \'$content\':0-1')
-    p.inColor();//Just for coverage
-});
-
-tsts(`build(str,str,str,,num)`,()=>{
-    const p=new ParseProblem('$noun','$reason','$content',undefined,1);
-	assert.is(p.noun, '$noun');
-    assert.is(p.reason, '$reason');
-    assert.is(p.content, '$content');
-    assert.is(p.start, undefined);
-    assert.is(p.end, 1);
-    assert.is(p.toString(),'Invalid $noun, $reason\n  \'$content\':-1')
-    p.inColor();//Just for coverage
-});
-
-tsts(`build(str,str,,num,num)`,()=>{
-    const p=new ParseProblem('$noun','$reason',undefined,0,1);
-	assert.is(p.noun, '$noun');
-    assert.is(p.reason, '$reason');
-    assert.is(p.content, undefined);
-    assert.is(p.start, 0);
-    assert.is(p.end, 1);
-    assert.is(p.toString(),'Invalid $noun, $reason :0-1')
-    p.inColor();//Just for coverage
-});
-
-// const inColorSet:[string,string,string|undefined,number|undefined,number|undefined][]=[
-//     ['$noun','$reason',undefined,undefined,undefined],
-// ];
-// for(const [noun,reason,content,start,end] of inColorSet) {
-//     tsts(`inColor`,()=>{
-//         const e=new ParseProblem(noun,reason,content,start,end);
-//     })
-// }
+const demoSet:ParseProblem[]=[
+    new ParseProblem('$noun','$reason'),
+    new ParseProblem('$noun','$reason','abc'),
+    new ParseProblem('$noun','$reason','abcdef',2),
+    new ParseProblem('$noun','$reason','abcdef',2,4),
+];
+if (DEMO) {
+    for(const pp of demoSet) {
+        console.log(pp.toString());
+        console.log(pp);//=pp.inColor()
+        console.log('--');
+    }    
+}
 
 tsts.run();

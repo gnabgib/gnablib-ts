@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { StackTrace } from '../../src/stacktrace/StackTrace';
-import { WindowStr } from '../../src/primitive/WindowStr';
+import { StackTrace } from '../../src/runtime/StackTrace';
 import { ParseProblem } from '../../src/error/ParseProblem';
 import util from 'util';
 

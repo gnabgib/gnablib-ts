@@ -1,10 +1,12 @@
 /* eslint-disable no-control-regex */
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Underline,Weight,LetterStyle,Blink,tty, reset, Color,demo, Ctrl, BgColor, Invert, Hide, StrikeThrough, Overline} from '../../src/tty';
+import {Underline,Weight,LetterStyle,Blink,tty, reset, Color,demo, Ctrl, BgColor, Invert, Hide, StrikeThrough, Overline} from '../../src/cli/tty';
+import { config } from '../config';
 
 
 const tsts = suite('TTY');
+const DEMO=false || config.getBool('demo');
 
 const ctrlTests:[string,string][]=[
     [
@@ -123,7 +125,9 @@ for(const [tty,expect] of styleTests) {
 
 tsts(`coverage`,()=>{
     const c=demo();
-    //console.log(c);
+    if (DEMO) {
+        console.log(c);
+    }
     assert.is(c.length>0,true);
 });
 

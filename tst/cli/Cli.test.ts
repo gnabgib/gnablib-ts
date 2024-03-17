@@ -1,15 +1,18 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Cli} from '../../src/cli/index.ts';
+import {Cli} from '../../src/cli/Cli.ts';
+import { config } from '../config.ts';
 
 const tsts = suite('Describe');
+const DEMO=false || config.getBool('demo');
+
 
 tsts('version',()=>{
     const d=new Cli('eg','Example cli');
     d.setOption('color',false);
-    assert.equal(d.version(),'Version: 0\n');
+    assert.equal(d.versionBlock(),'Version: 0\n');
     d.ver('eleventy');
-    assert.equal(d.version(),'Version: eleventy\n');
+    assert.equal(d.versionBlock(),'Version: eleventy\n');
 });
 
 tsts('set version twice fails',()=>{
@@ -20,7 +23,7 @@ tsts('set version twice fails',()=>{
 
 tsts('set version after finalize fails',()=>{
     const d=new Cli('eg','Example cli');
-    d.help();
+    d.helpBlock();
     assert.equal(d.ver('3').hasError,true);
 });
 
@@ -32,7 +35,7 @@ tsts('require(key)',()=>{
 tsts('require(key) after final fails',()=>{
     const d=new Cli('eg','Example cli');
     assert.equal(d.require('key','descr','herp').hasError,false);
-    d.help();
+    d.helpBlock();
     assert.equal(d.require('key','descr','herp').hasError,true);
 });
 
@@ -51,7 +54,7 @@ tsts('flag(key)',()=>{
 tsts('flag(key) after final fails',()=>{
     const d=new Cli('eg','Example cli');
     assert.equal(d.flag('key','descr',false,'k').hasError,false);
-    d.help();
+    d.helpBlock();
     assert.equal(d.flag('okay','descr',false,'k').hasError,true);
 });
 
@@ -74,7 +77,7 @@ tsts('removeOpt(help)',()=>{
 
 tsts('removeOpt(help) after final fails',()=>{
     const d=new Cli('eg','Example cli');
-    d.help();
+    d.helpBlock();
     assert.equal(d.removeOpt('help').hasError,true);
 });
 
@@ -91,7 +94,7 @@ tsts('removeAlt(h)',()=>{
 
 tsts('removeAlt(h) after final fails',()=>{
     const d=new Cli('eg','Example cli');
-    d.help();
+    d.helpBlock();
     assert.equal(d.removeAlt('h').hasError,true);
 });
 
@@ -181,29 +184,15 @@ tsts('version.ifComplete',()=>{
     assert.equal(log,true,'logged');
 });
 
-// tsts('general',()=>{
-//     const d=new Cli('eg','Example cli')
-//         .ver(1).ver(2)
-//         //.require('farts','everyone needs')
-//         .parse(0,['-h'])
-//         .ifComplete(()=>{});
-// })
-
-
-
-
-// tsts('general',()=>{
-//     const d=new Cli('bench','Run each file in DIR as a benchmark')
-//         .v(process.env.npm_package_version)
-//         .require('DIR','Directory to scan for benchmarks')
-//         .flag('recursive','Recursively look for files',false,'r')
-//         //.removeAlias('c')
-//         //.removeOpt('color','help')
-//         .parse()
-//         ;
-
-//     console.log(d.help());
-//     console.log(d.version());
-// });
+if (DEMO) {
+    const d=new Cli('eg','Example cli')
+        .require('DIR','A directory')
+        .flag('derp','derp like')
+        .flag('al','Alternative',false,'alt','a')
+        .parse(0,['-h'])
+        ;
+    console.log(d.helpBlock());
+    console.log(d.versionBlock());
+}
 
 tsts.run();

@@ -1,6 +1,12 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
-import { BgColor, Color, tty } from '../tty/index.js';
+import { Color } from '../cli/tty.js';
+
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
+const b = Color.cyan.now();
+const y = Color.yellow.now();
+const g = Color.grey24(16).now();
+const r = Color.red.now();
+const d = Color.default.now();
 
 /** A problem raised during parsing (could become an error) */
 export class ParseProblem {
@@ -8,10 +14,9 @@ export class ParseProblem {
 	constructor(noun: string, reason: string);
 	/** Invalid $noun, $reason\n  '$content' */
 	constructor(noun: string, reason: string, content: string);
-	/** Invalid $noun, $reason\n  '$content':$start-len($content) */
-	constructor(noun: string, reason: string, content: string, start: number);
-    /** Invalid $noun, $reason\n  '$content':$start-$end */
-    constructor(noun: string, reason: string, content: string, start: number, end:number);
+	/** Invalid $noun, $reason\n  '$content':$at */
+	constructor(noun: string, reason: string, content: string, at: number);
+	/** Invalid $noun, $reason\n  '$content':$start-$end */
 	constructor(
 		noun: string,
 		reason: string,
@@ -19,6 +24,7 @@ export class ParseProblem {
 		start: number,
 		end: number
 	);
+
 	constructor(
 		readonly noun: string,
 		readonly reason: string,
@@ -26,45 +32,53 @@ export class ParseProblem {
 		readonly start?: number,
 		readonly end?: number
 	) {
-		if (start !== undefined && end === undefined) end = content?.length;
+		//If end is defined, and start isn't.. start is set to 0
+		if (end !== undefined && start === undefined) this.start = 0;
 	}
 
 	renderRange(): string {
-		const ret =
-			(this.start === undefined ? '' : this.start) +
-			(this.end === undefined ? '' : '-' + this.end);
-		return ret.length > 0 ? ':' + ret : '';
+		if (this.start === undefined) return '';
+		let ret = ':' + this.start;
+		if (this.end) ret += '-' + this.end;
+		return ret;
 	}
 
 	toString(sep = '\n '): string {
 		let msg = `Invalid ${this.noun}, ${this.reason}`;
-        if (this.content!==undefined) {
-            msg+=sep + " '" + this.content + "'"+this.renderRange();
-        } else {
-            const r=this.renderRange();
-            if (r.length>0) msg+=' '+r;    
-        }
+		const r = this.renderRange();
+		if (this.content !== undefined) {
+			if (r.length > 0) msg += sep + " '" + this.content + "'" + r;
+			else msg += "; '" + this.content + "'";
+		} else {
+			if (r.length > 0) msg += ' ' + r;
+		}
 		return msg;
 	}
 
 	inColor(): string {
-		let msg = tty`Invalid ${Color.cyan}${this.noun}${Color.default}, ${this.reason}`;
-		if (this.content !== undefined) {
-			if (this.start !== undefined) {
-				msg +=
-					tty`\n  '${Color.grey24(16)}${this.content.substring(
-						0,
-						this.start
-					)}` +
-					tty`${BgColor.red}${this.content.substring(this.start, this.end)}` +
-					tty`${Color.grey24(16)}${this.content.substring(this.end!)}` +
-					tty`':${Color.yellow}${this.start}${Color.default}-${Color.yellow}${this.end}`;
-			} else {
-				msg += ': ' + this.content;
-			}
-		} else if (this.start !== undefined)
-			msg += tty` :${Color.yellow}${this.start}${Color.default}-${Color.yellow}${this.end}`;
-		return msg;
+		//Note we're managing color ourselves, so we have to remember to reset (${d})
+		let msg = `Invalid ${b}${this.noun}${d}, ${this.reason}`;
+		if (this.content === undefined) {
+			if (this.start !== undefined)
+				msg += ` :${y}${this.start}${d}-${y}${this.end}${d}`;
+			return msg;
+		}
+		if (this.start === undefined) return msg + "; '" + this.content + "'";
+		else msg += `\n  '${g}${this.content.substring(0, this.start)}${d}`;
+
+		if (this.end)
+			return (
+				msg +
+				`${r}${this.content.substring(this.start, this.end)}${d}` +
+				`${g}${this.content.substring(this.end)}${d}` +
+				`':${y}${this.start}${d}-${y}${this.end}${d}`
+			);
+		return (
+			msg +
+			`${r}${this.content.charAt(this.start)}${d}` +
+			`${g}${this.content.substring(this.start + 1)}${d}` +
+			`':${y}${this.start}${d}`
+		);
 	}
 
 	/** @hidden */

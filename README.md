@@ -72,13 +72,13 @@ Name|Sum size bits|Optional parameters
 [Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|seed
 [xxHash](https://cyan4973.github.io/xxHash/)|32, 64|seed
 
+
 ### Command Line Interface (cli)
 
 - Argument and option parsing
 - Foreground, background color (8 color, 213 color, 16M colors)
 - Underline, bold, faint, italic, blink, invert, hide, strike-through, overline text styles
-- Terminal controls (cursor move, screen/line clear)
-
+- Terminal controls & style (cursor move, screen/line clear)
 
 
 ### Codec
@@ -271,9 +271,10 @@ Name|Capacities|Optional parameters
 - RegExp escape string
 
 
-### StackTrace
+### RunTime
 
-- Normalize stack entries, and stack traces across engines, with colours 
+- Configuration (including collecting from environment variables)
+- Normalize stack entries, and stack traces across engines, with colors 
 
 
 ## License

@@ -1,41 +1,43 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { StackEntry } from '../../src/stacktrace/StackEntry';
+import { StackEntry } from '../../src/runtime/StackEntry';
 import { WindowStr } from '../../src/primitive/WindowStr';
 import { ParseProblem } from '../../src/error/ParseProblem';
 import util from 'util';
+import { config } from '../config.ts';
 
 const tsts = suite('StackEntry');
+const DEMO=false || config.getBool('demo');
 
 const parseV8Set: [string, string][] = [
-	['    at baz (filename.js:10:15)', 'baz filename.js:10:15'],
-	['    at bar (filename.js:6:3)', 'bar filename.js:6:3'],
-	['    at foo (filename.js:2:3)', 'foo filename.js:2:3'],
-	['    at filename.js:13:1', '. filename.js:13:1'], //Note no method becomes . (for root)
+	['    at baz (filename.js:10:15)', 'baz filename.js:10,15'],
+	['    at bar (filename.js:6:3)', 'bar filename.js:6,3'],
+	['    at foo (filename.js:2:3)', 'foo filename.js:2,3'],
+	['    at filename.js:13:1', '. filename.js:13,1'], //Note no method becomes . (for root)
 
 	[
 		'    at Stack.new (\\src\\error\\parseStack.ts:173:24)',
-		'Stack.new \\src\\error\\parseStack.ts:173:24',
+		'Stack.new \\src\\error\\parseStack.ts:173,24',
 	],
 	[
 		'    at Object.handler (\\tst\\error\\parseStack.test.ts:16:40)',
-		'Object.handler \\tst\\error\\parseStack.test.ts:16:40',
+		'Object.handler \\tst\\error\\parseStack.test.ts:16,40',
 	],
 	[
 		'    at Number.runner (\\node_modules\\3rd-party-danger\\index.js:78:16)',
-		'Number.runner \\node_modules\\3rd-party-danger\\index.js:78:16',
+		'Number.runner \\node_modules\\3rd-party-danger\\index.js:78,16',
 	],
 	[
 		'    at async Object.exec (\\node_modules\\3rd-party-danger\\index.js:141:33)',
-		'async Object.exec \\node_modules\\3rd-party-danger\\index.js:141:33',
+		'async Object.exec \\node_modules\\3rd-party-danger\\index.js:141,33',
 	],
 	[
 		'    at async exports.run (\\node_modules\\3rd-party-danger\\index.js:11:2)',
-		'async exports.run \\node_modules\\3rd-party-danger\\index.js:11:2',
+		'async exports.run \\node_modules\\3rd-party-danger\\index.js:11,2',
 	],
 	[
 		'    at async \\node_modules\\3rd-party-danger\\bin.js:28:5',
-		'async \\node_modules\\3rd-party-danger\\bin.js:28:5',
+		'async \\node_modules\\3rd-party-danger\\bin.js:28,5',
 	],
 ];
 for (const [parse, expect] of parseV8Set) {
@@ -67,10 +69,10 @@ for (const [parse, start, end] of badParseV8Set) {
 }
 
 const parseSpiderSet: [string, string][] = [
-	['baz@filename.js:10:15', 'baz filename.js:10:15'],
-	['bar@filename.js:6:3', 'bar filename.js:6:3'],
-	['foo@filename.js:2:3', 'foo filename.js:2:3'],
-	['@filename.js:13:1', '. filename.js:13:1'], //Note no method becomes . (for root)
+	['baz@filename.js:10:15', 'baz filename.js:10,15'],
+	['bar@filename.js:6:3', 'bar filename.js:6,3'],
+	['foo@filename.js:2:3', 'foo filename.js:2,3'],
+	['@filename.js:13:1', '. filename.js:13,1'], //Note no method becomes . (for root)
 ];
 for (const [parse, expect] of parseSpiderSet) {
 	tsts(`parseSpider(${parse})`, () => {
@@ -118,10 +120,19 @@ tsts(`coverage`, () => {
 	//Colours.. tricky to test
 });
 
-// tsts(`general`,()=>{
-//     const w=WindowStr.new('at herp:1');
-//     const s=StackEntry.parseV8(w);
-//     console.log(s);
-// });
+const demoSet:string[]=[
+	'Number.runner@\\node_modules\\3rd-party-danger\\index.js:78:16',
+	'baz@filename.js:10:15',
+	'@filename.js:13:1',
+];
+if (DEMO) {
+	for (const parse of demoSet) {
+		const w=WindowStr.new(parse);
+		const s=StackEntry.parseSpider(w);
+		console.log(s.toString(false));
+		console.log(s);
+		console.log('--');
+	}
+}
 
 tsts.run();
