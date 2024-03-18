@@ -14,38 +14,44 @@ import { asBE } from '../../endian/platform.js';
 
 const spaceForLen32 = 8; //Number of bytes needed to append length
 const spaceForLen64 = 16; //Number of bytes needed to append length
-const blockSize32 = 64;//bytes
-const stateSize = 8;//* bit size
+const blockSize32 = 64; //bytes
+const stateSize = 8; //* bit size
 const wSize32 = 64;
-const blockSize64 = 128;//bytes
+const blockSize64 = 128; //bytes
 const wSize64 = 80;
 
 const iv512 = [
 	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2..19):
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
 	//Note for 32bit use use 0+i*2 (every other value starting with the first)
-	0x6a09e667, 0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1, 
-    0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179,
+	0x6a09e667,
+	0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a,
+	0x5f1d36f1, 0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab,
+	0xfb41bd6b, 0x5be0cd19, 0x137e2179,
 ];
 
 const iv384 = [
 	//(first 64 bits of the fraction parts of the square roots of the 9th through 16th primes)
-    //These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
+	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
 	//Note for 32bit use use 1+i*2 (every other value starting with the second - quirk of sha224 to use the low bits
-	0xcbbb9d5d, 0xc1059ed8, 0x629a292a, 0x367cd507, 0x9159015a, 0x3070dd17, 0x152fecd8, 0xf70e5939,
-	0x67332667, 0xffc00b31, 0x8eb44a87, 0x68581511, 0xdb0c2e0d, 0x64f98fa7, 0x47b5481d, 0xbefa4fa4
+	0xcbbb9d5d,
+	0xc1059ed8, 0x629a292a, 0x367cd507, 0x9159015a, 0x3070dd17, 0x152fecd8,
+	0xf70e5939, 0x67332667, 0xffc00b31, 0x8eb44a87, 0x68581511, 0xdb0c2e0d,
+	0x64f98fa7, 0x47b5481d, 0xbefa4fa4,
 ];
 
 const init512_224 = [
 	//These are pre-generated call generateIV(224);
-	0x8c3d37c8, 0x19544da2, 0x73e19966, 0x89dcd4d6, 0x1dfab7ae, 0x32ff9c82, 0x679dd514, 0x582f9fcf,
-	0x0f6d2b69, 0x7bd44da8, 0x77e36f73, 0x04c48942, 0x3f9d85a8, 0x6a1d36c8, 0x1112e6ad, 0x91d692a1
+	0x8c3d37c8, 0x19544da2, 0x73e19966, 0x89dcd4d6, 0x1dfab7ae, 0x32ff9c82,
+	0x679dd514, 0x582f9fcf, 0x0f6d2b69, 0x7bd44da8, 0x77e36f73, 0x04c48942,
+	0x3f9d85a8, 0x6a1d36c8, 0x1112e6ad, 0x91d692a1,
 ];
 
 const init512_256 = [
 	//These are pre-generated call generateIV(256);
-	0x22312194, 0xfc2bf72c, 0x9f555fa3, 0xc84c64c2, 0x2393b86b, 0x6f53b151, 0x96387719, 0x5940eabd,
-	0x96283ee2, 0xa88effe3, 0xbe5e1e25, 0x53863992, 0x2b0199fc, 0x2c85b8aa, 0x0eb72ddc, 0x81c52ca2
+	0x22312194, 0xfc2bf72c, 0x9f555fa3, 0xc84c64c2, 0x2393b86b, 0x6f53b151,
+	0x96387719, 0x5940eabd, 0x96283ee2, 0xa88effe3, 0xbe5e1e25, 0x53863992,
+	0x2b0199fc, 0x2c85b8aa, 0x0eb72ddc, 0x81c52ca2,
 ];
 
 const k = [
@@ -101,15 +107,15 @@ class Sha2_32bit implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize32);
-	readonly #block32=new Uint32Array(this.#block.buffer);
+	readonly #block32 = new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 	readonly #iv: iv32;
 
 	constructor(digestSize: number, iv: iv32) {
@@ -120,7 +126,7 @@ class Sha2_32bit implements IHash {
 
 	private hash() {
 		const w = new Uint32Array(wSize32);
-		asBE.i32(this.#block,0,16);
+		asBE.i32(this.#block, 0, 16);
 		w.set(this.#block32);
 
 		//Expand
@@ -152,7 +158,14 @@ class Sha2_32bit implements IHash {
 			const maj = ((a ^ b) & c) ^ (a & b); //Similar to MD4-r2 (| -> ^)
 			const temp2 = s0 + maj;
 
-			(h = g), (g = f), (f = e), (e = d + temp1), (d = c), (c = b), (b = a), (a = temp1 + temp2);
+			(h = g),
+				(g = f),
+				(f = e),
+				(e = d + temp1),
+				(d = c),
+				(c = b),
+				(b = a),
+				(a = temp1 + temp2);
 		}
 
 		this.#state[0] += a;
@@ -165,7 +178,7 @@ class Sha2_32bit implements IHash {
 		this.#state[7] += h;
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -175,23 +188,23 @@ class Sha2_32bit implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes += data.length;
+		this._ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this.#block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
-			this.#bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
+			this._bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -207,39 +220,39 @@ class Sha2_32bit implements IHash {
 	}
 
 	/**
-     * Sum the hash - mutates internal state, but avoids memory alloc.
-     * Use if you won't need the obj again (for performance)
-     */
-	sumIn():Uint8Array {
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 * Use if you won't need the obj again (for performance)
+	 */
+	sumIn(): Uint8Array {
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen32;
 
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		//Write out the data size in big-endian
-		const ss32=sizeSpace>>2;// div 4
+		const ss32 = sizeSpace >> 2; // div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		this.#block32[ss32]=this.#ingestBytes / 0x20000000;
-		this.#block32[ss32+1]=this.#ingestBytes << 3;
-		asBE.i32(this.#block,sizeSpace);
-		asBE.i32(this.#block,sizeSpace+4);
+		this.#block32[ss32] = this._ingestBytes / 0x20000000;
+		this.#block32[ss32 + 1] = this._ingestBytes << 3;
+		asBE.i32(this.#block, sizeSpace);
+		asBE.i32(this.#block, sizeSpace + 4);
 		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(this.#state.buffer,this.#state.byteOffset);
+		const s8 = new Uint8Array(this.#state.buffer, this.#state.byteOffset);
 		//Make sure the bytes are BE - this might mangle alt.#state (but we're moments from disposing)
-		for(let i=0;i<this.size;i++) asBE.i32(s8,i*4);
-		return s8.slice(0,this.size);
+		for (let i = 0; i < this.size; i++) asBE.i32(s8, i * 4);
+		return s8.slice(0, this.size);
 	}
 
 	/**
@@ -248,9 +261,9 @@ class Sha2_32bit implements IHash {
 	reset(): void {
 		this.#iv(this.#state);
 		//Reset ingest count
-		this.#ingestBytes = 0;
+		this._ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -268,8 +281,8 @@ class Sha2_32bit implements IHash {
 		const ret = new Sha2_32bit(this.size, this.#iv);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }
@@ -294,11 +307,11 @@ class Sha2_64bit implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 	readonly #iv: iv64;
 
 	constructor(digestSize: number, iv: iv64) {
@@ -344,8 +357,14 @@ class Sha2_64bit implements IHash {
 			const maj = a.xor(b).and(c).xor(a.and(b)); //Similar to MD4-r2 (| -> ^)
 			const temp2 = s0.add(maj);
 
-
-			(h = g), (g = f), (f = e), (e = d.add(temp1)), (d = c), (c = b), (b = a), (a = temp1.add(temp2));
+			(h = g),
+				(g = f),
+				(f = e),
+				(e = d.add(temp1)),
+				(d = c),
+				(c = b),
+				(b = a),
+				(a = temp1.add(temp2));
 		}
 
 		this.#state[0] = this.#state[0].add(a);
@@ -358,7 +377,7 @@ class Sha2_64bit implements IHash {
 		this.#state[7] = this.#state[7].add(h);
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -368,23 +387,23 @@ class Sha2_64bit implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes += data.length;
+		this._ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this.#block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
-			this.#bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
+			this._bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -395,41 +414,41 @@ class Sha2_64bit implements IHash {
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
-	sum():Uint8Array {
+	sum(): Uint8Array {
 		return this.clone().sumIn();
 	}
 
 	/**
-     * Sum the hash - mutates internal state, but avoids memory alloc.
-     * Use if you won't need the obj again (for performance)
-     */
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 * Use if you won't need the obj again (for performance)
+	 */
 	sumIn(): Uint8Array {
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen64;
 
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		//Write out the data size in big-endian
-        // There's space for 128 bits of size (spaceForLenBytes64=16) but we can only count
-        // up to 2^52 bits (JS limitation), so we only need to write n+2,n+3 values (the others are zero)
+		// There's space for 128 bits of size (spaceForLenBytes64=16) but we can only count
+		// up to 2^52 bits (JS limitation), so we only need to write n+2,n+3 values (the others are zero)
 
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
 		bigEndian.u32IntoBytes(
-			this.#ingestBytes / 0x20000000,
+			this._ingestBytes / 0x20000000,
 			this.#block,
-			sizeSpace+8
+			sizeSpace + 8
 		);
-		bigEndian.u32IntoBytes(this.#ingestBytes << 3, this.#block, sizeSpace + 12);
+		bigEndian.u32IntoBytes(this._ingestBytes << 3, this.#block, sizeSpace + 12);
 		this.hash();
 		const ret = new Uint8Array(this.size);
 		bigEndian.u64ArrIntoBytesSafe(this.#state, ret);
@@ -442,9 +461,9 @@ class Sha2_64bit implements IHash {
 	reset(): void {
 		this.#iv(this.#state);
 		//Reset ingest count
-		this.#ingestBytes = 0;
+		this._ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -460,10 +479,10 @@ class Sha2_64bit implements IHash {
 	 */
 	clone(): IHash {
 		const ret = new Sha2_64bit(this.size, this.#iv);
-        for(let i=0;i<stateSize;i++) ret.#state[i]=this.#state[i];
+		for (let i = 0; i < stateSize; i++) ret.#state[i] = this.#state[i];
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }
@@ -508,7 +527,7 @@ export class Sha224 extends Sha2_32bit {
 	/**
 	 * Build a new Sha2-224 hash generator
 	 */
-    constructor() {
+	constructor() {
 		super(28, Sha224.iv);
 	}
 
@@ -526,10 +545,10 @@ export class Sha224 extends Sha2_32bit {
 }
 
 export class Sha256 extends Sha2_32bit {
-    /**
+	/**
 	 * Build a new Sha2-256 hash generator
 	 */
-    constructor() {
+	constructor() {
 		super(32, Sha256.iv);
 	}
 
@@ -547,7 +566,7 @@ export class Sha256 extends Sha2_32bit {
 }
 
 export class Sha384 extends Sha2_64bit {
-    /**
+	/**
 	 * Build a new Sha2-384 hash generator
 	 */
 	constructor() {
@@ -556,40 +575,40 @@ export class Sha384 extends Sha2_64bit {
 
 	private static iv(state: Array<Uint64>): void {
 		//Setup state
-        state[0]=new Uint64(iv384[1],iv384[0]);
-        state[1]=new Uint64(iv384[3],iv384[2]);
-        state[2]=new Uint64(iv384[5],iv384[4]);
-        state[3]=new Uint64(iv384[7],iv384[6]);
-        state[4]=new Uint64(iv384[9],iv384[8]);
-        state[5]=new Uint64(iv384[11],iv384[10]);
-        state[6]=new Uint64(iv384[13],iv384[12]);
-        state[7]=new Uint64(iv384[15],iv384[14]);
-    }
+		state[0] = new Uint64(iv384[1], iv384[0]);
+		state[1] = new Uint64(iv384[3], iv384[2]);
+		state[2] = new Uint64(iv384[5], iv384[4]);
+		state[3] = new Uint64(iv384[7], iv384[6]);
+		state[4] = new Uint64(iv384[9], iv384[8]);
+		state[5] = new Uint64(iv384[11], iv384[10]);
+		state[6] = new Uint64(iv384[13], iv384[12]);
+		state[7] = new Uint64(iv384[15], iv384[14]);
+	}
 }
 
 export class Sha512 extends Sha2_64bit {
-    /**
+	/**
 	 * Build a new Sha2-512 hash generator
 	 */
-    constructor() {
+	constructor() {
 		super(64, Sha512.iv);
 	}
 
 	private static iv(state: Array<Uint64>): void {
 		//Setup state
-        state[0]=new Uint64(iv512[1],iv512[0]);
-        state[1]=new Uint64(iv512[3],iv512[2]);
-        state[2]=new Uint64(iv512[5],iv512[4]);
-        state[3]=new Uint64(iv512[7],iv512[6]);
-        state[4]=new Uint64(iv512[9],iv512[8]);
-        state[5]=new Uint64(iv512[11],iv512[10]);
-        state[6]=new Uint64(iv512[13],iv512[12]);
-        state[7]=new Uint64(iv512[15],iv512[14]);
+		state[0] = new Uint64(iv512[1], iv512[0]);
+		state[1] = new Uint64(iv512[3], iv512[2]);
+		state[2] = new Uint64(iv512[5], iv512[4]);
+		state[3] = new Uint64(iv512[7], iv512[6]);
+		state[4] = new Uint64(iv512[9], iv512[8]);
+		state[5] = new Uint64(iv512[11], iv512[10]);
+		state[6] = new Uint64(iv512[13], iv512[12]);
+		state[7] = new Uint64(iv512[15], iv512[14]);
 	}
 }
 
 export class Sha512_224 extends Sha2_64bit {
-    /**
+	/**
 	 * Build a new Sha2-512/224 hash generator
 	 */
 	constructor() {
@@ -598,34 +617,34 @@ export class Sha512_224 extends Sha2_64bit {
 
 	private static iv(state: Array<Uint64>): void {
 		//Setup state
-        state[0]=new Uint64(init512_224[1],init512_224[0]);
-        state[1]=new Uint64(init512_224[3],init512_224[2]);
-        state[2]=new Uint64(init512_224[5],init512_224[4]);
-        state[3]=new Uint64(init512_224[7],init512_224[6]);
-        state[4]=new Uint64(init512_224[9],init512_224[8]);
-        state[5]=new Uint64(init512_224[11],init512_224[10]);
-        state[6]=new Uint64(init512_224[13],init512_224[12]);
-        state[7]=new Uint64(init512_224[15],init512_224[14]);
+		state[0] = new Uint64(init512_224[1], init512_224[0]);
+		state[1] = new Uint64(init512_224[3], init512_224[2]);
+		state[2] = new Uint64(init512_224[5], init512_224[4]);
+		state[3] = new Uint64(init512_224[7], init512_224[6]);
+		state[4] = new Uint64(init512_224[9], init512_224[8]);
+		state[5] = new Uint64(init512_224[11], init512_224[10]);
+		state[6] = new Uint64(init512_224[13], init512_224[12]);
+		state[7] = new Uint64(init512_224[15], init512_224[14]);
 	}
 }
 
 export class Sha512_256 extends Sha2_64bit {
-    /**
+	/**
 	 * Build a new Sha2-512/256 hash generator
 	 */
-    constructor() {
+	constructor() {
 		super(32, Sha512_256.iv);
 	}
 
 	private static iv(state: Array<Uint64>): void {
 		//Setup state
-        state[0]=new Uint64(init512_256[1],init512_256[0]);
-        state[1]=new Uint64(init512_256[3],init512_256[2]);
-        state[2]=new Uint64(init512_256[5],init512_256[4]);
-        state[3]=new Uint64(init512_256[7],init512_256[6]);
-        state[4]=new Uint64(init512_256[9],init512_256[8]);
-        state[5]=new Uint64(init512_256[11],init512_256[10]);
-        state[6]=new Uint64(init512_256[13],init512_256[12]);
-        state[7]=new Uint64(init512_256[15],init512_256[14]);
+		state[0] = new Uint64(init512_256[1], init512_256[0]);
+		state[1] = new Uint64(init512_256[3], init512_256[2]);
+		state[2] = new Uint64(init512_256[5], init512_256[4]);
+		state[3] = new Uint64(init512_256[7], init512_256[6]);
+		state[4] = new Uint64(init512_256[9], init512_256[8]);
+		state[5] = new Uint64(init512_256[11], init512_256[10]);
+		state[6] = new Uint64(init512_256[13], init512_256[12]);
+		state[7] = new Uint64(init512_256[15], init512_256[14]);
 	}
 }

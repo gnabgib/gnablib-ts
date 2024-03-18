@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE, asLE } from '../endian/platform.js';
 import { U32 } from '../primitive/number/U32.js';
@@ -36,54 +36,54 @@ export class XxHash32 implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	readonly #state = new Uint32Array(blockSizeEls);
+	private readonly _state = new Uint32Array(blockSizeEls);
 	/**
 	 * Temp processing block
 	 */
-	readonly #block = new Uint8Array(blockSize32Bytes);
-	readonly #block32 = new Uint32Array(this.#block.buffer);
+	private readonly _block = new Uint8Array(blockSize32Bytes);
+	private readonly _block32 = new Uint32Array(this._block.buffer);
 	/**
 	 * Starting seed
 	 */
-	readonly #seed: number;
+	private readonly _seed: number;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 
     /**
      * Build a new XxHash32 (non-crypto) hash generator
      * @param seed Optional 32bit seed number
      */
 	constructor(seed = 0) {
-		this.#seed = seed;
+		this._seed = seed;
 		this.reset();
 	}
 
 	private hash(): void {
-		asLE.i32(this.#block, 0, 4);
-		this.#state[0] = U32.mul(
-			U32.rol(this.#state[0] + U32.mul(this.#block32[0], p32_2), 13),
+		asLE.i32(this._block, 0, 4);
+		this._state[0] = U32.mul(
+			U32.rol(this._state[0] + U32.mul(this._block32[0], p32_2), 13),
 			p32_1
 		);
-		this.#state[1] = U32.mul(
-			U32.rol(this.#state[1] + U32.mul(this.#block32[1], p32_2), 13),
+		this._state[1] = U32.mul(
+			U32.rol(this._state[1] + U32.mul(this._block32[1], p32_2), 13),
 			p32_1
 		);
-		this.#state[2] = U32.mul(
-			U32.rol(this.#state[2] + U32.mul(this.#block32[2], p32_2), 13),
+		this._state[2] = U32.mul(
+			U32.rol(this._state[2] + U32.mul(this._block32[2], p32_2), 13),
 			p32_1
 		);
-		this.#state[3] = U32.mul(
-			U32.rol(this.#state[3] + U32.mul(this.#block32[3], p32_2), 13),
+		this._state[3] = U32.mul(
+			U32.rol(this._state[3] + U32.mul(this._block32[3], p32_2), 13),
 			p32_1
 		);
 
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -93,22 +93,22 @@ export class XxHash32 implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes += data.length;
+		this._ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize32Bytes - this.#bPos;
+		let space = blockSize32Bytes - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this._block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + space), this.#bPos);
+			this._block.set(data.subarray(dPos, dPos + space), this._bPos);
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -117,28 +117,28 @@ export class XxHash32 implements IHash {
 	}
 
 	_sum(): number {
-		let result = this.#ingestBytes;
-		if (this.#ingestBytes >= blockSize32Bytes) {
+		let result = this._ingestBytes;
+		if (this._ingestBytes >= blockSize32Bytes) {
 			result +=
-                U32.rol(this.#state[0], 1) +
-				U32.rol(this.#state[1], 7) +
-				U32.rol(this.#state[2], 12) +
-				U32.rol(this.#state[3], 18);
+                U32.rol(this._state[0], 1) +
+				U32.rol(this._state[1], 7) +
+				U32.rol(this._state[2], 12) +
+				U32.rol(this._state[3], 18);
 		} else {
-			result += this.#seed + p32_5;
+			result += this._seed + p32_5;
 		}
-		let nToAdd = this.#bPos;
+		let nToAdd = this._bPos;
 		//i is el-pos
 		let i = 0;
 		for (; nToAdd >= 4; i++) {
-			asLE.i32(this.#block, i * 4);
-			result = U32.mul(U32.rol(result + U32.mul(this.#block32[i], p32_3), 17), p32_4);
+			asLE.i32(this._block, i * 4);
+			result = U32.mul(U32.rol(result + U32.mul(this._block32[i], p32_3), 17), p32_4);
 			nToAdd -= 4;
 		}
 		//Switch i to byte-pos
 		i *= 4;
-		for (; i < this.#bPos; i++) {
-			result = U32.mul(U32.rol(result + this.#block[i] * p32_5, 11), p32_1);
+		for (; i < this._bPos; i++) {
+			result = U32.mul(U32.rol(result + this._block[i] * p32_5, 11), p32_1);
 		}
 		result ^= result >>> 15;
 		result = U32.mul(result, p32_2);
@@ -177,19 +177,19 @@ export class XxHash32 implements IHash {
 	 * Set hash state. Any past writes will be forgotten
 	 */
 	reset(): void {
-		this.#state[0] = this.#seed + p32_1 + p32_2;
-		this.#state[1] = this.#seed + p32_2;
-		this.#state[2] = this.#seed;
-		this.#state[3] = this.#seed - p32_1;
-		this.#bPos = 0;
-		this.#ingestBytes = 0;
+		this._state[0] = this._seed + p32_1 + p32_2;
+		this._state[1] = this._seed + p32_2;
+		this._state[2] = this._seed;
+		this._state[3] = this._seed - p32_1;
+		this._bPos = 0;
+		this._ingestBytes = 0;
 	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
 	newEmpty(): IHash {
-		return new XxHash32(this.#seed);
+		return new XxHash32(this._seed);
 	}
 
 	/**
@@ -197,11 +197,11 @@ export class XxHash32 implements IHash {
 	 * @returns
 	 */
 	clone(): XxHash32 {
-		const ret = new XxHash32(this.#seed);
-		ret.#state.set(this.#state);
-		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		const ret = new XxHash32(this._seed);
+		ret._state.set(this._state);
+		ret._block.set(this._block);
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }
@@ -218,69 +218,69 @@ export class XxHash64 implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	readonly #state = U64MutArray.fromLen(blockSizeEls);
+	private readonly _state = U64MutArray.fromLen(blockSizeEls);
 	/**
 	 * Temp processing block
 	 */
-	readonly #block = new Uint8Array(blockSize64Bytes);
-	readonly #block64 = U64MutArray.fromBytes(this.#block.buffer);
+	private readonly _block = new Uint8Array(blockSize64Bytes);
+	private readonly _block64 = U64MutArray.fromBytes(this._block.buffer);
 	/**
 	 * Starting seed
 	 */
-	readonly #seed: U64;
+	private readonly _seed: U64;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 	/**
 	 * Number of bytes added to the hash
 	 */
-	readonly #ingestBytes = U64Mut.fromInt(0);
+	private readonly _ingestBytes = U64Mut.fromInt(0);
 
 	constructor(seed = U64.fromInt(0)) {
-		this.#seed = seed;
+		this._seed = seed;
 		this.reset();
 	}
 
 	private hash(): void {
-		asLE.i64(this.#block, 0, 4);
-		this.#state
+		asLE.i64(this._block, 0, 4);
+		this._state
 			.at(0)
 			.set(
-				this.#state
+				this._state
 					.at(0)
-					.addEq(this.#block64.at(0).mulEq(p64_2))
+					.addEq(this._block64.at(0).mulEq(p64_2))
 					.lRotEq(31)
 					.mulEq(p64_1)
 			);
-		this.#state
+		this._state
 			.at(1)
 			.set(
-				this.#state
+				this._state
 					.at(1)
-					.addEq(this.#block64.at(1).mulEq(p64_2))
+					.addEq(this._block64.at(1).mulEq(p64_2))
 					.lRotEq(31)
 					.mulEq(p64_1)
 			);
-		this.#state
+		this._state
 			.at(2)
 			.set(
-				this.#state
+				this._state
 					.at(2)
-					.addEq(this.#block64.at(2).mulEq(p64_2))
+					.addEq(this._block64.at(2).mulEq(p64_2))
 					.lRotEq(31)
 					.mulEq(p64_1)
 			);
-		this.#state
+		this._state
 			.at(3)
 			.set(
-				this.#state
+				this._state
 					.at(3)
-					.addEq(this.#block64.at(3).mulEq(p64_2))
+					.addEq(this._block64.at(3).mulEq(p64_2))
 					.lRotEq(31)
 					.mulEq(p64_1)
 			);
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -290,22 +290,22 @@ export class XxHash64 implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes.addEq(U64Mut.fromIntUnsafe(data.length));
+		this._ingestBytes.addEq(U64Mut.fromIntUnsafe(data.length));
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize64Bytes - this.#bPos;
+		let space = blockSize64Bytes - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this._block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + space), this.#bPos);
+			this._block.set(data.subarray(dPos, dPos + space), this._bPos);
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -325,16 +325,16 @@ export class XxHash64 implements IHash {
      */
 	sumIn(): Uint8Array {
 		const result = U64Mut.fromIntUnsafe(0);
-		if (this.#ingestBytes.gte(U64.fromInt(blockSize64Bytes))) {
+		if (this._ingestBytes.gte(U64.fromInt(blockSize64Bytes))) {
 			result
-				.addEq(this.#state.at(0).lRot(1))
-				.addEq(this.#state.at(1).lRot(7))
-				.addEq(this.#state.at(2).lRot(12))
-				.addEq(this.#state.at(3).lRot(18));
+				.addEq(this._state.at(0).lRot(1))
+				.addEq(this._state.at(1).lRot(7))
+				.addEq(this._state.at(2).lRot(12))
+				.addEq(this._state.at(3).lRot(18));
             //We must .mut() the states because we don't want to change the
             // running context
 			result.set(
-				this.#state
+				this._state
 					.at(0)
 					.mut()
 					.mulEq(p64_2)
@@ -345,7 +345,7 @@ export class XxHash64 implements IHash {
 					.addEq(p64_4)
 			);
 			result.set(
-				this.#state
+				this._state
 					.at(1)
 					.mut()
 					.mulEq(p64_2)
@@ -356,7 +356,7 @@ export class XxHash64 implements IHash {
 					.addEq(p64_4)
 			);
 			result.set(
-				this.#state
+				this._state
 					.at(2)
 					.mut()
 					.mulEq(p64_2)
@@ -367,7 +367,7 @@ export class XxHash64 implements IHash {
 					.addEq(p64_4)
 			);
 			result.set(
-				this.#state
+				this._state
 					.at(3)
 					.mut()
 					.mulEq(p64_2)
@@ -378,17 +378,17 @@ export class XxHash64 implements IHash {
 					.addEq(p64_4)
 			);
 		} else {
-			result.addEq(this.#seed).addEq(p64_5);
+			result.addEq(this._seed).addEq(p64_5);
 		}
-		result.addEq(this.#ingestBytes);
-		let nToAdd = this.#bPos;
+		result.addEq(this._ingestBytes);
+		let nToAdd = this._bPos;
 		//i is el-pos
 		let i = 0;
 		for (; nToAdd >= 8; i++) {
-			asLE.i64(this.#block, i * 4);
+			asLE.i64(this._block, i * 4);
 			result.set(
 				result
-					.xorEq(this.#block64.at(i).mulEq(p64_2).lRotEq(31).mulEq(p64_1))
+					.xorEq(this._block64.at(i).mulEq(p64_2).lRotEq(31).mulEq(p64_1))
 					.lRotEq(27)
 					.mulEq(p64_1)
 					.addEq(p64_4)
@@ -399,7 +399,7 @@ export class XxHash64 implements IHash {
 		i *= 8;
 		if (nToAdd >= 4) {
 			result.set(
-				U64Mut.fromIntUnsafe(U32.iFromBytesLE(this.#block, i))
+				U64Mut.fromIntUnsafe(U32.iFromBytesLE(this._block, i))
 					.mulEq(p64_1)
 					.xorEq(result)
 					.lRotEq(23)
@@ -408,9 +408,9 @@ export class XxHash64 implements IHash {
 			);
 			i += 4;
 		}
-		for (; i < this.#bPos; i++) {
+		for (; i < this._bPos; i++) {
 			result.set(
-				U64Mut.fromIntUnsafe(this.#block[i])
+				U64Mut.fromIntUnsafe(this._block[i])
 					.mulEq(p64_5)
 					.xorEq(result)
 					.lRotEq(11)
@@ -430,20 +430,20 @@ export class XxHash64 implements IHash {
 	 * Set hash state. Any past writes will be forgotten
 	 */
 	reset(): void {
-		this.#state.at(0).set(this.#seed.mut().addEq(p64_1).addEq(p64_2));
-		this.#state.at(1).set(this.#seed.mut().addEq(p64_2));
-		this.#state.at(2).set(this.#seed);
-		this.#state.at(3).set(this.#seed).subEq(p64_1);
+		this._state.at(0).set(this._seed.mut().addEq(p64_1).addEq(p64_2));
+		this._state.at(1).set(this._seed.mut().addEq(p64_2));
+		this._state.at(2).set(this._seed);
+		this._state.at(3).set(this._seed).subEq(p64_1);
 
-		this.#bPos = 0;
-		this.#ingestBytes.set(U64Mut.zero);
+		this._bPos = 0;
+		this._ingestBytes.set(U64Mut.zero);
 	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
 	newEmpty(): IHash {
-		return new XxHash64(this.#seed);
+		return new XxHash64(this._seed);
 	}
 
 	/**
@@ -451,11 +451,11 @@ export class XxHash64 implements IHash {
 	 * @returns
 	 */
 	clone(): XxHash64 {
-		const ret = new XxHash64(this.#seed);
-		ret.#state.set(this.#state);
-		ret.#block.set(this.#block);
-		ret.#ingestBytes.set(this.#ingestBytes);
-		ret.#bPos = this.#bPos;
+		const ret = new XxHash64(this._seed);
+		ret._state.set(this._state);
+		ret._block.set(this._block);
+		ret._ingestBytes.set(this._ingestBytes);
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

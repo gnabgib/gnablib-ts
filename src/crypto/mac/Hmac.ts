@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
 
@@ -27,38 +27,38 @@ function fixKey(hash: IHash, key: Uint8Array): Uint8Array {
  */
 export class Hmac implements IHash {
 	/** Outside hash, initialized with oPad, never write directly (clone first) */
-	#oHash:IHash;
-	#startIHash:IHash;
-	#iHash:IHash;
-	
+	private _oHash: IHash;
+	private _startIHash: IHash;
+	private _iHash: IHash;
+
 	/**
 	 * New HMAC
 	 * @param hash Hash to use (output will be hash.blockSize in length)
 	 * @param key Secret key (as bytes, see utf8.toBytes, hex.toBytes etc)
 	 */
-	constructor(hash:IHash,key:Uint8Array) {
+	constructor(hash: IHash, key: Uint8Array) {
 		const fk = fixKey(hash, key);
-		const opk=new Uint8Array(hash.blockSize);
-		const ipk=new Uint8Array(hash.blockSize);
+		const opk = new Uint8Array(hash.blockSize);
+		const ipk = new Uint8Array(hash.blockSize);
 		for (let i = 0; i < hash.blockSize; i++) {
-			opk[i]=fk[i] ^ oPad;
-			ipk[i]=fk[i] ^ iPad;
+			opk[i] = fk[i] ^ oPad;
+			ipk[i] = fk[i] ^ iPad;
 		}
-	
-		this.#oHash=hash.newEmpty();
-		this.#oHash.write(opk);
 
-		this.#startIHash=hash.newEmpty();
-		this.#startIHash.write(ipk);
-		this.#iHash=this.#startIHash.clone();
+		this._oHash = hash.newEmpty();
+		this._oHash.write(opk);
+
+		this._startIHash = hash.newEmpty();
+		this._startIHash.write(ipk);
+		this._iHash = this._startIHash.clone();
 	}
 
 	/**
 	 * Write more data to the MAC
-	 * @param data 
+	 * @param data
 	 */
 	write(data: Uint8Array): void {
-		this.#iHash.write(data);
+		this._iHash.write(data);
 	}
 
 	/**
@@ -66,65 +66,65 @@ export class Hmac implements IHash {
 	 * @param size Output length (truncates output to this many bytes if >0), defaults to hash size
 	 * @returns HMAC-digest
 	 */
-	sum(size:number|undefined=0): Uint8Array {
-		const iHash=this.#iHash.sum();
-		const oh=this.#oHash.clone();
-		oh.write(iHash)
-		const ret=oh.sumIn();
-		return size>0?ret.slice(0,size):ret;
+	sum(size: number | undefined = 0): Uint8Array {
+		const iHash = this._iHash.sum();
+		const oh = this._oHash.clone();
+		oh.write(iHash);
+		const ret = oh.sumIn();
+		return size > 0 ? ret.slice(0, size) : ret;
 	}
 
-    /**
-     * Sum the hash with internal - mutates internal state, but avoids
-     * memory allocation. Use if you won't need the obj again (for performance)
+	/**
+	 * Sum the hash with internal - mutates internal state, but avoids
+	 * memory allocation. Use if you won't need the obj again (for performance)
 	 * @param size Output length (truncates output to this many bytes if >0), defaults to hash size
 	 * @returns HMAC-digest
-     */
-	sumIn(size:number|undefined=0): Uint8Array {
-		const iHash=this.#iHash.sumIn();
-		const oh=this.#oHash.clone();
+	 */
+	sumIn(size: number | undefined = 0): Uint8Array {
+		const iHash = this._iHash.sumIn();
+		const oh = this._oHash.clone();
 		oh.write(iHash);
-		const ret=oh.sumIn();
-		return size>0?ret.slice(0,size):ret;
+		const ret = oh.sumIn();
+		return size > 0 ? ret.slice(0, size) : ret;
 	}
 
 	/**
-     * Set hash to initial state. Any past writes will be forgotten
-     */
+	 * Set hash to initial state. Any past writes will be forgotten
+	 */
 	reset(): void {
-		this.#iHash=this.#startIHash.clone();
+		this._iHash = this._startIHash.clone();
 	}
 
 	/**
-     * Create an empty IHash using the same algorithm
-     */
+	 * Create an empty IHash using the same algorithm
+	 */
 	newEmpty(): IHash {
-		const ret=new Hmac(this.#oHash,new Uint8Array(this.#oHash.blockSize));
-		ret.#oHash=this.#oHash;
-		ret.#startIHash=this.#startIHash;
-		ret.#iHash=this.#startIHash.clone();
+		const ret = new Hmac(this._oHash, new Uint8Array(this._oHash.blockSize));
+		ret._oHash = this._oHash;
+		ret._startIHash = this._startIHash;
+		ret._iHash = this._startIHash.clone();
 		return ret;
 	}
 
-	clone():Hmac {
-		const ret=new Hmac(this.#oHash,new Uint8Array(this.#oHash.blockSize));
-		ret.#oHash=this.#oHash;
-		ret.#startIHash=this.#startIHash;
-		ret.#iHash=this.#iHash.clone();
+	clone(): Hmac {
+		const ret = new Hmac(this._oHash, new Uint8Array(this._oHash.blockSize));
+		ret._oHash = this._oHash;
+		ret._startIHash = this._startIHash;
+		ret._iHash = this._iHash.clone();
 		return ret;
 	}
 
 	/**
-     * Digest size in bytes
-     */
+	 * Digest size in bytes
+	 */
 	get size(): number {
-		return this.#iHash.size;
+		return this._iHash.size;
 	}
 
 	/**
-     * Block size in bytes
-     */
+	 * Block size in bytes
+	 */
 	get blockSize(): number {
-		return this.#iHash.blockSize;
+		return this._iHash.blockSize;
 	}
 }

@@ -63,7 +63,7 @@ class Blake1_32bit implements IHash {
 	/**
 	 * Number of rounds (10 for BLake32, 14 for Blake256)
 	 */
-	readonly #nr: number;
+	private readonly _nr: number;
 	/**
 	 * Salt, must be exactly 4 u32 (16 bytes)
 	 */
@@ -80,11 +80,11 @@ class Blake1_32bit implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	/**
 	 * Build a new 32bit blake1 hash generator
@@ -96,7 +96,7 @@ class Blake1_32bit implements IHash {
 			somewhatSafe.len.exactly('salt', salt, 4);
 			this.#salt = salt;
 		}
-		this.#nr = roundCount;
+		this._nr = roundCount;
 		this.reset();
 	}
 
@@ -136,7 +136,7 @@ class Blake1_32bit implements IHash {
 	 * @param countOverride If provided (not null/undefined) use this for the count rather than this.#ingestBytes
 	 */
 	private hash(countOverride?: number): void {
-		countOverride = countOverride ?? this.#ingestBytes;
+		countOverride = countOverride ?? this._ingestBytes;
 		const count32a = countOverride << 3; //We don't need to mask since the uint32array does it for us
 		const count32b = (countOverride / 0x20000000) | 0;
 		const v = new Uint32Array(blockSizeEls);
@@ -153,7 +153,7 @@ class Blake1_32bit implements IHash {
 		//Switch (maybe) block to big endian (may mangle storage)
 		for (let i = 0; i < blockSizeEls << 2; i += 4) asBE.i32(this.#block, i);
 
-		for (let r = 0; r < this.#nr; r++) {
+		for (let r = 0; r < this._nr; r++) {
 			const sigma = sigmas[r % 10];
 			//column
 			this.g(0, 4, 8, 12, v, sigma);
@@ -178,7 +178,7 @@ class Blake1_32bit implements IHash {
 		this.#state[7] ^= this.#salt[3] ^ v[7] ^ v[15];
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -188,23 +188,23 @@ class Blake1_32bit implements IHash {
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
 				const subData = data.subarray(dPos);
-				this.#block.set(subData, this.#bPos);
+				this.#block.set(subData, this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				//Update count
-				this.#ingestBytes += subData.length;
+				this._ingestBytes += subData.length;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
 			//pointless: this.#bPos += space;
-			this.#ingestBytes += this.blockSize;
+			this._ingestBytes += this.blockSize;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -225,21 +225,21 @@ class Blake1_32bit implements IHash {
 	 */
 	sumIn(): Uint8Array {
 		//End with a 0b1 in MSB
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen32;
 		let countOverride: number | undefined = undefined;
 
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 			countOverride = 0;
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		//Add a 0b1 in LSB before length
 		this.#block[sizeSpace - 1] |= 1;
@@ -248,8 +248,8 @@ class Blake1_32bit implements IHash {
 		const ss32 = sizeSpace >> 2; // div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		this.#block32[ss32] = this.#ingestBytes / 0x20000000;
-		this.#block32[ss32 + 1] = this.#ingestBytes << 3;
+		this.#block32[ss32] = this._ingestBytes / 0x20000000;
+		this.#block32[ss32 + 1] = this._ingestBytes << 3;
 		//Because hash will invert, we need to switch to BE to get it back to LE
 		asBE.i32(this.#block, sizeSpace);
 		asBE.i32(this.#block, sizeSpace + 4);
@@ -277,16 +277,16 @@ class Blake1_32bit implements IHash {
 		this.#state[7] = iv[14];
 
 		//Reset ingest count
-		this.#ingestBytes = 0;
+		this._ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
 	newEmpty(): IHash {
-		return new Blake1_32bit(this.#salt, this.#nr);
+		return new Blake1_32bit(this.#salt, this._nr);
 	}
 
 	/**
@@ -294,11 +294,11 @@ class Blake1_32bit implements IHash {
 	 * @returns
 	 */
 	clone(): IHash {
-		const ret = new Blake1_32bit(this.#salt, this.#nr);
+		const ret = new Blake1_32bit(this.#salt, this._nr);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }
@@ -316,7 +316,7 @@ class Blake1_64bit implements IHash {
 	/**
 	 * Number of rounds (14 for BLake64, 16 for Blake512)
 	 */
-	readonly #nr: number;
+	private readonly _nr: number;
 	/**
 	 * Salt, must be exactly 4 u64 (32 bytes)
 	 */
@@ -333,11 +333,11 @@ class Blake1_64bit implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	/**
 	 * Build a new Blake-512 hash generator
@@ -349,7 +349,7 @@ class Blake1_64bit implements IHash {
 			somewhatSafe.len.exactly('salt', salt, 4);
 			this.#salt = salt;
 		}
-		this.#nr = roundCount;
+		this._nr = roundCount;
 		this.reset();
 	}
 
@@ -390,7 +390,7 @@ class Blake1_64bit implements IHash {
 	 * @param countOverride If provided (not null/undefined) use this for the count rather than this.#ingestBytes
 	 */
 	private hash(countOverride?: number): void {
-		countOverride = countOverride ?? this.#ingestBytes;
+		countOverride = countOverride ?? this._ingestBytes;
 		const count64a = U64Mut.fromUint32Pair(
 			countOverride << 3,
 			countOverride / 0x20000000
@@ -413,7 +413,7 @@ class Blake1_64bit implements IHash {
 			asBE.i64(this.#block, i);
 		}
 
-		for (let r = 0; r < this.#nr; r++) {
+		for (let r = 0; r < this._nr; r++) {
 			const sigma = sigmas[r % 10];
 			//column
 			this.g(0, 4, 8, 12, v, sigma);
@@ -438,7 +438,7 @@ class Blake1_64bit implements IHash {
 		this.#state.at(7).xorEq(this.#salt.at(3)).xorEq(v.at(7)).xorEq(v.at(15));
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -448,23 +448,23 @@ class Blake1_64bit implements IHash {
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
 				const subData = data.subarray(dPos);
-				this.#block.set(subData, this.#bPos);
+				this.#block.set(subData, this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				//Update count
-				this.#ingestBytes += subData.length;
+				this._ingestBytes += subData.length;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
 			//pointless: this.#bPos += space;
-			this.#ingestBytes += this.blockSize;
+			this._ingestBytes += this.blockSize;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -481,21 +481,21 @@ class Blake1_64bit implements IHash {
 
 	sumIn(): Uint8Array {
 		//End with a 0b1 in MSB
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen64;
 		let countOverride: number | undefined = undefined;
 
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 			countOverride = 0;
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		//Add a 0b1 in LSB before length
 		this.#block[sizeSpace - 1] |= 1;
@@ -510,8 +510,8 @@ class Blake1_64bit implements IHash {
 			.at(ss64 + 1)
 			.set(
 				U64Mut.fromUint32Pair(
-					this.#ingestBytes << 3,
-					this.#ingestBytes / 0x20000000
+					this._ingestBytes << 3,
+					this._ingestBytes / 0x20000000
 				)
 			);
 		//Note hash also applies asBE to the block.  We call it twice because we want this value to be LE
@@ -535,16 +535,16 @@ class Blake1_64bit implements IHash {
 		this.#state.at(7).set(U64Mut.fromUint32Pair(iv[15], iv[14]));
 
 		//Reset ingest count
-		this.#ingestBytes = 0;
+		this._ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
 	newEmpty(): IHash {
-		return new Blake1_64bit(this.#salt, this.#nr);
+		return new Blake1_64bit(this.#salt, this._nr);
 	}
 
 	/**
@@ -552,11 +552,11 @@ class Blake1_64bit implements IHash {
 	 * @returns
 	 */
 	clone(): IHash {
-		const ret = new Blake1_64bit(this.#salt, this.#nr);
+		const ret = new Blake1_64bit(this.#salt, this._nr);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

@@ -5,17 +5,25 @@ import { config } from '../config';
 const tsts = suite('Config');
 
 tsts(`general`,()=>{
+    let impEnvWasCalled=false;
+    let impAvEnvWasCalled=false;
     config
         .define('test',false)
         .importEnv('npm_lifecycle_event',(v,set)=>{
             //v is the name of the `script` called from package.json.scripts, we'd expect:
             // test|test:deep|test:deeper
+            impEnvWasCalled=true;
             let isTest=false;
             if (v==='test') isTest=true;
             else if (v?.startsWith('test:')) isTest=true;
             //Normally you'd set state here, but that will mess up tests below.
             //if (isTest) set(true);
+        })
+        .importAvailEnv('never',(v,set)=>{
+            impAvEnvWasCalled=true;
         });
+    assert.equal(impEnvWasCalled,true);
+    assert.equal(impAvEnvWasCalled,false);
 
     assert.equal(config.getBool('test'),false,'getBool(default)');
     assert.equal(config.getBool('test',true),false,'Default is not required/used');

@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../crypto/interfaces/IHash.js';
 import { asBE, asLE } from '../endian/platform.js';
@@ -28,32 +28,32 @@ export class Lookup2 implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	readonly #state = Uint32Array.of(0x9e3779b9, 0x9e3779b9, 0);
+	private readonly _state = Uint32Array.of(0x9e3779b9, 0x9e3779b9, 0);
 	/**
 	 * Starting seed, uint32 0-0xffffffff
 	 */
-	readonly #seed: number;
+	private readonly _seed: number;
 	/**
 	 * Temp processing block
 	 */
-	readonly #block = new Uint8Array(blockSize);
-	readonly #block32 = new Uint32Array(this.#block.buffer);
+	private readonly _block = new Uint8Array(blockSize);
+	private readonly _block32 = new Uint32Array(this._block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	/**
 	 * Build a new Lookup2 (non-crypto) hash generator
 	 * @param seed
 	 */
 	constructor(seed = 0) {
-		this.#state[2] = seed;
-		this.#seed = this.#state[2];
+		this._state[2] = seed;
+		this._seed = this._state[2];
 	}
 
 	/**
@@ -61,63 +61,63 @@ export class Lookup2 implements IHash {
 	 */
 	hash(): void {
 		//Make sure block is little-endian
-		asLE.i32(this.#block, 0, 3);
+		asLE.i32(this._block, 0, 3);
 		//Add in data
-		this.#state[A] += this.#block32[0];
-		this.#state[B] += this.#block32[1];
-		this.#state[C] += this.#block32[2];
+		this._state[A] += this._block32[0];
+		this._state[B] += this._block32[1];
+		this._state[C] += this._block32[2];
 
 		///MIX
 		//a=this.#state[0], b=this.#state[1], c=this.#state[2]
-		this.#state[A] -= this.#state[B];
-		this.#state[A] -= this.#state[C];
-		this.#state[A] ^= this.#state[C] >>> 13;
-		this.#state[B] -= this.#state[C];
-		this.#state[B] -= this.#state[A];
-		this.#state[B] ^= this.#state[A] << 8;
-		this.#state[C] -= this.#state[A];
-		this.#state[C] -= this.#state[B];
-		this.#state[C] ^= this.#state[B] >>> 13;
+		this._state[A] -= this._state[B];
+		this._state[A] -= this._state[C];
+		this._state[A] ^= this._state[C] >>> 13;
+		this._state[B] -= this._state[C];
+		this._state[B] -= this._state[A];
+		this._state[B] ^= this._state[A] << 8;
+		this._state[C] -= this._state[A];
+		this._state[C] -= this._state[B];
+		this._state[C] ^= this._state[B] >>> 13;
 
-		this.#state[A] -= this.#state[B];
-		this.#state[A] -= this.#state[C];
-		this.#state[A] ^= this.#state[C] >>> 12;
-		this.#state[B] -= this.#state[C];
-		this.#state[B] -= this.#state[A];
-		this.#state[B] ^= this.#state[A] << 16;
-		this.#state[C] -= this.#state[A];
-		this.#state[C] -= this.#state[B];
-		this.#state[C] ^= this.#state[B] >>> 5;
+		this._state[A] -= this._state[B];
+		this._state[A] -= this._state[C];
+		this._state[A] ^= this._state[C] >>> 12;
+		this._state[B] -= this._state[C];
+		this._state[B] -= this._state[A];
+		this._state[B] ^= this._state[A] << 16;
+		this._state[C] -= this._state[A];
+		this._state[C] -= this._state[B];
+		this._state[C] ^= this._state[B] >>> 5;
 
-		this.#state[A] -= this.#state[B];
-		this.#state[A] -= this.#state[C];
-		this.#state[A] ^= this.#state[C] >>> 3;
-		this.#state[B] -= this.#state[C];
-		this.#state[B] -= this.#state[A];
-		this.#state[B] ^= this.#state[A] << 10;
-		this.#state[C] -= this.#state[A];
-		this.#state[C] -= this.#state[B];
-		this.#state[C] ^= this.#state[B] >>> 15;
+		this._state[A] -= this._state[B];
+		this._state[A] -= this._state[C];
+		this._state[A] ^= this._state[C] >>> 3;
+		this._state[B] -= this._state[C];
+		this._state[B] -= this._state[A];
+		this._state[B] ^= this._state[A] << 10;
+		this._state[C] -= this._state[A];
+		this._state[C] -= this._state[B];
+		this._state[C] ^= this._state[B] >>> 15;
 
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	write(data: Uint8Array): void {
-		this.#ingestBytes += data.length;
+		this._ingestBytes += data.length;
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize - this.#bPos;
+		let space = blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this._block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + blockSize), this.#bPos);
+			this._block.set(data.subarray(dPos, dPos + blockSize), this._bPos);
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -126,8 +126,8 @@ export class Lookup2 implements IHash {
 	}
 
 	private static _sum(alt:Lookup2):void {
-		alt.#state[2] += alt.#ingestBytes;
-		alt.#block.fill(0, alt.#bPos);
+		alt._state[2] += alt._ingestBytes;
+		alt._block.fill(0, alt._bPos);
 		alt.hash();
 	}
 
@@ -142,7 +142,7 @@ export class Lookup2 implements IHash {
      */
 	sumIn():Uint8Array {
 		Lookup2._sum(this);
-		const ret = new Uint8Array(this.#state.slice(2).buffer);
+		const ret = new Uint8Array(this._state.slice(2).buffer);
 		//Wiki implies big-endian (since that's how we right numbers)
 		asBE.i32(ret);
 		return ret;
@@ -153,25 +153,25 @@ export class Lookup2 implements IHash {
 	 */
 	sum32(): number {
 		Lookup2._sum(this);
-		return this.#state[2];
+		return this._state[2];
 	}
 
 	/**
 	 * Set hash state. Any past writes will be forgotten
 	 */
 	reset(): void {
-		this.#state[A] = 0x9e3779b9;
-		this.#state[B] = 0x9e3779b9;
-		this.#state[C] = this.#seed;
-		this.#ingestBytes = 0;
-		this.#bPos = 0;
+		this._state[A] = 0x9e3779b9;
+		this._state[B] = 0x9e3779b9;
+		this._state[C] = this._seed;
+		this._ingestBytes = 0;
+		this._bPos = 0;
 	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
 	newEmpty(): IHash {
-		return new Lookup2(this.#seed);
+		return new Lookup2(this._seed);
 	}
 
 	/**
@@ -179,11 +179,11 @@ export class Lookup2 implements IHash {
 	 * @returns
 	 */
 	clone(): Lookup2 {
-		const ret = new Lookup2(this.#seed);
-		ret.#state.set(this.#state);
-		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		const ret = new Lookup2(this._seed);
+		ret._state.set(this._state);
+		ret._block.set(this._block);
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

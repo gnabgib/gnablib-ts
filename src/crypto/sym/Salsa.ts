@@ -93,7 +93,7 @@ class Salsa implements IFullCrypt {
 	readonly #state = new Uint32Array(blockSize32);
 	/** Temp processing block */
 	readonly #b: SalsaBlock;
-	readonly #count: U64Mut;
+	private readonly _count: U64Mut;
 
 	constructor(key: Uint8Array, nonce: Uint8Array, count: U64, rounds: number) {
 		this.#b = new SalsaBlock(rounds);
@@ -137,8 +137,8 @@ class Salsa implements IFullCrypt {
 
 		//COUNTER
 		//Bind #count to the state array in position 8/9 (we know U64 uses little endian order)
-		this.#count = U64Mut.fromArray(this.#state, 8);
-		this.#count.set(count);
+		this._count = U64Mut.fromArray(this.#state, 8);
+		this._count.set(count);
 
 		//NONCE
 		const n = nonce.slice();
@@ -153,7 +153,7 @@ class Salsa implements IFullCrypt {
 		this.#b.u32.set(this.#state);
 		this.#b.block();
 		for (let i = 0; i < blockSize32; i++) this.#b.u32[i] += this.#state[i];
-		this.#count.addEq(U64.fromInt(1));
+		this._count.addEq(U64.fromInt(1));
 	}
 
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {

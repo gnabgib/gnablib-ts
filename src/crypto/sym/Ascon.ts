@@ -99,7 +99,7 @@ abstract class AAscon {
 	/** 10 elements */
 	protected readonly s32 = new Uint32Array(this.state.buffer);
 	/** Position in state*/
-	protected sPos = 0;
+	protected _sPos = 0;
 
 	constructor(
 		readonly blockSize: number,
@@ -142,7 +142,7 @@ abstract class AAscon {
 			xor64(this.s32, 3, ror0_32, 3); xor64(this.s32, 3, ror1_32, 3);
 			xor64(this.s32, 4, ror0_32, 4); xor64(this.s32, 4, ror1_32, 4);
 		}
-		this.sPos = 0;
+		this._sPos = 0;
 	}
 }
 
@@ -164,7 +164,7 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 	readonly tagSize = tagSize;
 	readonly #key: Uint8Array;
 	/** Stage Init=0/AssocData=1/Data=2 */
-	#stage = stage_init;
+	private _stage = stage_init;
 
 	/**
 	 * Construct a new Ascon AEAD state
@@ -206,48 +206,48 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 	 * @param data
 	 */
 	writeAD(data: Uint8Array): void {
-		if (this.#stage > stage_ad)
+		if (this._stage > stage_ad)
 			throw new Error('Associated data can no longer be written');
-		this.#stage = stage_ad;
+		this._stage = stage_ad;
 		let nToWrite = data.length;
 		let dPos = 0;
 		//Xor in full blocks and permute
 		while (nToWrite >= this.blockSize) {
 			for (let i = 0; i < this.blockSize; i++)
-				this.state[this.sPos++] ^= data[dPos++];
+				this.state[this._sPos++] ^= data[dPos++];
 			this.p(this.bRound);
 			nToWrite -= this.blockSize;
 		}
 		//Xor in any remainder
-		while (dPos < data.length) this.state[this.sPos++] ^= data[dPos++];
+		while (dPos < data.length) this.state[this._sPos++] ^= data[dPos++];
 	}
 
 	private finalizeAD(): void {
-		if (this.#stage === stage_ad) {
+		if (this._stage === stage_ad) {
 			//If we started writing AD we need to finish
 			//Append a 1
-			this.state[this.sPos] ^= 0x80;
+			this.state[this._sPos] ^= 0x80;
 			//Permute
 			this.p(this.bRound);
 		}
 		//Add the domain separator NOTE 2.4.2: "After processing A (also if s=0), a 1 bit domain separator is xored into S"
 		this.state[39] ^= 1;
-		this.#stage = stage_data;
+		this._stage = stage_data;
 	}
 
 	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
-		if (this.#stage < stage_data) this.finalizeAD();
-		else if (this.#stage == stage_done)
+		if (this._stage < stage_data) this.finalizeAD();
+		else if (this._stage == stage_done)
 			throw new Error('Cannot encrypt data after finalization');
-		this.#stage = stage_data;
+		this._stage = stage_data;
 
 		let nToWrite = plain.length;
 		let pPos = 0;
 		let ePos = 0;
 		//Xor in full blocks
 		while (nToWrite >= this.blockSize) {
-			for (; this.sPos < this.blockSize; )
-				this.state[this.sPos++] ^= plain[pPos++];
+			for (; this._sPos < this.blockSize; )
+				this.state[this._sPos++] ^= plain[pPos++];
 			//Copy out the cipher
 			enc.set(this.state.subarray(0, this.blockSize), ePos);
 			this.p(this.bRound);
@@ -256,26 +256,26 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		}
 		if (pPos < plain.length) {
 			//Xor any remainder
-			while (pPos < plain.length) this.state[this.sPos++] ^= plain[pPos++];
+			while (pPos < plain.length) this.state[this._sPos++] ^= plain[pPos++];
 			//Copy out the cipher
-			enc.set(this.state.subarray(0, this.sPos), pPos - this.sPos);
+			enc.set(this.state.subarray(0, this._sPos), pPos - this._sPos);
 		}
 	}
 
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
-		if (this.#stage < stage_data) this.finalizeAD();
-		else if (this.#stage == stage_done)
+		if (this._stage < stage_data) this.finalizeAD();
+		else if (this._stage == stage_done)
 			throw new Error('Cannot decrypt data after finalization');
-		this.#stage = stage_data;
+		this._stage = stage_data;
 
 		let nToWrite = enc.length;
 		let pPos = 0;
-		let space = this.blockSize - this.sPos;
+		let space = this.blockSize - this._sPos;
 		plain.set(enc);
 		//Xor out full blocks
 		while (nToWrite >= this.blockSize) {
-			for (; this.sPos < this.blockSize; )
-				plain[pPos++] ^= this.state[this.sPos++];
+			for (; this._sPos < this.blockSize; )
+				plain[pPos++] ^= this.state[this._sPos++];
 			//Update state
 			this.state.set(enc.subarray(pPos - space, pPos));
 			this.p(this.bRound);
@@ -284,7 +284,7 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		}
 		if (pPos < plain.length) {
 			space = plain.length - pPos;
-			while (pPos < plain.length) plain[pPos++] ^= this.state[this.sPos++];
+			while (pPos < plain.length) plain[pPos++] ^= this.state[this._sPos++];
 			//Update state
 			this.state.set(enc.subarray(pPos - space));
 		}
@@ -292,10 +292,10 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 
 	verify(tag: Uint8Array): boolean {
 		//End assoc writing
-		if (this.#stage < stage_data) this.finalizeAD();
+		if (this._stage < stage_data) this.finalizeAD();
 		//End data writing
-		this.state[this.sPos] ^= 0x80;
-		this.#stage = stage_done;
+		this.state[this._sPos] ^= 0x80;
+		this._stage = stage_done;
 		//Xor in key after blockSize
 		for (let i = 0; i < this.#key.length; i++)
 			this.state[this.blockSize + i] ^= this.#key[i];
@@ -313,10 +313,10 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 
 	finalize(): Uint8Array {
 		//End assoc writing
-		if (this.#stage < stage_data) this.finalizeAD();
+		if (this._stage < stage_data) this.finalizeAD();
 		//End data writing
-		this.state[this.sPos++] ^= 0x80;
-		this.#stage = stage_done;
+		this.state[this._sPos++] ^= 0x80;
+		this._stage = stage_done;
 		//Xor in key after blockSize
 		for (let i = 0; i < this.#key.length; i++)
 			this.state[this.blockSize + i] ^= this.#key[i];
@@ -438,18 +438,18 @@ class _AsconHash extends AAscon implements IHash {
 
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
-		let length = this.blockSize - this.sPos;
+		let length = this.blockSize - this._sPos;
 		let dPos = 0;
 		//Xor in full blocks and permute
 		while (nToWrite >= length) {
-			for (; this.sPos < this.blockSize; )
-				this.state[this.sPos++] ^= data[dPos++];
+			for (; this._sPos < this.blockSize; )
+				this.state[this._sPos++] ^= data[dPos++];
 			this.p(this.bRound);
 			nToWrite -= this.blockSize;
 			length = this.blockSize;
 		}
 		//Xor in any remainder
-		while (dPos < data.length) this.state[this.sPos++] ^= data[dPos++];
+		while (dPos < data.length) this.state[this._sPos++] ^= data[dPos++];
 	}
 
 	sum(): Uint8Array {
@@ -457,7 +457,7 @@ class _AsconHash extends AAscon implements IHash {
 	}
 
 	sumIn(): Uint8Array {
-		this.state[this.sPos++] ^= 0x80;
+		this.state[this._sPos++] ^= 0x80;
 		const ret = new Uint8Array(this.size);
 		this.p(this.aRound);
 		let pos = 0;
@@ -476,7 +476,7 @@ class _AsconHash extends AAscon implements IHash {
 		this.state[2] = this.aRound;
 		this.state[3] = this.aRound - this.bRound;
 		if (!this.xof) this.state[6] = 1;
-		this.sPos = 0;
+		this._sPos = 0;
 		this.p(this.aRound);
 	}
 
@@ -499,7 +499,7 @@ class _AsconHash extends AAscon implements IHash {
 			this.xof
 		);
 		ret.state.set(this.state);
-		ret.sPos = this.sPos;
+		ret._sPos = this._sPos;
 		return ret;
 	}
 }

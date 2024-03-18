@@ -17,22 +17,18 @@ which is atypical
 */
 
 class ConfigEl {
-	#v: unknown;
+	private _v: unknown;
 	reason = 'default';
 	constructor(readonly defaultValue: unknown) {
-		this.#v = defaultValue;
+		this._v = defaultValue;
 	}
 
 	get value(): unknown {
-		return this.#v;
+		return this._v;
 	}
 
-	// reset(): void {
-	// 	this.#v = this.defaultValue;
-	// }
-
 	setValue(value: unknown, reason: string) {
-		this.#v = value;
+		this._v = value;
 		this.reason = reason;
 	}
 }
@@ -52,10 +48,12 @@ class EnvCollector {
 	 *
 	 * @param key Variable to look for
 	 * @param proc How to process the value, which note could be undefined
-	 * @returns
+	 * @returns self (chainable)
 	 */
 	importEnv(
+        /** Environment variable to look for */
 		key: string,
+        /** What to do if variables are available (if `key` wasn't found `value`===undefined) */
 		proc: (value: string | undefined, set: yeeOldeSetter) => void
 	): EnvCollector {
 		if (!process) return this;
@@ -64,21 +62,49 @@ class EnvCollector {
 		proc(process.env[key], (v) => this.el.setValue(v, 'env.' + key));
 		return this;
 	}
+
+    /**
+     * Explain how to interpret an environment variable, will only be called if environment variables
+     * are available **and** a variable with this name exists.
+     * 
+     * Note because environment variables are stringy, the `value` may still be an empty string.
+     * 
+     * @param key 
+     * @param proc 
+     * @returns self (chainable)
+     */
+    importAvailEnv(
+        /** Environment variable to look for */
+        key:string,
+        /** What to do if the variable is found */
+        proc:(value:string,set:yeeOldeSetter)=>void
+    ):EnvCollector {
+        if (!process) return this;
+        const val=process.env[key];
+        if (val===undefined) return this;
+		proc(val, (v) => this.el.setValue(v, 'env.' + key));
+		return this;
+    }
 }
 
 class ConfigState {
-	#definitions: Map<string, ConfigEl> = new Map();
+	private _defns: Map<string, ConfigEl> = new Map();
 
-	/** Define a new config item, with its default value */
+    /**
+     * 
+     * @param key 
+     * @param defaultValue 
+     * @returns 
+     */
 	define<T>(key: string, defaultValue: T): EnvCollector {
-		if (this.#definitions.has(key)) throw new Error(`$key already defined`);
+		if (this._defns.has(key)) throw new Error(`$key already defined`);
 		const el = new ConfigEl(defaultValue);
-		this.#definitions.set(key, el);
+		this._defns.set(key, el);
 		return new EnvCollector(el);
 	}
 
 	set<T>(key: string, value: T, reason?: string): void {
-		const d = this.#definitions.get(key);
+		const d = this._defns.get(key);
 		if (!d) throw new Error(`$key not found`);
 		if (typeof d.value === typeof value) {
 			d.setValue(value, reason ?? 'unknown');
@@ -86,20 +112,20 @@ class ConfigState {
 	}
 
 	getBool(key: string, def = false): boolean {
-		const d = this.#definitions.get(key);
+		const d = this._defns.get(key);
 		if (!d) return def;
 		return d.value === true;
 	}
 
 	getInvertedBool(key: string, def = false): boolean {
-		const d = this.#definitions.get(key);
+		const d = this._defns.get(key);
 		if (!d) return def;
 		return d.value === false;
 	}
 
 	/** Get current value and reason of state*/
 	getValueReason(key: string): [unknown, string] | undefined {
-		const d = this.#definitions.get(key);
+		const d = this._defns.get(key);
 		if (!d) return undefined;
 		return [d.value, d.reason];
 	}

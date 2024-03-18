@@ -28,7 +28,7 @@ interface options {
 }
 
 class Base32 {
-	readonly #decode: Uint8Array;
+	private readonly _decode: Uint8Array;
 	/**
 	 * Whether padding is required (when not specified on @see fromBytes @see toBytes)
 	 */
@@ -44,7 +44,7 @@ class Base32 {
 		 */
 		options: options
 	) {
-		this.#decode = this.buildDecode(options);
+		this._decode = this.buildDecode(options);
 		this.reqPad = options.requirePad;
 		if (options.makeTblLower) this.tbl = tbl.toLowerCase();
 	}
@@ -151,7 +151,7 @@ class Base32 {
 		let carrySize = 0;
 		let ptr = 0;
 		for (; ptr < base32.length; ptr++) {
-			const dec = this.#decode[base32.charCodeAt(ptr)];
+			const dec = this._decode[base32.charCodeAt(ptr)];
 			//If 0, invalid
 			if (dec === 0)
 				throw new ContentError('Unknown char', name, base32.charAt(ptr));

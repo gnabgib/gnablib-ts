@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { Aes } from '../sym/Aes.js';
 import type { IHash } from '../interfaces/IHash.js';
@@ -6,10 +6,8 @@ import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
 
 const blockSize = 16;
 
-function generateSubKey(a: Aes): [Uint8Array, Uint8Array] {
+function generateSubKey(a: Aes, k1: Uint8Array, k2: Uint8Array): void {
 	//From section 2.3.  Subkey Generation Algorithm
-	const k1 = new Uint8Array(blockSize);
-	const k2 = new Uint8Array(blockSize);
 	const msb = 0x80;
 	const rb = 0x87;
 
@@ -25,8 +23,6 @@ function generateSubKey(a: Aes): [Uint8Array, Uint8Array] {
 	uint8ArrayExt.lShiftEq(l, 1);
 	if (msbIs1) l[l.length - 1] ^= rb;
 	k2.set(l);
-
-	return [k1, k2];
 }
 
 /**
@@ -47,13 +43,21 @@ export class Cmac implements IHash {
 	readonly blockSize = blockSize;
 	readonly size = blockSize;
 
-	readonly #aes: Aes;
-	readonly #k1: Uint8Array;
-	readonly #k2: Uint8Array;
+	private readonly _aes: Aes;
+	private readonly _k1 = new Uint8Array(blockSize);
+	private readonly _k2 = new Uint8Array(blockSize);
 	/** Temp processing block */
 	readonly #block = new Uint8Array(blockSize);
 	/** Position of data written to block */
-	#bPos = 0;
+	private _bPos = 0;
+
+	/**
+	 * Build a new CMAC generator with key
+	 * @param key Uint8Array of bytes to be used as a key
+	 */
+	constructor(key: Uint8Array);
+	//@ts-expect-error we want this protected, even though it's an illusion
+	protected constructor(crypt: Aes);
 
 	/**
 	 * Build a new CMAC generator with key
@@ -62,12 +66,12 @@ export class Cmac implements IHash {
 	 */
 	constructor(keyOrCrypt: Uint8Array | Aes) {
 		if (keyOrCrypt instanceof Aes) {
-			this.#aes = keyOrCrypt;
-			this.#k1 = new Uint8Array(blockSize);
-			this.#k2 = new Uint8Array(blockSize);
+			this._aes = keyOrCrypt;
+			this._k1 = new Uint8Array(blockSize);
+			this._k2 = new Uint8Array(blockSize);
 		} else {
-			this.#aes = new Aes(keyOrCrypt);
-			[this.#k1, this.#k2] = generateSubKey(this.#aes);
+			this._aes = new Aes(keyOrCrypt);
+			generateSubKey(this._aes, this._k1, this._k2);
 		}
 	}
 
@@ -77,14 +81,13 @@ export class Cmac implements IHash {
 		//Xor in full blocks and crypt
 		while (nToWrite > blockSize) {
 			for (let i = 0; i < blockSize; i++)
-				this.#block[this.#bPos++] ^= data[dPos++];
-			this.#aes.encryptBlock(this.#block);
-			this.#bPos = 0;
+				this.#block[this._bPos++] ^= data[dPos++];
+			this._aes.encryptBlock(this.#block);
+			this._bPos = 0;
 			nToWrite -= blockSize;
 		}
 		//Xor in any remainder
-		while(dPos<data.length)
-			this.#block[this.#bPos++] ^= data[dPos++];
+		while (dPos < data.length) this.#block[this._bPos++] ^= data[dPos++];
 	}
 
 	sum(): Uint8Array {
@@ -92,37 +95,37 @@ export class Cmac implements IHash {
 	}
 
 	sumIn(): Uint8Array {
-		if (this.#bPos === 16) {
+		if (this._bPos === 16) {
 			//When the size is exactly a block xor k1, crypt and we're done
-			uint8ArrayExt.xorEq(this.#block, this.#k1);
+			uint8ArrayExt.xorEq(this.#block, this._k1);
 		} else {
 			//Otherwise add the end marker, xor k2, crypt and.. we're done
-			this.#block[this.#bPos++] ^= 0x80;
-			uint8ArrayExt.xorEq(this.#block, this.#k2);
+			this.#block[this._bPos++] ^= 0x80;
+			uint8ArrayExt.xorEq(this.#block, this._k2);
 		}
-		this.#aes.encryptBlock(this.#block);
-		this.#bPos = 0;
+		this._aes.encryptBlock(this.#block);
+		this._bPos = 0;
 		return this.#block;
 	}
 
 	reset(): void {
-		this.#bPos = 0;
+		this._bPos = 0;
 		this.#block.fill(0);
 	}
 
 	newEmpty(): IHash {
-		const ret = new Cmac(this.#aes);
-		ret.#k1.set(this.#k1);
-		ret.#k2.set(this.#k2);
+		const ret = new Cmac(this._aes);
+		ret._k1.set(this._k1);
+		ret._k2.set(this._k2);
 		return ret;
 	}
 
 	clone(): IHash {
-		const ret = new Cmac(this.#aes);
-		ret.#k1.set(this.#k1);
-		ret.#k2.set(this.#k2);
+		const ret = new Cmac(this._aes);
+		ret._k1.set(this._k1);
+		ret._k2.set(this._k2);
 		ret.#block.set(this.#block);
-		ret.#bPos = this.#bPos;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

@@ -6,9 +6,9 @@ import { config } from '../runtime/Config.js';
 
 config
 	.define('color',true)
-	.importEnv('NO_COLOR',(v,set)=>{
+	.importAvailEnv('NO_COLOR',(v,set)=>{
 		//If NO_COLOR is defined and not empty string https://no-color.org/
-		if (v!==undefined && v.length > 0) set(false);
+		if (v.length > 0) set(false);
 	})
 	.importEnv('NODE_DISABLE_COLORS',(v,set)=>{
 		//v can be undefined, as in defined env exits, but it's not defined (diff from no env)

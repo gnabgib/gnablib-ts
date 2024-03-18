@@ -7,14 +7,14 @@ const byteEat = 3;
 
 /** Base 64 encoder/decoder using a table */
 class Base64 {
-	readonly #decode: Uint8Array;
+	private readonly _decode: Uint8Array;
 	constructor(
 		/** Encoding table */
 		private readonly tbl: string,
 		/** Whether padding is required (when not specified explicity) @private */
 		private readonly reqPad: boolean
 	) {
-		this.#decode = this.buildDecode();
+		this._decode = this.buildDecode();
 	}
 	private buildDecode(): Uint8Array {
 		//We only need to set the first 127 places, since they're ASCII
@@ -84,7 +84,7 @@ class Base64 {
 		let carry = 0;
 		let carrySize = 0;
 		for (let i = 0; i < src.length; i++) {
-			const dec = this.#decode[src.charCodeAt(i)];
+			const dec = this._decode[src.charCodeAt(i)];
 			//If 0, invalid
 			if (dec === 0)
 				throw new ContentError('Unknown char', name, src.charAt(i));

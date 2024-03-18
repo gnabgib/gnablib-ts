@@ -3,6 +3,18 @@
 
 Tests are written using the swift [uvu](https://github.com/lukeed/uvu) test runner /w [uvu/assert](https://github.com/lukeed/uvu/blob/master/docs/api.assert.md)
 
+### Use of es2021 private properties (#prop)
+
+- A typescript `private` field is enforced in typescript, but only vaguely in JS
+- An ES2021 `#priv` field is enforced in both typescript and JS, so *it is more safe*, however because we target
+ ES6/2015 `#priv` fields generate further code which may cause performance degradation. 
+- Suggestion: Use `private` when the field is private/shouldn't pollute scope, but if it's content was visible
+ it wouldn't be the end of the world.  Use `#priv` when the privacy of the data is critical - eg cryptography,
+ secret and password data fields.
+ 
+ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties
+
+
 ### Linting
 You may need eslint globally installed:
 `npm install -g eslint`

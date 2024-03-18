@@ -1,4 +1,4 @@
-/*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2024 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
@@ -31,15 +31,15 @@ export class Md5 implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize);
-	readonly #block32=new Uint32Array(this.#block.buffer);
+	readonly #block32 = new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	/**
 	 * Build a new MD5 hash generator
@@ -55,7 +55,7 @@ export class Md5 implements IHash {
 		const dd = this.#state[3];
 
 		//Make sure block is LE (might mangle state, but it's reset after hash)
-		for(let i=0;i<blockSize;i+=4) asLE.i32(this.#block,i);
+		for (let i = 0; i < blockSize; i += 4) asLE.i32(this.#block, i);
 
 		/* Round 1. */
 		//a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s)
@@ -67,7 +67,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
+					this.#state[3]) +
 					this.#state[0] +
 					this.#block32[0] +
 					0xd76aa478,
@@ -76,7 +77,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
+					this.#state[2]) +
 					this.#state[3] +
 					this.#block32[1] +
 					0xe8c7b756,
@@ -85,7 +87,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
+					this.#state[1]) +
 					this.#state[2] +
 					this.#block32[2] +
 					0x242070db,
@@ -94,7 +97,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
+					this.#state[0]) +
 					this.#state[1] +
 					this.#block32[3] +
 					0xc1bdceee,
@@ -104,7 +108,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
+					this.#state[3]) +
 					this.#state[0] +
 					this.#block32[4] +
 					0xf57c0faf,
@@ -113,7 +118,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
+					this.#state[2]) +
 					this.#state[3] +
 					this.#block32[5] +
 					0x4787c62a,
@@ -122,7 +128,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
+					this.#state[1]) +
 					this.#state[2] +
 					this.#block32[6] +
 					0xa8304613,
@@ -131,7 +138,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
+					this.#state[0]) +
 					this.#state[1] +
 					this.#block32[7] +
 					0xfd469501,
@@ -141,7 +149,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
+					this.#state[3]) +
 					this.#state[0] +
 					this.#block32[8] +
 					0x698098d8,
@@ -150,7 +159,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
+					this.#state[2]) +
 					this.#state[3] +
 					this.#block32[9] +
 					0x8b44f7af,
@@ -159,7 +169,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
+					this.#state[1]) +
 					this.#state[2] +
 					this.#block32[10] +
 					0xffff5bb1,
@@ -168,7 +179,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
+					this.#state[0]) +
 					this.#state[1] +
 					this.#block32[11] +
 					0x895cd7be,
@@ -178,7 +190,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
+					this.#state[3]) +
 					this.#state[0] +
 					this.#block32[12] +
 					0x6b901122,
@@ -187,7 +200,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
+					this.#state[2]) +
 					this.#state[3] +
 					this.#block32[13] +
 					0xfd987193,
@@ -196,7 +210,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
+					this.#state[1]) +
 					this.#state[2] +
 					this.#block32[14] +
 					0xa679438e,
@@ -205,7 +220,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
+					this.#state[0]) +
 					this.#state[1] +
 					this.#block32[15] +
 					0x49b40821,
@@ -222,7 +238,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
+					this.#state[2]) +
 					this.#state[0] +
 					this.#block32[1] +
 					0xf61e2562,
@@ -231,7 +248,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
+					this.#state[1]) +
 					this.#state[3] +
 					this.#block32[6] +
 					0xc040b340,
@@ -240,7 +258,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
+					this.#state[0]) +
 					this.#state[2] +
 					this.#block32[11] +
 					0x265e5a51,
@@ -249,7 +268,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
+					this.#state[3]) +
 					this.#state[1] +
 					this.#block32[0] +
 					0xe9b6c7aa,
@@ -259,7 +279,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
+					this.#state[2]) +
 					this.#state[0] +
 					this.#block32[5] +
 					0xd62f105d,
@@ -268,7 +289,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
+					this.#state[1]) +
 					this.#state[3] +
 					this.#block32[10] +
 					0x02441453,
@@ -277,7 +299,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
+					this.#state[0]) +
 					this.#state[2] +
 					this.#block32[15] +
 					0xd8a1e681,
@@ -286,7 +309,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
+					this.#state[3]) +
 					this.#state[1] +
 					this.#block32[4] +
 					0xe7d3fbc8,
@@ -296,7 +320,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
+					this.#state[2]) +
 					this.#state[0] +
 					this.#block32[9] +
 					0x21e1cde6,
@@ -305,7 +330,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
+					this.#state[1]) +
 					this.#state[3] +
 					this.#block32[14] +
 					0xc33707d6,
@@ -314,7 +340,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
+					this.#state[0]) +
 					this.#state[2] +
 					this.#block32[3] +
 					0xf4d50d87,
@@ -323,7 +350,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
+					this.#state[3]) +
 					this.#state[1] +
 					this.#block32[8] +
 					0x455a14ed,
@@ -333,7 +361,8 @@ export class Md5 implements IHash {
 		this.#state[0] =
 			this.#state[1] +
 			U32.rol(
-				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^ this.#state[2]) +
+				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
+					this.#state[2]) +
 					this.#state[0] +
 					this.#block32[13] +
 					0xa9e3e905,
@@ -342,7 +371,8 @@ export class Md5 implements IHash {
 		this.#state[3] =
 			this.#state[0] +
 			U32.rol(
-				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^ this.#state[1]) +
+				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
+					this.#state[1]) +
 					this.#state[3] +
 					this.#block32[2] +
 					0xfcefa3f8,
@@ -351,7 +381,8 @@ export class Md5 implements IHash {
 		this.#state[2] =
 			this.#state[3] +
 			U32.rol(
-				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^ this.#state[0]) +
+				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
+					this.#state[0]) +
 					this.#state[2] +
 					this.#block32[7] +
 					0x676f02d9,
@@ -360,7 +391,8 @@ export class Md5 implements IHash {
 		this.#state[1] =
 			this.#state[2] +
 			U32.rol(
-				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^ this.#state[3]) +
+				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
+					this.#state[3]) +
 					this.#state[1] +
 					this.#block32[12] +
 					0x8d2a4c8a,
@@ -683,7 +715,7 @@ export class Md5 implements IHash {
 		this.#state[3] += dd;
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -693,22 +725,22 @@ export class Md5 implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes += data.length;
+		this._ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize - this.#bPos;
+		let space = blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this.#block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + blockSize), this.#bPos);
+			this.#block.set(data.subarray(dPos, dPos + blockSize), this._bPos);
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -724,40 +756,40 @@ export class Md5 implements IHash {
 	}
 
 	/**
-     * Sum the hash - mutates internal state, but avoids memory alloc.
-     */
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 */
 	sumIn(): Uint8Array {
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		//Write out the data size in little-endian
-		const ss32=sizeSpace>>2;// div 4
+		const ss32 = sizeSpace >> 2; // div 4
 		//We tracked bytes, <<3 (*8) to count bits
-		this.#block32[ss32]=this.#ingestBytes << 3;
+		this.#block32[ss32] = this._ingestBytes << 3;
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		this.#block32[ss32+1]=this.#ingestBytes / 0x20000000;
+		this.#block32[ss32 + 1] = this._ingestBytes / 0x20000000;
 		//This might mangle #block, but we're about to hash anyway
-		asLE.i32(this.#block,sizeSpace);
-		asLE.i32(this.#block,sizeSpace+4);
+		asLE.i32(this.#block, sizeSpace);
+		asLE.i32(this.#block, sizeSpace + 4);
 		this.hash();
 
 		//Project state into bytes
-		const s8=new Uint8Array(this.#state.buffer,this.#state.byteOffset);
+		const s8 = new Uint8Array(this.#state.buffer, this.#state.byteOffset);
 		//Make sure the bytes are LE - this might mangle alt.#state (but we're moments from disposing)
-		for(let i=0;i<digestSize;i++) asLE.i32(s8,i*4);
+		for (let i = 0; i < digestSize; i++) asLE.i32(s8, i * 4);
 		//Finally slice (duplicate) the data so caller can't discover hidden state
-		return s8.slice(0,this.size);
+		return s8.slice(0, this.size);
 	}
 
 	/**
@@ -770,14 +802,14 @@ export class Md5 implements IHash {
 		this.#state[2] = iv[2];
 		this.#state[3] = iv[3];
 		//Reset ingest count
-		this.#ingestBytes = 0;
+		this._ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
-     * Create an empty IHash using the same algorithm
-     */
+	 * Create an empty IHash using the same algorithm
+	 */
 	newEmpty(): IHash {
 		return new Md5();
 	}
@@ -790,8 +822,8 @@ export class Md5 implements IHash {
 		const ret = new Md5();
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

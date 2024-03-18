@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
@@ -209,29 +209,29 @@ const sBox3 = Uint32Array.of(
 	0x01c36ae4, 0xd6ebe1f9, 0x90d4f869, 0xa65cdea0, 0x3f09252d, 0xc208e69f,
 	0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6,
 );
-const blockSize=8;
+const blockSize = 8;
 
 /**
  * [Blowfish block Cipher](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)
  * ([Wiki](https://en.wikipedia.org/wiki/Blowfish_(cipher)#cite_note-blowfish-paper-4))
- * 
- * Blowfish is a symmetric-key block cipher, designed in 1993 by [Bruce Schneier](https://www.schneier.com/blog/about/) 
- * and included in many cipher suites and encryption products. Blowfish provides a good encryption rate in software, 
- * and no effective cryptanalysis of it has been found to date. However, the 
- * {@link crypto/sym/Aes.Aes | Advanced Encryption Standard (AES)} now receives more attention, and Schneier recommends 
+ *
+ * Blowfish is a symmetric-key block cipher, designed in 1993 by [Bruce Schneier](https://www.schneier.com/blog/about/)
+ * and included in many cipher suites and encryption products. Blowfish provides a good encryption rate in software,
+ * and no effective cryptanalysis of it has been found to date. However, the
+ * {@link crypto/sym/Aes.Aes | Advanced Encryption Standard (AES)} now receives more attention, and Schneier recommends
  * {@link crypto/sym/Twofish.Twofish | Twofish} for modern applications.
- * 
- * First Published: *1993*  
- * Block size: *8 bytes*  
- * Key size: *4 - 56 bytes*  
- * Nonce size: *0 bytes*  
- * Rounds: *16*  
+ *
+ * First Published: *1993*
+ * Block size: *8 bytes*
+ * Key size: *4 - 56 bytes*
+ * Nonce size: *0 bytes*
+ * Rounds: *16*
  */
 export class Blowfish implements IBlockCrypt {
 	/** Block size in bytes */
 	readonly blockSize = blockSize;
 	/** permutation array */
-	private readonly _p = pArr.slice();
+	readonly #p = pArr.slice();
 	/** substitution box 0 */
 	private readonly _s0 = sBox0.slice();
 	/** substitution box 1 */
@@ -252,26 +252,26 @@ export class Blowfish implements IBlockCrypt {
 
 	private _encBlock(data: Uint32Array): void {
 		for (let r = 0; r < rounds; r++) {
-			data[0] ^= this._p[r];
+			data[0] ^= this.#p[r];
 			const t = this._f(data[0]) ^ data[1];
 			data[1] = data[0];
 			data[0] = t;
 		}
 		const t = data[1];
-		data[1] = data[0] ^ this._p[16];
-		data[0] = t ^ this._p[17];
+		data[1] = data[0] ^ this.#p[16];
+		data[0] = t ^ this.#p[17];
 	}
 
 	private _decBlock(data: Uint32Array): void {
 		for (let r = rounds + 1; r > 1; r--) {
-			data[0] ^= this._p[r];
+			data[0] ^= this.#p[r];
 			const t = this._f(data[0]) ^ data[1];
 			data[1] = data[0];
 			data[0] = t;
 		}
 		const t = data[1];
-		data[1] = data[0] ^ this._p[1];
-		data[0] = t ^ this._p[0];
+		data[1] = data[0] ^ this.#p[1];
+		data[0] = t ^ this.#p[0];
 	}
 
 	private init(key: Uint8Array): void {
@@ -289,62 +289,70 @@ export class Blowfish implements IBlockCrypt {
 			p = (p + 1) % key.length;
 			k = (k << 8) | key[p];
 			p = (p + 1) % key.length;
-			this._p[i] ^= k;
+			this.#p[i] ^= k;
 		}
 		//blowfish key expansion (521 iterations)
 		const data = Uint32Array.of(0, 0);
 		for (let i = 0; i < pArr.length; i += 2) {
 			this._encBlock(data);
-			this._p.set(data,i);
+			this.#p.set(data, i);
 		}
 		//Loop unroll for each sBox - since they're not arrays we cannot roll
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s0.set(data,j);
+			this._s0.set(data, j);
 		}
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s1.set(data,j);
+			this._s1.set(data, j);
 		}
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s2.set(data,j);
+			this._s2.set(data, j);
 		}
 		for (let j = 0; j < sBox0.length; j += 2) {
 			this._encBlock(data);
-			this._s3.set(data,j);
+			this._s3.set(data, j);
 		}
 	}
 
-    /**
+	/**
 	 * {@inheritDoc IBlockCrypt.decryptBlock}
-	 * 
-	 * @throws {@link ../primitive/NotEnoughSpaceError} 
+	 *
+	 * @throws {@link ../primitive/NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
-     */
-    decryptBlock(block:Uint8Array,offset=0):void {
-        const byteStart=offset*blockSize;
-        if (block.length<byteStart+blockSize) 
-            throw new NotEnoughSpaceError('block.length',byteStart+blockSize,block.length);
-        const b32 = new Uint32Array(block.buffer,byteStart,2);
-        asBE.i32(block,byteStart,2);
-        this._decBlock(b32.subarray(0,2));
-        asBE.i32(block,byteStart,2);
-    }
+	 */
+	decryptBlock(block: Uint8Array, offset = 0): void {
+		const byteStart = offset * blockSize;
+		if (block.length < byteStart + blockSize)
+			throw new NotEnoughSpaceError(
+				'block.length',
+				byteStart + blockSize,
+				block.length
+			);
+		const b32 = new Uint32Array(block.buffer, byteStart, 2);
+		asBE.i32(block, byteStart, 2);
+		this._decBlock(b32.subarray(0, 2));
+		asBE.i32(block, byteStart, 2);
+	}
 
-    /**
+	/**
 	 * {@inheritDoc IBlockCrypt.encryptBlock}
 	 *
 	 * @throws {@link ../primitive/NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
-     */
-    encryptBlock(block:Uint8Array,offset=0):void {
-        const byteStart=offset*blockSize;
-        if (block.length<byteStart+blockSize) 
-            throw new NotEnoughSpaceError('block.length',byteStart+blockSize,block.length);
-        const b32 = new Uint32Array(block.buffer,byteStart,2);
-        asBE.i32(block,byteStart,2);
-        this._encBlock(b32.subarray(0,2));
-        asBE.i32(block,byteStart,2);
-    }
+	 */
+	encryptBlock(block: Uint8Array, offset = 0): void {
+		const byteStart = offset * blockSize;
+		if (block.length < byteStart + blockSize)
+			throw new NotEnoughSpaceError(
+				'block.length',
+				byteStart + blockSize,
+				block.length
+			);
+		const b32 = new Uint32Array(block.buffer, byteStart, 2);
+		asBE.i32(block, byteStart, 2);
+		this._encBlock(b32.subarray(0, 2));
+		asBE.i32(block, byteStart, 2);
+	}
 }

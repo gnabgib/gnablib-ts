@@ -79,11 +79,15 @@ function mdsColumnMul(b: number, col: number): number {
 	const mulEF = gfMul(b, 0xef, mdsPolynomial);
 
 	switch (col) {
-		case 0: return mul01 | (mul5B << 8) | (mulEF << 16) | (mulEF << 24);
-		case 1: return mulEF | (mulEF << 8) | (mul5B << 16) | (mul01 << 24);
-		case 2: return mul5B | (mulEF << 8) | (mul01 << 16) | (mulEF << 24);
+		case 0:
+			return mul01 | (mul5B << 8) | (mulEF << 16) | (mulEF << 24);
+		case 1:
+			return mulEF | (mulEF << 8) | (mul5B << 16) | (mul01 << 24);
+		case 2:
+			return mul5B | (mulEF << 8) | (mul01 << 16) | (mulEF << 24);
 		//case 3:
-        default: return mul5B | (mul01 << 8) | (mulEF << 16) | (mul5B << 24);
+		default:
+			return mul5B | (mul01 << 8) | (mulEF << 16) | (mul5B << 24);
 	}
 	//throw new Error(`col needed to be 0-3, got ${col}`);
 }
@@ -93,7 +97,7 @@ function sBoxGen(b: Uint8Array, key: Uint8Array, offset: number): number {
 	const y = new Uint8Array(4);
 	y.set(b.subarray(0, 4));
 
-    // prettier-ignore
+	// prettier-ignore
 	switch (key.length) {
 		case 8 * 4: //32
 			y[0] = sBox1[y[0]] ^ key[4 * (6 + offset) + 0];
@@ -130,13 +134,13 @@ function sBoxGen(b: Uint8Array, key: Uint8Array, offset: number): number {
  *
  * Twofish is a symmetric key block cipher with a block size of 128 bits and key sizes up to 256 bits.
  * It was one of the five finalists of the Advanced Encryption Standard contest, but it was not
- * selected for standardization. Twofish is related to the earlier block cipher 
+ * selected for standardization. Twofish is related to the earlier block cipher
  * {@link crypto/sym/Blowfish.Blowfish | Blowfish}.
  *
- * First Published: *1998*  
- * Block size: *16 bytes*  
- * Key size: *16, 24, 32 bytes*  
- * Nonce size: *0 bytes*  
+ * First Published: *1998*
+ * Block size: *16 bytes*
+ * Key size: *16, 24, 32 bytes*
+ * Nonce size: *0 bytes*
  * Rounds: *16*
  *
  * [Spec](https://www.schneier.com/wp-content/uploads/2016/02/paper-twofish-paper.pdf)
@@ -147,7 +151,7 @@ export class Twofish implements IBlockCrypt {
 	private readonly _s1 = new Uint32Array(256);
 	private readonly _s2 = new Uint32Array(256);
 	private readonly _s3 = new Uint32Array(256);
-	private readonly _k = new Uint32Array(40);
+	readonly #k = new Uint32Array(40);
 
 	constructor(key: Uint8Array) {
 		switch (key.length) {
@@ -185,10 +189,10 @@ export class Twofish implements IBlockCrypt {
 			let b = sBoxGen(tmp, key, 1);
 			b = U32.rol(b, 8);
 
-			this._k[2 * i] = a + b;
+			this.#k[2 * i] = a + b;
 
 			// K[2i+1] = (A + 2B) <<< 9
-			this._k[2 * i + 1] = U32.rol(2 * b + a, 9);
+			this.#k[2 * i + 1] = U32.rol(2 * b + a, 9);
 		}
 
 		// prettier-ignore
@@ -222,30 +226,30 @@ export class Twofish implements IBlockCrypt {
 
 	private _decBlock(data: Uint8Array) {
 		// Undo undo final swap
-		let a = U32.iFromBytesLE(data, 8) ^ this._k[6];
-		let b = U32.iFromBytesLE(data, 12) ^ this._k[7];
-		let c = U32.iFromBytesLE(data) ^ this._k[4];
-		let d = U32.iFromBytesLE(data, 4) ^ this._k[5];
+		let a = U32.iFromBytesLE(data, 8) ^ this.#k[6];
+		let b = U32.iFromBytesLE(data, 12) ^ this.#k[7];
+		let c = U32.iFromBytesLE(data) ^ this.#k[4];
+		let d = U32.iFromBytesLE(data, 4) ^ this.#k[5];
 
-        let kPos = 39;
-        // prettier-ignore
+		let kPos = 39;
+		// prettier-ignore
 		for (let i = 8; i > 0; i--) {
 			let t0 = this._s0[c & 0xff] ^ this._s1[(c >>> 8) & 0xff] ^ this._s2[(c >>> 16) & 0xff] ^ this._s3[c >>> 24];
 			let t1 = this._s1[d & 0xff] ^ this._s2[(d >>> 8) & 0xff] ^ this._s3[(d >>> 16) & 0xff] ^ this._s0[d >>> 24];
-            b = U32.rol(b ^ (t1 + t1 + t0 + this._k[kPos--]), -1);
-            a = U32.rol(a, 1) ^ (t1 + t0 + this._k[kPos--]);
+            b = U32.rol(b ^ (t1 + t1 + t0 + this.#k[kPos--]), -1);
+            a = U32.rol(a, 1) ^ (t1 + t0 + this.#k[kPos--]);
 
 			t0 = this._s0[a & 0xff] ^ this._s1[(a >>> 8) & 0xff] ^ this._s2[(a >>> 16) & 0xff] ^ this._s3[a >>> 24];
 			t1 = this._s1[b & 0xff] ^ this._s2[(b >>> 8) & 0xff] ^ this._s3[(b >>> 16) & 0xff] ^ this._s0[b >>> 24];
-            d = U32.ror(d ^ (t1 + t1 + t0 + this._k[kPos--]), 1);
-            c = U32.rol(c, 1) ^ (t0 + t1 + this._k[kPos--]);
+            d = U32.ror(d ^ (t1 + t1 + t0 + this.#k[kPos--]), 1);
+            c = U32.rol(c, 1) ^ (t0 + t1 + this.#k[kPos--]);
 		}
 
 		// Undo pre-whitening
-		a ^= this._k[0];
-		b ^= this._k[1];
-		c ^= this._k[2];
-		d ^= this._k[3];
+		a ^= this.#k[0];
+		b ^= this.#k[1];
+		c ^= this.#k[2];
+		d ^= this.#k[3];
 
 		data.set(U32.toBytesLE(a));
 		data.set(U32.toBytesLE(b), 4);
@@ -261,29 +265,29 @@ export class Twofish implements IBlockCrypt {
 		let d = U32.iFromBytesLE(data, 12);
 
 		// Pre-whitening
-		a ^= this._k[0];
-		b ^= this._k[1];
-		c ^= this._k[2];
-		d ^= this._k[3];
+		a ^= this.#k[0];
+		b ^= this.#k[1];
+		c ^= this.#k[2];
+		d ^= this.#k[3];
 
 		let kPos = 8;
-        // prettier-ignore
+		// prettier-ignore
 		for (let i = 0; i < 8; i++) {
 			let t0 = this._s0[a & 0xff] ^ this._s1[(a >>> 8) & 0xff] ^ this._s2[(a >>> 16) & 0xff] ^ this._s3[a >>> 24];
 			let t1 = this._s1[b & 0xff] ^ this._s2[(b >>> 8) & 0xff] ^ this._s3[(b >>> 16) & 0xff] ^ this._s0[b >>> 24];
-			c = U32.ror(c ^ (t0 + t1 + this._k[kPos++]), 1);
-			d = U32.rol(d, 1) ^ (t1 + t1 + t0 + this._k[kPos++]);
+			c = U32.ror(c ^ (t0 + t1 + this.#k[kPos++]), 1);
+			d = U32.rol(d, 1) ^ (t1 + t1 + t0 + this.#k[kPos++]);
 
 			t0 = this._s0[c & 0xff] ^ this._s1[(c >>> 8) & 0xff] ^ this._s2[(c >>> 16) & 0xff] ^ this._s3[c >>> 24];
 			t1 = this._s1[d & 0xff] ^ this._s2[(d >>> 8) & 0xff] ^ this._s3[(d >>> 16) & 0xff] ^ this._s0[d >>> 24];
-			a = U32.ror(a ^ (t0 + t1 + this._k[kPos++]), 1);
-			b = U32.rol(b, 1) ^ (t1 + t1 + t0 + this._k[kPos++]);
+			a = U32.ror(a ^ (t0 + t1 + this.#k[kPos++]), 1);
+			b = U32.rol(b, 1) ^ (t1 + t1 + t0 + this.#k[kPos++]);
 		}
 
-		data.set(U32.toBytesLE(c ^ this._k[4]));
-		data.set(U32.toBytesLE(d ^ this._k[5]), 4);
-		data.set(U32.toBytesLE(a ^ this._k[6]), 8);
-		data.set(U32.toBytesLE(b ^ this._k[7]), 12);
+		data.set(U32.toBytesLE(c ^ this.#k[4]));
+		data.set(U32.toBytesLE(d ^ this.#k[5]), 4);
+		data.set(U32.toBytesLE(a ^ this.#k[6]), 8);
+		data.set(U32.toBytesLE(b ^ this.#k[7]), 12);
 	}
 
 	/**

@@ -1,4 +1,4 @@
-/*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2024 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
@@ -92,13 +92,13 @@ class RipeMd implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 	readonly #iv: ivFunc;
-	readonly #hash: hashFunc;
+	private readonly _hash: hashFunc;
 
 	/**
 	 * Build a new RipeMd-320 hash generator
@@ -107,7 +107,7 @@ class RipeMd implements IHash {
 		this.size = digestSize;
 		this.#state = new Uint32Array(digestSize >> 2);
 		this.#iv = iv;
-		this.#hash = hash;
+		this._hash = hash;
 		this.reset();
 	}
 
@@ -116,10 +116,10 @@ class RipeMd implements IHash {
 		for (let i = 0; i < 16; i++) asLE.i32(this.#block, i * 4);
 
 		// littleEndian.u32IntoArrFromBytes(x, 0, 16, this.#block);
-		this.#hash(this.#state, this.#block32);
+		this._hash(this.#state, this.#block32);
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -129,23 +129,23 @@ class RipeMd implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes += data.length;
+		this._ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize - this.#bPos;
+		let space = blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this.#block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + blockSize), this.#bPos);
-			this.#bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + blockSize), this._bPos);
+			this._bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -163,25 +163,25 @@ class RipeMd implements IHash {
 	 * Sum the hash - mutates internal state, but avoids memory alloc.
 	 */
 	sumIn(): Uint8Array {
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		const ss32 = sizeSpace >> 2; // div 4
 		//We tracked bytes, <<3 (*8) to count bits
-		this.#block32[ss32] = this.#ingestBytes << 3;
+		this.#block32[ss32] = this._ingestBytes << 3;
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		this.#block32[ss32 + 1] = this.#ingestBytes / 0x20000000;
+		this.#block32[ss32 + 1] = this._ingestBytes / 0x20000000;
 		//This might mangle #block, but we're about to hash anyway
 		asLE.i32(this.#block, sizeSpace);
 		asLE.i32(this.#block, sizeSpace + 4);
@@ -201,16 +201,16 @@ class RipeMd implements IHash {
 	reset(): void {
 		this.#iv(this.#state);
 		//Reset ingest count
-		this.#ingestBytes = 0;
+		this._ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
 	newEmpty(): IHash {
-		return new RipeMd(this.size, this.#iv, this.#hash);
+		return new RipeMd(this.size, this.#iv, this._hash);
 	}
 
 	/**
@@ -218,11 +218,11 @@ class RipeMd implements IHash {
 	 * @returns
 	 */
 	clone(): IHash {
-		const ret = new RipeMd(this.size, this.#iv, this.#hash);
+		const ret = new RipeMd(this.size, this.#iv, this._hash);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

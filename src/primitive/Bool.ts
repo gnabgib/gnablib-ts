@@ -25,32 +25,32 @@ export class _BoolCore implements ISerializer {
 	static readonly storageBytes = 1;
 	/**Number of bits required to serialize this data */
 	static readonly serialBits = 1;
-	readonly #v: Uint8Array;
-	readonly #shift: number;
+	private readonly _v: Uint8Array;
+	private readonly _shift: number;
 
 	protected constructor(storage: Uint8Array, shift: number) {
-		this.#v = storage;
-		this.#shift = shift;
+		this._v = storage;
+		this._shift = shift;
 	}
 
 	/** Value as a boolean */
 	toJSON(): boolean {
-		return (this.#v[0] & masks[this.#shift]) === masks[this.#shift];
+		return (this._v[0] & masks[this._shift]) === masks[this._shift];
 	}
 
 	/** Value as an int 1=true, 0=false */
 	public valueOf(): number {
-		return (this.#v[0] & masks[this.#shift]) >> this.#shift;
+		return (this._v[0] & masks[this._shift]) >> this._shift;
 	}
 	/** Value as a boolean */
 	public valueBool(): boolean {
-		return (this.#v[0] & masks[this.#shift]) === masks[this.#shift];
+		return (this._v[0] & masks[this._shift]) === masks[this._shift];
 	}
 
 	/** Serialize into target  - 1 bit*/
 	public serialize(target: BitWriter): void {
 		target.writeNumber(
-			(this.#v[0] & masks[this.#shift]) === masks[this.#shift] ? 1 : 0,
+			(this._v[0] & masks[this._shift]) === masks[this._shift] ? 1 : 0,
 			_BoolCore.serialBits
 		);
 	}
@@ -74,8 +74,8 @@ export class _BoolCore implements ISerializer {
 
 	/** Copy this value into storage */
 	protected fill(storage: Uint8Array, pos: number): void {
-		const shift = this.#shift - pos;
-		storage[0] = (this.#v[0] & masks[shift]) >> shift;
+		const shift = this._shift - pos;
+		storage[0] = (this._v[0] & masks[shift]) >> shift;
 	}
 
 	protected static writeBool(

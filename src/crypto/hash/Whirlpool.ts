@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { U64Mut, U64MutArray } from '../../primitive/number/U64.js';
@@ -112,11 +112,11 @@ export class Whirlpool implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	readonly #ingestBytes = U64Mut.fromIntUnsafe(0);
+	private readonly _ingestBytes = U64Mut.fromIntUnsafe(0);
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	/**
 	 * Build a new Whirlpool hash generator
@@ -189,7 +189,7 @@ export class Whirlpool implements IHash {
 		this.#state.xorEq(state);
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -199,23 +199,23 @@ export class Whirlpool implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes.addEq(U64Mut.fromInt(data.length));
+		this._ingestBytes.addEq(U64Mut.fromInt(data.length));
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this.#block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
-			this.#bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
+			this._bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -234,18 +234,18 @@ export class Whirlpool implements IHash {
 	 * Sum the hash - mutates internal state, but avoids memory alloc.
 	 */
 	sumIn(): Uint8Array {
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = this.blockSize - spaceForLen;
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		const ss64 = sizeSpace >> 3; // div 3
 		//Technically we write 256bit length ([ms_u64,u64,u64,ls_u64]), but we only count 67 bits (for now)
@@ -254,8 +254,8 @@ export class Whirlpool implements IHash {
 		//alt.#block64.at(ss64 + 1).set(alt.#ingestBytesHigh.lShift(3));
 		//asBE.i64(alt.#block, sizeSpace);
 		//asBE.i64(alt.#block, sizeSpace + 8);
-		this.#block64.at(ss64 + 2).set(this.#ingestBytes.rShift(61));
-		this.#block64.at(ss64 + 3).set(this.#ingestBytes.lShift(3));
+		this.#block64.at(ss64 + 2).set(this._ingestBytes.rShift(61));
+		this.#block64.at(ss64 + 3).set(this._ingestBytes.lShift(3));
 		asBE.i64(this.#block, sizeSpace + 16);
 		asBE.i64(this.#block, sizeSpace + 24);
 		this.hash();
@@ -269,9 +269,9 @@ export class Whirlpool implements IHash {
 		//Setup state
 		this.#state.zero();
 		//Reset ingest count
-		this.#ingestBytes.zero();
+		this._ingestBytes.zero();
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -289,8 +289,8 @@ export class Whirlpool implements IHash {
 		const ret = new Whirlpool();
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes.set(this.#ingestBytes);
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes.set(this._ingestBytes);
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

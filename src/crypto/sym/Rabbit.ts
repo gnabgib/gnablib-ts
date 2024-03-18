@@ -39,10 +39,9 @@ export class Rabbit implements IFullCrypt {
 	readonly #x = new Uint32Array(stateSize32);
 	readonly #c = new Uint32Array(stateSize32);
 	readonly #state = new Uint8Array(blockSize);
-
 	readonly #s32 = new Uint32Array(this.#state.buffer);
 
-	#counterCarryBit = 0;
+	private _counterCarryBit = 0;
 
 	constructor(key: Uint8Array, iv?: Uint8Array) {
 		somewhatSafe.len.exactly('key', key, 16);
@@ -120,8 +119,8 @@ export class Rabbit implements IFullCrypt {
 		const g = new Uint32Array(8);
 		for (let i = 0; i < 8; i++) {
 			//Counter update (2.5)
-			const t = this.#c[i] + a[i] + this.#counterCarryBit;
-			this.#counterCarryBit = t / wordSize;
+			const t = this.#c[i] + a[i] + this._counterCarryBit;
+			this._counterCarryBit = t / wordSize;
 			this.#c[i] = t;
 
 			// nextState (2.6)

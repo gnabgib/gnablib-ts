@@ -1,4 +1,4 @@
-/*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
@@ -40,11 +40,11 @@ export class Sha1 implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	#ingestBytes = 0;
+	private _ingestBytes = 0;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	/**
 	 * Build a new Sha-1 hash generator
@@ -104,7 +104,7 @@ export class Sha1 implements IHash {
 			(this.#state[4] += e);
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -114,23 +114,23 @@ export class Sha1 implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this.#ingestBytes += data.length;
+		this._ingestBytes += data.length;
 
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = blockSize - this.#bPos;
+		let space = blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this.#block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + blockSize), this.#bPos);
-			this.#bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + blockSize), this._bPos);
+			this._bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -150,26 +150,26 @@ export class Sha1 implements IHash {
 	 * memory allocation. Use if you won't need the obj again (for performance)
 	 */
 	sumIn(): Uint8Array {
-		this.#block[this.#bPos] = 0x80;
-		this.#bPos++;
+		this.#block[this._bPos] = 0x80;
+		this._bPos++;
 
 		const sizeSpace = blockSize - spaceForLenBytes;
 
 		//If there's not enough space, end this block
-		if (this.#bPos > sizeSpace) {
+		if (this._bPos > sizeSpace) {
 			//Zero the remainder of the block
-			this.#block.fill(0, this.#bPos);
+			this.#block.fill(0, this._bPos);
 			this.hash();
 		}
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 
 		//Write out the data size in big-endian
 		const ss32 = sizeSpace >> 2; // div 4
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		this.#block32[ss32] = this.#ingestBytes / 0x20000000;
-		this.#block32[ss32 + 1] = this.#ingestBytes << 3;
+		this.#block32[ss32] = this._ingestBytes / 0x20000000;
+		this.#block32[ss32 + 1] = this._ingestBytes << 3;
 		asBE.i32(this.#block, sizeSpace);
 		asBE.i32(this.#block, sizeSpace + 4);
 		this.hash();
@@ -192,9 +192,9 @@ export class Sha1 implements IHash {
 		this.#state[3] = iv[3];
 		this.#state[4] = iv[4];
 		//Reset ingest count
-		this.#ingestBytes = 0;
+		this._ingestBytes = 0;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -212,8 +212,8 @@ export class Sha1 implements IHash {
 		const ret = new Sha1();
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }

@@ -5,27 +5,27 @@ import { superSafe as safe } from '../safe/index.js';
 const mask = [0xff, 0x7f, 0x3f, 0x1f, 0xf, 0x7, 0x3, 0x1];
 
 export class BitWriter {
-	#buff: Uint8Array;
-	#bitCount = 0; //msb=0
+	private _buff: Uint8Array;
+	private _bitCount = 0; //msb=0
 
 	constructor(bufferLength: number) {
-		this.#buff = new Uint8Array(bufferLength);
+		this._buff = new Uint8Array(bufferLength);
 	}
 
 	/** Position in the current byte */
 	get bitPos(): number {
-		return this.#bitCount & 7; //msb=0
+		return this._bitCount & 7; //msb=0
 	}
 
 	/** Number of bits stored */
 	get bitCount(): number {
-		return this.#bitCount;
+		return this._bitCount;
 	}
 
 	/** Number of bytes used for storage */
 	get byteCount(): number {
 		//For any bitPos other than 0, bitCount+7 will go to the next byte (po' man's Math.ceil)
-		return (this.#bitCount + 7) >>> 3;
+		return (this._bitCount + 7) >>> 3;
 	}
 
 	/**
@@ -44,19 +44,19 @@ export class BitWriter {
 		// 0 + 2 + 7 /8 = 1 	0 + 8 + 7 /8 = 1
 		// 2 + 6 + 7 /8 = 1	 	0 + 9 + 7 /8 = 2
 		//console.log(`t.bc=${this.#bitCount} bc=${bitCount}`);
-		const byteCountNeed = (this.#bitCount + bitCount + 7) >>> 3;
-		safe.len.atLeast('(internal)buffer', this.#buff, byteCountNeed);
+		const byteCountNeed = (this._bitCount + bitCount + 7) >>> 3;
+		safe.len.atLeast('(internal)buffer', this._buff, byteCountNeed);
 
-		let ptr = this.#bitCount >>> 3;
+		let ptr = this._bitCount >>> 3;
 		let byteBitSpace = 8 - this.bitPos;
 		if (bitCount <= byteBitSpace) {
 			//It'll all fit in the current byte
 			const shift = byteBitSpace - bitCount;
 			const shiftValue = value << shift;
 			const shiftMask = mask[this.bitPos];
-			this.#buff[ptr] |= shiftMask & shiftValue;
+			this._buff[ptr] |= shiftMask & shiftValue;
 			//console.log(`bbs=${byteBitSpace} sl=${shift}, sv=${shiftValue} sm=${shiftMask} p=${ptr} ${this.#buff}`);
-			this.#bitCount += bitCount;
+			this._bitCount += bitCount;
 			return;
 		}
 		while (bitCount > 0) {
@@ -64,9 +64,9 @@ export class BitWriter {
 			const shift = bitCount - byteBitSpace;
 			const shiftValue = shift > 0 ? value >>> shift : value << -shift;
 			const shiftMask = mask[this.bitPos];
-			this.#buff[ptr++] |= shiftMask & shiftValue;
+			this._buff[ptr++] |= shiftMask & shiftValue;
 			//console.log(`bbs=${byteBitSpace} sr=${shift} sv=${shiftValue} sm=${shiftMask} p=${ptr} ${this.#buff}`);
-			this.#bitCount += bitsToWrite;
+			this._bitCount += bitsToWrite;
 			bitCount -= bitsToWrite;
 			byteBitSpace = 8;
 		}
@@ -74,6 +74,6 @@ export class BitWriter {
 
 	/** Get a copy of the current encoded data */
 	getBytes(): Uint8Array {
-		return this.#buff.slice(0, this.byteCount);
+		return this._buff.slice(0, this.byteCount);
 	}
 }

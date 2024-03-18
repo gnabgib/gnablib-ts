@@ -35,7 +35,7 @@ export class Poly1305 implements IHash {
 	readonly #block = new Uint8Array(tagSize);
 	readonly #b16 = new Uint16Array(this.#block.buffer);
 	/** Position of data written to block */
-	#bPos = 0;
+	private _bPos = 0;
 
 	constructor(key: Uint8Array) {
 		somewhatSafe.len.exactly('key', key, 32); //256
@@ -139,23 +139,23 @@ export class Poly1305 implements IHash {
 		d[1] += c;
 
 		this.#a.set(d);
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
-				this.#block.set(data.subarray(dPos), this.#bPos);
+				this.#block.set(data.subarray(dPos), this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
-			this.#bPos += space;
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
+			this._bPos += space;
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -169,9 +169,9 @@ export class Poly1305 implements IHash {
 
 	sumIn(): Uint8Array {
 		//Process any remainder
-		if (this.#bPos > 0) {
-			this.#block[this.#bPos++] = 1;
-			this.#block.fill(0, this.#bPos);
+		if (this._bPos > 0) {
+			this.#block[this._bPos++] = 1;
+			this.#block.fill(0, this._bPos);
 			this.hash(true);
 		}
 
@@ -233,7 +233,7 @@ export class Poly1305 implements IHash {
 	}
 
 	reset(): void {
-		this.#bPos = 0;
+		this._bPos = 0;
 		this.#block.fill(0);
 		this.#a.fill(0);
 	}
@@ -250,7 +250,7 @@ export class Poly1305 implements IHash {
 		ret.#r.set(this.#r);
 		ret.#s.set(this.#s);
 		ret.#block.set(this.#block);
-		ret.#bPos = this.#bPos;
+		ret._bPos = this._bPos;
 		ret.#a.set(this.#a);
 		return ret;
 	}
@@ -293,22 +293,22 @@ interface IFullCryptBuilder {
 class Poly1305Aead implements IAeadCrypt {
 	//Accept Salsa/XSalsa/ChaCha/XChaCha and AEAD and.. make it so
 	readonly tagSize = tagSize;
-	#hash: Poly1305;
-	#crypt: IFullCrypt;
+	private _hash: Poly1305;
+	private _crypt: IFullCrypt;
 	/** Stage Init=0/AssocData=1/Data=2 */
-	#stage = stage_init;
-	readonly #adLen = U64Mut.fromUint32Pair(0, 0);
-	readonly #cLen = U64Mut.fromUint32Pair(0, 0);
+	private _stage = stage_init;
+	private readonly _adLen = U64Mut.fromUint32Pair(0, 0);
+	private readonly _cLen = U64Mut.fromUint32Pair(0, 0);
 
 	constructor(key: Uint8Array, nonce: Uint8Array, ctor: IFullCryptBuilder) {
-		this.#crypt = new ctor(key, nonce);
-		this.#hash = Poly1305.fromCrypt(this.#crypt);
+		this._crypt = new ctor(key, nonce);
+		this._hash = Poly1305.fromCrypt(this._crypt);
 		//Conveniently the protocol wants hash using counter=0, and crypt
 		// using counter>=1, so we can the same object for both
 	}
 
 	get blockSize(): number {
-		return this.#crypt.blockSize;
+		return this._crypt.blockSize;
 	}
 
 	/**
@@ -316,64 +316,64 @@ class Poly1305Aead implements IAeadCrypt {
 	 * @param data
 	 */
 	writeAD(data: Uint8Array): void {
-		if (this.#stage > stage_ad)
+		if (this._stage > stage_ad)
 			throw new Error('Associated data can no longer be written');
-		this.#stage = stage_ad;
-		this.#adLen.addEq(U64.fromInt(data.length));
-		this.#hash.write(data);
+		this._stage = stage_ad;
+		this._adLen.addEq(U64.fromInt(data.length));
+		this._hash.write(data);
 	}
 
 	private finalizeAD(): void {
-		if (this.#stage === stage_ad) {
+		if (this._stage === stage_ad) {
 			//Add enough zeros to make adLen a multiple of 16
-			const padCount = 16 - (this.#adLen.low & 0xf);
+			const padCount = 16 - (this._adLen.low & 0xf);
 			//If padCount is less than 16.. aka needed, add zeros to the hash
-			if (padCount < 16) this.#hash.write(new Uint8Array(padCount));
+			if (padCount < 16) this._hash.write(new Uint8Array(padCount));
 		}
-		this.#stage = stage_data;
+		this._stage = stage_data;
 	}
 
 	encryptInto(enc: Uint8Array, plain: Uint8Array): void {
-		if (this.#stage < stage_data) this.finalizeAD();
-		else if (this.#stage == stage_done)
+		if (this._stage < stage_data) this.finalizeAD();
+		else if (this._stage == stage_done)
 			throw new Error('Cannot encrypt data after finalization');
-		this.#stage = stage_data;
+		this._stage = stage_data;
 
-		this.#crypt.encryptInto(enc, plain);
-		this.#hash.write(enc);
-		this.#cLen.addEq(U64.fromInt(plain.length));
+		this._crypt.encryptInto(enc, plain);
+		this._hash.write(enc);
+		this._cLen.addEq(U64.fromInt(plain.length));
 	}
 
 	decryptInto(plain: Uint8Array, enc: Uint8Array): void {
-		if (this.#stage < stage_data) this.finalizeAD();
-		else if (this.#stage == stage_done)
+		if (this._stage < stage_data) this.finalizeAD();
+		else if (this._stage == stage_done)
 			throw new Error('Cannot decrypt data after finalization');
-		this.#stage = stage_data;
+		this._stage = stage_data;
 
-		this.#crypt.decryptInto(plain, enc);
-		this.#hash.write(enc);
-		this.#cLen.addEq(U64.fromInt(plain.length));
+		this._crypt.decryptInto(plain, enc);
+		this._hash.write(enc);
+		this._cLen.addEq(U64.fromInt(plain.length));
 	}
 
 	verify(tag: Uint8Array): boolean {
 		//End assoc writing
-		if (this.#stage < stage_data) this.finalizeAD();
-		if (this.#stage === stage_data) {
+		if (this._stage < stage_data) this.finalizeAD();
+		if (this._stage === stage_data) {
 			//Add enough zeros to make adLen a multiple of 16
-			const padCount = 16 - (this.#cLen.low & 0xf);
+			const padCount = 16 - (this._cLen.low & 0xf);
 			//If padCount is less than 16.. aka needed, add zeros to the hash
-			if (padCount < 16) this.#hash.write(new Uint8Array(padCount));
+			if (padCount < 16) this._hash.write(new Uint8Array(padCount));
 
 			//Add AD len in LE
-			this.#hash.write(this.#adLen.toBytesLE());
+			this._hash.write(this._adLen.toBytesLE());
 			//Add C len in LE
-			this.#hash.write(this.#cLen.toBytesLE());
+			this._hash.write(this._cLen.toBytesLE());
 		}
-		this.#stage = stage_done;
+		this._stage = stage_done;
 		//Make sure the provided tag is the right size
 		somewhatSafe.len.exactly('tag', tag, tagSize);
 
-		const foundTag = this.#hash.sumIn();
+		const foundTag = this._hash.sumIn();
 
 		let zero = 0;
 		for (let i = 0; i < foundTag.length; i++) zero |= tag[i] ^ foundTag[i];
@@ -382,20 +382,20 @@ class Poly1305Aead implements IAeadCrypt {
 
 	finalize(): Uint8Array {
 		//End assoc writing
-		if (this.#stage < stage_data) this.finalizeAD();
-		if (this.#stage === stage_data) {
+		if (this._stage < stage_data) this.finalizeAD();
+		if (this._stage === stage_data) {
 			//Add enough zeros to make adLen a multiple of 16
-			const padCount = 16 - (this.#cLen.low & 0xf);
+			const padCount = 16 - (this._cLen.low & 0xf);
 			//If padCount is less than 16.. aka needed, add zeros to the hash
-			if (padCount < 16) this.#hash.write(new Uint8Array(padCount));
+			if (padCount < 16) this._hash.write(new Uint8Array(padCount));
 
 			//Add AD len in LE
-			this.#hash.write(this.#adLen.toBytesLE());
+			this._hash.write(this._adLen.toBytesLE());
 			//Add C len in LE
-			this.#hash.write(this.#cLen.toBytesLE());
+			this._hash.write(this._cLen.toBytesLE());
 		}
-		this.#stage = stage_done;
-		return this.#hash.sumIn();
+		this._stage = stage_done;
+		return this._hash.sumIn();
 	}
 
 	encryptSize(plainLen: number): number {

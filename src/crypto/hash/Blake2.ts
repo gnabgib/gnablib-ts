@@ -76,14 +76,14 @@ class Blake2_32bit implements IHash {
 	/**
 	 * Number of bytes added to the hash (this is just the low count)
 	 */
-	#ingestBytes = Uint64.zero;
+	private _ingestBytes = Uint64.zero;
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		somewhatSafe.int.inRangeInc('key.length',key.length,0,32);
+		somewhatSafe.int.inRangeInc('key.length', key.length, 0, 32);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -172,9 +172,9 @@ class Blake2_32bit implements IHash {
 		v[10] = iv[4];
 		v[11] = iv[6];
 		//note it's bytes in Blake2
-		v[12] = iv[8] ^ this.#ingestBytes.lowU32;
+		v[12] = iv[8] ^ this._ingestBytes.lowU32;
 		//No need to xor v13, countHigh is always 0 for now
-		v[13] = iv[10] ^ this.#ingestBytes.highU32;
+		v[13] = iv[10] ^ this._ingestBytes.highU32;
 		v[14] = iv[12];
 		v[15] = iv[14];
 
@@ -210,7 +210,7 @@ class Blake2_32bit implements IHash {
 		//console.log(`st=${hex.fromU64s(this.#state,' ')}`);
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -220,24 +220,24 @@ class Blake2_32bit implements IHash {
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
 				const subData = data.subarray(dPos);
-				this.#block.set(subData, this.#bPos);
+				this.#block.set(subData, this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				//Update count
-				this.#ingestBytes = this.#ingestBytes.add(
+				this._ingestBytes = this._ingestBytes.add(
 					Uint64.fromNumber(subData.length)
 				);
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
-			this.#ingestBytes = this.#ingestBytes.add(
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
+			this._ingestBytes = this._ingestBytes.add(
 				Uint64.fromNumber(this.blockSize)
 			);
 			this.hash();
@@ -255,12 +255,12 @@ class Blake2_32bit implements IHash {
 	}
 
 	/**
-     * Sum the hash - mutates internal state, but avoids memory alloc.
-     * Use if you won't need the obj again (for performance)
-     */
-	sumIn():Uint8Array {
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 * Use if you won't need the obj again (for performance)
+	 */
+	sumIn(): Uint8Array {
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 		this.hash(true);
 		const ret = new Uint8Array(this.size);
 		littleEndian.u32ArrIntoBytesSafe(this.#state, ret);
@@ -282,9 +282,9 @@ class Blake2_32bit implements IHash {
 		this.#state[7] = iv[14] ^ U32.iFromBytesLE(this.#params, 28);
 
 		//Reset ingest count
-		this.#ingestBytes = Uint64.zero;
+		this._ingestBytes = Uint64.zero;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 
 		//If a key was provided, start writing to the block
 		if (this.#key.length > 0) this.write(this.#key);
@@ -307,8 +307,8 @@ class Blake2_32bit implements IHash {
 		const ret = new Blake2_32bit(this.#key, this.#params);
 		ret.#state.set(this.#state);
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }
@@ -338,15 +338,15 @@ class Blake2_64bit implements IHash {
 	/**
 	 * Number of bytes added to the hash (this is just the low count)
 	 */
-	#ingestBytes = Uint64.zero;
-	//#ingestBytesHigh=new Uint64(0);//13
+	private _ingestBytes = Uint64.zero;
+	//_ingestBytesHigh=Uint64.zero;//13
 	/**
 	 * Position of data written to block
 	 */
-	#bPos = 0;
+	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		somewhatSafe.int.inRangeInc('key.length',key.length,0,64);
+		somewhatSafe.int.inRangeInc('key.length', key.length, 0, 64);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -369,7 +369,7 @@ class Blake2_64bit implements IHash {
 	}
 
 	get nodeOffset(): U64 {
-		const bytes=new Uint8Array(this.#params.subarray(8, 16));
+		const bytes = new Uint8Array(this.#params.subarray(8, 16));
 		return U64.fromBytesLE(bytes);
 	}
 
@@ -442,7 +442,7 @@ class Blake2_64bit implements IHash {
 		v[10] = new Uint64(iv[5], iv[4]);
 		v[11] = new Uint64(iv[7], iv[6]);
 		//note it's bytes in Blake2
-		v[12] = new Uint64(iv[9], iv[8]).xor(this.#ingestBytes);
+		v[12] = new Uint64(iv[9], iv[8]).xor(this._ingestBytes);
 		//No need to xor v13, countHigh is always 0 for now
 		v[13] = new Uint64(iv[11], iv[10]);
 		v[14] = new Uint64(iv[13], iv[12]);
@@ -480,7 +480,7 @@ class Blake2_64bit implements IHash {
 		//console.log(`st=${hex.fromU64s(this.#state,' ')}`);
 
 		//Reset block pointer
-		this.#bPos = 0;
+		this._bPos = 0;
 	}
 
 	/**
@@ -490,24 +490,24 @@ class Blake2_64bit implements IHash {
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
-		let space = this.blockSize - this.#bPos;
+		let space = this.blockSize - this._bPos;
 		while (nToWrite > 0) {
 			//Note this is >, so if there's exactly space this won't trigger
 			// (ie bPos will always be some distance away from max allowing at least 1 byte write)
 			if (space > nToWrite) {
 				//More space than data, copy in verbatim
 				const subData = data.subarray(dPos);
-				this.#block.set(subData, this.#bPos);
+				this.#block.set(subData, this._bPos);
 				//Update pos
-				this.#bPos += nToWrite;
+				this._bPos += nToWrite;
 				//Update count
-				this.#ingestBytes = this.#ingestBytes.add(
+				this._ingestBytes = this._ingestBytes.add(
 					Uint64.fromNumber(subData.length)
 				);
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this.#bPos);
-			this.#ingestBytes = this.#ingestBytes.add(
+			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
+			this._ingestBytes = this._ingestBytes.add(
 				Uint64.fromNumber(this.blockSize)
 			);
 			this.hash();
@@ -525,11 +525,11 @@ class Blake2_64bit implements IHash {
 	}
 
 	/**
-     * Sum the hash - mutates internal state, but avoids memory alloc.
-     */
-	sumIn():Uint8Array {
+	 * Sum the hash - mutates internal state, but avoids memory alloc.
+	 */
+	sumIn(): Uint8Array {
 		//Zero the rest of the block
-		this.#block.fill(0, this.#bPos);
+		this.#block.fill(0, this._bPos);
 		this.hash(true);
 		const ret = new Uint8Array(this.size);
 		littleEndian.u64ArrIntoBytesSafe(this.#state, ret);
@@ -575,9 +575,9 @@ class Blake2_64bit implements IHash {
 		);
 
 		//Reset ingest count
-		this.#ingestBytes = Uint64.zero;
+		this._ingestBytes = Uint64.zero;
 		//Reset block (which is just pointing to the start)
-		this.#bPos = 0;
+		this._bPos = 0;
 
 		//If a key was provided, start writing to the block
 		if (this.#key.length > 0) this.write(this.#key);
@@ -600,8 +600,8 @@ class Blake2_64bit implements IHash {
 		const ret = new Blake2_64bit(this.#key, this.#params);
 		for (let i = 0; i < this.#state.length; i++) ret.#state[i] = this.#state[i];
 		ret.#block.set(this.#block);
-		ret.#ingestBytes = this.#ingestBytes;
-		ret.#bPos = this.#bPos;
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
 		return ret;
 	}
 }
@@ -623,8 +623,8 @@ export class Blake2s extends Blake2_32bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
-		somewhatSafe.int.inRangeInc('digestSize',digestSize,1,32);
-		somewhatSafe.int.inRangeInc('fanOut',fanOut,0,255);
+		somewhatSafe.int.inRangeInc('digestSize', digestSize, 1, 32);
+		somewhatSafe.int.inRangeInc('fanOut', fanOut, 0, 255);
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
@@ -637,7 +637,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!salt || salt.length == 0) {
 			//nop
 		} else if (salt.length != saltSize32) {
-			somewhatSafe.len.exactly('salt',salt,saltSize32);
+			somewhatSafe.len.exactly('salt', salt, saltSize32);
 		} else {
 			p.set(salt, 16);
 		}
@@ -645,7 +645,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!personalization || personalization.length == 0) {
 			//nop
 		} else if (personalization.length != saltSize32) {
-			somewhatSafe.len.exactly('personalization',personalization,saltSize32);
+			somewhatSafe.len.exactly('personalization', personalization, saltSize32);
 		} else {
 			p.set(personalization, 24);
 		}
@@ -689,8 +689,8 @@ export class Blake2b extends Blake2_64bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
-		somewhatSafe.int.inRangeInc('digestSize',digestSize,1,64);
-		somewhatSafe.int.inRangeInc('fanOut',fanOut,0,255);
+		somewhatSafe.int.inRangeInc('digestSize', digestSize, 1, 64);
+		somewhatSafe.int.inRangeInc('fanOut', fanOut, 0, 255);
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
@@ -703,7 +703,7 @@ export class Blake2b extends Blake2_64bit {
 		if (!salt || salt.length == 0) {
 			//nop
 		} else if (salt.length != saltSize64) {
-			throw new LengthError(saltSize64,'salt',salt.length);
+			throw new LengthError(saltSize64, 'salt', salt.length);
 		} else {
 			p.set(salt, 32);
 		}
@@ -711,7 +711,11 @@ export class Blake2b extends Blake2_64bit {
 		if (!personalization || personalization.length == 0) {
 			//nop
 		} else if (personalization.length != saltSize64) {
-			throw new LengthError(saltSize64,'personalization',personalization.length);
+			throw new LengthError(
+				saltSize64,
+				'personalization',
+				personalization.length
+			);
 		} else {
 			p.set(personalization, 48);
 		}

@@ -16,10 +16,10 @@ export class Nano implements ISerializer {
 	static readonly storageBytes = 4;
 	/**Number of bits required to serialize this data */
 	static readonly serialBits = 30;
-	readonly #v: Uint8Array;
+	private readonly _v: Uint8Array;
 
 	private constructor(storage: Uint8Array) {
-		this.#v = storage;
+		this._v = storage;
 	}
 
 	/** Not zero padded (0-999999999) */
@@ -35,14 +35,14 @@ export class Nano implements ISerializer {
 	/** Value as an integer (0-999999999) */
 	toJSON(): number {
 		return (
-			(this.#v[0] << 24) | (this.#v[1] << 16) | (this.#v[2] << 8) | this.#v[3]
+			(this._v[0] << 24) | (this._v[1] << 16) | (this._v[2] << 8) | this._v[3]
 		);
 	}
 
 	/** Value as an integer (0-999999999) */
 	public valueOf(): number {
 		return (
-			(this.#v[0] << 24) | (this.#v[1] << 16) | (this.#v[2] << 8) | this.#v[3]
+			(this._v[0] << 24) | (this._v[1] << 16) | (this._v[2] << 8) | this._v[3]
 		);
 	}
 
@@ -78,10 +78,10 @@ export class Nano implements ISerializer {
 
 	/** Copy this value into storage */
 	protected fill(storage: Uint8Array): void {
-		storage[0] = this.#v[0];
-		storage[1] = this.#v[1];
-		storage[2] = this.#v[2];
-		storage[3] = this.#v[3];
+		storage[0] = this._v[0];
+		storage[1] = this._v[1];
+		storage[2] = this._v[2];
+		storage[3] = this._v[3];
 	}
 
 	/** Copy this value into provided storage, and return a new object from that */
