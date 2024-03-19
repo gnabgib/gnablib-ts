@@ -48,10 +48,6 @@
 			"types": "./_o/type/codec/index.d.ts",
 			"default": "./_o/dist/codec/index.js"
 		},
-		"./crypto": {
-			"types": "./_o/type/crypto/index.d.ts",
-			"default": "./_o/dist/crypto/index.js"
-		},
 		"./crypto/block": {
 			"types": "./_o/type/crypto/block/index.d.ts",
 			"default": "./_o/dist/crypto/block/index.js"
@@ -99,10 +95,6 @@
 		"./error": {
 			"types": "./_o/type/error/index.d.ts",
 			"default": "./_o/dist/error/index.js"
-		},
-		"./log": {
-			"types": "./_o/type/log/index.d.ts",
-			"default": "./_o/dist/log/index.js"
 		},
 		"./primitive": {
 			"types": "./_o/type/primitive/index.d.ts",

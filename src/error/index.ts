@@ -8,6 +8,8 @@ export { InclusiveRangeError } from './InclusiveRangeError.js';
 export { LengthError } from './LengthError.js';
 export { LTError } from './LTError.js';
 export { NegativeError } from './NegativeError.js';
+export { NotInRangeError } from './NotInRangeError.js';
+export { NotEnoughSpaceError } from './NotEnoughSpaceError.js';
 export { NaNError } from './NaNError.js';
 export { ZeroError } from './ZeroError.js';
 

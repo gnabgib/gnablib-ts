@@ -1,8 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../codec/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
-import { NotEnoughSpaceError } from './ErrorExt.js';
+import { NotEnoughSpaceError } from '../error/NotEnoughSpaceError.js';
 import { safety } from './Safety.js';
 
 const maxU32 = 0xffffffff;

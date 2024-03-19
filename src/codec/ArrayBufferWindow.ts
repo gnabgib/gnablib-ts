@@ -540,7 +540,7 @@ export class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		safety.intInRangeIncExc(start, 0, buffer.byteLength, 'start');
+		safety.intInRangeInc(start,0,buffer.byteLength-1,'start');
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {

@@ -38,25 +38,6 @@ for(const [test,throws] of intInRangeInc1_5Test) {
     })
 }
 
-const intInRangeIncExc1_5Test:[number|undefined,boolean][]=[
-    [0,true],//out of range
-    [1,false],
-    [2,false],
-    [5,true],//out of range
-    [6,true],//out of range
-    [undefined,true],//string is not an int
-];
-i=0;
-for(const [test,throws] of intInRangeIncExc1_5Test) {
-    tsts(`intInRangeIncExc[${i++}]`,()=>{
-        if (throws) {
-            assert.throws(()=>safety.intInRangeIncExc(test,1,5));
-        } else {
-            safety.intInRangeIncExc(test,1,5);
-        }
-    })
-}
-
 const intGte1Test:[number|undefined,boolean][]=[
     [0,true],//out of range
     [1,false],

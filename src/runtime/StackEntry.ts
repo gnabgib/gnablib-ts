@@ -1,13 +1,13 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 import { WindowStr } from '../primitive/WindowStr.js';
-import { Color, Underline, reset } from '../cli/tty.js';
+import { color, style } from '../cli/csi-tables.js';
 import { ParseProblem } from '../error/ParseProblem.js';
+import { config } from './Config.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-const b = Color.cyan.now();
-const g = Color.grey24(16).now() + Underline.single.now();
-const y = Color.yellow.now();
-const d = reset(); //Use reset rather than default color to clear underline too
+const { cyan: method, gray, yellow: num } = color;
+const { reset, underline } = style;
+const file=gray+underline;
 
 export class StackEntry {
 	constructor(
@@ -32,16 +32,22 @@ export class StackEntry {
 	}
 
 	/** Describe this entry (with TTY colors by default) */
-	toString(color = true): string {
-		if (color) return this.inColor();
+	toString(): string {
 		return `${this.method} ${this.file}:${this.line},${this.char}`;
 	}
 
 	inColor(): string {
-		//Note we're managing color and style ourselves, so we have to remember reset ${d}
+		//If undefined, config.color will be false (second param for get bool), however if the
+		// tty file has been visited, config.color will be true unless the environment tells 
+		// it otherwise.. so:
+		// no env check - no color (default)
+		// env check and all clear - color
+		// env check and constraint (term)/request (no-color) - no color
+		if (!config.getBool('color')) return this.toString();
+		//Note we're managing color and style ourselves, so we have to remember reset
 		return (
-			`${b}${this.method} ${g}${this.file}${d}` +
-			`:${y}${this.line}${d},${y}${this.char}${d}`
+			`${method}${this.method} ${file}${this.file}${reset}` +
+			`:${num}${this.line}${reset},${num}${this.char}${reset}`
 		);
 	}
 
@@ -52,6 +58,7 @@ export class StackEntry {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		//By default try and render in color during debugging 
 		return this.inColor();
 	}
 

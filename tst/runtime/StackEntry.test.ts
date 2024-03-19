@@ -5,9 +5,11 @@ import { WindowStr } from '../../src/primitive/WindowStr';
 import { ParseProblem } from '../../src/error/ParseProblem';
 import util from 'util';
 import { config } from '../config.ts';
+import { Color } from '../../src/cli/tty.ts';
 
 const tsts = suite('StackEntry');
 const DEMO=false || config.getBool('demo');
+
 
 const parseV8Set: [string, string][] = [
 	['    at baz (filename.js:10:15)', 'baz filename.js:10,15'],
@@ -46,7 +48,7 @@ for (const [parse, expect] of parseV8Set) {
 		const s = StackEntry.parseV8(w);
 
 		if (s instanceof ParseProblem) console.log(s.inColor());
-		else assert.equal(s?.toString(false), expect);
+		else assert.equal(s.toString(), expect);
 	});
 }
 
@@ -80,7 +82,7 @@ for (const [parse, expect] of parseSpiderSet) {
 		const s = StackEntry.parseSpider(w);
 
 		if (s instanceof ParseProblem) console.log(s.inColor());
-		else assert.equal(s?.toString(false), expect);
+		else assert.equal(s.toString(), expect);
 	});
 }
 
@@ -120,6 +122,12 @@ tsts(`coverage`, () => {
 	//Colours.. tricky to test
 });
 
+//By importing Color, and setting up this pointless 'blue' we configure 'color' and detect
+// any environmental concerns about the use of color. By default (if undefined) no color
+// will be used, but once the tty page has been loaded the inverse is true - color will be
+// used unless the env says otherwise
+const blue=Color.blue;
+
 const demoSet:string[]=[
 	'Number.runner@\\node_modules\\3rd-party-danger\\index.js:78:16',
 	'baz@filename.js:10:15',
@@ -129,7 +137,8 @@ if (DEMO) {
 	for (const parse of demoSet) {
 		const w=WindowStr.new(parse);
 		const s=StackEntry.parseSpider(w);
-		console.log(s.toString(false));
+		if (s instanceof ParseProblem) continue;
+		console.log(s.toString());
 		console.log(s);
 		console.log('--');
 	}

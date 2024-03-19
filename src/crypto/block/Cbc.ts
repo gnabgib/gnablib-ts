@@ -1,7 +1,9 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { LengthError } from '../../error/LengthError.js';
-import { IBlockCrypt, IFullCrypt, IPad } from '../index.js';
+import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
+import { IFullCrypt } from '../interfaces/IFullCrypt.js';
+import { IPad } from '../interfaces/IPad.js';
 
 /**
  * [Cipher block chaining (CBC)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_block_chaining_(CBC))

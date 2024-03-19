@@ -3,15 +3,24 @@ import * as assert from 'uvu/assert';
 import {Cli} from '../../src/cli/Cli.ts';
 import { config } from '../config.ts';
 
-const tsts = suite('Describe');
+const tsts = suite('CLI');
 const DEMO=false || config.getBool('demo');
 
 
-tsts('version',()=>{
-    const d=new Cli('eg','Example cli');
-    d.setOption('color',false);
+tsts('version(undefined) = 0',()=>{
+    const d=new Cli('eg','Example cli')
+        .setOption('no-color',true)
+        .parse(0,[]);//We have to parse to spread no-color to config    
+    if (d.hasError) d.ifComplete();//Will trigger output (help with debug)
     assert.equal(d.versionBlock(),'Version: 0\n');
-    d.ver('eleventy');
+});
+
+tsts('version(eleventy) = eleventy',()=>{
+    const d=new Cli('eg','Example cli')
+        .setOption('no-color',true)
+        .ver('eleventy')
+        .parse(0,[]);//We have to parse to spread no-color to config    
+    if (d.hasError) d.ifComplete();//Will trigger output (help with debug)
     assert.equal(d.versionBlock(),'Version: eleventy\n');
 });
 
@@ -28,21 +37,21 @@ tsts('set version after finalize fails',()=>{
 });
 
 tsts('require(key)',()=>{
-    const d=new Cli('eg','Example cli').require('key','descr','herp');
-    assert.equal(d.value('key'),'herp');
+    const d=new Cli('eg','Example cli').require('key','descr','default');
+    assert.equal(d.value('key'),'default');
 });
 
 tsts('require(key) after final fails',()=>{
     const d=new Cli('eg','Example cli');
-    assert.equal(d.require('key','descr','herp').hasError,false);
+    assert.equal(d.require('key','descr','default').hasError,false);
     d.helpBlock();
-    assert.equal(d.require('key','descr','herp').hasError,true);
+    assert.equal(d.require('key','descr','default').hasError,true);
 });
 
 tsts('require(key).require(key) fails',()=>{
     const d=new Cli('eg','Example cli');
-    assert.equal(d.require('key','descr','herp').hasError,false);
-    assert.equal(d.require('key','descr','herp').hasError,true);
+    assert.equal(d.require('key','descr','default').hasError,false);
+    assert.equal(d.require('key','descr','default').hasError,true);
 });
 
 tsts('flag(key)',()=>{
@@ -160,7 +169,7 @@ tsts('error.ifComplete',()=>{
 tsts('help.ifComplete',()=>{
     let log=false;
     const d=new Cli('eg','Example cli',()=>log=true)
-        .parse(0,['-c','-h'])
+        .parse(0,['-h'])
         .ifComplete(()=>{});
 
     assert.equal(d.hasError,false,'hasError');
@@ -170,7 +179,7 @@ tsts('help.ifComplete',()=>{
 tsts('version.ifComplete',()=>{
     let log=false;
     const d=new Cli('eg','Example cli',()=>log=true)
-        .parse(0,['-c','-v'])
+        .parse(0,['-v'])
         .ifComplete(()=>{});
 
     assert.equal(d.hasError,false,'hasError');
@@ -191,8 +200,11 @@ if (DEMO) {
         .flag('al','Alternative',false,'alt','a')
         .parse(0,['-h'])
         ;
+    console.log('--');
     console.log(d.helpBlock());
+    console.log('--');
     console.log(d.versionBlock());
+    console.log('--');
 }
 
 tsts.run();

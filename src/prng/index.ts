@@ -14,9 +14,8 @@
  *
  * @module
  */
-export type { IRandFloat } from './interfaces/IRandFloat.js';
-export type { IRandInt } from './interfaces/IRandInt.js';
 export { marsaglia } from './marsaglia.js';
 export { middleSquare } from './middleSquare.js';
 export { msvcRand } from './msvcRand.js';
 export { randu } from './randu.js';
+//Interfaces: see src/interfaces/index.ts

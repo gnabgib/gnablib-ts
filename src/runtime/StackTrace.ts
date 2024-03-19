@@ -8,8 +8,11 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 export class StackTrace {
 	constructor(readonly entries: StackEntry[]) {}
 
-	toString(color = true): string {
-		return this.entries.map((e) => e.toString(color)).join('\n');
+	toString(): string {
+		return this.entries.map((e) => e.toString()).join('\n');
+	}
+	inColor():string {
+		return this.entries.map((e) => e.inColor()).join('\n');
 	}
 
 	/** @hidden */
@@ -19,17 +22,16 @@ export class StackTrace {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return this.toString();
+		return this.inColor();
 	}
 
 	static parse(
 		stack: string | undefined,
-		v: { back?: number; localOnly?: boolean } = {}
-	): StackTrace | undefined {
-		if (!stack) return;
-		let { back, localOnly } = v;
-		if (!back) back = 0;
-		if (!localOnly) localOnly = false;
+		v: { back?: number; localOnly?: boolean; limit?:number } = {}
+	): StackTrace {
+		//If this logic changes, make sure callFrom also works
+		if (!stack) return new StackTrace([]);
+		const { back, localOnly,limit } = v;
 		let parse = StackEntry.parseSpider;
 
 		//console.log(stack);
@@ -41,10 +43,11 @@ export class StackTrace {
 			ptr++;
 			parse = StackEntry.parseV8;
 		}
-		ptr += back;
+		if (back) ptr+=back;
 
 		const entries: StackEntry[] = [];
-		while (ptr < lines.length) {
+		const n = limit ? ptr+limit : lines.length;
+		while (ptr < n) {
 			const e = parse(lines[ptr++]);
 			if (e instanceof ParseProblem) continue;
 			if (localOnly) {
@@ -57,10 +60,9 @@ export class StackTrace {
 	}
 
 	static new(
-		v: { back?: number; localOnly?: boolean } = {}
-	): StackTrace | undefined {
+		v: { back?: number; localOnly?: boolean; limit?:number } = {}
+	): StackTrace {
 		if (!v.back) v.back = 0;
-		if (!v.localOnly) v.localOnly = false;
 		v.back += 1;
 		return StackTrace.parse(new Error().stack, v);
 	}

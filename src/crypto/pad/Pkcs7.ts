@@ -25,7 +25,7 @@ export class Pkcs7 {
 	/**
 	 * {@inheritDoc crypto.IPad.pad}
 	 *
-	 * @throws {@link ../primitive/InvalidLengthError}
+	 * @throws {@link error.LengthError}
 	 * If `input` is too long
 	 *
 	 * @example
@@ -39,7 +39,7 @@ export class Pkcs7 {
 	static pad(input: Uint8Array, len: number, pos = 0): Uint8Array {
 		const ret = new Uint8Array(len);
 		const need = len - (input.length - pos);
-		if (need < 0) throw LengthError.atMost(len,'input.length',len-need);
+		if (need < 0) throw LengthError.atMost(len, 'input.length', len - need);
 		ret.fill(need, len - need);
 		ret.set(input.subarray(pos));
 		return ret;
@@ -48,7 +48,7 @@ export class Pkcs7 {
 	/**
 	 * {@inheritDoc crypto.IPad.unpad}
 	 *
-	 * @throws {@link ../primitive/ContentError}
+	 * @throws {@link error.ContentError}
 	 * If padding length is too large, or one byte doesn't match
 	 *
 	 * @example

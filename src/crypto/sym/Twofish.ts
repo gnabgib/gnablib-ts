@@ -1,9 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import {
-	InvalidValueError,
-	NotEnoughSpaceError,
-} from '../../primitive/ErrorExt.js';
+import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
+import { InvalidValueError } from '../../primitive/ErrorExt.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
@@ -293,7 +291,7 @@ export class Twofish implements IBlockCrypt {
 	/**
 	 * {@inheritDoc IBlockCrypt.decryptBlock}
 	 *
-	 * @throws {@link ../primitive/NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
@@ -310,7 +308,7 @@ export class Twofish implements IBlockCrypt {
 	/**
 	 * {@inheritDoc IBlockCrypt.encryptBlock}
 	 *
-	 * @throws {@link ../primitive/NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {

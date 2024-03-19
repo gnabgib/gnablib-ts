@@ -1,5 +1,14 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+import { log } from './Log.js';
+import { callFrom } from './callFrom.js';
+import {
+	ConfigValue,
+	IConfigEnvCollector,
+	IConfigOracle,
+	ValueSetter,
+} from './interfaces/ForConfig.js';
+
 /* 
 
 ConfigState is shared across all in context (singleton), when defining a new element
@@ -17,118 +26,132 @@ which is atypical
 */
 
 class ConfigEl {
-	private _v: unknown;
+	readonly typ: string;
+	private _v: ConfigValue;
 	reason = 'default';
-	constructor(readonly defaultValue: unknown) {
+	constructor(
+		readonly key: string,
+		readonly defaultValue: ConfigValue,
+		readonly guard: boolean
+	) {
+		this.typ = typeof defaultValue;
 		this._v = defaultValue;
 	}
 
-	get value(): unknown {
+	get value(): ConfigValue {
+		if (this.guard)
+			log.warn('guarded config access', { key: this.key, caller: callFrom(2) });
 		return this._v;
 	}
 
-	setValue(value: unknown, reason: string) {
+	valueIfType(typ: string): ConfigValue | undefined {
+		if (this.typ !== typ) {
+			log.info('incorrect type access', {
+				key: this.key,
+				have: this.typ,
+				seek: typ,
+			});
+			return;
+		}
+		if (this.guard)
+			log.warn('guarded config access', { key: this.key, caller: callFrom(2) });
+		return this._v;
+	}
+
+	/** Type checks are done before this call (to prevent stack pollution) */
+	setValue(value: ConfigValue, reason: string) {
 		this._v = value;
 		this.reason = reason;
 	}
 }
 
-type yeeOldeSetter = (v: unknown) => void;
-
-class EnvCollector {
+class EnvCollector implements IConfigEnvCollector {
 	constructor(readonly el: ConfigEl) {}
 
-	/**
-	 * Explain how to interpret an environment variable, will only be called if environment variables
-	 * are available, but note `proc` will be called with `value=undefined` even if that specific environment
-	 * variable isn't defined - this allows processing to detect missing environment variables too.
-     * 
-     * Because environment variables are stringy, an env with no content would be '' (empty string) not
-     * undefined
-	 *
-	 * @param key Variable to look for
-	 * @param proc How to process the value, which note could be undefined
-	 * @returns self (chainable)
-	 */
 	importEnv(
-        /** Environment variable to look for */
 		key: string,
-        /** What to do if variables are available (if `key` wasn't found `value`===undefined) */
-		proc: (value: string | undefined, set: yeeOldeSetter) => void
+		proc: (value: string | undefined, set: ValueSetter) => void
 	): EnvCollector {
+		/* c8 ignore next - when this is running in browser, there may not be process, but tricky to test*/
 		if (!process) return this;
-		//This feels like majority cases, but might need an alt sig to allow undefined to mean something
-		//if (!this.el) return this;
 		proc(process.env[key], (v) => this.el.setValue(v, 'env.' + key));
 		return this;
 	}
 
-    /**
-     * Explain how to interpret an environment variable, will only be called if environment variables
-     * are available **and** a variable with this name exists.
-     * 
-     * Note because environment variables are stringy, the `value` may still be an empty string.
-     * 
-     * @param key 
-     * @param proc 
-     * @returns self (chainable)
-     */
-    importAvailEnv(
-        /** Environment variable to look for */
-        key:string,
-        /** What to do if the variable is found */
-        proc:(value:string,set:yeeOldeSetter)=>void
-    ):EnvCollector {
-        if (!process) return this;
-        const val=process.env[key];
-        if (val===undefined) return this;
+	importAvailEnv(
+		key: string,
+		proc: (value: string, set: ValueSetter) => void
+	): EnvCollector {
+		/* c8 ignore next - when this is running in browser, there may not be process, but tricky to test*/
+		if (!process) return this;
+		const val = process.env[key];
+		if (val === undefined) return this;
 		proc(val, (v) => this.el.setValue(v, 'env.' + key));
 		return this;
-    }
+	}
 }
 
-class ConfigState {
-	private _defns: Map<string, ConfigEl> = new Map();
+class ConfigState implements IConfigOracle {
+	private _defs: Map<string, ConfigEl> = new Map();
 
-    /**
-     * 
-     * @param key 
-     * @param defaultValue 
-     * @returns 
-     */
-	define<T>(key: string, defaultValue: T): EnvCollector {
-		if (this._defns.has(key)) throw new Error(`$key already defined`);
-		const el = new ConfigEl(defaultValue);
-		this._defns.set(key, el);
+	define(
+		key: string,
+		defaultValue: ConfigValue,
+		guard = false
+	): IConfigEnvCollector {
+		if (this._defs.has(key)) throw new Error(`$key already defined`);
+		const el = new ConfigEl(key, defaultValue, guard);
+		this._defs.set(key, el);
 		return new EnvCollector(el);
 	}
 
-	set<T>(key: string, value: T, reason?: string): void {
-		const d = this._defns.get(key);
-		if (!d) throw new Error(`$key not found`);
-		if (typeof d.value === typeof value) {
-			d.setValue(value, reason ?? 'unknown');
-		}
+	set(key: string, value: ConfigValue, reason?: string): void {
+		const d = this._defs.get(key);
+		if (!d) throw new Error(`${key} not found`);
+		const vType = typeof value;
+		if (vType !== d.typ)
+			throw new Error(`${key} is type ${d.typ}, got ${vType}`);
+		d.setValue(value, reason ?? 'direct set');
 	}
 
 	getBool(key: string, def = false): boolean {
-		const d = this._defns.get(key);
-		if (!d) return def;
-		return d.value === true;
+		const d = this._defs.get(key);
+		if (!d) {
+			log.debug('unknown config', { key });
+			return def;
+		}
+		const v = d.valueIfType('boolean');
+		return v === undefined ? def : (v as boolean);
 	}
 
 	getInvertedBool(key: string, def = false): boolean {
-		const d = this._defns.get(key);
-		if (!d) return def;
-		return d.value === false;
+		const d = this._defs.get(key);
+		if (!d) {
+			log.debug('unknown config', { key });
+			return def;
+		}
+		const v = d.valueIfType('boolean');
+		return v === undefined ? def : (!v as boolean);
 	}
 
-	/** Get current value and reason of state*/
-	getValueReason(key: string): [unknown, string] | undefined {
-		const d = this._defns.get(key);
+	getString(key: string, def = ''): string {
+		const d = this._defs.get(key);
+		if (!d) {
+			log.debug('unknown config', { key });
+			return def;
+		}
+		const v = d.valueIfType('string');
+		return v === undefined ? def : (v as string);
+	}
+
+	getValueReason(key: string): [ConfigValue, string] | undefined {
+		const d = this._defs.get(key);
 		if (!d) return undefined;
 		return [d.value, d.reason];
 	}
 }
 
-export const config = new ConfigState();
+/**
+ * Config oracle (singleton)
+ */
+export const config: IConfigOracle = new ConfigState();

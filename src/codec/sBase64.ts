@@ -104,9 +104,9 @@ export function fromBytes(src: Uint8Array): string {
  * @param src Shift-base64 encoded data
  * @returns Decoded bytes
  *
- * @throws {@link primitive.error.ContentError ContentError} 
+ * @throws {@link error.ContentError ContentError} 
  * Bad source character
- * @throws {@link primitive.error.ContentError ContentError} 
+ * @throws {@link error.ContentError ContentError} 
  * Spurious character found (length must be `4x + (0|2|3)`)
  * 
  * @example
@@ -180,7 +180,7 @@ export function toBytes(src: string): Uint8Array {
  *
  * @param src Shift-base64 encoded data
  * @returns decoded bytes
- * @throws {@link primitive.error.ContentError ContentError} 
+ * @throws {@link error.ContentError ContentError} 
  * Spurious character found (length must be `4x + (0|2|3)`)
  * 
  * @example Normal/safe decode

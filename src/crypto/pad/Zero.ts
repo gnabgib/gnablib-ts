@@ -20,7 +20,7 @@ export class Zero {
 	/** 
      * {@inheritDoc crypto.IPad.pad} 
 	 * 
-	 * @throws {@link ../primitive/InvalidLengthError} 
+	 * @throws {@link error.LengthError} 
 	 * If `input` is too long
 	 * 
 	 * @example

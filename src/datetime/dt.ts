@@ -947,7 +947,7 @@ export class Year extends Core implements ISerializer {
 
 	/**
 	 * Create a year from a js Date object in UTC
-	 * @param date Value used as source
+	 * @param dt Value used as source
 	 */
 	public static fromDateUtc(dt: Date): Year {
 		const dv = new DataView(new ArrayBuffer(yearBytes));
@@ -1021,7 +1021,6 @@ export class Year extends Core implements ISerializer {
 	 * - There's not 15 bits remaining in $source.buffer
 	 * - There's no available $storage
 	 * @param src Source to read bits from
-	 * @param storage Storage location, if undefined will be built
 	 * @returns
 	 */
 	public static deserialize(src: BitReader): Year {
@@ -1168,7 +1167,6 @@ export class Month extends Core implements ISerializer {
 	 * - There's no available $storage
 	 * It's recommended you call .validate() after
 	 * @param src Source to read bits from
-	 * @param storage Storage location, if undefined will be built
 	 */
 	public static deserialize(src: BitReader): Month {
 		const dv = new DataView(new ArrayBuffer(monthBytes));
@@ -1495,7 +1493,6 @@ export class DateOnly extends Core implements ISerializer {
 	 *
 	 * @param ys Integer, if float will be truncated
 	 * @param ms
-	 * @param d
 	 *
 	 * @pure
 	 */
@@ -1544,7 +1541,6 @@ export class DateOnly extends Core implements ISerializer {
 	 * ```
 	 *
 	 * @param v
-	 * @param storage
 	 * @returns
 	 */
 	public static fromValue(v: number): DateOnly {
@@ -1561,10 +1557,10 @@ export class DateOnly extends Core implements ISerializer {
 
 	/**
 	 * Create a date from a js Date object
-	 * @param date Value used as source
+	 * @param dt Value used as source
 	 */
-	public static fromDate(date: Date): DateOnly {
-		const ms = date.valueOf() - date.getTimezoneOffset() * msPerMin;
+	public static fromDate(dt: Date): DateOnly {
+		const ms = dt.valueOf() - dt.getTimezoneOffset() * msPerMin;
 		const dv = new DataView(new ArrayBuffer(dateBytes));
 		Core.dateFromUnixDays(dv, 0, ms / msPerDay);
 		return new DateOnly(dv);
@@ -1572,21 +1568,21 @@ export class DateOnly extends Core implements ISerializer {
 
 	/**
 	 * Create a date from a js Date object in UTC
-	 * @param date Value used as source
+	 * @param dt Value used as source
 	 */
-	public static fromDateUtc(date: Date): DateOnly {
+	public static fromDateUtc(dt: Date): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(dv, 0, date.valueOf() / msPerDay);
+		Core.dateFromUnixDays(dv, 0, dt.valueOf() / msPerDay);
 		return new DateOnly(dv);
 	}
 
 	/**
 	 * Create a date from float seconds since UNIX epoch aka unix time
 	 * *NOTE*: Unix time is always in UTC, depending on your timezone this may differ from local
-	 * */
-	public static fromUnixTime(source: number): DateOnly {
+	 */
+	public static fromUnixTime(s: number): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(dv, 0, source / sPerDay);
+		Core.dateFromUnixDays(dv, 0, s / sPerDay);
 		return new DateOnly(dv);
 	}
 
@@ -1594,9 +1590,9 @@ export class DateOnly extends Core implements ISerializer {
 	 * Create a date from float milliseconds since UNIX epoch aka unix time
 	 * *NOTE*: Unix time is always in UTC, depending on your timezone this may differ from local
 	 */
-	public static fromUnixTimeMs(source: number): DateOnly {
+	public static fromUnixTimeMs(ms: number): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
-		Core.dateFromUnixDays(dv, 0, source / msPerDay);
+		Core.dateFromUnixDays(dv, 0, ms / msPerDay);
 		return new DateOnly(dv);
 	}
 
@@ -1604,7 +1600,7 @@ export class DateOnly extends Core implements ISerializer {
 	 * Parse a string into a date, accepts:
 	 * 'now', a 3 part date separated by '-' characters
 	 * @param input
-	 * @param storage
+	 * @param [strict=false] Whether {@link Year.parse} {@link Month.parse} and {@link Day.parse} are strict
 	 */
 	public static parse(input: WindowStr, strict = false): DateOnly {
 		const dv = new DataView(new ArrayBuffer(dateBytes));
@@ -2715,7 +2711,6 @@ export class TimeOnly extends Core implements ISerializer {
 	 * Parse a string into a date, accepts:
 	 * 'now', a 3 part time separated by ':' characters with fractional seconds
 	 * @param input
-	 * @param storage
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnly {
 		const dv = new DataView(new ArrayBuffer(timeBytes));
@@ -3028,7 +3023,6 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * Parse a string into a date, accepts:
 	 * 'now', a 3 part time separated by ':' characters with fractional seconds
 	 * @param input
-	 * @param storage
 	 */
 	public static parse(input: WindowStr, strict = false): TimeOnlyMs {
 		const dv = new DataView(new ArrayBuffer(timeMsBytes));
@@ -3746,7 +3740,6 @@ export class DateTimeLocal extends DateTimeShared implements ISerializer {
 	 * @param i 0-59
 	 * @param s 0-59
 	 * @param u 0-999999
-	 * @param storage
 	 */
 	public static new(
 		y: number,
@@ -4151,7 +4144,6 @@ export class DateTimeUtc extends DateTimeShared implements ISerializer {
 	 * @param i 0-59
 	 * @param s 0-59
 	 * @param u 0-999999
-	 * @param storage
 	 */
 	public static new(
 		y: number,

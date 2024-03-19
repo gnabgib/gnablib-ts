@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { NotEnoughSpaceError } from './ErrorExt.js';
+import { NotEnoughSpaceError } from '../error/NotEnoughSpaceError.js';
 import { safety } from './Safety.js';
 
 export const uint8ArrayExt = {

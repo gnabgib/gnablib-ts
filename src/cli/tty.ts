@@ -19,6 +19,13 @@ config
 		if (v === 'dumb') set(false);
 	});
 
+//Only support style if terminal is not dumb
+config
+	.define('ttyStyle',true)
+	.importEnv('TERM',(v,set)=>{
+		if (v==='dumb') set(false);
+	})
+
 //[ANSI escape code](https://en.wikipedia.org/wiki/ANSI_escape_code)
 //[ECMA-48](https://www.ecma-international.org/publications-and-standards/standards/ecma-48/)
 //[CHARACTER CONTENT ARCHITECTURES T.416](https://www.itu.int/rec/T-REC-T.416-199303-I/en)
@@ -359,6 +366,10 @@ export class Color extends StyleSet {
 	/** Set foreground color to white */
 	static get white(): Color {
 		return new Color([37]);
+	}
+	/** Set foreground color to gray */
+	static get gray():Color {
+		return new Color([90]);
 	}
 	/**
 	 * Get one of 24 shades of grey (0=black, 23=white) (8 bit color)

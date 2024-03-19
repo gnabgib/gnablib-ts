@@ -2,7 +2,7 @@
     "src":["src"],
     "all":true,
     "include":["src/**/*.ts"],
-    "exclude":["src/**/interfaces/I*.ts"],
+    "exclude":["src/**/interfaces/*.ts","src/**/index.ts"],
     "report-dir":"./_o/cover",
     "skip-full":true
 }

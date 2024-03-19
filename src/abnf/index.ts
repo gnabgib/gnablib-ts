@@ -1,8 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
-
+// abnf barrel file
 export type { IBnf } from './interfaces/IBnf.js';
 export type { IBnfRepeat } from './interfaces/IBnfRepeat.js';
-
 
 export {
 	BnfChar,

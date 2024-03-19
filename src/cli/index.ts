@@ -1,5 +1,5 @@
 // Command line interface barrel file
-export { Cli } from './Cli.js';
+export { Cli, type Log } from './Cli.js';
 export {
 	Ctrl,
 	Underline,

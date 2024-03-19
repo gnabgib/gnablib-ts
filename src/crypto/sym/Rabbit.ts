@@ -3,7 +3,7 @@
 import { asBE, asLE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { somewhatSafe } from '../../safe/index.js';
-import { IFullCrypt } from '../index.js';
+import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
 // Section 2.5 Counter System
 const a = [

@@ -1,8 +1,10 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { EnforceTypeError, NotInRangeError, NullError } from './ErrorExt.js';
+import { EnforceTypeError, NullError } from './ErrorExt.js';
 import { LengthError } from '../error/LengthError.js';
 import { ILengther } from './interfaces/ILengther.js';
+import { NotInRangeError } from '../error/NotInRangeError.js';
+import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
 
 /** @namespace */
 export const safety = {
@@ -46,32 +48,7 @@ export const safety = {
 		if (noun === undefined) noun = 'value';
 		this.isInt(test, noun);
 		if (test < lowInc || test > highInc)
-			throw new NotInRangeError(noun, test, '<=', lowInc, '<=', highInc);
-	},
-
-	/**
-	 * Requires that `test` is an integer, and at a min `low` (inclusive) and less than `high` (exclusive)
-	 * @param test Value to test
-	 * @param lowInc Lowest possible value
-	 * @param highExc First integer above highest value
-	 * @param noun Value description (default ='value')
-	 *
-	 * @throws {@link ./EnforceTypeError}
-	 * Expected [$noun as] integer, got: typeof($value)=$value
-	 *
-	 * @throws {@link ./NotInRangeError}
-	 * $noun/value should be [$lowInc-$highInc), got: $value
-	 */
-	intInRangeIncExc: function (
-		test: number,
-		lowInc: number,
-		highExc: number,
-		noun?: string
-	): void {
-		this.isInt(test, noun);
-		if (noun === undefined) noun = 'value';
-		if (test < lowInc || test >= highExc)
-			throw new NotInRangeError(noun, test, '<=', lowInc, '<', highExc);
+			throw new InclusiveRangeError(noun,test,lowInc,highInc);
 	},
 
 	/**

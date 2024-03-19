@@ -1,7 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
-
-// checksum / non-crypto hashes
-
+// checksum barrel file
 export { adler32 } from './adler.js';
 export { bcc } from './bcc.js';
 export { cksum } from './cksum.js';

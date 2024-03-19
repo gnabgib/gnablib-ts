@@ -29,11 +29,13 @@ export { Year, Month, Day } from './dt.js';
 //Time
 export { Hour, Minute, Second, Millisecond, Microsecond } from './dt.js';
 //Aggregates
-export { DateOnly, TimeOnly, TimeOnlyMs, DateTimeLocal, DateTimeUtc } from './dt.js';
+export {
+	DateOnly,
+	TimeOnly,
+	TimeOnlyMs,
+	DateTimeLocal,
+	DateTimeUtc,
+} from './dt.js';
 //Durations
 export { DurationExact, Duration } from './Duration.js';
-//Interfaces
-export type {
-	IDurationExactParts,
-	IDurationParts,
-} from './interfaces/IDurationParts.js';
+//Interfaces: see src/interfaces/index.ts

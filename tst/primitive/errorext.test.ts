@@ -2,7 +2,6 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import {
 	NotEnoughDataError,
-	NotEnoughSpaceError,
 	NotSupportedError,
 	NullError,
 	OutOfRangeError,
@@ -23,11 +22,6 @@ for (const [value, low, highInc] of oorTests) {
 		assert.instance(e, Error);
 	});
 }
-
-tsts('NotEnoughSpaceError', () => {
-	const e = new NotEnoughSpaceError('irrelevant', 1, 3);
-	assert.instance(e, Error);
-});
 
 tsts('NotEnoughDataError', () => {
 	const e = new NotEnoughDataError('irrelevant', 'hefferlumps', 2, 1);

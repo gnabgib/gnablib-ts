@@ -221,11 +221,6 @@ Name|Capacities|Optional parameters
 - Little
 
 
-### Log
-
-- Structured logging
-
-
 ### Net
 
 - [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing)
@@ -274,6 +269,7 @@ Name|Capacities|Optional parameters
 ### RunTime
 
 - Configuration (including collecting from environment variables)
+- Structured logging
 - Normalize stack entries, and stack traces across engines, with colors 
 
 

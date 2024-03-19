@@ -1,12 +1,9 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
-import { Color } from '../cli/tty.js';
+import { color } from '../cli/csi-tables.js';
+import { config } from '../runtime/Config.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-const b = Color.cyan.now();
-const y = Color.yellow.now();
-const g = Color.grey24(16).now();
-const r = Color.red.now();
-const d = Color.default.now();
+const { cyan: noun, gray: g, yellow: num, red: r, reset } = color;
 
 /** A problem raised during parsing (could become an error) */
 export class ParseProblem {
@@ -57,27 +54,27 @@ export class ParseProblem {
 
 	inColor(): string {
 		//Note we're managing color ourselves, so we have to remember to reset (${d})
-		let msg = `Invalid ${b}${this.noun}${d}, ${this.reason}`;
+		let msg = `Invalid ${noun}${this.noun}${reset}, ${this.reason}`;
 		if (this.content === undefined) {
 			if (this.start !== undefined)
-				msg += ` :${y}${this.start}${d}-${y}${this.end}${d}`;
+				msg += ` :${num}${this.start}${reset}-${num}${this.end}${reset}`;
 			return msg;
 		}
 		if (this.start === undefined) return msg + "; '" + this.content + "'";
-		else msg += `\n  '${g}${this.content.substring(0, this.start)}${d}`;
+		else msg += `\n  '${g}${this.content.substring(0, this.start)}`;
 
 		if (this.end)
 			return (
 				msg +
-				`${r}${this.content.substring(this.start, this.end)}${d}` +
-				`${g}${this.content.substring(this.end)}${d}` +
-				`':${y}${this.start}${d}-${y}${this.end}${d}`
+				`${r}${this.content.substring(this.start, this.end)}${reset}` +
+				`${g}${this.content.substring(this.end)}${reset}` +
+				`':${num}${this.start}${reset}-${num}${this.end}${reset}`
 			);
 		return (
 			msg +
-			`${r}${this.content.charAt(this.start)}${d}` +
-			`${g}${this.content.substring(this.start + 1)}${d}` +
-			`':${y}${this.start}${d}`
+			`${r}${this.content.charAt(this.start)}${reset}` +
+			`${g}${this.content.substring(this.start + 1)}${reset}` +
+			`':${num}${this.start}${reset}`
 		);
 	}
 
@@ -93,6 +90,6 @@ export class ParseProblem {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return this.inColor();
+		return config.getBool('color')?this.inColor():this.toString();
 	}
 }

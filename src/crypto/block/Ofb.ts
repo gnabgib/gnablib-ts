@@ -1,7 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { LengthError } from '../../error/LengthError.js';
-import { IBlockCrypt, IFullCrypt } from '../index.js';
+import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
+import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
 /**
  * [Output Feedback (OFB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_feedback_(CFB))

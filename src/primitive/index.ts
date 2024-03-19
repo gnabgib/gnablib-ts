@@ -1,7 +1,5 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-export * as interfaces from './interfaces/index.js';
-
 export { bitExt, Carrier } from './BitExt.js';
 export * from './ErrorExt.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
@@ -81,3 +79,4 @@ export * as number from './number/index.js';
  * - {@link primitive.net.IpTree IpTree}
  */
 export * as net from './net/index.js';
+//Interfaces: see src/interfaces/index.ts

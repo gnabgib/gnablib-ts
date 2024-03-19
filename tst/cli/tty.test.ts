@@ -127,6 +127,8 @@ tsts(`coverage`,()=>{
     const c=demo();
     if (DEMO) {
         console.log(c);
+        console.log('--')
+        console.log(Underline.single.now().replace('\x1b','\\x1b'))
     }
     assert.is(c.length>0,true);
 });

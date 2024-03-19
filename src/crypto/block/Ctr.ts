@@ -3,7 +3,8 @@
 import { U32 } from '../../primitive/number/U32.js';
 import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
 import { LengthError } from '../../error/LengthError.js';
-import { IBlockCrypt, IFullCrypt } from '../index.js';
+import { IFullCrypt } from '../interfaces/IFullCrypt.js';
+import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 export interface ICountMode extends Iterable<Uint8Array> {
 	/** Length of the counter block (in bytes) */

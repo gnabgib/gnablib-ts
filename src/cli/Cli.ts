@@ -1,19 +1,26 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { callFrom } from '../primitive/ErrorExt.js';
 import { Color } from './tty.js';
+import { color } from './csi-tables.js';
+import { config } from '../runtime/Config.js';
+import { callFrom } from '../runtime/callFrom.js';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _ = Color.blue.now(); //Triggers env checking for no-color etc
+const { cyan, yellow: y, red: r, reset } = color;
 
 interface Option {
 	readonly descr: string;
 	readonly defValue?: unknown;
 	value?: unknown;
 }
+
 class Flag implements Option {
 	value: boolean;
 	constructor(readonly descr: string, readonly defValue = false) {
 		this.value = defValue;
 	}
 }
+
 class Argument {
 	value: string | undefined;
 	constructor(
@@ -24,25 +31,22 @@ class Argument {
 		this.value = defValue;
 	}
 }
-type Action = () => void;
+
+/* c8 ignore next 3 - hard to reasonably test*/
 function exit(): void {
 	process.exit(0);
 }
-type Log = (msg: string) => void;
-type ErrorLog = (msg: string) => void;
-type IdxType = 'argument' | 'option' | 'alias';
 
-const b = Color.cyan.now();
-const y = Color.yellow.now();
-const r = Color.red.now();
-const d = Color.default.now();
+export type Log = (msg: string) => void;
+
+type IdxType = 'argument' | 'option' | 'alias';
 
 /**
  * Describe a command line interface, by default the flags:
- *  -c,--color,--colour | -h,--help  | -v,--version will be defined
+ *  --no-color,--no-colour | -h,--help  | -v,--version will be defined
  *
- * If you wish to use the keys (color/help/version) you'll need to .removeOpt
- * If you wish to use the aliases (c/colour/h/v) you'll need to .removeAlias
+ * If you wish to use the keys (no-color/help/version) you'll need to .removeOpt
+ * If you wish to use the aliases (no-colour/h/v) you'll need to .removeAlias
  */
 export class Cli {
 	private readonly _prog: string[] = [];
@@ -63,41 +67,38 @@ export class Cli {
 	/** Where to log info, used when --help/-h or --version/-v are detected, can be overridden in constructor */
 	private _log: Log = console.log;
 	/** Where to log errors, used when reporting an error, can be overridden by {@link onError}  */
-	private _logError: ErrorLog = console.error;
+	private _logError: Log = console.error;
 	/** Whether to exit (>=0) and what status to exit with when an error is detected, can be overridden by {@link onError} */
 	private _errExitStatus: number = 1;
 
 	constructor(readonly name: string, readonly descr: string, log?: Log) {
 		this._prog.push(name);
-		this.flag('color', "Don't use colors in output", true, 'c', '_colour');
+		this.flag('no-color', "Don't use colors in output", false, '_no-colour');
 		this.flag('help', 'Display this message', false, 'h');
 		this.flag('version', 'Display version information', false, 'v');
 		if (log) this._log = log;
 	}
 
 	private cyan(s: string): string {
-		return this.optionValue('color') ? b + s + d : s;
-	}
-	private yellow(s: string): string {
-		return this.optionValue('color') ? y + s + d : s;
+		return config.getBool('color') ? cyan + s + reset : s;
 	}
 
 	get hasError(): boolean {
 		return this._error !== undefined;
 	}
 
-	/** Define the version of this CLI, setting twice with fail */
+	/** Define the version of this CLI, setting twice will fail */
 	ver(ver: number | string | undefined): Cli {
 		if (this.hasError) return this;
 		const strVer = this.cyan(ver === undefined ? '' : '' + ver);
 		if (this._finalized) {
 			this._error = `Cannot set version=${strVer} after finalization`;
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 		} else if (this._ver !== undefined && ver !== this._ver) {
 			this._error = `Version already set to ${this.cyan(
 				this._ver
 			)}, cannot set to ${strVer}`;
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 		} else {
 			this._ver = ver === undefined ? undefined : '' + ver;
 		}
@@ -111,10 +112,10 @@ export class Cli {
 			this._error = `Cannot define a required value ${this.cyan(
 				key
 			)} after finalization`;
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 		} else if (this._resIdx.has(key)) {
 			this._error = `Cannot redefine ${this.cyan(key)}`;
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 		} else {
 			this._args.push(new Argument(key, descr, defValue));
 			this._prog.push(key);
@@ -128,20 +129,20 @@ export class Cli {
 		if (this.hasError) return this;
 		if (this._finalized) {
 			this._error = `Cannot define flag ${this.cyan(key)} after finalization`;
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 			return this;
 		}
 		if (key.startsWith('_')) {
 			this._error =
 				'Flag-key cannot be hidden (start with underscore): ' + this.cyan(key);
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 			return this;
 		}
 		const opt = new Flag(descr, value);
 
 		if (this._resIdx.has(key)) {
 			this._error = `Cannot redefine ${this.cyan(key)}`;
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 		}
 
 		this.#opts.set(key, opt);
@@ -152,7 +153,7 @@ export class Cli {
 			this._resIdx.set(alt, 'alias');
 			if (len == this._resIdx.size) {
 				this._error = `${alt} already assigned to ${this._aliasMap.get(alt)}`;
-				this._errorLine = callFrom(new Error().stack);
+				this._errorLine = callFrom();
 				return this;
 			}
 			//Link the alias
@@ -168,19 +169,19 @@ export class Cli {
 		}
 	}
 
-	/** Remove an option from configuration, rarely needed unless you wish to redefine color/version/help */
+	/** Remove an option from configuration, rarely needed unless you wish to redefine no-color/version/help */
 	removeOpt(...keys: string[]): Cli {
 		if (this.hasError) return this;
 		if (this._finalized) {
 			this._error = 'Cannot remove keys after finalization';
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 			return this;
 		}
 		for (const key of keys) {
 			if (!this.#opts.has(key)) {
 				this._error =
 					'Unable to remove ' + this.cyan(key) + ' - not found as an option';
-				this._errorLine = callFrom(new Error().stack);
+				this._errorLine = callFrom();
 				return this;
 			}
 			//Remove the opt
@@ -196,18 +197,18 @@ export class Cli {
 		return this;
 	}
 
-	/** Remove an alias from configuration, rarely needed unless you wish to redefine c/colour/v/h */
+	/** Remove an alias from configuration, rarely needed unless you wish to redefine no-colour/v/h */
 	removeAlt(...alts: string[]): Cli {
 		if (this.hasError) return this;
 		if (this._finalized) {
 			this._error = 'Cannot remove keys after finalization';
-			this._errorLine = callFrom(new Error().stack);
+			this._errorLine = callFrom();
 			return this;
 		}
 		for (const alt of alts) {
 			if (!this._resIdx.has(alt)) {
 				this._error = `Cannot remove ${this.cyan(alt)} - not found`;
-				this._errorLine = callFrom(new Error().stack);
+				this._errorLine = callFrom();
 				return this;
 			}
 			for (const [k, alts] of this._aliasMap) {
@@ -240,10 +241,11 @@ export class Cli {
 		if (key) return this.#opts.get(key);
 	}
 
-	setOption(name: string, value: unknown): void {
+	setOption(name: string, value: unknown): Cli {
 		const opt = this.getOption(name);
 		if (!opt) throw new Error('Option not found: ' + name);
 		opt.value = value;
+		return this;
 	}
 
 	/** Get the value of the argument/option/alias */
@@ -253,6 +255,7 @@ export class Cli {
 		if (ty == 'argument') {
 			for (const arg of this._args) {
 				if (arg.key === name) return arg.value;
+				/* c8 ignore next 2 - for obvious reasons this will always return before end */
 			}
 		}
 		//Either an option or an alias (for option)
@@ -289,7 +292,6 @@ export class Cli {
 
 	/** Collect arguments from the CLI (argv default) starting at index 2 (default) */
 	parse(start = 2, args = process.argv): Cli {
-		if (!this._finalized) this.finalize();
 		if (this.hasError) return this;
 		let argPtr = 0;
 		for (let i = start; i < args.length; i++) {
@@ -329,6 +331,12 @@ export class Cli {
 				this._args[argPtr++].value = arg;
 			}
 		}
+		//React to any arguments here
+		if (this.optionValue('no-color') === true) {
+			config.set('color', false, 'set by --no-color');
+		}
+		if (!this._finalized) this.finalize();
+
 		//Make sure all required arguments are defined (they will be defined in order defined, if they have
 		// a default value that will be used instead, but note order is important)
 		// ie. if the first arg as a default, but the second doesn't and parse only has one arg, an error
@@ -345,15 +353,21 @@ export class Cli {
 	}
 
 	error(msg: string, line?: string): void {
-		let m = this.optionValue('color') ? r + 'Error' + d : 'Error';
+		let m = 'Error';
+		if (config.getBool('color')) m = r + m + reset;
 		m += ': ' + msg;
 		if (line) m += '\n  ' + line;
 		this._logError(m);
 		if (this._errExitStatus >= 0) process.exit(this._errExitStatus);
 	}
 
-	/** Function to run after arguments specified a complete action (eg `help` or `version`) defaults to  `process.exit(0)` */
-	ifComplete(next: Action = exit): Cli {
+	/**
+	 * Call after arguments specified, and {@link parse} has been called.  If arguments
+	 * result in a final action (eg `help` or `version`) then `next` will be called.
+	 * @param next What to call after a finishing action, by default `process.exit(0)`
+	 * @returns Self (chainable)
+	 */
+	ifComplete(next: () => void = exit): Cli {
 		//A help or version request outranks an error
 		if (this.optionValue('help') === true) {
 			this._log(this.helpBlock());
@@ -375,7 +389,7 @@ export class Cli {
 	onError(
 		v: {
 			/** Where to log an error (default console), note will uses colours */
-			target?: ErrorLog;
+			target?: Log;
 			/** Exit status code (default 1), a value of -1 will not end processing */
 			exitStatus?: number;
 		} = {}
@@ -394,9 +408,11 @@ export class Cli {
 		//We state the length as -1 (not 0) because as an alt it doesn't have a trailing ,
 		if (k.startsWith('_')) return -1;
 		if (k.length == 1) {
+			//Add to start
 			keys.unshift('-' + this.cyan(k));
 			return k.length + 1;
 		} else {
+			//Add to end
 			keys.push('--' + this.cyan(k));
 			return k.length + 2;
 		}
@@ -444,7 +460,9 @@ export class Cli {
 
 	/** Full version block */
 	versionBlock(): string {
-		return `Version: ${this.yellow(this._ver ?? '0')}\n`;
+		let v = this._ver ?? 0;
+		if (config.getBool('color')) v = y + v + reset;
+		return 'Version: ' + v + '\n';
 	}
 
 	/** Full help block */

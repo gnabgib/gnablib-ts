@@ -1,5 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
-
+// algo barrel file
 export type { IMatcher } from './interfaces/IMatcher.js';
 export type { INode } from './interfaces/INode.js';
 export type { IRandSrc } from './interfaces/IRandSrc.js';

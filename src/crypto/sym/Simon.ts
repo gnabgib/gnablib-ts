@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
+import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
 import { U64Mut } from '../../primitive/number/U64.js';
 import { somewhatSafe } from '../../safe/index.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';

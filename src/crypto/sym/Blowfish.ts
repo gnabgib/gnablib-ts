@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
-import { NotEnoughSpaceError } from '../../primitive/ErrorExt.js';
+import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
 import { safety } from '../../primitive/Safety.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
@@ -319,7 +319,7 @@ export class Blowfish implements IBlockCrypt {
 	/**
 	 * {@inheritDoc IBlockCrypt.decryptBlock}
 	 *
-	 * @throws {@link ../primitive/NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
@@ -339,7 +339,7 @@ export class Blowfish implements IBlockCrypt {
 	/**
 	 * {@inheritDoc IBlockCrypt.encryptBlock}
 	 *
-	 * @throws {@link ../primitive/NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {

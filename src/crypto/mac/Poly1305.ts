@@ -1,11 +1,14 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { IAeadCrypt, IHash, IFullCrypt } from '../index.js';
-import { ChaCha20, Salsa20, XChaCha20, XSalsa20 } from '../sym/index.js';
 import { asLE } from '../../endian/platform.js';
-import { NotInRangeError } from '../../primitive/ErrorExt.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
 import { somewhatSafe } from '../../safe/index.js';
+import { IFullCrypt } from '../interfaces/IFullCrypt.js';
+import { IHash } from '../interfaces/IHash.js';
+import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
+import { ChaCha20, XChaCha20 } from '../sym/ChaCha.js';
+import { Salsa20, XSalsa20 } from '../sym/Salsa.js';
+import { NotInRangeError } from '../../error/NotInRangeError.js';
 
 const tagSize = 16;
 

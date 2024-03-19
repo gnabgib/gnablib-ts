@@ -525,7 +525,7 @@ export class Aes implements IBlockCrypt {
 	/**
 	 * {@inheritDoc IBlockCrypt.decryptBlock}
 	 *
-	 * @throws {@link ../primitive/NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
@@ -537,7 +537,7 @@ export class Aes implements IBlockCrypt {
 	/**
 	 * {@inheritDoc IBlockCrypt.encryptBlock}
 	 *
-	 * @throws {@link ../primitive/NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {

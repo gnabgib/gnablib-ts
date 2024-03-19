@@ -183,10 +183,10 @@ export const base64: {
 	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
 	 * @returns Decoded bytes
 	 *
-	 * @throws {@link primitive.error.ContentError ContentError}
+	 * @throws {@link error.ContentError ContentError}
 	 * Bad source character/Not enough characters
 	 *
-	 * @throws {@link primitive.error.ContentError ContentError}
+	 * @throws {@link error.ContentError ContentError}
 	 * Content after padding/Padding missing/Padding inadequate
 	 *
 	 * @example
@@ -238,10 +238,10 @@ export const base64url: {
 	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
 	 * @returns Decoded bytes
 	 *
-	 * @throws {@link primitive.error.ContentError ContentError}
+	 * @throws {@link error.ContentError ContentError}
 	 * Bad source character/Not enough characters
 	 *
-	 * @throws {@link primitive.error.ContentError ContentError}
+	 * @throws {@link error.ContentError ContentError}
 	 * Content after padding/Padding missing/Padding inadequate
 	 *
 	 * @example
@@ -293,10 +293,10 @@ export const b64: {
 	 * @param requirePad Whether padding is required (overrides default) - if required and missing, may throw
 	 * @returns Decoded bytes
 	 *
-	 * @throws {@link primitive.error.ContentError ContentError}
+	 * @throws {@link error.ContentError ContentError}
 	 * Bad source character/Not enough characters
 	 *
-	 * @throws {@link primitive.error.ContentError ContentError}
+	 * @throws {@link error.ContentError ContentError}
 	 * Content after padding/Padding missing/Padding inadequate
 	 *
 	 * @example

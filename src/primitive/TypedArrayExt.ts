@@ -1,7 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { nextPow2 } from '../algo/nextPow2.js';
-import { NotEnoughSpaceError, NotSupportedError } from './ErrorExt.js';
+import { NotSupportedError } from './ErrorExt.js';
 import { IReadTyped } from './interfaces/IReadTyped.js';
 import { UInt } from './number/index.js';
 import type { IReadArray } from './interfaces/IReadArray.js';
@@ -9,6 +9,7 @@ import type { IReadWriteArray } from './interfaces/IReadWriteArray.js';
 import { IWriteTyped } from './interfaces/IWriteTyped.js';
 import { IBufferer } from './interfaces/IBufferer.js';
 import { IBuildable } from './interfaces/IBuildable.js';
+import { NotEnoughSpaceError } from '../error/NotEnoughSpaceError.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 // Because the interfaces, functions and SharedType<T> are not exported
