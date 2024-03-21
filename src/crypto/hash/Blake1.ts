@@ -3,7 +3,7 @@
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64Mut, U64MutArray } from '../../primitive/number/U64.js';
-import { somewhatSafe } from '../../safe/index.js';
+import { somewhatSafe } from '../../safe/safe.js';
 
 import type { IHash } from '../interfaces/IHash.js';
 

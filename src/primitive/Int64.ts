@@ -1,8 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from './Safety.js';
 import { hex } from '../codec/Hex.js';
 import { EnforceTypeError, NotSupportedError } from './ErrorExt.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 //const maxI32 = 2147483647; // 0x7fffffff
@@ -21,8 +21,8 @@ export class Int64 {
 		// when using hex for numbers (which we frequently do for readability)
 		// JS considers them unsigned, so 0xFFFFFFFF isn't -1, it's +4M so..
 		//We allow between ~ -2M and +4M (even though you should choose one or the other range)
-		safety.intInRangeInc(lowI32,minI32,maxU32);
-		safety.intInRangeInc(highI32,minI32,maxU32);
+		somewhatSafe.int.inRangeInc('lowI32', lowI32, minI32, maxU32);
+		somewhatSafe.int.inRangeInc('highI32', highI32, minI32, maxU32);
 		this.highU32 = highI32 >>> 0;
 		this.lowU32 = lowI32 >>> 0;
 	}
@@ -49,7 +49,6 @@ export class Int64 {
 	 * @returns this^num
 	 */
 	xor(num: Int64): Int64 {
-		safety.notNull(num, 'xor(num)');
 		return new Int64(this.lowU32 ^ num.lowU32, this.highU32 ^ num.highU32);
 	}
 
@@ -59,7 +58,6 @@ export class Int64 {
 	 * @returns this|num
 	 */
 	or(num: Int64): Int64 {
-		safety.notNull(num, 'or(num)');
 		return new Int64(this.lowU32 | num.lowU32, this.highU32 | num.highU32);
 	}
 
@@ -69,7 +67,6 @@ export class Int64 {
 	 * @returns this&num
 	 */
 	and(num: Int64): Int64 {
-		safety.notNull(num, 'and(num)');
 		return new Int64(this.lowU32 & num.lowU32, this.highU32 & num.highU32);
 	}
 
@@ -148,7 +145,7 @@ export class Int64 {
 	 * @returns shifted value
 	 */
 	lShift(by: number): Int64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(by);
 		return new Int64(o[3], o[2]);
 	}
@@ -159,7 +156,7 @@ export class Int64 {
 	 * @returns rotated value
 	 */
 	lRot(by: number): Int64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(by);
 		return new Int64(o[3] | o[1], o[2] | o[0]);
 	}
@@ -170,7 +167,7 @@ export class Int64 {
 	 * @returns shifted value
 	 */
 	rShift(by: number): Int64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		//Shifting right can be emulated by using the shift-out registers of
 		// a left shift.  eg. In <<1 the outgoing register has 1 bit in it,
 		// the same result as >>>63
@@ -184,7 +181,7 @@ export class Int64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): Int64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(64 - by);
 		return new Int64(o[3] | o[1], o[2] | o[0]);
 	}
@@ -205,7 +202,6 @@ export class Int64 {
 	 * @returns new value
 	 */
 	add(num: Int64): Int64 {
-		safety.notNull(num, 'add(num)');
 		return this.addUnsafe(num);
 	}
 
@@ -232,7 +228,6 @@ export class Int64 {
 	 * @returns boolean
 	 */
 	equals(other: Int64): boolean {
-		safety.notNull(other, 'equals(other)');
 		return this.lowU32 === other.lowU32 && this.highU32 === other.highU32;
 	}
 
@@ -388,7 +383,7 @@ export class Int64 {
 
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Int64 {
 		const end = sourcePos + 8;
-		safety.numInRangeInc(end,0,sourceBytes.length,'sourceBytes');
+		somewhatSafe.uint.atMost('sourceBytes', end, sourceBytes.length);
 		const high =
 			(sourceBytes[sourcePos++] << 24) |
 			(sourceBytes[sourcePos++] << 16) |
@@ -403,9 +398,9 @@ export class Int64 {
 	}
 
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Int64 {
-		safety.intInRangeInc(len,0,8,'len');
+		somewhatSafe.uint.atMost('len', len, 8);
 		const end = sourcePos + len;
-		safety.numInRangeInc(end,0,sourceBytes.length,'sourceBytes');
+		somewhatSafe.uint.atMost('sourceBytes', end, sourceBytes.length);
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

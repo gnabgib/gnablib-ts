@@ -6,7 +6,7 @@
  * share is they have access to innards for some ops, but don't expose themselves to lib-users
  */
 
-import { superSafe as safe } from '../safe/index.js';
+import { superSafe as safe, somewhatSafe } from '../safe/safe.js';
 import { AtMostError } from '../error/AtMostError.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 import { BitReader } from '../primitive/BitReader.js';
@@ -203,10 +203,10 @@ abstract class ADurationCore {
 	}
 
 	protected _validate(): void {
-		safe.int.lt('hour', this._storage[this._hPos], 24);
-		safe.int.lt('minute', this._storage[this._hPos + 1], 60);
-		safe.int.lt('second', this._storage[this._hPos + 2], 60);
-		safe.int.lt('second', this.microsecond, usPerSec);
+		somewhatSafe.uint.atMost('hour',this._storage[this._hPos], 24);
+		somewhatSafe.uint.atMost('minute', this._storage[this._hPos + 1], 60);
+		somewhatSafe.uint.atMost('second', this._storage[this._hPos + 2], 60);
+		somewhatSafe.uint.atMost('microsecond', this.microsecond, usPerSec);
 	}
 
 	//Extract the current value into two integers, both u32

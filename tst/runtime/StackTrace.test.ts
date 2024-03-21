@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { StackTrace } from '../../src/runtime/StackTrace';
-import { ParseProblem } from '../../src/error/ParseProblem';
+import { ParseProblem } from '../../src/error/probs/ParseProblem';
 import util from 'util';
 import { config } from '../config';
 import { Color } from '../../src/cli/tty';

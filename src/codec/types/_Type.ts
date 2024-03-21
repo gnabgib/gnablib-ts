@@ -42,10 +42,10 @@ import type {
 	ReadonlyInt32Array,
 	ReadonlyInt8Array,
 } from '../../primitive/ReadonlyTypedArray.js';
-import { safety } from '../../primitive/Safety.js';
 import { DateTimeLocal } from '../../datetime/dt.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
+import { somewhatSafe } from '../../safe/safe.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -419,12 +419,12 @@ class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		safety.intInRangeInc(start, 0, buffer.byteLength - 1, 'start');
+		somewhatSafe.uint.atMost('start',start,buffer.byteLength);
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {
 			//Note when end===start (allowed) the window has 0 length
-			safety.intInRangeInc(end, start, buffer.byteLength, 'end');
+			somewhatSafe.int.inRangeInc('end',end,start,buffer.byteLength);
 		}
 		if (buffer instanceof ArrayBufferWindow) {
 			this._buffer = buffer._buffer;

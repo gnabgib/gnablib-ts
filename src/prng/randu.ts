@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { superSafe } from '../safe/index.js';
+import { superSafe } from '../safe/safe.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 
 /**

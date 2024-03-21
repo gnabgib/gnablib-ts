@@ -1,8 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from "../../primitive/Safety.js";
 import { StringBuilder } from "../../primitive/StringBuilder.js";
 import type { WindowStr } from "../../primitive/WindowStr.js";
+import { somewhatSafe } from "../../safe/safe.js";
 import { IMatcher } from "../interfaces/IMatcher.js";
 import { INode } from "../interfaces/INode.js";
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -136,11 +136,11 @@ export class Nfa {
         // [x]->[x]->..(min) ->()->[x]->()->[x]->()..(max)
         //                      \        \_________//^
         //                       \________________/
-        safety.intGte(min,0,'min');
+        somewhatSafe.int.gte('min',min,0);
         if (max===undefined) {
             max=min;
         } else {
-            safety.intGte(max,min,'max');
+            somewhatSafe.int.gte('max',max,min);
         }
 
         //Add required nodes

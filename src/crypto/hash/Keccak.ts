@@ -4,7 +4,7 @@ import type { IHash } from '../interfaces/IHash.js';
 import * as littleEndian from '../../endian/little.js';
 import { Uint64 } from '../../primitive/Uint64.js';
 import { utf8 } from '../../codec/Utf8.js';
-import { safety } from '../../primitive/Safety.js';
+import { somewhatSafe } from '../../safe/safe.js';
 
 //[Wikipedia: SHA-3](https://en.wikipedia.org/wiki/SHA-3)
 //[Keccak](https://keccak.team/keccak.html)
@@ -114,11 +114,10 @@ class KeccakCore implements IHash {
 		capacityBytes = 0,
 		roundStart = 0
 	) {
-		safety.intInRangeInc(
+		somewhatSafe.uint.atMost(
+			'capacityBytes',
 			capacityBytes,
-			0,
-			maxBlockSizeBytes / 2,
-			'capacityBytes'
+			maxBlockSizeBytes / 2
 		);
 		if (capacityBytes <= 0) capacityBytes = digestSizeBytes;
 		capacityBytes *= 2;
@@ -442,7 +441,7 @@ function encodeString(x: string | Uint8Array | undefined): Uint8Array {
 	return ret;
 }
 function bytePad(w: number, ...x: Uint8Array[]): Uint8Array {
-	safety.intGte(w, 1, 'w');
+	somewhatSafe.int.gte('w', w, 1);
 	const l = leftEncode(w);
 	//Sum all the inputs (x)
 	let reqSpace = 0;

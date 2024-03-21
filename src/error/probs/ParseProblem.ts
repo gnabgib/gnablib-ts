@@ -1,12 +1,13 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
-import { color } from '../cli/csi-tables.js';
-import { config } from '../runtime/Config.js';
+import { color } from '../../cli/csi-tables.js';
+import { config } from '../../runtime/Config.js';
+import { IProblem } from './interfaces/IProblem.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const { cyan: noun, gray: g, yellow: num, red: r, reset } = color;
 
 /** A problem raised during parsing (could become an error) */
-export class ParseProblem {
+export class ParseProblem implements IProblem {
 	/** Invalid $noun, $reason */
 	constructor(noun: string, reason: string);
 	/** Invalid $noun, $reason\n  '$content' */
@@ -90,6 +91,6 @@ export class ParseProblem {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return config.getBool('color')?this.inColor():this.toString();
+		return config.getBool('color') ? this.inColor() : this.toString();
 	}
 }

@@ -2,12 +2,14 @@
 
 import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
-import { ACudColType } from './CudColType.js';
+import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { DateTimeLocal } from '../../datetime/dt.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
+import { IProblem } from '../../error/probs/interfaces/IProblem.js';
+import { TypeProblem } from '../../error/probs/TypeProblem.js';
 
 export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 	/*MySQL supports microsecond res, but only for years 1000-9999 which is smaller than -4713-294276 (doh)*/
@@ -23,13 +25,13 @@ export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 		super(nullable);
 	}
 
-	cudByteSize(_input: DateTimeLocal): number {
+	cudByteSize(): number {
 		return 8;
 	}
 
-	valid(input: DateTimeLocal | undefined): Error | undefined {
-		if (input === undefined || input === null) {
-			if (!this.nullable) return new NullError('DateTime');
+	valid(input: DateTimeLocal | undefined): IProblem | undefined {
+		if (input == undefined) {
+			if (!this.nullable) return TypeProblem.Null('input');
 		}
 	}
 	unknownBin(value: DateTimeLocal | undefined): Uint8Array {

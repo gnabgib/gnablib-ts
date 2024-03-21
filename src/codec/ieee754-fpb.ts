@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from '../primitive/Safety.js';
+import { somewhatSafe } from '../safe/safe.js';
 const last2Bits = 0x3;
 const last4Bits = 0xf;
 const last5Bits = 0x1f;
@@ -149,7 +149,7 @@ export const fpb16 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		safety.numInRangeInc(pos, 0, bytes.length - 2, 'pos');
+		somewhatSafe.int.lte('pos',pos,bytes.length-2);
 		return fpb16.fromBytesUnsafe(bytes, pos);
 	},
 };
@@ -265,7 +265,7 @@ export const fpb32 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		safety.numInRangeInc(pos, 0, bytes.length - 4, 'pos');
+		somewhatSafe.int.lte('pos',pos,bytes.length-4);
 		return fpb32.fromBytesUnsafe(bytes, pos);
 	},
 };
@@ -389,7 +389,7 @@ export const fpb64 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		safety.numInRangeInc(pos, 0, bytes.length - 8, 'pos');
+		somewhatSafe.int.lte('pos',pos,bytes.length-8);
 		return fpb64.fromBytesUnsafe(bytes, pos);
 	},
 };

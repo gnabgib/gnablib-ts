@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { somewhatSafe } from '../safe/index.js';
+import { somewhatSafe } from '../safe/safe.js';
 import { hex } from './Hex.js';
 
 /**

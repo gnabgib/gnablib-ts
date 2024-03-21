@@ -10,7 +10,7 @@ const isInt: [unknown, boolean][] = [
 	[0, true],
 	[1, true],
 
-	[true, true],
+	[true, false],
 	[1.1, true],
 ];
 for (const [test, isValid] of isInt) {
@@ -20,19 +20,6 @@ for (const [test, isValid] of isInt) {
 		} else {
 			assert.throws(() => somewhatSafe.int.is(test));
 		}
-	});
-}
-
-const intCoerceSet: [unknown, number][] = [
-	['', 0],
-	['1', 1],
-	[1.9, 1],
-	[true, 1],
-	[123, 123],
-];
-for (const [input, expect] of intCoerceSet) {
-	tsts(`somewhatSafe.int.coerce(${input})`, () => {
-		assert.is(expect, somewhatSafe.int.coerce(input));
 	});
 }
 
@@ -99,9 +86,9 @@ const isFloat: [unknown, boolean][] = [
 	//no checks in somewhatSafe
 	[0, true],
 	[1, true],
-	[true, true],
+	[true, false],
 	[1.1, true],
-	['1.1', true],
+	['1.1', false],
 ];
 for (const [test, isValid] of isFloat) {
 	tsts(`somewhatSafe.float.is(${test})`, () => {
@@ -113,26 +100,13 @@ for (const [test, isValid] of isFloat) {
 	});
 }
 
-const floatCoerceSet: [unknown, number][] = [
-	['', 0],
-	['1', 1],
-	[1.9, 1.9],
-	[true, 1],
-	[123, 123],
-];
-for (const [input, expect] of floatCoerceSet) {
-	tsts(`somewhatSafe.float.coerce(${input})`, () => {
-		assert.is(expect, somewhatSafe.float.coerce(input));
-	});
-}
-
 const isString: [unknown, boolean][] = [
-	[undefined, true],
-	[null, true],
+	[undefined, false],
+	[null, false],
 	//[Symbol('nope'),false],
-	[true, true],
-	[0, true],
-	[1.1, true],
+	[true, false],
+	[0, false],
+	[1.1, false],
 
 	['yep', true],
 	['', true],

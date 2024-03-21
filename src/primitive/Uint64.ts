@@ -1,19 +1,16 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from './Safety.js';
 import { hex } from '../codec/Hex.js';
-import {
-	EnforceTypeError,
-	NotSupportedError,
-} from './ErrorExt.js';
+import { EnforceTypeError, NotSupportedError } from './ErrorExt.js';
 import { NegativeError } from '../error/NegativeError.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = 0x100000000;
 const mask5Bits = 0x1f;
 const mask16Bits = 0xffff;
 
-export type Uint64ish = Uint64|number;
+export type Uint64ish = Uint64 | number;
 /**
  * A 64 bit int/uint
  */
@@ -34,7 +31,6 @@ export class Uint64 {
 	 * @returns this^num
 	 */
 	xor(num: Uint64): Uint64 {
-		safety.notNull(num, 'xor(num)');
 		return new Uint64(
 			(this.lowU32 ^ num.lowU32) >>> 0,
 			(this.highU32 ^ num.highU32) >>> 0
@@ -47,7 +43,6 @@ export class Uint64 {
 	 * @returns this|num
 	 */
 	or(num: Uint64): Uint64 {
-		safety.notNull(num, 'or(num)');
 		return new Uint64(
 			(this.lowU32 | num.lowU32) >>> 0,
 			(this.highU32 | num.highU32) >>> 0
@@ -60,7 +55,6 @@ export class Uint64 {
 	 * @returns this&num
 	 */
 	and(num: Uint64): Uint64 {
-		safety.notNull(num, 'and(num)');
 		return new Uint64(
 			(this.lowU32 & num.lowU32) >>> 0,
 			(this.highU32 & num.highU32) >>> 0
@@ -142,7 +136,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	lShift(by: number): Uint64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(by);
 		return new Uint64(o[3] >>> 0, o[2] >>> 0);
 	}
@@ -153,7 +147,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	lRot(by: number): Uint64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -164,7 +158,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	rShift(by: number): Uint64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		//Shifting right can be emulated by using the shift-out registers of
 		// a left shift.  eg. In <<1 the outgoing register has 1 bit in it,
 		// the same result as >>>63
@@ -178,7 +172,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): Uint64 {
-		safety.intInRangeInc(by,0,64,'by');
+		somewhatSafe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(64 - by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -201,7 +195,6 @@ export class Uint64 {
 	 * @returns new value
 	 */
 	add(num: Uint64): Uint64 {
-		safety.notNull(num, 'add(num)');
 		return this.addUnsafe(num);
 	}
 
@@ -248,7 +241,6 @@ export class Uint64 {
 	 * @returns boolean
 	 */
 	equals(other: Uint64): boolean {
-		safety.notNull(other, 'equals(other)');
 		return this.lowU32 == other.lowU32 && this.highU32 == other.highU32;
 	}
 
@@ -372,7 +364,7 @@ export class Uint64 {
 	 */
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
 		const end = sourcePos + 8;
-		safety.numInRangeInc(end,0,sourceBytes.length,'end');
+		somewhatSafe.uint.atMost('end', end, sourceBytes.length);
 		const high =
 			((sourceBytes[sourcePos++] << 24) |
 				(sourceBytes[sourcePos++] << 16) |
@@ -389,9 +381,9 @@ export class Uint64 {
 	}
 
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Uint64 {
-		safety.intInRangeInc(len,0,8,'len');
+		somewhatSafe.uint.atMost('len', len, 8);
 		const end = sourcePos + len;
-		safety.numInRangeInc(end,0,sourceBytes.length,'end');
+		somewhatSafe.uint.atMost('end', end, sourceBytes.length);
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;
@@ -423,10 +415,10 @@ export class Uint64 {
 
 	/**
 	 * Coerce a Uint64 or number into a Uint64 if it isn't already
-	 * @param value 
-	 * @returns 
+	 * @param value
+	 * @returns
 	 */
-	static coerce(value:Uint64ish):Uint64 {
+	static coerce(value: Uint64ish): Uint64 {
 		if (value instanceof Uint64) {
 			return value;
 		} else {
@@ -436,7 +428,6 @@ export class Uint64 {
 
 	//minSafe cannot be represented in unsigned int
 }
-const zero=new Uint64(0,0);
-
+const zero = new Uint64(0, 0);
 
 //Uint64.MAX=new Uint64(maxU32,maxU32);

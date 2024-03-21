@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { utf } from '../../primitive/Utf.js';
-import { somewhatSafe } from '../../safe/index.js';
+import { somewhatSafe } from '../../safe/safe.js';
 import { IMatcher } from '../interfaces/IMatcher.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 

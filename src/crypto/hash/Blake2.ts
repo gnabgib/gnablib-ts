@@ -5,7 +5,7 @@ import { Uint64, Uint64ish } from '../../primitive/Uint64.js';
 import type { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64 } from '../../primitive/number/U64.js';
-import { somewhatSafe } from '../../safe/index.js';
+import { somewhatSafe } from '../../safe/safe.js';
 import { LengthError } from '../../error/LengthError.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)

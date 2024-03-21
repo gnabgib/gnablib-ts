@@ -1,16 +1,16 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from '../primitive/Safety.js';
 import { stringExt } from '../primitive/StringExt.js';
 import { config } from '../runtime/Config.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 config
-	.define('color',true)
-	.importAvailEnv('NO_COLOR',(v,set)=>{
+	.define('color', true)
+	.importAvailEnv('NO_COLOR', (v, set) => {
 		//If NO_COLOR is defined and not empty string https://no-color.org/
 		if (v.length > 0) set(false);
 	})
-	.importEnv('NODE_DISABLE_COLORS',(v,set)=>{
+	.importEnv('NODE_DISABLE_COLORS', (v, set) => {
 		//v can be undefined, as in defined env exits, but it's not defined (diff from no env)
 		//https://nodejs.org/api/cli.html#node_disable_colors1
 		if (v === '1') set(false);
@@ -20,11 +20,9 @@ config
 	});
 
 //Only support style if terminal is not dumb
-config
-	.define('ttyStyle',true)
-	.importEnv('TERM',(v,set)=>{
-		if (v==='dumb') set(false);
-	})
+config.define('ttyStyle', true).importEnv('TERM', (v, set) => {
+	if (v === 'dumb') set(false);
+});
 
 //[ANSI escape code](https://en.wikipedia.org/wiki/ANSI_escape_code)
 //[ECMA-48](https://www.ecma-international.org/publications-and-standards/standards/ecma-48/)
@@ -33,7 +31,7 @@ config
 // -xterm, alacritty, mosh, putty, mobaxterm, cmd, powershell, xterm.js, iTerm2
 
 //NO_COLOR: https://no-color.org/ (either not present, or empty string)
-const enabled=config.getBool('color');
+const enabled = config.getBool('color');
 //!NODE_DISABLE_COLORS && NO_COLOR == undefined && TERM !== 'dumb';
 //?Support FORCE_COLOR (https://nodejs.org/api/cli.html#force_color1-2-3)
 // - It has some implied colorspace abilities (empty/1-16color, 2-256, 3-16M, undefined=ignore)
@@ -43,7 +41,7 @@ const enabled=config.getBool('color');
 // 2. powershell 7 (current)
 // 3. cmd.exe
 // 4. alacritty (win)
-// 5. vs code/embedded powershell (win) /w 
+// 5. vs code/embedded powershell (win) /w
 // 6. mobaXterm
 //                 01 02 03 04 05 06 07
 // Named Color     x  x  x  x1 x1
@@ -100,7 +98,7 @@ const color_index = 5;
 /** Issue a Control Sequence Introducer (CSI) command  */
 function csi(end: string, ns: Array<number>): string {
 	//\033 (octal) \x1b (hex) or \e (bash only?) is the escape sequence for.. the escape char
-	return enabled?`\x1b[${ns.join(';')}${end}`:'';
+	return enabled ? `\x1b[${ns.join(';')}${end}` : '';
 }
 
 /** Issue a Select Graphic Rendition (SGR) command */
@@ -368,7 +366,7 @@ export class Color extends StyleSet {
 		return new Color([37]);
 	}
 	/** Set foreground color to gray */
-	static get gray():Color {
+	static get gray(): Color {
 		return new Color([90]);
 	}
 	/**
@@ -379,7 +377,7 @@ export class Color extends StyleSet {
 	 * @returns
 	 */
 	static grey24(value: number): Color {
-		safety.intInRangeInc(value, 0, 23, 'value');
+		somewhatSafe.uint.atMost('value', value, 23);
 		const start = 232;
 		return new Color([fg_expand, color_index, start + value]);
 	}
@@ -393,9 +391,9 @@ export class Color extends StyleSet {
 	 * @returns
 	 */
 	static rgb6(r: number, g: number, b: number): Color {
-		safety.intInRangeInc(r, 0, 5, 'r');
-		safety.intInRangeInc(g, 0, 5, 'g');
-		safety.intInRangeInc(b, 0, 5, 'b');
+		somewhatSafe.uint.atMost('r', r, 5);
+		somewhatSafe.uint.atMost('g', g, 5);
+		somewhatSafe.uint.atMost('b', b, 5);
 		const start = 16;
 		//Grid starts at 16, r goes up by 36, g by 6, b by 1
 		return new Color([fg_expand, color_index, start + r * 36 + g * 6 + b]);
@@ -460,7 +458,7 @@ export class BgColor extends StyleSet {
 	 * @returns
 	 */
 	static grey24(value: number): BgColor {
-		safety.intInRangeInc(value, 0, 23, 'value');
+		somewhatSafe.uint.atMost('value', value, 23);
 		const start = 232;
 		return new BgColor([bg_expand, color_index, start + value]);
 	}
@@ -474,9 +472,9 @@ export class BgColor extends StyleSet {
 	 * @returns
 	 */
 	static rgb6(r: number, g: number, b: number): BgColor {
-		safety.intInRangeInc(r, 0, 5, 'r');
-		safety.intInRangeInc(g, 0, 5, 'g');
-		safety.intInRangeInc(b, 0, 5, 'b');
+		somewhatSafe.uint.atMost('r', r, 5);
+		somewhatSafe.uint.atMost('g', g, 5);
+		somewhatSafe.uint.atMost('b', b, 5);
 		//Grid starts at 16, r goes up by 36, g by 6, b by 1
 		const start = 16;
 		return new BgColor([bg_expand, color_index, start + r * 36 + g * 6 + b]);
@@ -501,33 +499,33 @@ export function reset(): string {
  * Render TeleTYpewriter text /w CSI/SGR control codes - use as a template literal
  * @example tty`{Color.red}Red{Color.default} means stop`
  * @example tty`{Underline.single}Underline automatically removed at end of line`
- * 
- * @param strings 
- * @param expressions 
- * @returns 
+ *
+ * @param strings
+ * @param expressions
+ * @returns
  */
 export function tty(
 	strings: TemplateStringsArray,
 	...expressions: unknown[]
 ): string {
-    const ret=[];
+	const ret = [];
 	const ctx = new StyleContext();
 	for (let i = 0; i < expressions.length; i++) {
-        ret.push(strings[i]);
+		ret.push(strings[i]);
 		const e = expressions[i];
 		if (e instanceof StyleSet) {
-            ret.push(ctx.add(e));
+			ret.push(ctx.add(e));
 		} else if (e instanceof Ctrl) {
-            ret.push(e.exec());
+			ret.push(e.exec());
 		} else {
 			//Anything that isn't a style set will just be added as a string
-            ret.push(e);
+			ret.push(e);
 		}
 	}
 	//Add the last string literal
-    ret.push(strings[strings.length - 1]);
-    //Add any cleanup
-    ret.push(ctx.cleanup());
+	ret.push(strings[strings.length - 1]);
+	//Add any cleanup
+	ret.push(ctx.cleanup());
 	return ret.join('');
 }
 
@@ -582,14 +580,18 @@ export function demo(): string {
 			'white',
 		];
 		for (let i = 0; i < named.length; i++) {
-            //TypeScript doesn't consider keyof an object to be a string to force us to consider
-            // super-sets (where other keys may be present) implicit explicit any
+			//TypeScript doesn't consider keyof an object to be a string to force us to consider
+			// super-sets (where other keys may be present) implicit explicit any
 			fg +=
-				tty` [${Color[named[i] as (keyof typeof Color)]}${stringExt.padStart(named[i], w)}` +
-				']';
+				tty` [${Color[named[i] as keyof typeof Color]}${stringExt.padStart(
+					named[i],
+					w
+				)}` + ']';
 			bg +=
-                tty` [${BgColor[named[i] as (keyof typeof BgColor)]}${stringExt.padStart(named[i], w)}` +
-				']';
+				tty` [${BgColor[named[i] as keyof typeof BgColor]}${stringExt.padStart(
+					named[i],
+					w
+				)}` + ']';
 			if ((i & 3) === 3) {
 				fg += '\n';
 				bg += '\n';
@@ -642,7 +644,7 @@ export function demo(): string {
 			fg += '\n';
 			bg += '\n';
 		}
-        for (let r = 0; r < 256; r += 32) {
+		for (let r = 0; r < 256; r += 32) {
 			for (let g = 128; g < 256; g += 32) {
 				for (let b = 0; b < 256; b += 32) {
 					fg += tty`${Color.rgb(r, g, b)}${largeFg}`;
@@ -674,4 +676,3 @@ export function demo(): string {
 //cmd.exe
 // @for /f tokens^=2 %L in ('mode con^|find "Lin"')do echo %~L
 // @for /f tokens^=2 %L in ('mode con^|find "Col"')do echo %~L
-

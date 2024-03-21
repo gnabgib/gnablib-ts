@@ -2,8 +2,7 @@
 
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { nameValue } from '../../primitive/nameValue.js';
-import { somewhatSafe as safe } from '../../safe/index.js';
+import { somewhatSafe as safe } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 const blockSize = 16;
@@ -394,10 +393,10 @@ function expandKey(key: Uint8Array, enc: Uint32Array, dec: Uint32Array): void {
  * Also known by its original name Rijndael, AES is a symmetric-key block cipher, designed in 1998 by
  * [Joan Daemen](https://en.wikipedia.org/wiki/Joan_Daemen) and [Vincent Rijmen](https://en.wikipedia.org/wiki/Vincent_Rijmen)
  *
- * First Published: *1998*  
- * Block size: *16 bytes*  
- * Key Size: *16, 24, 32 bytes*  
- * Nonce size: *0 bytes*  
+ * First Published: *1998*
+ * Block size: *16 bytes*
+ * Key Size: *16, 24, 32 bytes*
+ * Nonce size: *0 bytes*
  * Rounds: *10, 12, 14* (key size dependent)
  *
  * Specified in
@@ -530,7 +529,7 @@ export class Aes implements IBlockCrypt {
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		safe.len.atLeast(...nameValue({block}),byteStart+blockSize);
+		safe.len.atLeast('block', block, byteStart + blockSize);
 		this._decBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 
@@ -542,7 +541,7 @@ export class Aes implements IBlockCrypt {
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		safe.len.atLeast(...nameValue({block}),byteStart+blockSize);
+		safe.len.atLeast('block', block, byteStart + blockSize);
 		this._encBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 }

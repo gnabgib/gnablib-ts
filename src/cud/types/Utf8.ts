@@ -1,15 +1,14 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import {
-	EnforceTypeError,
-	NullError,
-} from '../../primitive/ErrorExt.js';
+import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
-import { ACudColType } from './CudColType.js';
+import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { utf8 } from '../../codec/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { safety } from '../../primitive/Safety.js';
+import { somewhatSafe } from '../../safe/safe.js';
+import { IProblem } from '../../error/probs/interfaces/IProblem.js';
+import { TypeProblem } from '../../error/probs/TypeProblem.js';
 
 abstract class AUtf8 extends ACudColType implements IValid<string> {
 	protected abstract get _lenBytes(): number;
@@ -26,14 +25,12 @@ abstract class AUtf8 extends ACudColType implements IValid<string> {
 		return input.length + this._lenBytes;
 	}
 
-	valid(input: string | undefined): Error | undefined {
-		if (input === undefined || input === null) {
-			if (!this.nullable) return new NullError('Utf8');
+	valid(input: string | undefined): IProblem | undefined {
+		if (input == undefined) {
+			if (!this.nullable) return TypeProblem.Null('Utf8');
 			return undefined;
-		} else if (!(typeof input === 'string')) {
-			return new EnforceTypeError('string', input);
 		}
-		safety.lenInRangeInc(input, 0, this._maxStrLen, 'input');
+		somewhatSafe.len.atMost('input', input, this._maxStrLen);
 	}
 
 	unknownBin(value: string | undefined): Uint8Array {
@@ -44,7 +41,7 @@ abstract class AUtf8 extends ACudColType implements IValid<string> {
 			throw new TypeError('String required');
 		}
 		const b = utf8.toBytes(value);
-		safety.lenInRangeInc(b, 0, this._maxStrLen, 'value-bytes');
+		somewhatSafe.len.atMost('value-bytes', b, this._maxStrLen);
 
 		const ret = new Uint8Array(this._lenBytes + b.length);
 		let lenPtr = this._lenBytes - 1;

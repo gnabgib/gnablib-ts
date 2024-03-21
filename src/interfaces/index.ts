@@ -47,5 +47,14 @@ export {
 	type ILogTarget,
 	type ILogOracle,
 } from '../runtime/interfaces/ForLog.js';
+// Safe
+export type {
+	ISafeInt,
+	ISafeUint,
+	ISafeFloat,
+	ISafeLen,
+	ISafeStr,
+	ISafe,
+} from '../safe/interfaces/ForSafe.js';
 // Test
 export type { errorSetting } from '../test/interfaces/errorSetting.js';

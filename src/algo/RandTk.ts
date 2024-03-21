@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from '../primitive/Safety.js';
+import { somewhatSafe } from '../safe/safe.js';
 import { IRandSrc } from './interfaces/IRandSrc.js';
 
 /**
@@ -63,7 +63,7 @@ export class RandTk {
 	weightedCumulative(weights: number[]): number {
 		let last = 0;
 		for (let i = 0; i < weights.length; i++) {
-			safety.numGte(weights[i], last, `weights[${i}]`);
+			somewhatSafe.int.gte(`weights[${i}]`, weights[i], last);
 			last = weights[i];
 		}
 		//Todo make sure weights are logical (w[n]>=0, w[n]>=w[n-1])

@@ -1,23 +1,25 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import {
-	EnforceTypeError,
-	NullError,
-	OutOfRangeError,
-} from '../../primitive/ErrorExt.js';
+import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
-import { ACudColType } from './CudColType.js';
+import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { Int64 } from '../../primitive/Int64.js';
 import { TableName } from '../TableName.js';
 import { ColName } from '../ColName.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { safety } from '../../primitive/Safety.js';
+import { somewhatSafe } from '../../safe/safe.js';
+import { IProblem } from '../../error/probs/interfaces/IProblem.js';
+import { TypeProblem } from '../../error/probs/TypeProblem.js';
+import { RangeProblem } from '../../error/probs/RangeProblem.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = new Int64(0, 0);
 
-export abstract class ARef extends ACudColType implements IValid<number | Int64> {
+export abstract class ARef
+	extends ACudColType
+	implements IValid<number | Int64>
+{
 	protected abstract get _maxByteLen(): number;
 	protected abstract get _max64(): Int64;
 	protected abstract get _cudPrefix(): string;
@@ -37,26 +39,26 @@ export abstract class ARef extends ACudColType implements IValid<number | Int64>
 		);
 	}
 
-	cudByteSize(_input: number): number {
+	cudByteSize(): number {
 		return this._maxByteLen;
 	}
 
-	valid(input: number | Int64 | undefined): Error | undefined {
+	valid(input: number | Int64 | undefined): IProblem | undefined {
 		let i64: Int64;
-		if (input === undefined || input === null) {
-			if (!this.nullable) return new NullError('Ref');
-			return undefined;
+		if (input == undefined) {
+			if (!this.nullable) return TypeProblem.Null('Ref');
+			return;
 		} else if (input instanceof Int64) {
 			i64 = input;
 			//if (input.lt(min64) || input.gt(max64)) return new OutOfRangeError('Id', input, min64, max64);
-		} else if (typeof input === 'number' && Number.isInteger(input)) {
+		} else if (Number.isInteger(input)) {
 			//Good
 			i64 = Int64.fromNumber(input);
 		} else {
-			return new EnforceTypeError('Integer|Int64', input);
+			return TypeProblem.UnexpVal('Ref', input, 'integer or Int64');
 		}
 		if (i64.lt(min64) || i64.gt(this._max64))
-			return new OutOfRangeError('Ref', input, min64, this._max64);
+			return RangeProblem.IncInc('Ref', input, min64, this._max64);
 	}
 
 	toBin(): Uint8Array {
@@ -87,7 +89,7 @@ export abstract class ARef extends ACudColType implements IValid<number | Int64>
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		safety.lenInRangeInc(n,0,this._maxByteLen,'i64-bytes');
+		somewhatSafe.len.atMost('i64-bytes', n, this._maxByteLen);
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;

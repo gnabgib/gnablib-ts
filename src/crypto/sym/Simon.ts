@@ -2,7 +2,7 @@
 
 import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
 import { U64Mut } from '../../primitive/number/U64.js';
-import { somewhatSafe } from '../../safe/index.js';
+import { somewhatSafe } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 // https://nsacyber.github.io/simon-speck/implementations/ImplementationGuide1.1.pdf

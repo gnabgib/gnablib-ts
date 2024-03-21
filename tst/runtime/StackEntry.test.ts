@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { StackEntry } from '../../src/runtime/StackEntry';
 import { WindowStr } from '../../src/primitive/WindowStr';
-import { ParseProblem } from '../../src/error/ParseProblem';
+import { ParseProblem } from '../../src/error/probs/ParseProblem';
 import util from 'util';
 import { config } from '../config.ts';
 import { Color } from '../../src/cli/tty.ts';

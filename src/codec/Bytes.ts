@@ -1,6 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { safety } from '../primitive/Safety.js';
+import { somewhatSafe } from '../safe/safe.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -22,7 +23,7 @@ export function toBytes(bytes: string): Uint8Array {
 	let idx = 0;
 	for (const strByte of stringBytes) {
 		const int = parseInt(strByte, 10);
-		safety.intInRangeInc(int,0,255,`bytes[${idx}]`);
+		somewhatSafe.int.inRangeInc(`bytes[${idx}]`,int,0,255);
 		ret[idx++] = int;
 	}
 	return ret;

@@ -4,7 +4,7 @@ import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { Bin1, Bin2, Bin3, Bin4ish } from './Bin.js';
 import { Bool } from './Bool.js';
 import { ColType } from './ColType.js';
-import type { ACudColType } from './CudColType.js';
+import type { ACudColType } from './ACudColType.js';
 import { DateTimeCol } from './DateTime.js';
 import { Float4, Float8 } from './Float.js';
 import { Id2, Id4, Id8 } from './Id.js';

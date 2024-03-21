@@ -1,9 +1,9 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
-import { InvalidValueError } from '../../primitive/ErrorExt.js';
+import { ContentError } from '../../error/ContentError.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { somewhatSafe } from '../../safe/index.js';
+import { somewhatSafe } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
 const blockSize = 64; //16*32bit = 512bit
@@ -74,7 +74,7 @@ class ChaCha implements IFullCrypt {
 			//256 bit key
 			k = key.slice();
 			rc = sigma;
-		} else throw new InvalidValueError('key.length', key.length, 16, 32);
+		} else throw new ContentError('should be 16 or 32','key.length',key.length);
 		somewhatSafe.len.exactly('nonce', nonce, 12); //96 bit nonce
 		asLE.i32(k, 0, 8);
 

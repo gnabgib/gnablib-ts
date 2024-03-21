@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import type { Int64 } from '../primitive/Int64.js';
 import type { Uint64 } from '../primitive/Uint64.js';
@@ -15,7 +15,7 @@ import type {
 	ReadonlyUint8Array,
 } from '../primitive/ReadonlyTypedArray.js';
 import { isLE } from '../endian/platform.js';
-import { safety } from '../primitive/Safety.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 export class ArrayBufferWindowReader {
 	private readonly _view: DataView;
@@ -540,12 +540,12 @@ export class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		safety.intInRangeInc(start,0,buffer.byteLength-1,'start');
+		somewhatSafe.uint.atMost('start',start,buffer.byteLength-1);
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {
 			//Note when end===start (allowed) the window has 0 length
-			safety.intInRangeInc(end, start, buffer.byteLength, 'end');
+			somewhatSafe.int.inRangeInc('end',end,start,buffer.byteLength);
 		}
 		if (buffer instanceof ArrayBufferWindow) {
 			this._buffer = buffer._buffer;

@@ -10,7 +10,6 @@ export { Lazy } from './Lazy.js';
 export { MatchSuccess, MatchFail } from './MatchResult.js';
 //export * from './ReadonlyTypedArray_es2020.js';
 export * from './ReadonlyTypedArray.js';
-export { safety } from './Safety.js';
 export { StringBuilder } from './StringBuilder.js';
 export { stringExt } from './StringExt.js';
 export {

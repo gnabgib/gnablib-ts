@@ -1,7 +1,7 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { utf8 } from '../codec/Utf8.js';
-import { safety } from '../primitive/Safety.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 const ord_0 = 48; //char '0'
 
@@ -12,7 +12,7 @@ export function luhnStr(str: string): number {
 	let mul = 2;
 	while (ptr >= 0) {
 		let val = bytes[ptr--] - ord_0;
-		safety.intInRangeInc(val, 0, 10, `str-bytes[${ptr + 1}]`);
+		somewhatSafe.uint.atMost(`str-bytes[${ptr+1}]`,val,10);
 		val *= mul;
 		sum += ((val % 10) + val / 10) | 0;
 		mul = 1 + (mul % 2);

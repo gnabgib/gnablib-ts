@@ -2,7 +2,7 @@
 
 import { asBE } from '../../endian/platform.js';
 import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
-import { safety } from '../../primitive/Safety.js';
+import { somewhatSafe } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 // A Feistel cipher
@@ -275,7 +275,7 @@ export class Blowfish implements IBlockCrypt {
 	}
 
 	private init(key: Uint8Array): void {
-		safety.intInRangeInc(key.length, minKeyLen, maxKeyLen, 'key.length');
+		somewhatSafe.len.inRangeInc('key',key,minKeyLen,maxKeyLen);
 		//initialize P box w/ key
 		let k: number;
 		for (let i = 0, p = 0; i < pArr.length; i++) {

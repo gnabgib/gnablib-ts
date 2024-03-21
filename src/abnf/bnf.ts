@@ -12,7 +12,7 @@ import { utf } from '../primitive/Utf.js';
 import type { WindowStr } from '../primitive/WindowStr.js';
 import { IBnf } from './interfaces/IBnf.js';
 import { IBnfRepeat } from './interfaces/IBnfRepeat.js';
-import { somewhatSafe } from '../safe/index.js';
+import { somewhatSafe } from '../safe/safe.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 //Augmented Backus-Naur Form

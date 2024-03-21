@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from '../primitive/Safety.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 const ord_a = 97;
 const ord_z = 122;
@@ -16,8 +16,8 @@ const ord_9 = 57;
  * @returns
  */
 export function shift(bytes: Uint8Array, distA = 13, distD = 5): Uint8Array {
-	safety.intInRangeInc(distA,-25,25,'distA');
-	safety.intInRangeInc(distD,-9,9,'distD');
+	somewhatSafe.int.inRangeInc('distA', distA, -25, 25);
+	somewhatSafe.int.inRangeInc('distD', distD, -9, 9);
 	const ret = new Uint8Array(bytes.length);
 	//1000001 = x41 = 65 = A
 	//1100001 = x61 = 97 = a

@@ -3,8 +3,7 @@
 import { Uint64 } from '../primitive/Uint64.js';
 import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
 import { Int64 } from '../primitive/Int64.js';
-import { safety } from '../primitive/Safety.js';
-
+import { somewhatSafe } from '../safe/safe.js';
 
 /**
  * Copy the contents of @param sourceBytes at position @param sourcePos into @param target
@@ -25,8 +24,12 @@ export function u64IntoArrFromBytes(
 	sourcePos = 0
 ): void {
 	const byteCount = targetSize * size64Bytes;
-	safety.numInRangeInc(sourcePos,0,sourceBytes.length-byteCount);
-	safety.numInRangeInc(targetPos,0,target.length-targetSize,'targetPos');
+	somewhatSafe.uint.atMost(
+		'sourcePos',
+		sourcePos,
+		sourceBytes.length - byteCount
+	);
+	somewhatSafe.uint.atMost('targetPos', targetPos, target.length - targetSize);
 
 	const n = sourcePos + byteCount;
 	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
@@ -36,7 +39,6 @@ export function u64IntoArrFromBytes(
 		);
 	}
 }
-
 
 /**
  * Copy the content of an Array<Uint64> into @param targetBytes
@@ -51,17 +53,20 @@ export function u64ArrIntoBytesSafe(
 	targetBytes: Uint8Array,
 	targetPos = 0
 ): void {
-	let targetByteCount=targetBytes.length-targetPos;
-	let i=0;
-	while (targetByteCount>8) {
-		if (sourceU64s.length<=i) return;
-		targetBytes.set(sourceU64s[i].toBytes(),targetPos);
+	let targetByteCount = targetBytes.length - targetPos;
+	let i = 0;
+	while (targetByteCount > 8) {
+		if (sourceU64s.length <= i) return;
+		targetBytes.set(sourceU64s[i].toBytes(), targetPos);
 		i++;
-		targetPos+=size64Bytes;
-		targetByteCount-=size64Bytes;
+		targetPos += size64Bytes;
+		targetByteCount -= size64Bytes;
 	}
-	if (targetByteCount>0) {
-		targetBytes.set(sourceU64s[i].toBytes().slice(0,targetByteCount),targetPos);
+	if (targetByteCount > 0) {
+		targetBytes.set(
+			sourceU64s[i].toBytes().slice(0, targetByteCount),
+			targetPos
+		);
 	}
 }
 
@@ -144,13 +149,16 @@ export function u32IntoBytes(
 	targetBytes: Uint8Array,
 	targetPos = 0
 ): void {
-	safety.numInRangeInc(targetPos,0,targetBytes.length-size32Bytes,'targetBytes');
+	somewhatSafe.uint.atMost(
+		'targetBytes',
+		targetPos,
+		targetBytes.length - size32Bytes
+	);
 	targetBytes[targetPos] = u32 >> 24;
 	targetBytes[targetPos + 1] = u32 >> 16;
 	targetBytes[targetPos + 2] = u32 >> 8;
 	targetBytes[targetPos + 3] = u32;
 }
-
 
 //No meaning: (endian is about byte order)
 // - u8FromBytes

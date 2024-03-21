@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import type { ACudColType } from './types/CudColType.js';
+import type { ACudColType } from './types/ACudColType.js';
 import { ColName } from './ColName.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { cudColTypeFromBin } from './types/cudColTypeFromBin.js';

@@ -1,9 +1,9 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { ParseProblem } from '../../src/error/ParseProblem';
+import { ParseProblem } from '../../../src/error/probs/ParseProblem';
 import util from 'util';
-import { Color } from '../../src/cli/tty';
-import { config } from '../config';
+import { Color } from '../../../src/cli/tty';
+import { config } from '../../config';
 
 const tsts = suite('ParseProblem');
 const DEMO=false || config.getBool('demo');

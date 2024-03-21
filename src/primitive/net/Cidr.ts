@@ -4,7 +4,7 @@ import { bitExt } from '../BitExt.js';
 import { IpV4 } from './Ip.js';
 import { ContentError } from '../../error/ContentError.js';
 import { UInt } from '../number/index.js';
-import { somewhatSafe } from '../../safe/index.js';
+import { somewhatSafe } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Cidr';

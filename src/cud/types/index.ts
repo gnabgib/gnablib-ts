@@ -5,7 +5,7 @@ export { Bin1, Bin2, Bin3, Bin4ish } from './Bin.js';
 export { Bool } from './Bool.js';
 export { ColType } from './ColType.js';
 export { Command, CommandCtrl, CommandData } from './Command.js';
-export { ACudColType } from './CudColType.js';
+export { ACudColType } from './ACudColType.js';
 export { cudColTypeFromBin } from './cudColTypeFromBin.js';
 export { DateTimeCol } from './DateTime.js';
 export { Float4, Float8 } from './Float.js';

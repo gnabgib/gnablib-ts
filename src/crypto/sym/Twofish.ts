@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
+import { ContentError } from '../../error/ContentError.js';
 import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
-import { InvalidValueError } from '../../primitive/ErrorExt.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
@@ -152,13 +152,10 @@ export class Twofish implements IBlockCrypt {
 	readonly #k = new Uint32Array(40);
 
 	constructor(key: Uint8Array) {
-		switch (key.length) {
-			case 16:
-			case 24:
-			case 32:
-				break;
-			default:
-				throw new InvalidValueError('key', key.length, 16, 24, 32);
+		const k8=key.length>>3;
+		if (/*multiple of 8*/(key.length&7)!=0 || k8<2 || k8>4) {
+			//Make sure key is a multiple of 8 and either 2 (16), 3(24) or 4(32)
+			throw new ContentError('should be 16, 24, or 32','key.length',key.length);
 		}
 
 		/**Number of u64 */

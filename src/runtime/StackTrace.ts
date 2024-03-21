@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 import { WindowStr } from '../primitive/WindowStr.js';
-import { ParseProblem } from '../error/ParseProblem.js';
+import { ParseProblem } from '../error/probs/ParseProblem.js';
 import { StackEntry } from './StackEntry.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');

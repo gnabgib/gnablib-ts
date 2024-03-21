@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { somewhatSafe as safe } from '../safe/index.js';
+import { somewhatSafe as safe } from '../safe/safe.js';
 
 const mask = [0xff, 0x7f, 0x3f, 0x1f, 0xf, 0x7, 0x3, 0x1];
 

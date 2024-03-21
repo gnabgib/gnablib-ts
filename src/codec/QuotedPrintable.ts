@@ -1,9 +1,9 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from '../primitive/Safety.js';
 import { ContentError } from '../error/ContentError.js';
 import { hex } from './Hex.js';
 import { IQuotedPrintableEncodeOpts } from './interfaces/IQuotedPrintableEncodeOpts.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 //https://en.wikipedia.org/wiki/Quoted-printable
 //https://datatracker.ietf.org/doc/html/rfc2045#section-6.7
@@ -16,11 +16,14 @@ export const quotedPrintable = {
 	 * @param opts
 	 * @returns
 	 */
-	fromBytes: function (bytes: Uint8Array, opts?: IQuotedPrintableEncodeOpts): string {
+	fromBytes: function (
+		bytes: Uint8Array,
+		opts?: IQuotedPrintableEncodeOpts
+	): string {
 		let maxLineLength: number;
 		if (opts?.lineLength !== undefined) {
 			//Lower bound is 3 because a single char can encode to 3 chars (eg 61)
-			safety.intInRangeInc(opts.lineLength,3,998,'opts.lineLength');
+			somewhatSafe.int.inRangeInc('opts.lineLength', opts.lineLength, 3, 998);
 			maxLineLength = opts.lineLength;
 		} else {
 			maxLineLength = 76;

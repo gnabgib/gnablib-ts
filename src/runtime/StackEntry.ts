@@ -1,7 +1,7 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 import { WindowStr } from '../primitive/WindowStr.js';
 import { color, style } from '../cli/csi-tables.js';
-import { ParseProblem } from '../error/ParseProblem.js';
+import { ParseProblem } from '../error/probs/ParseProblem.js';
 import { config } from './Config.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');

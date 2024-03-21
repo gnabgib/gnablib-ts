@@ -2,7 +2,7 @@
 
 import { utf8 } from '../codec/Utf8.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
-import { safety } from '../primitive/Safety.js';
+import { somewhatSafe } from '../safe/safe.js';
 
 const minLen = 1; //We don't support empty names
 const maxLen = 63;
@@ -37,7 +37,7 @@ export class TableName {
 	 */
 	static fromStr(name: string): TableName {
 		const bytes = utf8.toBytes(name);
-		safety.lenInRangeInc(bytes,minLen,maxLen,'name-bytes');
+		somewhatSafe.len.inRangeInc('name-bytes',bytes,minLen,maxLen);
 		return new TableName(name, bytes);
 	}
 
@@ -47,7 +47,7 @@ export class TableName {
 	 * @returns
 	 */
 	static fromUtf8Bytes(utf8bytes: Uint8Array): TableName {
-		safety.lenInRangeInc(utf8bytes,minLen,maxLen,'utf8bytes');
+		somewhatSafe.len.inRangeInc('utf8bytes',utf8bytes,minLen,maxLen);
 		const n = utf8.fromBytes(utf8bytes);
 		return new TableName(n, utf8bytes);
 	}

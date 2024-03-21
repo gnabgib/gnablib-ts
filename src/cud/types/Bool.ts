@@ -1,10 +1,12 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
-import { ACudColType } from './CudColType.js';
+import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
+import { IProblem } from '../../error/probs/interfaces/IProblem.js';
+import { TypeProblem } from '../../error/probs/TypeProblem.js';
 
 export class Bool extends ACudColType implements IValid<boolean> {
 	readonly mysqlType = 'tinyint(1)'; //boolean,bool map
@@ -17,13 +19,13 @@ export class Bool extends ACudColType implements IValid<boolean> {
 		super(nullable);
 	}
 
-	cudByteSize(_input: boolean): number {
+	cudByteSize(): number {
 		return 1;
 	}
 
-	valid(input: boolean | undefined): Error | undefined {
-		if (input === undefined || input === null) {
-			if (!this.nullable) return new NullError('Bool');
+	valid(input: boolean | undefined): IProblem | undefined {
+		if (input == undefined) {
+			if (!this.nullable) return TypeProblem.Null('input');
 		}
 	}
 

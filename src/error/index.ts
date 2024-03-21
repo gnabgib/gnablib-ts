@@ -8,10 +8,11 @@ export { InclusiveRangeError } from './InclusiveRangeError.js';
 export { LengthError } from './LengthError.js';
 export { LTError } from './LTError.js';
 export { NegativeError } from './NegativeError.js';
-export { NotInRangeError } from './NotInRangeError.js';
 export { NotEnoughSpaceError } from './NotEnoughSpaceError.js';
 export { NaNError } from './NaNError.js';
 export { ZeroError } from './ZeroError.js';
 
 // Problems (could be errors)
-export { ParseProblem } from './ParseProblem.js';
+export { ParseProblem } from './probs/ParseProblem.js';
+export { RangeProblem } from './probs/RangeProblem.js';
+export { TypeProblem } from './probs/TypeProblem.js';

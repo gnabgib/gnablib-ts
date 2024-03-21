@@ -1,6 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from '../../primitive/Safety.js';
+import { somewhatSafe } from '../../safe/safe.js';
 
 const blockSize256Bytes = 32; //512bits
 const blockSize512Bytes = 64; //512bits
@@ -14,7 +14,7 @@ class Ctx {
 	private readonly _digestSizeBytes;
 
 	constructor(digestSize256: number) {
-		safety.intInRangeInc(digestSize256,1,2,'digestSize256');
+		somewhatSafe.int.inRangeInc('digestSize256',digestSize256,1,2);
 		this._digestSizeBytes = digestSize256 * 256;
 		if (digestSize256 === 1) {
 			for (let i = 0; i < blockSize512Bytes; i++) this._h[i] = 0x01;
