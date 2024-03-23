@@ -1,8 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../codec/Hex.js';
-import { EnforceTypeError, NotSupportedError } from './ErrorExt.js';
-import { somewhatSafe } from '../safe/safe.js';
+import { NotSupportedError } from '../error/NotSupportedError.js';
+import { somewhatSafe, superSafe } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 //const maxI32 = 2147483647; // 0x7fffffff
@@ -359,8 +359,7 @@ export class Int64 {
 	 * @returns
 	 */
 	static fromNumber(number: number): Int64 {
-		if (!Number.isInteger(number))
-			throw new EnforceTypeError('Integer', number);
+		superSafe.int.is(number);
 		const low = number & maxU32;
 		const high = Math.floor(number / maxU32Plus1);
 		// let high = 0;

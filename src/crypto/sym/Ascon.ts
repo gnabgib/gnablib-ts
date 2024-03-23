@@ -182,7 +182,7 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		bRound: number
 	) {
 		super(rate, aRound, bRound);
-		somewhatSafe.int.inRangeInc('key.length', key.length, 0, 20); //0-160 bits
+		somewhatSafe.len.atMost('key', key, 20); //0-160 bits
 		somewhatSafe.len.exactly('nonce', nonce, 16); //128 bits
 		//Note rate/aRound/bRound are tunable but not expected to be exposed so no need for safety checks)
 		this.#key = key;

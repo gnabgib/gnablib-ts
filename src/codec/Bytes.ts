@@ -1,6 +1,5 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safety } from '../primitive/Safety.js';
 import { somewhatSafe } from '../safe/safe.js';
 /**
  * Support: (Uint8Array)
@@ -23,7 +22,7 @@ export function toBytes(bytes: string): Uint8Array {
 	let idx = 0;
 	for (const strByte of stringBytes) {
 		const int = parseInt(strByte, 10);
-		somewhatSafe.int.inRangeInc(`bytes[${idx}]`,int,0,255);
+		somewhatSafe.uint.atMost(`bytes[${idx}]`,int,255);
 		ret[idx++] = int;
 	}
 	return ret;

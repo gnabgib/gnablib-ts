@@ -1,7 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 export { bitExt, Carrier } from './BitExt.js';
-export * from './ErrorExt.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
 //export { Int64 } from './Int64_es2020.js';
 export { Int64 } from './Int64.js';

@@ -32,7 +32,7 @@ export const bfloat16 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		somewhatSafe.int.inRangeInc('pos', pos, 0, bytes.length - 2);
+		somewhatSafe.uint.atMost('pos', pos, bytes.length - 2);
 		const expand = new Uint8Array(4);
 		expand.set(bytes.subarray(pos, pos + 2));
 		return fpb32.fromBytes(expand, 0);

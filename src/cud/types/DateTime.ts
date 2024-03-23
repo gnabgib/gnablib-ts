@@ -1,6 +1,5 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
@@ -10,6 +9,7 @@ import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
+import { ContentError } from '../../error/ContentError.js';
 
 export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 	/*MySQL supports microsecond res, but only for years 1000-9999 which is smaller than -4713-294276 (doh)*/
@@ -29,14 +29,15 @@ export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 		return 8;
 	}
 
-	valid(input: DateTimeLocal | undefined): IProblem | undefined {
+	valid(input?: DateTimeLocal): IProblem | undefined {
 		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('input');
 		}
 	}
-	unknownBin(value: DateTimeLocal | undefined): Uint8Array {
+	unknownBin(value?: DateTimeLocal): Uint8Array {
 		if (!value) {
-			if (!this.nullable) throw new NullError('DateTime');
+			if (!this.nullable) 
+				throw new ContentError('cannot be null', 'DateTime', undefined);
 			return new Uint8Array([0]);
 		}
 		const bw = new BitWriter(Math.ceil(DateTimeLocal.serialBits / 8));

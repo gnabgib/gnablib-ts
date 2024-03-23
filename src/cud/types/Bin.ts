@@ -1,13 +1,13 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { somewhatSafe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
+import { ContentError } from '../../error/ContentError.js';
 
 const len1Byte = 255;
 const len2Byte = 65536; //65k
@@ -34,7 +34,7 @@ abstract class ABin extends ACudColType implements IValid<Uint8Array> {
 		}
 	}
 
-	abstract valid(input: Uint8Array | undefined): IProblem | undefined;
+	abstract valid(input?: Uint8Array): IProblem | undefined;
 }
 
 export class Bin1 extends ABin {
@@ -46,16 +46,17 @@ export class Bin1 extends ABin {
 		return input.length + 1;
 	}
 
-	valid(input: Uint8Array | undefined): IProblem | undefined {
+	valid(input?: Uint8Array): IProblem | undefined {
 		return this._valid(input, len1Byte);
 	}
 
-	unknownBin(value: Uint8Array | undefined): Uint8Array {
+	unknownBin(value?: Uint8Array): Uint8Array {
 		if (!value) {
-			if (!this.nullable) throw new NullError('Bin');
+			if (!this.nullable)
+				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
-		somewhatSafe.len.inRangeInc('value', value, 0, len1Byte);
+		somewhatSafe.len.atMost('value', value, len1Byte);
 		const ret = new Uint8Array(1 + value.length);
 		ret[0] = value.length;
 		ret.set(value, 1);
@@ -98,13 +99,14 @@ export class Bin2 extends ABin {
 		return input.length + 2;
 	}
 
-	valid(input: Uint8Array | undefined): IProblem | undefined {
+	valid(input?: Uint8Array): IProblem | undefined {
 		return this._valid(input, len2Byte);
 	}
 
-	unknownBin(value: Uint8Array): Uint8Array {
+	unknownBin(value?: Uint8Array): Uint8Array {
 		if (!value) {
-			if (!this.nullable) throw new NullError('Bin');
+			if (!this.nullable)
+				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
 		somewhatSafe.len.atMost('value', value, len2Byte);
@@ -151,13 +153,14 @@ export class Bin3 extends ABin {
 		return input.length + 3;
 	}
 
-	valid(input: Uint8Array | undefined): IProblem | undefined {
+	valid(input?: Uint8Array): IProblem | undefined {
 		return this._valid(input, len3Byte);
 	}
 
-	unknownBin(value: Uint8Array): Uint8Array {
+	unknownBin(value?: Uint8Array): Uint8Array {
 		if (!value) {
-			if (!this.nullable) throw new NullError('Bin');
+			if (!this.nullable)
+				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
 		somewhatSafe.len.atMost('value', value, len3Byte);
@@ -207,13 +210,14 @@ export class Bin4ish extends ABin {
 		return input.length + 4;
 	}
 
-	valid(input: Uint8Array | undefined): IProblem | undefined {
+	valid(input?: Uint8Array): IProblem | undefined {
 		return this._valid(input, len4Byte);
 	}
 
-	unknownBin(value: Uint8Array): Uint8Array {
+	unknownBin(value?: Uint8Array): Uint8Array {
 		if (!value) {
-			if (!this.nullable) throw new NullError('Bin');
+			if (!this.nullable)
+				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
 		somewhatSafe.len.atMost('value', value, len4Byte);

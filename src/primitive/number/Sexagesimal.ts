@@ -58,7 +58,7 @@ export class Sexagesimal implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Sexagesimal {
-		safe.int.inRangeInc('value', this.valueOf(), 0, 59);
+		safe.uint.atMost('value', this.valueOf(), 59);
 		return this;
 	}
 
@@ -81,7 +81,7 @@ export class Sexagesimal implements ISerializer {
 
 	/** Create a new sexagesimal number, range 0-59 */
 	public static new(v: number, storage?: Uint8Array): Sexagesimal {
-		safe.int.inRangeInc('value', v, 0, 59);
+		safe.uint.atMost('value', v, 59);
 		const stor = self.setupStor(storage);
 		stor[0] = v;
 		return new Sexagesimal(stor);
@@ -108,7 +108,7 @@ export class Sexagesimal implements ISerializer {
 			);
 		}
 		const iVal = parseInt(digits, 10);
-		safe.int.inRangeInc('value', iVal, 0, 59);
+		safe.uint.atMost('value', iVal, 59);
 		storage[0] = iVal;
 		input.shrink(digits.length);
 	}

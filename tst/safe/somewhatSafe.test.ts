@@ -44,25 +44,6 @@ for (const [test, inRange] of intInRange1To5) {
 	});
 }
 
-const intGt5Set:[number,boolean][]=[
-	[0,false],
-	[4,false],
-	[5,false],
-	[5.1,true],
-	[6,true],
-];
-for(const [test,inRange] of intGt5Set) {
-	if (inRange) {
-		tsts(`somewhatSafe.int.gt(${test},5)`,()=>{
-			assert.not.throws(()=>somewhatSafe.int.gt('$noun',test,5));
-		})
-	} else {
-		tsts(`somewhatSafe.int.gt(${test},5) throws`,()=>{
-			assert.throws(()=>somewhatSafe.int.gt('$noun',test,5));
-		})
-	}
-}
-
 const intGte5Set:[number,boolean][]=[
 	[0,false],
 	[4,false],

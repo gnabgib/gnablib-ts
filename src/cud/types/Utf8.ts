@@ -1,6 +1,5 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
@@ -9,6 +8,7 @@ import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { somewhatSafe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
+import { ContentError } from '../../error/ContentError.js';
 
 abstract class AUtf8 extends ACudColType implements IValid<string> {
 	protected abstract get _lenBytes(): number;
@@ -25,7 +25,7 @@ abstract class AUtf8 extends ACudColType implements IValid<string> {
 		return input.length + this._lenBytes;
 	}
 
-	valid(input: string | undefined): IProblem | undefined {
+	valid(input?: string): IProblem | undefined {
 		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('Utf8');
 			return undefined;
@@ -33,9 +33,10 @@ abstract class AUtf8 extends ACudColType implements IValid<string> {
 		somewhatSafe.len.atMost('input', input, this._maxStrLen);
 	}
 
-	unknownBin(value: string | undefined): Uint8Array {
-		if (value === null || value === undefined) {
-			if (!this.nullable) throw new NullError('String');
+	unknownBin(value?: string): Uint8Array {
+		if (value == undefined) {
+			if (!this.nullable) 
+				throw new ContentError('cannot be null', 'String', undefined);
 			return new Uint8Array([0]);
 		} else if (!(typeof value === 'string')) {
 			throw new TypeError('String required');

@@ -246,7 +246,6 @@ Name|Capacities|Optional parameters
 #### Extensions:
 
 - Bit
-- Error
 - Int
 - String
 - Uint8Array

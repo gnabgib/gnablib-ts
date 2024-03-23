@@ -91,6 +91,7 @@ export class ParseProblem implements IProblem {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		/* c8 ignore next*/
 		return config.getBool('color') ? this.inColor() : this.toString();
 	}
 }

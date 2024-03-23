@@ -1,7 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { nextPow2 } from '../algo/nextPow2.js';
-import { NotSupportedError } from './ErrorExt.js';
 import { IReadTyped } from './interfaces/IReadTyped.js';
 import { UInt } from './number/index.js';
 import type { IReadArray } from './interfaces/IReadArray.js';
@@ -721,7 +720,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 	 * @param dataSizeBytes Number of bytes the new buffer should be
 	 */
 	private _resize(dataSizeBytes: number, viewSizeEls: number) {
-		if (this._sizeLocked) throw new NotSupportedError('This array is locked');
+		if (this._sizeLocked) throw new Error('This array is locked');
 		//No need to check dataSizeBytes<= viewSizeEls * bytes per (this is an internal call)
 		if (dataSizeBytes < this._data.byteLength) {
 			//Downsize

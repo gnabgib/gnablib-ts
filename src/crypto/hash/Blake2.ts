@@ -83,7 +83,7 @@ class Blake2_32bit implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		somewhatSafe.int.inRangeInc('key.length', key.length, 0, 32);
+		somewhatSafe.uint.atMost('key.length', key.length, 32);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -346,7 +346,7 @@ class Blake2_64bit implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		somewhatSafe.int.inRangeInc('key.length', key.length, 0, 64);
+		somewhatSafe.uint.atMost('key.length', key.length, 64);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -624,7 +624,7 @@ export class Blake2s extends Blake2_32bit {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
 		somewhatSafe.int.inRangeInc('digestSize', digestSize, 1, 32);
-		somewhatSafe.int.inRangeInc('fanOut', fanOut, 0, 255);
+		somewhatSafe.uint.atMost('fanOut', fanOut, 255);
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
@@ -690,7 +690,7 @@ export class Blake2b extends Blake2_64bit {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
 		somewhatSafe.int.inRangeInc('digestSize', digestSize, 1, 64);
-		somewhatSafe.int.inRangeInc('fanOut', fanOut, 0, 255);
+		somewhatSafe.uint.atMost('fanOut', fanOut, 255);
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;

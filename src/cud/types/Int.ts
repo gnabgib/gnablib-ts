@@ -1,7 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Int64 } from '../../primitive/Int64.js';
-import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
@@ -10,6 +9,7 @@ import { somewhatSafe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { RangeProblem } from '../../error/probs/RangeProblem.js';
+import { ContentError } from '../../error/ContentError.js';
 
 //sql engines keep everything signed
 
@@ -26,7 +26,7 @@ abstract class AInt extends ACudColType implements IValid<number | Int64> {
 		return this._maxByteLen;
 	}
 
-	valid(input: number | Int64 | undefined): IProblem | undefined {
+	valid(input?: number | Int64): IProblem | undefined {
 		let i64: Int64;
 		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('Int');
@@ -44,10 +44,11 @@ abstract class AInt extends ACudColType implements IValid<number | Int64> {
 			return RangeProblem.IncInc('Int', input, this._min64, this._max64);
 	}
 
-	unknownBin(value: number | Int64 | undefined): Uint8Array {
+	unknownBin(value?: number | Int64): Uint8Array {
 		let i64: Int64;
-		if (value === null || value === undefined) {
-			if (!this.nullable) throw new NullError('Int');
+		if (value == undefined) {
+			if (!this.nullable) 
+				throw new ContentError('cannot be null', 'Int', undefined);
 			return new Uint8Array([0]);
 		} else if (value instanceof Int64) {
 			//Good

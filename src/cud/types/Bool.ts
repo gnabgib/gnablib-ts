@@ -1,12 +1,12 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
+import { ContentError } from '../../error/ContentError.js';
 
 export class Bool extends ACudColType implements IValid<boolean> {
 	readonly mysqlType = 'tinyint(1)'; //boolean,bool map
@@ -23,15 +23,16 @@ export class Bool extends ACudColType implements IValid<boolean> {
 		return 1;
 	}
 
-	valid(input: boolean | undefined): IProblem | undefined {
+	valid(input?: boolean): IProblem | undefined {
 		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('input');
 		}
 	}
 
-	unknownBin(value: boolean | undefined): Uint8Array {
+	unknownBin(value?: boolean): Uint8Array {
 		if (!value) {
-			if (!this.nullable) throw new NullError('Bool');
+			if (!this.nullable)
+				throw new ContentError('cannot be null', 'Bool', undefined);
 			return new Uint8Array([0]);
 		}
 		const ret = new Uint8Array(2);

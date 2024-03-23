@@ -58,7 +58,7 @@ export class Micro implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Micro {
-		safe.int.inRangeInc('value', this.valueOf(), 0, 999999);
+		safe.uint.atMost('value', this.valueOf(), 999999);
 		return this;
 	}
 
@@ -100,7 +100,7 @@ export class Micro implements ISerializer {
 
 	/** Create a new micro/millionth, range 0-999999 */
 	public static new(v: number, storage?: Uint8Array): Micro {
-		safe.int.inRangeInc('value', v, 0, 999999);
+		safe.uint.atMost('value', v, 999999);
 		const stor = self.setupStor(storage);
 		self.writeValue(stor, v);
 		return new Micro(stor);
@@ -133,7 +133,7 @@ export class Micro implements ISerializer {
 			effDigits = (digits + '000000').substring(0, 6);
 		}
 		const iVal = parseInt(effDigits, 10);
-		safe.int.inRangeInc(name, iVal, 0, 999999);
+		safe.uint.atMost(name, iVal, 999999);
 		self.writeValue(storage, iVal);
 		input.shrink(digits.length);
 	}

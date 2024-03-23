@@ -19,7 +19,7 @@ export class Cidr {
 	readonly mask: number;
 
 	constructor(ipv4: IpV4, mask: number) {
-		somewhatSafe.int.inRangeInc('mask',mask,0,32);
+		somewhatSafe.uint.atMost('mask', mask, 32);
 		const ipv4Int = ipv4.valueOf();
 		this.bitMask = bitExt.lsbs(32 - mask);
 		const startInt = (ipv4Int & ~this.bitMask) >>> 0;
@@ -109,7 +109,7 @@ export class Cidr {
 	 */
 	static fromString(value: string): Cidr {
 		const parts = value.split('/');
-		somewhatSafe.len.exactly('parts',parts,2);
+		somewhatSafe.len.exactly('parts', parts, 2);
 		const ipv4 = IpV4.fromString(parts[0]);
 		const mask = UInt.parseDec(parts[1]);
 		if (mask === undefined)

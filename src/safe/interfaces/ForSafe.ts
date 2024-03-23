@@ -9,8 +9,6 @@ export interface ISafeInt {
 
     /** May throw if $test <$lowIn or >highInc  */
 	inRangeInc(noun: string, test: number, lowInc: number, highInc: number): void;
-	/** May throw if $test <= $gt */
-	gt(noun: string, test: number, gt: number): void;
 	/** May throw if $test < $gte */
 	gte(noun: string, test: number, gte: number): void;
 	/** Make sure that $test is <$lt */

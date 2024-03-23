@@ -1,9 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../codec/Hex.js';
-import { EnforceTypeError, NotSupportedError } from './ErrorExt.js';
-import { NegativeError } from '../error/NegativeError.js';
-import { somewhatSafe } from '../safe/safe.js';
+import { NotSupportedError } from '../error/NotSupportedError.js';
+import { somewhatSafe, superSafe } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = 0x100000000;
@@ -338,9 +337,7 @@ export class Uint64 {
 	 * @returns
 	 */
 	static fromNumber(number: number): Uint64 {
-		if (number < 0) throw new NegativeError('number', number);
-		if (!Number.isInteger(number))
-			throw new EnforceTypeError('Integer', number);
+		superSafe.uint.is(number);
 		//Mask the low 32 bits (also stops it being floating point)
 		const low = number & maxU32;
 		const high = Math.floor(number / maxU32Plus1);

@@ -159,7 +159,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 		if (this.start.caseInsensitive || this.end.caseInsensitive)
 			throw new RangeError('You can only specify case sensitive characters.');
 		this.nonPrintable = this.start.nonPrintable || this.end.nonPrintable;
-		somewhatSafe.int.gt('end.ord',this.end.ord,this.start.ord);
+		somewhatSafe.int.gte('end.ord',this.end.ord,this.start.ord+1);
 		this.name = name;
 	}
 

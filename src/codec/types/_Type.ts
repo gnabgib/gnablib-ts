@@ -36,7 +36,7 @@ import { Int64 } from '../../primitive/Int64.js';
 import { Uint64 } from '../../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../ieee754-fpb.js';
 import { utf8 } from '../Utf8.js';
-import { BinResult, FromBinResult } from '../../primitive/FromBinResult.js';
+import { BinResult } from '../../primitive/FromBinResult.js';
 import type {
 	/*ReadonlyBigInt64Array,*/ ReadonlyInt16Array,
 	ReadonlyInt32Array,

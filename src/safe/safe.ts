@@ -16,7 +16,6 @@ safe.int.inRangeInclusive(test:number,low:number,high:number) //May throw RangeE
 
 import { AtMostError } from '../error/AtMostError.js';
 import { GTEError } from '../error/GTEError.js';
-import { GTError } from '../error/GTError.js';
 import { InclusiveRangeError } from '../error/InclusiveRangeError.js';
 import { LTError } from '../error/LTError.js';
 import { LengthError } from '../error/LengthError.js';
@@ -117,10 +116,6 @@ export const somewhatSafe: ISafe = {
 			if (test >= lowInc && test <= highInc) return;
 			throw new InclusiveRangeError(noun, test, lowInc, highInc);
 		},
-		gt(noun: string, test: number, gt: number) {
-			if (test > gt) return;
-			throw new GTError(noun, test, gt);
-		},
 		gte(noun: string, test: number, gte: number) {
 			if (test >= gte) return;
 			throw new GTEError(noun, test, gte);
@@ -169,12 +164,6 @@ export const superSafe: ISafe = {
 				throw new TypeError(`Not an integer: ${test}`);
 			if (test < lowInc || test > highInc)
 				throw new InclusiveRangeError(noun, test, lowInc, highInc);
-		},
-		gt(noun: string, test: number, gt: number) {
-			if (!Number.isSafeInteger(test))
-				throw new TypeError(`Not an integer: ${test}`);
-			if (test > gt) return;
-			throw new GTError(noun, test, gt);
 		},
 		gte(noun: string, test: number, gte: number) {
 			if (!Number.isSafeInteger(test))

@@ -20,4 +20,3 @@ export class NegativeError extends RangeError {
 		return 'NegativeError';
 	}
 }
-

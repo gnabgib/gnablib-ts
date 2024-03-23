@@ -305,10 +305,10 @@ class Core {
 		/*vetDay*/ safe.int.inRangeInc('day', d, 1, Month.lastDay(m, y));
 	}
 	protected static vetTime(h: number, i: number, s: number, u: number): void {
-		/*vetHour*/ safe.int.inRangeInc('hour', h, 0, 23);
-		/*vetMinute*/ safe.int.inRangeInc('minute', i, 0, 59);
-		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
-		/*vetMicro*/ safe.int.inRangeInc('microsecond', u, 0, 999999);
+		/*vetHour*/ safe.uint.atMost('hour', h, 23);
+		/*vetMinute*/ safe.uint.atMost('minute', i, 59);
+		/*vetSecond*/ safe.uint.atMost('second', s, 59);
+		/*vetMicro*/ safe.uint.atMost('microsecond', u, 999999);
 	}
 
 	protected static parseYear(
@@ -929,7 +929,7 @@ export class Year extends Core implements ISerializer {
 
 	/** Create a new year in Holocene format, range 0 - 32767*/
 	public static newHolocene(year: number): Year {
-		safe.int.inRangeInc('year', year, 0, maxHeYear);
+		safe.uint.atMost('year', year, maxHeYear);
 		const dv = new DataView(new ArrayBuffer(yearBytes));
 		wYear(dv, 0, year - 10000);
 		return new Year(dv);
@@ -1725,7 +1725,7 @@ export class Hour extends Core implements ISerializer {
 
 	/** Create a new hour, range 0-23 */
 	public static new(v: number): Hour {
-		/*vetHour*/ safe.int.inRangeInc('hour', v, 0, 23);
+		/*vetHour*/ safe.uint.atMost('hour', v, 23);
 		const dv = new DataView(new ArrayBuffer(hourBytes));
 		wHour(dv, 0, v);
 		return new Hour(dv);
@@ -1894,7 +1894,7 @@ export class Minute extends Core implements ISerializer {
 
 	/** Create a new minute, range 0-59 */
 	public static new(v: number): Minute {
-		/*vetMinute*/ safe.int.inRangeInc('minute', v, 0, 59);
+		/*vetMinute*/ safe.uint.atMost('minute', v, 59);
 		const dv = new DataView(new ArrayBuffer(minBytes));
 		wMin(dv, 0, v);
 		return new Minute(dv);
@@ -2063,7 +2063,7 @@ export class Second extends Core implements ISerializer {
 
 	/** Create a new second, range 0-59 */
 	public static new(v: number): Second {
-		/*vetSecond*/ safe.int.inRangeInc('second', v, 0, 59);
+		/*vetSecond*/ safe.uint.atMost('second', v, 59);
 		const dv = new DataView(new ArrayBuffer(secBytes));
 		wSec(dv, 0, v);
 		return new Second(dv);
@@ -2222,7 +2222,7 @@ export class Millisecond extends Core implements ISerializer {
 
 	/** Create a new Millisecond, range 0-999 */
 	public static new(v: number): Millisecond {
-		/*vetMilli*/ safe.int.inRangeInc('millisecond', v, 0, 999);
+		/*vetMilli*/ safe.uint.atMost('millisecond', v, 999);
 		const dv = new DataView(new ArrayBuffer(milliBytes));
 		wMilli(dv, 0, v);
 		return new Millisecond(dv);
@@ -2390,7 +2390,7 @@ export class Microsecond extends Core implements ISerializer {
 
 	/** Create a new Microsecond, range 0-999999 */
 	public static new(v: number): Microsecond {
-		/*vetMicro*/ safe.int.inRangeInc('microsecond', v, 0, 999999);
+		/*vetMicro*/ safe.uint.atMost('microsecond', v, 999999);
 		const dv = new DataView(new ArrayBuffer(microBytes));
 		wMicro(dv, 0, v);
 		return new Microsecond(dv);
@@ -2915,10 +2915,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 * @param ms Milliseconds 0-999
 	 */
 	public static new(h: number, i: number, s: number, ms: number): TimeOnlyMs {
-		/*vetHour*/ safe.int.inRangeInc('hour', h, 0, 23);
-		/*vetMinute*/ safe.int.inRangeInc('minute', i, 0, 59);
-		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
-		/*vetMilli*/ safe.int.inRangeInc('millisecond', ms, 0, 999);
+		/*vetHour*/ safe.uint.atMost('hour', h, 23);
+		/*vetMinute*/ safe.uint.atMost('minute', i, 59);
+		/*vetSecond*/ safe.uint.atMost('second', s, 59);
+		/*vetMilli*/ safe.uint.atMost('millisecond', ms, 999);
 
 		const dv = new DataView(new ArrayBuffer(timeMsBytes));
 		wTimeMs(dv, 0, h, i, s, ms);
@@ -2937,10 +2937,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 		v = (v - s) / 100;
 		const i = v % 100;
 		v = (v - i) / 100;
-		/*vetHour*/ safe.int.inRangeInc('hour', v, 0, 23);
-		/*vetMinute*/ safe.int.inRangeInc('minute', i, 0, 59);
-		/*vetSecond*/ safe.int.inRangeInc('second', s, 0, 59);
-		/*vetMilli*/ safe.int.inRangeInc('millisecond', ms, 0, 999);
+		/*vetHour*/ safe.uint.atMost('hour', v, 23);
+		/*vetMinute*/ safe.uint.atMost('minute', i, 59);
+		/*vetSecond*/ safe.uint.atMost('second', s, 59);
+		/*vetMilli*/ safe.uint.atMost('millisecond', ms, 999);
 
 		const dv = new DataView(new ArrayBuffer(timeMsBytes));
 		wTimeMs(dv, 0, v, i, s, ms);

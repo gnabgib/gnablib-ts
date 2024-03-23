@@ -2,12 +2,12 @@
 
 import { fpb32, fpb64 } from '../../codec/ieee754-fpb.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { NullError } from '../../primitive/ErrorExt.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
+import { ContentError } from '../../error/ContentError.js';
 
 abstract class AFloat extends ACudColType implements IValid<number> {
 	constructor(nullable = false) {
@@ -68,9 +68,10 @@ export class Float4 extends AFloat {
 		return 4;
 	}
 
-	unknownBin(value: number | undefined): Uint8Array {
-		if (value === null || value === undefined) {
-			if (!this.nullable) throw new NullError('Float');
+	unknownBin(value?: number): Uint8Array {
+		if (value == undefined) {
+			if (!this.nullable) 
+				throw new ContentError('cannot be null', 'Float', undefined);
 		}
 		if (typeof value !== 'number') {
 			throw new TypeError('Float required');
@@ -103,8 +104,9 @@ export class Float8 extends AFloat {
 	}
 
 	unknownBin(value: number | undefined): Uint8Array {
-		if (value === null || value === undefined) {
-			if (!this.nullable) throw new NullError('Float');
+		if (value ==  undefined) {
+			if (!this.nullable) 
+				throw new ContentError('cannot be null', 'Float', undefined);
 		}
 		if (typeof value !== 'number') {
 			throw new TypeError('Float required');

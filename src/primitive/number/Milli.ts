@@ -58,7 +58,7 @@ export class Milli implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Milli {
-		safe.int.inRangeInc('value', (this._v[0] << 8) | this._v[1], 0, 999);
+		safe.uint.atMost('value', (this._v[0] << 8) | this._v[1], 999);
 		return this;
 	}
 
@@ -98,7 +98,7 @@ export class Milli implements ISerializer {
 
 	/** Create a new milli/thousandth, range 0-999 */
 	public static new(v: number, storage?: Uint8Array): Milli {
-		safe.int.inRangeInc('value', v, 0, 999);
+		safe.uint.atMost('value', v, 999);
 		const stor = self.setupStor(storage);
 		self.writeValue(stor, v);
 		return new Milli(stor);
@@ -130,7 +130,7 @@ export class Milli implements ISerializer {
 			effDigits = (digits + '000').substring(0, 3);
 		}
 		const iVal = parseInt(effDigits, 10);
-		safe.int.inRangeInc(name, iVal, 0, 999);
+		safe.uint.atMost(name, iVal, 999);
 		self.writeValue(storage, iVal);
 		input.shrink(digits.length);
 	}

@@ -73,7 +73,7 @@ export class WindowStr {
 	 * @pure
 	 */
 	charAt(idx: number): string {
-		safe.int.inRangeInc('idx', idx, 0, this.length - 1);
+		safe.uint.atMost('idx', idx, this.length - 1);
 		const cp = this._src.codePointAt(idx + this._start);
 		//if (cp === undefined) return '';
 		//@ts-ignore - We've already tested out of range idx (above), so we know it's a number
@@ -88,7 +88,7 @@ export class WindowStr {
 	 * @pure
 	 */
 	codePointAt(idx: number): number {
-		safe.int.inRangeInc('idx', idx, 0, this.length - 1);
+		safe.uint.atMost('idx', idx, this.length - 1);
 		//@ts-ignore - We've already tested out of range idx (above), so we know it's a number
 		return this._src.codePointAt(idx + this._start);
 	}
@@ -126,7 +126,7 @@ export class WindowStr {
 	 */
 	indexOf(searchString: string, start?: number): number {
 		if (!start) start = 0;
-		else safe.int.inRangeInc('start', start, 0, this._len);
+		else safe.uint.atMost('start', start, this._len);
 		let pos = this._src.indexOf(searchString, this._start + start);
 		//Not found - return
 		if (pos < 0) return NOT_FOUND;
@@ -147,7 +147,7 @@ export class WindowStr {
 	 */
 	indexOfAny(search: string[], start?: number): number {
 		if (!start) start = 0;
-		else safe.int.inRangeInc('start', start, 0, this._len);
+		else safe.uint.atMost('start', start, this._len);
 
 		const effLen = this._start + this._len;
 		let earliest = effLen;
@@ -178,7 +178,7 @@ export class WindowStr {
 		if (length === undefined) {
 			length = this._len;
 		} else {
-			safe.int.inRangeInc('length', length, 0, this._len);
+			safe.uint.atMost('length', length, this._len);
 		}
 		const lastIndexPos = this._start + length - searchString.length;
 		//Because JS treats <=0 as 0 in lastIndexPos we need to catch negative
@@ -201,7 +201,7 @@ export class WindowStr {
 		if (length === undefined) {
 			length = this._len;
 		} else {
-			safe.int.inRangeInc('length', length, 0, this._len);
+			safe.uint.atMost('length', length, this._len);
 			length+=this._start;
 		}
 		let latest=this._start-1;
@@ -225,7 +225,7 @@ export class WindowStr {
 	 * @pure
 	 */
 	left(length: number): WindowStr {
-		safe.int.inRangeInc('length', length, 0, this.length);
+		safe.uint.atMost('length', length, this.length);
 		return new WindowStr(this._src, this._start, length);
 	}
 
@@ -278,7 +278,7 @@ export class WindowStr {
 	 * @pure
 	 */
 	right(length: number): WindowStr {
-		safe.int.inRangeInc('length', length, 0, this.length);
+		safe.uint.atMost('length', length, this.length);
 		const start = this._start + this._len - length;
 		return new WindowStr(this._src, start, length);
 	}
@@ -296,9 +296,9 @@ export class WindowStr {
 	 */
 	shrink(startBy?: number, lengthBy?: number): WindowStr {
 		if (!startBy) startBy = 0;
-		else safe.int.inRangeInc('startBy', startBy, 0, this._len);
+		else safe.uint.atMost('startBy', startBy,  this._len);
 		if (!lengthBy) lengthBy = 0;
-		else safe.int.inRangeInc('lengthBy', lengthBy, 0, this._len - startBy);
+		else safe.uint.atMost('lengthBy', lengthBy, this._len - startBy);
 
 		this._start += startBy;
 		this._len = this._len - startBy - lengthBy;
@@ -314,11 +314,11 @@ export class WindowStr {
 	 */
 	span(start: number, length?: number): WindowStr {
 		//If start is low, add length (-1 will give you the last char)
-		safe.int.inRangeInc('start', start, 0, this._len);
+		safe.uint.atMost('start', start, this._len);
 		if (length == undefined) {
 			length = this._len - start;
 		} else {
-			safe.int.inRangeInc('length', length, 0, this._len - start);
+			safe.uint.atMost('length', length, this._len - start);
 		}
 		return new WindowStr(this._src, this._start + start, length);
 	}
@@ -527,9 +527,9 @@ export class WindowStr {
 	static new(source: string, start?: number, length?: number): WindowStr {
 		if (!source) source = '';
 		if (!start) start = 0;
-		else safe.int.inRangeInc('start', start, 0, source.length);
+		else safe.uint.atMost('start', start, source.length);
 		if (length === undefined) length = source.length - start;
-		else safe.int.inRangeInc('length', length, 0, source.length - start);
+		else safe.uint.atMost('length', length, source.length - start);
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		return new WindowStr(new String(source), start, length);
 	}

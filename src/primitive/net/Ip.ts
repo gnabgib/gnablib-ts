@@ -11,7 +11,7 @@ export class IpV4 {
 	readonly bytes: Uint8Array;
 
 	constructor(bytes: Uint8Array) {
-		somewhatSafe.len.exactly('bytes',bytes,4);
+		somewhatSafe.len.exactly('bytes', bytes, 4);
 		this.bytes = bytes;
 	}
 
@@ -59,10 +59,10 @@ export class IpV4 {
 	 * @returns
 	 */
 	static fromParts(p0: number, p1: number, p2: number, p3: number): IpV4 {
-		somewhatSafe.int.inRangeInc('first part', p0, 0, 255);
-		somewhatSafe.int.inRangeInc('second part', p1, 0, 255);
-		somewhatSafe.int.inRangeInc('third part', p2, 0, 255);
-		somewhatSafe.int.inRangeInc('fourth part', p3, 0, 255);
+		somewhatSafe.uint.atMost('first part', p0, 255);
+		somewhatSafe.uint.atMost('second part', p1, 255);
+		somewhatSafe.uint.atMost('third part', p2, 255);
+		somewhatSafe.uint.atMost('fourth part', p3, 255);
 		return new IpV4(Uint8Array.of(p0, p1, p2, p3));
 	}
 
@@ -77,7 +77,7 @@ export class IpV4 {
 	 */
 	static fromString(value: string): IpV4 {
 		const parts = value.split('.');
-		somewhatSafe.len.exactly('parts',parts,4);
+		somewhatSafe.len.exactly('parts', parts, 4);
 
 		const p0 = UInt.parseDec(parts[0]);
 		const p1 = UInt.parseDec(parts[1]);

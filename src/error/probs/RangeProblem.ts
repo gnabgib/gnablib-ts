@@ -4,7 +4,7 @@ import { config } from '../../runtime/Config.js';
 import { IProblem } from './interfaces/IProblem.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-const { cyan: noun, reset } = color;
+const { cyan: noun, yellow, magenta, green, reset } = color;
 
 /** A problem raised by something out of range */
 export class RangeProblem<T> implements IProblem {
@@ -15,11 +15,26 @@ export class RangeProblem<T> implements IProblem {
 	}
 
 	toString(): string {
-		return `${this.noun} ${this._descr}, got ${this.value}`;
+		let val = '' + this.value;
+		if (typeof this.value === 'string') {
+			val = "'" + val + "'";
+		}
+		return `${this.noun} ${this._descr}, got: ${val}`;
 	}
 
 	inColor(): string {
-		return `${noun}${this.noun}${reset} ${this._descr}, got: ${this.value}`;
+		let val = '' + this.value;
+		let col = magenta; //undefined|null|true|false
+		switch (typeof this.value) {
+			case 'string':
+				col = green;
+				val = "'" + val + "'";
+				break;
+			case 'number':
+				col = yellow;
+				break;
+		}
+		return `${noun}${this.noun}${reset} ${this._descr}, got: ${col}${val}${reset}`;
 	}
 
 	/** @hidden */
@@ -34,10 +49,16 @@ export class RangeProblem<T> implements IProblem {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		/* c8 ignore next*/
 		return config.getBool('color') ? this.inColor() : this.toString();
 	}
 
-    static IncInc<T>(noun:string,value:T,lowInc:T,highInc:T):RangeProblem<T> {
-        return new RangeProblem(noun,`should be [${lowInc},${highInc}]`,value);
-    }
+	static IncInc<T>(
+		noun: string,
+		value: T,
+		lowInc: T,
+		highInc: T
+	): RangeProblem<T> {
+		return new RangeProblem(noun, `should be [${lowInc},${highInc}]`, value);
+	}
 }
