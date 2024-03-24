@@ -112,7 +112,7 @@ export class Cidr {
 		somewhatSafe.len.exactly('parts', parts, 2);
 		const ipv4 = IpV4.fromString(parts[0]);
 		const mask = UInt.parseDec(parts[1]);
-		if (mask === undefined)
+		if (mask == undefined)
 			throw new ContentError('Expecting integer 0-32', 'Mask', parts[1]);
 
 		return new this(ipv4, mask);

@@ -22,7 +22,7 @@ export class LengthError extends RangeError {
 	) {
 		let name = 'length';
 		let avail: number;
-		if (available !== undefined) {
+		if (available != undefined) {
 			name = '' + nameOrAvailable;
 			avail = available;
 		} else {

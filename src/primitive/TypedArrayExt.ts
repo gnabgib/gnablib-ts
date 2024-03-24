@@ -58,7 +58,7 @@ function bufferize(
 
 	if (
 		typeof b === 'object' &&
-		b !== null &&
+		b != null &&
 		'buffer' in b &&
 		b.buffer instanceof ArrayBuffer
 	) {
@@ -442,8 +442,8 @@ export class ReadonlyTyped<T extends IReadTyped<T>>
 	constructor(
 		private readonly base: IBuildable<T>,
 		data: ArrayBufferLike | IBufferer,
-		startEl: number | undefined,
-		lengthEls: number | undefined
+		startEl?: number,
+		lengthEls?: number
 	) {
 		let d: ArrayBuffer | undefined;
 		if (data instanceof base) {
@@ -451,7 +451,7 @@ export class ReadonlyTyped<T extends IReadTyped<T>>
 		} else {
 			d = bufferize(data);
 		}
-		if (d === undefined)
+		if (d == undefined)
 			throw new TypeError('Expecting ArrayBufferLike|IBufferer');
 
 		//Start needs to be in bytes
@@ -514,8 +514,8 @@ export class FixedTyped<T extends IWriteTyped<T>>
 	constructor(
 		private readonly base: IBuildable<T>,
 		data: ArrayBufferLike | IBufferer,
-		start: number | undefined,
-		length: number | undefined
+		start?: number,
+		length?: number
 	) {
 		let d: ArrayBuffer | undefined;
 		if (data instanceof base) {
@@ -523,7 +523,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 		} else {
 			d = bufferize(data);
 		}
-		if (d === undefined)
+		if (d == undefined)
 			throw new TypeError('Expecting ArrayBufferLike|IBufferer');
 
 		//Start needs to be in bytes
@@ -545,7 +545,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 			},
 			set(target, prop, value): boolean {
 				const u = UInt.parseDec((prop as string) ?? '');
-				if (u !== undefined) {
+				if (u != undefined) {
 					target.setEl(u, value);
 					return true;
 				}
@@ -705,7 +705,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 					return true;
 				}
 				const u = UInt.parseDec((prop as string) ?? '');
-				if (u !== undefined) {
+				if (u != undefined) {
 					target.setEl(u, value);
 					return true;
 				}

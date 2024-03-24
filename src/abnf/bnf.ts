@@ -1,12 +1,9 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { nextPow2 } from '../algo/nextPow2.js';
-import {
-	MatchFail,
-	MatchSuccess,
-} from '../primitive/MatchResult.js';
-import { IMatchResult } from "../primitive/interfaces/IMatchResult.js";
-import { IMatchDetail } from "../primitive/interfaces/IMatchDetail.js";
+import { MatchFail, MatchSuccess } from '../primitive/MatchResult.js';
+import { IMatchResult } from '../primitive/interfaces/IMatchResult.js';
+import { IMatchDetail } from '../primitive/interfaces/IMatchDetail.js';
 import { stringExt } from '../primitive/StringExt.js';
 import { utf } from '../primitive/Utf.js';
 import type { WindowStr } from '../primitive/WindowStr.js';
@@ -34,7 +31,7 @@ function bnfCharArrToStr(asHex: boolean, set: BnfChar[]): string {
 export class BnfChar implements IBnf {
 	name: string | undefined = undefined;
 	readonly ord: number;
-	readonly caseInsensitive: boolean | undefined;
+	readonly caseInsensitive?: boolean;
 
 	/**
 	 * Construct with a single character, or a number
@@ -53,11 +50,11 @@ export class BnfChar implements IBnf {
 		} else if (value instanceof BnfChar) {
 			this.ord = value.ord;
 			//Override CI preference if not defined
-			if (caseInsensitive === undefined) {
+			if (caseInsensitive == undefined) {
 				caseInsensitive = value.caseInsensitive;
 			}
 		} else {
-			somewhatSafe.len.exactly('value',value,1);
+			somewhatSafe.len.exactly('value', value, 1);
 			this.ord = value.charCodeAt(0);
 		}
 		this.caseInsensitive = BnfChar.smartSensitive(this.ord, caseInsensitive);
@@ -73,11 +70,11 @@ export class BnfChar implements IBnf {
 	 */
 	private static smartSensitive(
 		ord: number,
-		caseInsensitive: boolean | undefined
+		caseInsensitive?: boolean
 	): boolean | undefined {
 		if (utf.asciiCased(ord)) {
 			//default sensitive
-			if (caseInsensitive === undefined) return false;
+			if (caseInsensitive == undefined) return false;
 			return caseInsensitive;
 		}
 		return undefined;
@@ -159,7 +156,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 		if (this.start.caseInsensitive || this.end.caseInsensitive)
 			throw new RangeError('You can only specify case sensitive characters.');
 		this.nonPrintable = this.start.nonPrintable || this.end.nonPrintable;
-		somewhatSafe.int.gte('end.ord',this.end.ord,this.start.ord+1);
+		somewhatSafe.int.gte('end.ord', this.end.ord, this.start.ord + 1);
 		this.name = name;
 	}
 
@@ -228,7 +225,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 	name: string | undefined = undefined;
 	private readonly _chars: BnfChar[];
-	readonly nonPrintable=false;
+	readonly nonPrintable = false;
 	/**
 	 * True: all chars are insensitive/doesn't matter (SPEC)
 	 * False: all chars are sensitive/doesn't matter
@@ -243,11 +240,15 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 	 * @param value
 	 * @param caseInsensitive
 	 */
-	constructor(value: string | BnfChar[], caseInsensitive = true, name?: string) {
+	constructor(
+		value: string | BnfChar[],
+		caseInsensitive = true,
+		name?: string
+	) {
 		let ci: boolean | undefined | 'mix' = caseInsensitive;
 		if (Array.isArray(value)) {
-			if (!value.every(v=>v instanceof BnfChar)) {
-				this._chars=[];
+			if (!value.every((v) => v instanceof BnfChar)) {
+				this._chars = [];
 				return;
 			}
 			this._chars = value;
@@ -258,7 +259,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 				//Any are non printable they all are
 				nonPrint ||= c.nonPrintable;
 				//Any not undef will false
-				ci_all_undef &&= c.caseInsensitive === undefined;
+				ci_all_undef &&= c.caseInsensitive == undefined;
 				//Any other type
 				ci_mixed ||= c.caseInsensitive === !caseInsensitive;
 				//(note ALL other type will become mixed.. but what is the dev doing?)
@@ -266,7 +267,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 			this.nonPrintable = nonPrint;
 			ci = ci_all_undef ? undefined : ci_mixed ? 'mix' : caseInsensitive;
 		} else {
-			somewhatSafe.len.atLeast('value',value,2);
+			somewhatSafe.len.atLeast('value', value, 2);
 			let nonPrint = false;
 			let ci_all_undef = true;
 			this._chars = value.split('').map((c) => {
@@ -276,7 +277,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 				//Any are non printable they all are
 				nonPrint ||= bc.nonPrintable;
 				//Any not undef will false
-				ci_all_undef &&= bc.caseInsensitive === undefined;
+				ci_all_undef &&= bc.caseInsensitive == undefined;
 				// No need to check for mixed (Char will not invert preference)
 				return bc;
 			});
@@ -315,7 +316,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 		let i = 0;
 		for (; i < this._chars.length; i++) {
 			const match = this._chars[i].atStartOf(ptr);
-			if (match.fail || match.remain===undefined) {
+			if (match.fail || match.remain == undefined) {
 				return new MatchFail(s.length - ptr.length);
 			}
 			//We could capture the component parts, but a string is a basic primitive
@@ -419,7 +420,7 @@ export class BnfConcat implements IBnf, Iterable<IBnf> {
 		let ptr = s.span(0);
 		for (const item of this.items) {
 			const match = item.atStartOf(ptr);
-			if (match.fail || match.remain===undefined) {
+			if (match.fail || match.remain == undefined) {
 				return new MatchFail(s.length - ptr.length);
 			}
 			ptr = match.remain;
@@ -508,15 +509,15 @@ export class BnfAlt implements IBnf, Iterable<IBnf> {
 	atStartOf(s: WindowStr): IMatchResult {
 		for (const item of this.items) {
 			const match = item.atStartOf(s);
-			if (!match.fail && match.remain!==undefined) {
+			if (!match.fail && match.remain != undefined) {
 				//We have to recreate the result to capture our name
-				const detail:IMatchDetail={
+				const detail: IMatchDetail = {
 					name: this.name,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					value: match.result!.value,
-				}
+				};
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				if (!this.suppressComponents) detail.components=[match.result!];
+				if (!this.suppressComponents) detail.components = [match.result!];
 				return new MatchSuccess(match.remain, detail);
 				// if (match.result.name!==undefined) {
 				//     //Keep an old name if it's found
@@ -577,8 +578,8 @@ export class BnfRepeat implements IBnfRepeat {
 	 */
 	private constructor(rule: IBnf, min: number, max: number, name?: string) {
 		//max = infinity, but we cannot measure that..this is a decent equiv for now
-		somewhatSafe.int.gte('min',min,0);
-		somewhatSafe.int.gte('max',max,min);
+		somewhatSafe.int.gte('min', min, 0);
+		somewhatSafe.int.gte('max', max, min);
 		this.rule = rule;
 		this.min = min;
 		this.max = max;
@@ -612,7 +613,7 @@ export class BnfRepeat implements IBnfRepeat {
 		//Must have at least min matches
 		for (let i = 0; i < this.min; i++) {
 			const match = this.rule.atStartOf(ptr);
-			if (match.fail || match.remain===undefined) {
+			if (match.fail || match.remain == undefined) {
 				return new MatchFail(s.length - ptr.length);
 			}
 			ptr = match.remain;
@@ -623,7 +624,7 @@ export class BnfRepeat implements IBnfRepeat {
 		//May have up to max matches
 		for (let i = this.min; i < this.max; i++) {
 			const match = this.rule.atStartOf(ptr);
-			if (match.fail || match.remain===undefined) break;
+			if (match.fail || match.remain == undefined) break;
 			ptr = match.remain;
 			//There must be a result if it didn't fail
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -675,7 +676,12 @@ export class BnfRepeat implements IBnfRepeat {
 	 * @param min Integer, must be >=0
 	 * @param max Integer, must be >=$min
 	 */
-	static Between(min: number, max: number, rule: IBnf, name?: string): BnfRepeat {
+	static Between(
+		min: number,
+		max: number,
+		rule: IBnf,
+		name?: string
+	): BnfRepeat {
 		return new BnfRepeat(rule, min, max, name);
 	}
 

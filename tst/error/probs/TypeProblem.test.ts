@@ -39,19 +39,6 @@ for(const [noun,str] of nullSet) {
     })
 }
 
-// const incIncSet:[string,unknown,unknown,unknown,string][]=[
-//     ['$noun',6,1,5,'$noun should be [1,5], got: 6'],
-// ];
-// i=0;
-// for(const [noun,value,low,high,expect] of incIncSet) {
-//     tsts(`build[${i++}]`,()=>{
-//         const p=RangeProblem.IncInc(noun,value,low,high);
-//         assert.is(p.noun,noun);
-//         assert.is(p.value,value);
-//         assert.is(p.toString(),expect);
-//     })
-// }
-
 tsts(`coverage`, () => {
 	const p = TypeProblem.UnexpVal('$noun',undefined,'atoms');
 	assert.is(p.name, 'TypeProblem', 'name');

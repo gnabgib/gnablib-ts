@@ -96,7 +96,7 @@ export class Sexagesimal implements ISerializer {
 		input.trimStart();
 		//Only parse unsigned integers
 		const r = input.match(/^(\d+)\s*$/);
-		if (r === null)
+		if (r == null)
 			throw new ContentError('expecting unsigned integer-string', name, input);
 
 		const [, digits] = r;

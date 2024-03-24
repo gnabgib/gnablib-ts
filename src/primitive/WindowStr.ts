@@ -175,7 +175,7 @@ export class WindowStr {
 	 * @pure
 	 */
 	lastIndexOf(searchString: string, length?: number): number {
-		if (length === undefined) {
+		if (length == undefined) {
 			length = this._len;
 		} else {
 			safe.uint.atMost('length', length, this._len);
@@ -198,7 +198,7 @@ export class WindowStr {
 	 * @pure
 	 */
 	lastIndexOfAny(search:string[],length?:number):number {
-		if (length === undefined) {
+		if (length == undefined) {
 			length = this._len;
 		} else {
 			safe.uint.atMost('length', length, this._len);
@@ -528,7 +528,7 @@ export class WindowStr {
 		if (!source) source = '';
 		if (!start) start = 0;
 		else safe.uint.atMost('start', start, source.length);
-		if (length === undefined) length = source.length - start;
+		if (length == undefined) length = source.length - start;
 		else safe.uint.atMost('length', length, source.length - start);
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		return new WindowStr(new String(source), start, length);

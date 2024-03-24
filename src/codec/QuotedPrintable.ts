@@ -21,7 +21,7 @@ export const quotedPrintable = {
 		opts?: IQuotedPrintableEncodeOpts
 	): string {
 		let maxLineLength: number;
-		if (opts?.lineLength !== undefined) {
+		if (opts?.lineLength != undefined) {
 			//Lower bound is 3 because a single char can encode to 3 chars (eg 61)
 			somewhatSafe.int.inRangeInc('opts.lineLength', opts.lineLength, 3, 998);
 			maxLineLength = opts.lineLength;

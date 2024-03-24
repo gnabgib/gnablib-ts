@@ -85,7 +85,7 @@ class EnvCollector implements IConfigEnvCollector {
 		/* c8 ignore next - when this is running in browser, there may not be process, but tricky to test*/
 		if (!process) return this;
 		const val = process.env[key];
-		if (val === undefined) return this;
+		if (val == undefined) return this;
 		proc(val, (v) => this.el.setValue(v, 'env.' + key));
 		return this;
 	}
@@ -121,7 +121,7 @@ class ConfigState implements IConfigOracle {
 			return def;
 		}
 		const v = d.valueIfType('boolean');
-		return v === undefined ? def : (v as boolean);
+		return v == undefined ? def : (v as boolean);
 	}
 
 	getInvertedBool(key: string, def = false): boolean {
@@ -131,7 +131,7 @@ class ConfigState implements IConfigOracle {
 			return def;
 		}
 		const v = d.valueIfType('boolean');
-		return v === undefined ? def : (!v as boolean);
+		return v == undefined ? def : (!v as boolean);
 	}
 
 	getString(key: string, def = ''): string {
@@ -141,7 +141,7 @@ class ConfigState implements IConfigOracle {
 			return def;
 		}
 		const v = d.valueIfType('string');
-		return v === undefined ? def : (v as string);
+		return v == undefined ? def : (v as string);
 	}
 
 	getValueReason(key: string): [ConfigValue, string] | undefined {

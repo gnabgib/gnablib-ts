@@ -655,7 +655,7 @@ export class U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64 {
-		somewhatSafe.int.gte('uint51',uint51,0);
+		somewhatSafe.int.gte('uint51', uint51, 0);
 		return new U64(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -747,7 +747,7 @@ export class U64 {
 		if (uint64 instanceof U64) {
 			return uint64;
 		} else {
-			somewhatSafe.int.gte('uint64',uint64,0);
+			somewhatSafe.int.gte('uint64', uint64, 0);
 			return new U64(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}
@@ -929,7 +929,7 @@ export class U64Mut extends U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64Mut {
-		somewhatSafe.int.gte('uint51',uint51,0);
+		somewhatSafe.int.gte('uint51', uint51, 0);
 		return new U64Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -989,7 +989,7 @@ export class U64Mut extends U64 {
 		if (uint64 instanceof U64) {
 			return uint64.mut();
 		} else {
-			somewhatSafe.int.gte('uint64',uint64,0);
+			somewhatSafe.int.gte('uint64', uint64, 0);
 			return new U64Mut(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}
@@ -1008,7 +1008,7 @@ export class U64MutArray {
 	 */
 	protected constructor(buf: Uint32Array, bufPos = 0, len?: number) {
 		//Default to rest of the array (will round down if uneven)
-		if (len === undefined) {
+		if (len == undefined) {
 			len = (buf.length - bufPos) >> 1; //div 2 - we need two u32 per u64
 		}
 		this.buf = buf;
@@ -1095,7 +1095,7 @@ export class U64MutArray {
 	 * @param len
 	 */
 	span(start?: number, len?: number): U64MutArray {
-		if (start === undefined) {
+		if (start == undefined) {
 			start = 0;
 		}
 		start += this.bufPos;
@@ -1174,7 +1174,7 @@ export class U64MutArray {
 		byteLen?: number
 	): U64MutArray {
 		//if (!(buffer instanceof ArrayBuffer)) throw TypeError('Expecting ArrayBuffer');
-		if (byteLen === undefined) {
+		if (byteLen == undefined) {
 			byteLen = buffer.byteLength - bytePos;
 		}
 		byteLen >>= 2; //div 4 - make it u32-element count rather than byte count

@@ -45,7 +45,7 @@ export class Rabbit implements IFullCrypt {
 
 	constructor(key: Uint8Array, iv?: Uint8Array) {
 		somewhatSafe.len.exactly('key', key, 16);
-		if (iv !== undefined) somewhatSafe.len.exactly('iv', iv, 8);
+		if (iv != undefined) somewhatSafe.len.exactly('iv', iv, 8);
 		//Copy the key and correct endianness if required
 		const k = key.slice();
 		asBE.i128(k);
@@ -92,7 +92,7 @@ export class Rabbit implements IFullCrypt {
 		this.#c[7] ^= this.#x[3];
 
 		//IV setup scheme
-		if (iv !== undefined) {
+		if (iv != undefined) {
 			const i = iv.slice();
 			asBE.i64(i);
 			asLE.i32(i, 0, 2);

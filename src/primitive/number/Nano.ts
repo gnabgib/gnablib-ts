@@ -121,7 +121,7 @@ export class Nano implements ISerializer {
 		input.trimStart();
 		//Only parse integers (no floating point/scientific notation)
 		const r = input.match(/^(\d+)\s*$/);
-		if (r === null)
+		if (r == null)
 			throw new ContentError('expecting unsigned integer-string', name, input);
 
 		const [, digits] = r;

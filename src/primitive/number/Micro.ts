@@ -117,7 +117,7 @@ export class Micro implements ISerializer {
 		//Only parse integers (no floating point/scientific notation)
 		const r = input.match(/^(\d+)\s*$/);
 		//We should match unlimited digits because it could be zero pad (!left).. 00001 is still just 1
-		if (r === null)
+		if (r == null)
 			throw new ContentError('expecting unsigned integer-string', name, input);
 
 		const [, digits] = r;

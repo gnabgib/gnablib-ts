@@ -653,7 +653,7 @@ export function encode(value: unknown): Uint8Array {
 	if (value instanceof Uint8Array) {
 		return encodeBin(value);
 	}
-	if (value === null) {
+	if (value == undefined) {
 		return new Uint8Array([Type.Null]);
 	}
 	throw new TypeError(`Cannot encode ${value}`);

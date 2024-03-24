@@ -31,11 +31,11 @@ export class ParseProblem implements IProblem {
 		readonly end?: number
 	) {
 		//If end is defined, and start isn't.. start is set to 0
-		if (end !== undefined && start === undefined) this.start = 0;
+		if (end != undefined && start == undefined) this.start = 0;
 	}
 
 	renderRange(): string {
-		if (this.start === undefined) return '';
+		if (this.start == undefined) return '';
 		let ret = ':' + this.start;
 		if (this.end) ret += '-' + this.end;
 		return ret;
@@ -44,7 +44,7 @@ export class ParseProblem implements IProblem {
 	toString(sep = '\n '): string {
 		let msg = `Invalid ${this.noun}, ${this.reason}`;
 		const r = this.renderRange();
-		if (this.content !== undefined) {
+		if (this.content != undefined) {
 			if (r.length > 0) msg += sep + " '" + this.content + "'" + r;
 			else msg += "; '" + this.content + "'";
 		} else {
@@ -56,12 +56,12 @@ export class ParseProblem implements IProblem {
 	inColor(): string {
 		//Note we're managing color ourselves, so we have to remember to reset (${d})
 		let msg = `Invalid ${noun}${this.noun}${reset}, ${this.reason}`;
-		if (this.content === undefined) {
-			if (this.start !== undefined)
+		if (this.content == undefined) {
+			if (this.start != undefined)
 				msg += ` :${num}${this.start}${reset}-${num}${this.end}${reset}`;
 			return msg;
 		}
-		if (this.start === undefined) return msg + "; '" + this.content + "'";
+		if (this.start == undefined) return msg + "; '" + this.content + "'";
 		else msg += `\n  '${g}${this.content.substring(0, this.start)}`;
 
 		if (this.end)

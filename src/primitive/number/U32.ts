@@ -714,7 +714,7 @@ export class U32MutArray {
 	private arr: Array<U32Mut>;
 
 	protected constructor(buf: Uint32Array, bufPos = 0, len?: number) {
-		if (len === undefined) {
+		if (len == undefined) {
 			len = buf.length - bufPos;
 		}
 		this.buf = buf;
@@ -811,7 +811,7 @@ export class U32MutArray {
 		bytePos = 0,
 		byteLen?: number
 	): U32MutArray {
-		if (byteLen === undefined) {
+		if (byteLen == undefined) {
 			byteLen = buffer.byteLength - bytePos;
 		}
 		byteLen >>= 2; //div 4 - make it u32-element count rather than byte count

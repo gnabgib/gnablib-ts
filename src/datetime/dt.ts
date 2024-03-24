@@ -320,7 +320,7 @@ class Core {
 	): Error | undefined {
 		//Optional leading +-, one or more digits, optional trailing space, nothing else
 		const r = input.match(/^([+-])?(\d+)$/);
-		if (r !== null) {
+		if (r != null) {
 			const [, sign, digits] = r;
 			if (strict) {
 				if (
@@ -364,7 +364,7 @@ class Core {
 		const r = input.match(
 			/^(?:([\p{Alphabetic}\p{Mark}\p{Join_Control}]{3,})|(\d+))$/u
 		);
-		if (r !== null) {
+		if (r != null) {
 			const [, mon, int] = r;
 			if (mon != undefined) {
 				//Try and parse using Date and local settings (16th makes unambiguous day)
@@ -409,7 +409,7 @@ class Core {
 	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
 		const r = input.match(/^(\d+)$/);
-		if (r !== null) {
+		if (r != null) {
 			const [, digits] = r;
 			if (strict) {
 				if (digits.length != 2) {
@@ -538,7 +538,7 @@ class Core {
 	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
 		const r = input.match(/^(\d+)$/);
-		if (r !== null) {
+		if (r != null) {
 			const [, digits] = r;
 			if (strict) {
 				if (digits.length != 2) {
@@ -569,7 +569,7 @@ class Core {
 	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
 		const r = input.match(/^(\d+)$/);
-		if (r !== null) {
+		if (r != null) {
 			const [, digits] = r;
 			if (strict) {
 				if (digits.length != 2) {
@@ -604,7 +604,7 @@ class Core {
 	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
 		const r = input.match(/^(\d+)$/);
-		if (r !== null) {
+		if (r != null) {
 			const [, digits] = r;
 			if (strict) {
 				if (digits.length != 2) {
@@ -640,7 +640,7 @@ class Core {
 	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
 		const r = input.match(/^(\d+)$/);
-		if (r !== null) {
+		if (r != null) {
 			const [, digits] = r;
 			let effDigits = digits;
 			if (strict && digits.length != 3) {
@@ -679,7 +679,7 @@ class Core {
 	): Error | undefined {
 		//One more more digits, optional trailing whitespace only
 		const r = input.match(/^(\d+)$/);
-		if (r !== null) {
+		if (r != null) {
 			const [, digits] = r;
 			let effDigits = digits;
 			if (strict && digits.length != 6) {
@@ -1188,7 +1188,7 @@ export class Month extends Core implements ISerializer {
 	 */
 	public static lastDay(month: number, year: number): number;
 	public static lastDay(m: number, y?: number): number {
-		const leap = y === undefined ? false : Year.isLeap(y);
+		const leap = y == undefined ? false : Year.isLeap(y);
 		return m != 2 || !leap ? DIM[m] : 29;
 	}
 }

@@ -12,7 +12,7 @@ export class BinResult {
 export class FromBinResult<T> {
 	readonly value?: T;
 	readonly byteLen: number;
-	readonly reason: string | undefined;
+	readonly reason?: string;
 
 	constructor(
 		bytes: number,
@@ -29,7 +29,7 @@ export class FromBinResult<T> {
 	}
 
 	switchT<U>(): FromBinResult<U> {
-		if (this.value !== undefined)
+		if (this.value != undefined)
 			throw new TypeError('Unable to convert T to U');
 		return new FromBinResult<U>(this.byteLen, undefined, this.reason);
 	}

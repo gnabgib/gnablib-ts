@@ -16,7 +16,7 @@ export class InsertColDef {
 	public constructor(name: ColName, type: ACudColType, defValue?: unknown) {
 		this.name = name;
 		this.type = type;
-		if (defValue !== null || defValue !== undefined) {
+		if (defValue != undefined) {
 			this.default = defValue;
 		}
 	}
@@ -42,7 +42,7 @@ export class InsertColDef {
 	toJSON(): Record<string, unknown> {
 		const c: Record<string, unknown> = {};
 		c[this.name.name] = this.type.cudType + (this.type.nullable ? '?' : '');
-		if (this.default !== undefined) c.default = this.default;
+		if (this.default != undefined) c.default = this.default;
 		return c;
 	}
 

@@ -84,23 +84,23 @@ export class Cli {
 	}
 
 	get hasError(): boolean {
-		return this._error !== undefined;
+		return this._error != undefined;
 	}
 
 	/** Define the version of this CLI, setting twice will fail */
-	ver(ver: number | string | undefined): Cli {
+	ver(ver?: number | string): Cli {
 		if (this.hasError) return this;
-		const strVer = this.cyan(ver === undefined ? '' : '' + ver);
+		const strVer = this.cyan(ver == undefined ? '' : '' + ver);
 		if (this._finalized) {
 			this._error = `Cannot set version=${strVer} after finalization`;
 			this._errorLine = callFrom();
-		} else if (this._ver !== undefined && ver !== this._ver) {
+		} else if (this._ver != undefined && ver !== this._ver) {
 			this._error = `Version already set to ${this.cyan(
 				this._ver
 			)}, cannot set to ${strVer}`;
 			this._errorLine = callFrom();
 		} else {
-			this._ver = ver === undefined ? undefined : '' + ver;
+			this._ver = ver == undefined ? undefined : '' + ver;
 		}
 		return this;
 	}
@@ -251,7 +251,7 @@ export class Cli {
 	/** Get the value of the argument/option/alias */
 	value(name: string): unknown | undefined {
 		const ty = this._resIdx.get(name);
-		if (ty === undefined) return;
+		if (ty == undefined) return;
 		if (ty == 'argument') {
 			for (const arg of this._args) {
 				if (arg.key === name) return arg.value;
@@ -342,7 +342,7 @@ export class Cli {
 		// ie. if the first arg as a default, but the second doesn't and parse only has one arg, an error
 		//     will be raised (the one found *will not* be applied to the second)
 		for (let i = argPtr; i < this._args.length; i++) {
-			if (this._args[i].value === undefined) {
+			if (this._args[i].value == undefined) {
 				this._error = `Argument '${this.cyan(
 					this._args[i].key
 				)}' is required but not defined`;
@@ -379,7 +379,7 @@ export class Cli {
 			next();
 			return this;
 		}
-		if (this._error !== undefined) {
+		if (this._error != undefined) {
 			this.error(this._error, this._errorLine);
 		}
 		return this;

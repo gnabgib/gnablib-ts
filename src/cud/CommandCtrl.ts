@@ -163,7 +163,7 @@ export class CmdCtrlInsCols extends ACmdCtrl {
 
 	toJSON(): Record<string, unknown> {
 		const ret = super.toJSON();
-		if (this.after !== undefined) {
+		if (this.after != undefined) {
 			ret.after = this.after.name;
 		}
 		ret.cols = this.cols;

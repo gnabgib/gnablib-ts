@@ -34,7 +34,7 @@ class Base64 {
 		return code;
 	}
 	fromBytes(src: Uint8Array, addPad?: boolean): string {
-		if (addPad === undefined) addPad = this.reqPad;
+		if (addPad == undefined) addPad = this.reqPad;
 		let ret = '';
 		let pos = byteEat - 1;
 

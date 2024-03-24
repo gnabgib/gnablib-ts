@@ -22,7 +22,7 @@ class Entry implements ILogEntry {
         /* c8 ignore next - for now this is always... `now` but in a deser future..*/
 		this.when = when ? when : DateTimeUtc.now();
 		//Utility, if there's a caller:undefined in fields, we'll determine it here
-		if ('caller' in fields && fields['caller'] === undefined) {
+		if ('caller' in fields && fields['caller'] == undefined) {
 			this.fields['caller'] = callFrom(2);
 		}
 	}

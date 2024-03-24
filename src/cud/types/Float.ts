@@ -14,8 +14,8 @@ abstract class AFloat extends ACudColType implements IValid<number> {
 		super(nullable);
 	}
 
-	valid(input: number | undefined): IProblem | undefined {
-		if (input === undefined || input === null) {
+	valid(input?: number): IProblem | undefined {
+		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('Float');
 		}
 	}
@@ -70,7 +70,7 @@ export class Float4 extends AFloat {
 
 	unknownBin(value?: number): Uint8Array {
 		if (value == undefined) {
-			if (!this.nullable) 
+			if (!this.nullable)
 				throw new ContentError('cannot be null', 'Float', undefined);
 		}
 		if (typeof value !== 'number') {
@@ -87,7 +87,7 @@ export class Float4 extends AFloat {
 	binUnknown(bin: Uint8Array, pos: number): FromBinResult<number | undefined> {
 		const bytes = this._binUnknown(bin, pos, 4);
 		//Propagate null or error (notice type change)
-		if (bytes.value === undefined) return bytes.switchT<number | undefined>();
+		if (bytes.value == undefined) return bytes.switchT<number | undefined>();
 		return new FromBinResult(5, fpb32.fromBytes(bytes.value));
 	}
 }
@@ -103,9 +103,9 @@ export class Float8 extends AFloat {
 		return 8;
 	}
 
-	unknownBin(value: number | undefined): Uint8Array {
-		if (value ==  undefined) {
-			if (!this.nullable) 
+	unknownBin(value?: number): Uint8Array {
+		if (value == undefined) {
+			if (!this.nullable)
 				throw new ContentError('cannot be null', 'Float', undefined);
 		}
 		if (typeof value !== 'number') {
@@ -122,7 +122,7 @@ export class Float8 extends AFloat {
 	binUnknown(bin: Uint8Array, pos: number): FromBinResult<number | undefined> {
 		const bytes = this._binUnknown(bin, pos, 8);
 		//Propagate null or error (notice type change)
-		if (bytes.value === undefined) return bytes.switchT<number | undefined>();
+		if (bytes.value == undefined) return bytes.switchT<number | undefined>();
 		return new FromBinResult(9, fpb64.fromBytes(bytes.value));
 	}
 }

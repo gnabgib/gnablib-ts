@@ -37,7 +37,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 			ret[0] = f.length;
 			ret.set(f, 1);
 		}
-	} else if (value === undefined || value === null) {
+	} else if (value == undefined) {
 		ret = new Uint8Array(1);
 		//ret[0]=0;
 	} else if (value instanceof DateTimeLocal) {

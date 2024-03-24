@@ -427,9 +427,9 @@ function rightEncode(w: number): Uint8Array {
 	ret[6] = 5 - ptr; //bitExt.reverse(ptr-1);
 	return ret.subarray(ptr + 1);
 }
-function encodeString(x: string | Uint8Array | undefined): Uint8Array {
+function encodeString(x?: string | Uint8Array): Uint8Array {
 	const s =
-		x === undefined
+		x == undefined
 			? new Uint8Array(0)
 			: x instanceof Uint8Array
 			? x
@@ -485,7 +485,7 @@ class CShake implements IHash {
 			//cShake
 			this._keccak = new KeccakCore(cShake_suffix, digestSize, cap);
 			this.customization =
-				customization === undefined
+				customization == undefined
 					? new Uint8Array(0)
 					: customization instanceof Uint8Array
 					? customization
@@ -1013,7 +1013,7 @@ export class KangarooTwelve extends KeccakCore {
 	constructor(digestSize: number, customization?: Uint8Array | string) {
 		super(0x07, digestSize, 16, k12RoundStart);
 		this.customization =
-			customization === undefined
+			customization == undefined
 				? new Uint8Array(0)
 				: customization instanceof Uint8Array
 				? customization

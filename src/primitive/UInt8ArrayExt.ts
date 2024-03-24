@@ -19,7 +19,7 @@ export const uint8ArrayExt = {
 		start = 0,
 		len?: number
 	): Uint8Array {
-		if (len === undefined) len = input.length - start;
+		if (len == undefined) len = input.length - start;
 		else somewhatSafe.uint.atMost('len', len, 255);
 		const ret = new Uint8Array(len + 1);
 		ret[0] = len;

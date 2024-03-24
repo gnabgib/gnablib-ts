@@ -79,7 +79,7 @@ class Base32 {
 	}
 
 	fromBytes(b: Uint8Array, addPad?: boolean): string {
-		if (addPad === undefined) addPad = this.reqPad;
+		if (addPad == undefined) addPad = this.reqPad;
 		let ret = '';
 		let pos = byteEat - 1;
 

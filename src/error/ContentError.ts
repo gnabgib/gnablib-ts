@@ -20,7 +20,7 @@ export class ContentError extends SyntaxError {
 		let key = '';
 		let keyPad = '';
 		let val = '';
-		if (value !== undefined) {
+		if (value != undefined) {
 			if (keyOrValue) {
 				keyPad = ' ';
 				key = '' + keyOrValue;

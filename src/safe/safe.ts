@@ -61,7 +61,7 @@ const safeString: ISafeStr = {
 	//coerce: input.toString (but not undefined/null will throw)
 
 	nullEmpty: function (v: unknown): string | undefined {
-		if (v === null || v === undefined) return undefined;
+		if (v == undefined) return undefined;
 		//Coerce to string
 		const str = '' + v;
 		if (str.length === 0) return undefined;
