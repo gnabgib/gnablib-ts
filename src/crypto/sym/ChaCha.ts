@@ -3,7 +3,7 @@
 import { asLE } from '../../endian/platform.js';
 import { ContentError } from '../../error/ContentError.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
 const blockSize = 64; //16*32bit = 512bit
@@ -75,7 +75,7 @@ class ChaCha implements IFullCrypt {
 			k = key.slice();
 			rc = sigma;
 		} else throw new ContentError('should be 16 or 32','key.length',key.length);
-		somewhatSafe.len.exactly('nonce', nonce, 12); //96 bit nonce
+		safe.len.exactly('nonce', nonce, 12); //96 bit nonce
 		asLE.i32(k, 0, 8);
 
 		//CONSTANTS
@@ -156,9 +156,9 @@ function hChaCha(
 	input: Uint8Array,
 	rounds: number
 ): void {
-	somewhatSafe.len.atLeast('output', output, 32); //256 bit output
-	somewhatSafe.len.exactly('key', key, 32); //256 bit key
-	somewhatSafe.len.atLeast('input', input, 16); //128 bit input
+	safe.len.atLeast('output', output, 32); //256 bit output
+	safe.len.exactly('key', key, 32); //256 bit key
+	safe.len.atLeast('input', input, 16); //128 bit input
 	const b = new ChaChaBlock(rounds);
 	/* C C C C
 	 * K K K K
@@ -203,7 +203,7 @@ class XChaCha extends ChaCha {
 		count: number,
 		rounds: number
 	) {
-		somewhatSafe.len.exactly('nonce', nonce, 24); //192 bit nonce
+		safe.len.exactly('nonce', nonce, 24); //192 bit nonce
 
 		//Generate z (hChaCha output)
 		const z = new Uint8Array(32);

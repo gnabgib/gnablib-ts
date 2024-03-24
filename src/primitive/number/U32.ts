@@ -2,7 +2,7 @@
 
 import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT_U32 = 'U32';
@@ -242,7 +242,7 @@ export class U32 {
 	 * @returns
 	 */
 	static fromInt(uint32: number): U32 {
-		somewhatSafe.uint.atMost('uint32', uint32, maxU32);
+		safe.uint.atMost('uint32', uint32, maxU32);
 		return new U32(Uint32Array.of(uint32));
 	}
 
@@ -306,7 +306,7 @@ export class U32 {
 		} else if (uint32 instanceof Uint32Array) {
 			return new U32(uint32);
 		} else {
-			somewhatSafe.uint.atMost('uint32', uint32, maxU32);
+			safe.uint.atMost('uint32', uint32, maxU32);
 			return new U32(Uint32Array.of(uint32), 0);
 		}
 	}
@@ -656,7 +656,7 @@ export class U32Mut extends U32 {
 	 * @returns
 	 */
 	static fromInt(uint32: number): U32Mut {
-		somewhatSafe.uint.atMost('uint32', uint32, maxU32);
+		safe.uint.atMost('uint32', uint32, maxU32);
 		return new U32Mut(Uint32Array.of(uint32));
 	}
 
@@ -702,7 +702,7 @@ export class U32Mut extends U32 {
 		} else if (uint32 instanceof Uint32Array) {
 			return new U32Mut(uint32);
 		} else {
-			somewhatSafe.uint.atMost('uint32', uint32, maxU32);
+			safe.uint.atMost('uint32', uint32, maxU32);
 			return new U32Mut(Uint32Array.of(uint32), 0);
 		}
 	}

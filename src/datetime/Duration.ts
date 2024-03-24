@@ -6,7 +6,7 @@
  * share is they have access to innards for some ops, but don't expose themselves to lib-users
  */
 
-import { superSafe as safe, somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 import { AtMostError } from '../error/AtMostError.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 import { BitReader } from '../primitive/BitReader.js';
@@ -66,8 +66,6 @@ const yearStorageBytes = 3;
 const monthStorageBytes = 2;
 
 //By using a shared _DurationCore, DurationExact and Duration can share features and code
-
-
 
 abstract class ADurationCore {
 	protected constructor(
@@ -203,10 +201,10 @@ abstract class ADurationCore {
 	}
 
 	protected _validate(): void {
-		somewhatSafe.uint.atMost('hour',this._storage[this._hPos], 24);
-		somewhatSafe.uint.atMost('minute', this._storage[this._hPos + 1], 60);
-		somewhatSafe.uint.atMost('second', this._storage[this._hPos + 2], 60);
-		somewhatSafe.uint.atMost('microsecond', this.microsecond, usPerSec);
+		safe.uint.atMost('hour', this._storage[this._hPos], 24);
+		safe.uint.atMost('minute', this._storage[this._hPos + 1], 60);
+		safe.uint.atMost('second', this._storage[this._hPos + 2], 60);
+		safe.uint.atMost('microsecond', this.microsecond, usPerSec);
 	}
 
 	//Extract the current value into two integers, both u32

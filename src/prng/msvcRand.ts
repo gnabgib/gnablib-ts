@@ -1,6 +1,5 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { superSafe as safe } from '../safe/safe.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
@@ -13,7 +12,6 @@ import { IRandInt } from './interfaces/IRandInt.js';
  * @returns function to produce integers in range 0 - 32767
  */
 export function msvcRand(seed = 1): IRandInt {
-	safe.int.is(seed);
 	let s = seed >>> 0; //cast to u32
 
 	/** Returns next random number (0-32767) */

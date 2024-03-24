@@ -2,7 +2,7 @@
 
 import { hex } from '../codec/Hex.js';
 import { NotSupportedError } from '../error/NotSupportedError.js';
-import { somewhatSafe, superSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = 0x100000000;
@@ -135,7 +135,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	lShift(by: number): Uint64 {
-		somewhatSafe.uint.atMost('by', by, 64);
+		safe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(by);
 		return new Uint64(o[3] >>> 0, o[2] >>> 0);
 	}
@@ -146,7 +146,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	lRot(by: number): Uint64 {
-		somewhatSafe.uint.atMost('by', by, 64);
+		safe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -157,7 +157,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	rShift(by: number): Uint64 {
-		somewhatSafe.uint.atMost('by', by, 64);
+		safe.uint.atMost('by', by, 64);
 		//Shifting right can be emulated by using the shift-out registers of
 		// a left shift.  eg. In <<1 the outgoing register has 1 bit in it,
 		// the same result as >>>63
@@ -171,7 +171,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): Uint64 {
-		somewhatSafe.uint.atMost('by', by, 64);
+		safe.uint.atMost('by', by, 64);
 		const o = this.lShiftOut(64 - by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -337,7 +337,6 @@ export class Uint64 {
 	 * @returns
 	 */
 	static fromNumber(number: number): Uint64 {
-		superSafe.uint.is(number);
 		//Mask the low 32 bits (also stops it being floating point)
 		const low = number & maxU32;
 		const high = Math.floor(number / maxU32Plus1);
@@ -361,7 +360,7 @@ export class Uint64 {
 	 */
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
 		const end = sourcePos + 8;
-		somewhatSafe.uint.atMost('end', end, sourceBytes.length);
+		safe.uint.atMost('end', end, sourceBytes.length);
 		const high =
 			((sourceBytes[sourcePos++] << 24) |
 				(sourceBytes[sourcePos++] << 16) |
@@ -378,9 +377,9 @@ export class Uint64 {
 	}
 
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Uint64 {
-		somewhatSafe.uint.atMost('len', len, 8);
+		safe.uint.atMost('len', len, 8);
 		const end = sourcePos + len;
-		somewhatSafe.uint.atMost('end', end, sourceBytes.length);
+		safe.uint.atMost('end', end, sourceBytes.length);
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

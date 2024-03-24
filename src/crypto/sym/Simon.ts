@@ -2,7 +2,7 @@
 
 import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
 import { U64Mut } from '../../primitive/number/U64.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 // https://nsacyber.github.io/simon-speck/implementations/ImplementationGuide1.1.pdf
@@ -15,7 +15,7 @@ class Simon_32bit implements IBlockCrypt {
 		private readonly rounds: number,
 		key: Uint8Array
 	) {
-		somewhatSafe.len.exactly('key', key, keySize);
+		safe.len.exactly('key', key, keySize);
 
 		//keySchedule
 		const c = 0xfffffffc;

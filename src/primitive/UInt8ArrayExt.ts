@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { NotEnoughSpaceError } from '../error/NotEnoughSpaceError.js';
-import { somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 
 export const uint8ArrayExt = {
 	/**
@@ -20,7 +20,7 @@ export const uint8ArrayExt = {
 		len?: number
 	): Uint8Array {
 		if (len == undefined) len = input.length - start;
-		else somewhatSafe.uint.atMost('len', len, 255);
+		else safe.uint.atMost('len', len, 255);
 		const ret = new Uint8Array(len + 1);
 		ret[0] = len;
 		ret.set(input.subarray(start, start + len), 1);
@@ -72,7 +72,7 @@ export const uint8ArrayExt = {
 	): number {
 		const finalBitPos = currentBitPos + bitSize;
 		const bitLen = bytes.length << 3;
-		somewhatSafe.uint.atMost('bitSize', bitSize, 32);
+		safe.uint.atMost('bitSize', bitSize, 32);
 		if (bitSize < 1) return currentBitPos;
 		if (finalBitPos > bitLen)
 			throw new NotEnoughSpaceError('bytes', currentBitPos + bitSize, bitLen);

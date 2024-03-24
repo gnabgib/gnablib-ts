@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 
 const max32p1 = 4294967296;
 const bit8 = 0b10000000;
@@ -141,7 +141,7 @@ function n32bytes(n: number, pos: number, u: Uint8Array): number {
 	return pos;
 }
 function uintMinBytes(n: number): Uint8Array {
-	somewhatSafe.uint.is(n);
+	safe.uint.is(n);
 	//Since JS supports ints up to 2^52, we'll need 7 bytes max
 	const ret = new Uint8Array(7);
 	if (n === 0) return ret.subarray(0, 1);
@@ -161,7 +161,7 @@ function uintMinBytes(n: number): Uint8Array {
 	return ret.subarray(0, pos);
 }
 function intMinBytes(n: number): Uint8Array {
-	somewhatSafe.int.is(n);
+	safe.int.is(n);
 	const ret = new Uint8Array(7);
 	if (n === 0) return ret.subarray(0, 1);
 	let pos = 0;

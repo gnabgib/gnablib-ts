@@ -2,7 +2,7 @@
 
 import { asLE } from '../../endian/platform.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 import { IHash } from '../interfaces/IHash.js';
 import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
@@ -41,7 +41,7 @@ export class Poly1305 implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array) {
-		somewhatSafe.len.exactly('key', key, 32); //256
+		safe.len.exactly('key', key, 32); //256
 
 		const r16 = new Uint16Array(key.slice(0, 16).buffer);
 		//Make sure data is LE
@@ -367,7 +367,7 @@ class Poly1305Aead implements IAeadCrypt {
 		}
 		this._stage = stage_done;
 		//Make sure the provided tag is the right size
-		somewhatSafe.len.exactly('tag', tag, tagSize);
+		safe.len.exactly('tag', tag, tagSize);
 
 		const foundTag = this._hash.sumIn();
 

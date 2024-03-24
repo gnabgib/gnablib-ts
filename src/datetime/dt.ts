@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { somewhatSafe as safe } from '../safe/safe.js';
+import { safe as safe } from '../safe/safe.js';
 import { BitReader } from '../primitive/BitReader.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 import { WindowStr } from '../primitive/WindowStr.js';

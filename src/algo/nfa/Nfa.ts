@@ -2,7 +2,7 @@
 
 import { StringBuilder } from "../../primitive/StringBuilder.js";
 import type { WindowStr } from "../../primitive/WindowStr.js";
-import { somewhatSafe } from "../../safe/safe.js";
+import { safe } from "../../safe/safe.js";
 import { IMatcher } from "../interfaces/IMatcher.js";
 import { INode } from "../interfaces/INode.js";
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -136,11 +136,11 @@ export class Nfa {
         // [x]->[x]->..(min) ->()->[x]->()->[x]->()..(max)
         //                      \        \_________//^
         //                       \________________/
-        somewhatSafe.int.gte('min',min,0);
+        safe.int.gte('min',min,0);
         if (max===undefined) {
             max=min;
         } else {
-            somewhatSafe.int.gte('max',max,min);
+            safe.int.gte('max',max,min);
         }
 
         //Add required nodes

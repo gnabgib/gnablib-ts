@@ -3,7 +3,7 @@
 import { Uint64 } from '../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../codec/ieee754-fpb.js';
 import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
-import { somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 
 /**
  * Output a 64 bit unsigned number from @param sourceBytes at position @param sourcePos
@@ -14,7 +14,7 @@ import { somewhatSafe } from '../safe/safe.js';
  * @returns
  */
 export function u64FromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
-	somewhatSafe.uint.atMost(
+	safe.uint.atMost(
 		'sourcePos',
 		sourcePos,
 		sourceBytes.length - size64Bytes
@@ -46,12 +46,12 @@ export function u64IntoArrFromBytes(
 ): void {
 	const byteCount = targetSize * size64Bytes;
 	const n = sourcePos + byteCount;
-	somewhatSafe.uint.atMost(
+	safe.uint.atMost(
 		'sourcePos',
 		sourcePos,
 		sourceBytes.length - byteCount
 	);
-	somewhatSafe.uint.atMost('targetPos', targetPos, target.length - targetSize);
+	safe.uint.atMost('targetPos', targetPos, target.length - targetSize);
 
 	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
 		target[targetPos++] = new Uint64(
@@ -89,7 +89,7 @@ export function u64ArrIntoBytes(
 	targetPos = 0
 ): void {
 	const byteCount = sourceU64s.length * size64Bytes;
-	somewhatSafe.uint.atMost(
+	safe.uint.atMost(
 		'targetPos',
 		targetPos,
 		targetBytes.length - byteCount
@@ -206,7 +206,7 @@ export function fp64ToBytes(float64: number): Uint8Array {
  * @returns
  */
 export function fp64FromBytes(bytes: Uint8Array, pos = 0): number {
-	somewhatSafe.uint.atMost('pos', pos, bytes.length - 8);
+	safe.uint.atMost('pos', pos, bytes.length - 8);
 	return fpb64.fromBytesUnsafe(bytes.slice(pos, 8).reverse(), 0);
 }
 
@@ -226,7 +226,7 @@ export function fp32ToBytes(float32: number): Uint8Array {
  * @returns
  */
 export function fp32FromBytes(bytes: Uint8Array, pos = 0): number {
-	somewhatSafe.uint.atMost('pos', pos, bytes.length - 4);
+	safe.uint.atMost('pos', pos, bytes.length - 4);
 	return fpb32.fromBytesUnsafe(bytes.slice(pos, 4).reverse(), 0);
 }
 
@@ -247,6 +247,6 @@ export function fp16ToBytes(float16: number): Uint8Array {
  * @returns
  */
 export function fp16FromBytes(bytes: Uint8Array, pos = 0): number {
-	somewhatSafe.uint.atMost('pos', pos, bytes.length - 2);
+	safe.uint.atMost('pos', pos, bytes.length - 2);
 	return fpb16.fromBytesUnsafe(bytes.slice(pos, 2).reverse(), 0);
 }

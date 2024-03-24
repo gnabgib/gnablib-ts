@@ -2,7 +2,7 @@
 
 import { asBE, asLE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
 // Section 2.5 Counter System
@@ -44,8 +44,8 @@ export class Rabbit implements IFullCrypt {
 	private _counterCarryBit = 0;
 
 	constructor(key: Uint8Array, iv?: Uint8Array) {
-		somewhatSafe.len.exactly('key', key, 16);
-		if (iv != undefined) somewhatSafe.len.exactly('iv', iv, 8);
+		safe.len.exactly('key', key, 16);
+		if (iv != undefined) safe.len.exactly('iv', iv, 8);
 		//Copy the key and correct endianness if required
 		const k = key.slice();
 		asBE.i128(k);

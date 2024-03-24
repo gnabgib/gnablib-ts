@@ -3,7 +3,7 @@
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64Mut, U64MutArray } from '../../primitive/number/U64.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 
 import type { IHash } from '../interfaces/IHash.js';
 
@@ -93,7 +93,7 @@ class Blake1_32bit implements IHash {
 		if (!salt || salt.length === 0) {
 			this.#salt = new Uint32Array(4);
 		} else {
-			somewhatSafe.len.exactly('salt', salt, 4);
+			safe.len.exactly('salt', salt, 4);
 			this.#salt = salt;
 		}
 		this._nr = roundCount;
@@ -346,7 +346,7 @@ class Blake1_64bit implements IHash {
 		if (!salt) {
 			this.#salt = U64MutArray.fromLen(4);
 		} else {
-			somewhatSafe.len.exactly('salt', salt, 4);
+			safe.len.exactly('salt', salt, 4);
 			this.#salt = salt;
 		}
 		this._nr = roundCount;

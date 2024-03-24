@@ -5,7 +5,7 @@ import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { RangeProblem } from '../../error/probs/RangeProblem.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
@@ -52,7 +52,7 @@ abstract class AId extends ACudColType implements IValid<number | Int64> {
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		somewhatSafe.len.atMost('i64-bytes',n,this._maxByteLen);
+		safe.len.atMost('i64-bytes',n,this._maxByteLen);
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;

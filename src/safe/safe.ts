@@ -2,15 +2,8 @@
 
 /*
 
-somewhatSafe - Does range checks, but not type checks
+safe - Does range checks
 superSafe - Does range and type checks
-safe - Defaults to superSafe, but can be switched by setting safe.super=false;
-
-if (safe.super) will throw on bad types
-
-safe.super:boolean
-safe.int.is(test:unknown) //May throw TypeError
-safe.int.inRangeInclusive(test:number,low:number,high:number) //May throw RangeError
 
 */
 
@@ -97,7 +90,7 @@ const safeLen: ISafeLen = {
 };
 
 /** Performs range checks, but not type checks */
-export const somewhatSafe: ISafe = {
+export const safe: ISafe = {
 	int: {
 		/** Confirm `test` is a number (or throws) */
 		is: function (test: unknown): test is number {
@@ -198,6 +191,3 @@ export const superSafe: ISafe = {
 	string: safeString,
 	len: safeLen,
 };
-
-// export const safe:ISafe=superSafe;
-// safe.

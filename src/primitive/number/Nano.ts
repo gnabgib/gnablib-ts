@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { superSafe as safe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
 import { WindowStr } from '../WindowStr.js';
@@ -72,7 +72,7 @@ export class Nano implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Nano {
-		safe.uint.atMost('value', this.valueOf(),  999999999);
+		safe.uint.atMost('value', this.valueOf(), 999999999);
 		return this;
 	}
 

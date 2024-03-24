@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { somewhatSafe } from '../../src/safe';
+import { safe } from '../../src/safe';
 import { ILengther } from '../../src/primitive/interfaces/ILengther';
 
 const tsts = suite('somewhatSafe');
@@ -16,9 +16,9 @@ const isInt: [unknown, boolean][] = [
 for (const [test, isValid] of isInt) {
 	tsts(`somewhatSafe.int.is(${test})`, () => {
 		if (isValid) {
-			assert.not.throws(() => somewhatSafe.int.is(test));
+			assert.not.throws(() => safe.int.is(test));
 		} else {
-			assert.throws(() => somewhatSafe.int.is(test));
+			assert.throws(() => safe.int.is(test));
 		}
 	});
 }
@@ -37,9 +37,9 @@ const intInRange1To5: [number, boolean][] = [
 for (const [test, inRange] of intInRange1To5) {
 	tsts(`somewhatSafe.int.inRangeInc(${test},1,5)`, () => {
 		if (inRange) {
-			assert.not.throws(() => somewhatSafe.int.inRangeInc('test', test, 1, 5));
+			assert.not.throws(() => safe.int.inRangeInc('test', test, 1, 5));
 		} else {
-			assert.throws(() => somewhatSafe.int.inRangeInc('test', test, 1, 5));
+			assert.throws(() => safe.int.inRangeInc('test', test, 1, 5));
 		}
 	});
 }
@@ -54,11 +54,11 @@ const intGte5Set:[number,boolean][]=[
 for(const [test,inRange] of intGte5Set) {
 	if (inRange) {
 		tsts(`somewhatSafe.int.gte(${test},5)`,()=>{
-			assert.not.throws(()=>somewhatSafe.int.gte('$noun',test,5));
+			assert.not.throws(()=>safe.int.gte('$noun',test,5));
 		})
 	} else {
 		tsts(`somewhatSafe.int.gte(${test},5) throws`,()=>{
-			assert.throws(()=>somewhatSafe.int.gte('$noun',test,5));
+			assert.throws(()=>safe.int.gte('$noun',test,5));
 		})
 	}
 }
@@ -74,9 +74,9 @@ const isFloat: [unknown, boolean][] = [
 for (const [test, isValid] of isFloat) {
 	tsts(`somewhatSafe.float.is(${test})`, () => {
 		if (isValid) {
-			assert.not.throws(() => somewhatSafe.float.is(test));
+			assert.not.throws(() => safe.float.is(test));
 		} else {
-			assert.throws(() => somewhatSafe.float.is(test));
+			assert.throws(() => safe.float.is(test));
 		}
 	});
 }
@@ -95,9 +95,9 @@ const isString: [unknown, boolean][] = [
 for (const [test, isValid] of isString) {
 	tsts(`safe.string.is(${test})`, () => {
 		if (isValid) {
-			assert.not.throws(() => somewhatSafe.string.is(test));
+			assert.not.throws(() => safe.string.is(test));
 		} else {
-			assert.throws(() => somewhatSafe.string.is(test));
+			assert.throws(() => safe.string.is(test));
 		}
 	});
 }
@@ -111,7 +111,7 @@ const nullEmpty: [unknown, string | undefined][] = [
 ];
 for (const [test, expect] of nullEmpty) {
 	tsts(`safe.string.nullEmpty(${test})`, () => {
-		assert.is(somewhatSafe.string.nullEmpty(test), expect);
+		assert.is(safe.string.nullEmpty(test), expect);
 	});
 }
 
@@ -127,11 +127,11 @@ const lengthAtLeast: [ILengther, number, boolean][] = [
 for (const [test, need, expect] of lengthAtLeast) {
 	if (expect) {
 		tsts(`safe.len.atLeast(${test},${need})`, () => {
-			assert.not.throws(()=>somewhatSafe.len.atLeast('$noun',test,need));
+			assert.not.throws(()=>safe.len.atLeast('$noun',test,need));
 		});	
 	} else {
 		tsts(`safe.len.atLeast(${test},${need}) throws`, () => {
-			assert.throws(()=>somewhatSafe.len.atLeast('$noun',test,need));
+			assert.throws(()=>safe.len.atLeast('$noun',test,need));
 		});	
 	}
 }
@@ -144,11 +144,11 @@ const lengthExactlySet:[ILengther,number,boolean][] =[
 for(const [test,need,expect] of lengthExactlySet) {
 	if (expect) {
 		tsts(`safe.len.exactly(${test},${need})`,()=>{
-			assert.not.throws(()=>somewhatSafe.len.exactly('$noun',test,need));
+			assert.not.throws(()=>safe.len.exactly('$noun',test,need));
 		})
 	} else {
 		tsts(`safe.len.exactly(${test},${need}) throws`,()=>{
-			assert.throws(()=>somewhatSafe.len.exactly('$noun',test,need));
+			assert.throws(()=>safe.len.exactly('$noun',test,need));
 		})
 	}
 }
@@ -163,11 +163,11 @@ const zeroToFiveSet:[number,boolean][]=[
 for(const [test,expect] of zeroToFiveSet) {
 	if (expect) {
 		tsts(`safe.float.zeroTo(${test},5)`,()=>{
-			assert.not.throws(()=>somewhatSafe.float.zeroTo('$noun',test,5));
+			assert.not.throws(()=>safe.float.zeroTo('$noun',test,5));
 		})
 	} else {
 		tsts(`safe.float.zeroTo(${test},5) throws`,()=>{
-			assert.throws(()=>somewhatSafe.float.zeroTo('$noun',test,5));
+			assert.throws(()=>safe.float.zeroTo('$noun',test,5));
 		})
 	}
 }
@@ -182,11 +182,11 @@ const ltFiveSet:[number,boolean][]=[
 for(const [test,expect] of ltFiveSet) {
 	if (expect) {
 		tsts(`safe.float.lt(${test},5)`,()=>{
-			assert.not.throws(()=>somewhatSafe.float.lt('$noun',test,5));
+			assert.not.throws(()=>safe.float.lt('$noun',test,5));
 		})
 	} else {
 		tsts(`safe.float.lt(${test},5) throws`,()=>{
-			assert.throws(()=>somewhatSafe.float.lt('$noun',test,5));
+			assert.throws(()=>safe.float.lt('$noun',test,5));
 		})
 	}
 }

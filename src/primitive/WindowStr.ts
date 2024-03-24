@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { somewhatSafe as safe } from '../safe/safe.js';
+import { safe as safe } from '../safe/safe.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'WindowStr';
 const NOT_FOUND = -1;

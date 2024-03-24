@@ -2,7 +2,7 @@
 
 import type { IHash } from "../interfaces/IHash.js";
 import { Hmac } from "../mac/Hmac.js";
-import { somewhatSafe } from "../../safe/safe.js";
+import { safe } from "../../safe/safe.js";
 
 //(HMAC-based Extract-and-Expand Key Derivation Function)[https://datatracker.ietf.org/doc/html/rfc5869] (2010)
 
@@ -31,7 +31,7 @@ export function extract(hash:IHash,ikm:Uint8Array,salt?:Uint8Array):Uint8Array {
  */
 export function expand(hash:IHash,prk:Uint8Array,lenBytes:number,info?:Uint8Array):Uint8Array {
     //Per RFC, and because only one byte is used per round to indicate which round it is
-    somewhatSafe.uint.atMost('lenBytes',lenBytes,maxUint8*hash.size);
+    safe.uint.atMost('lenBytes',lenBytes,maxUint8*hash.size);
     //If no info is provided, zero length
     info=info??new Uint8Array(0);
     //Chose the lower bound since the last write may need to be sized to remaining space 

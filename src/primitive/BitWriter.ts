@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { superSafe as safe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 
 const mask = [0xff, 0x7f, 0x3f, 0x1f, 0xf, 0x7, 0x3, 0x1];
 
@@ -37,7 +37,6 @@ export class BitWriter {
 	 * @param bitCount Number of bits to write 1-32
 	 */
 	writeNumber(value: number, bitCount: number): void {
-		safe.int.is(value);
 		safe.int.inRangeInc('bitCount', bitCount, 1, 32);
 
 		//for a bitPos offset of anything but 0, we need one extra byte

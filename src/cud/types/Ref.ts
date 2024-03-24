@@ -7,7 +7,7 @@ import { Int64 } from '../../primitive/Int64.js';
 import { TableName } from '../TableName.js';
 import { ColName } from '../ColName.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { RangeProblem } from '../../error/probs/RangeProblem.js';
@@ -90,7 +90,7 @@ export abstract class ARef
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		somewhatSafe.len.atMost('i64-bytes', n, this._maxByteLen);
+		safe.len.atMost('i64-bytes', n, this._maxByteLen);
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;

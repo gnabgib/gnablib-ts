@@ -1,6 +1,5 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { superSafe } from '../safe/safe.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
@@ -14,7 +13,6 @@ import { IRandInt } from './interfaces/IRandInt.js';
  * @returns function to produce integers in the range 0 - 2147483647
  */
 export function randu(seed = 1): IRandInt {
-	superSafe.int.is(seed);
 	let s = seed;
 	//a= 65539 c=0
 	/** Get the next random number */

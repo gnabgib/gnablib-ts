@@ -1,6 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-import { somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 import { fpb32 } from './ieee754-fpb.js';
 
 /**
@@ -32,7 +32,7 @@ export const bfloat16 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		somewhatSafe.uint.atMost('pos', pos, bytes.length - 2);
+		safe.uint.atMost('pos', pos, bytes.length - 2);
 		const expand = new Uint8Array(4);
 		expand.set(bytes.subarray(pos, pos + 2));
 		return fpb32.fromBytes(expand, 0);

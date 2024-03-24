@@ -4,7 +4,7 @@ import { bitExt } from '../BitExt.js';
 import { IpV4 } from './Ip.js';
 import { ContentError } from '../../error/ContentError.js';
 import { UInt } from '../number/index.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Cidr';
@@ -19,7 +19,7 @@ export class Cidr {
 	readonly mask: number;
 
 	constructor(ipv4: IpV4, mask: number) {
-		somewhatSafe.uint.atMost('mask', mask, 32);
+		safe.uint.atMost('mask', mask, 32);
 		const ipv4Int = ipv4.valueOf();
 		this.bitMask = bitExt.lsbs(32 - mask);
 		const startInt = (ipv4Int & ~this.bitMask) >>> 0;
@@ -109,7 +109,7 @@ export class Cidr {
 	 */
 	static fromString(value: string): Cidr {
 		const parts = value.split('/');
-		somewhatSafe.len.exactly('parts', parts, 2);
+		safe.len.exactly('parts', parts, 2);
 		const ipv4 = IpV4.fromString(parts[0]);
 		const mask = UInt.parseDec(parts[1]);
 		if (mask == undefined)

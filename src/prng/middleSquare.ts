@@ -1,7 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { ContentError } from '../error/ContentError.js';
-import { superSafe as safe } from '../safe/safe.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
@@ -18,7 +17,6 @@ import { IRandInt } from './interfaces/IRandInt.js';
  * @returns function to produce integers in range 0 - (10**n -1)
  */
 export function middleSquare(seed: number, n?: number): IRandInt {
-	safe.int.is(seed);
 	let s = seed >>> 0; //cast to u32
 	//If n isn't defined, count from seed.. note you really don't need
 	// to provide n unless the seed should be zero padded.

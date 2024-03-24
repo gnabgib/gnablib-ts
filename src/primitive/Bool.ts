@@ -1,4 +1,4 @@
-import { superSafe as safe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 import { BitReader } from './BitReader.js';
 import { BitWriter } from './BitWriter.js';
 import { WindowStr } from './WindowStr.js';

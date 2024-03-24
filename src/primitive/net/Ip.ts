@@ -2,7 +2,7 @@
 
 import { U32 } from '../number/U32.js';
 import { UInt } from '../number/index.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'IpV4';
@@ -11,7 +11,7 @@ export class IpV4 {
 	readonly bytes: Uint8Array;
 
 	constructor(bytes: Uint8Array) {
-		somewhatSafe.len.exactly('bytes', bytes, 4);
+		safe.len.exactly('bytes', bytes, 4);
 		this.bytes = bytes;
 	}
 
@@ -59,10 +59,10 @@ export class IpV4 {
 	 * @returns
 	 */
 	static fromParts(p0: number, p1: number, p2: number, p3: number): IpV4 {
-		somewhatSafe.uint.atMost('first part', p0, 255);
-		somewhatSafe.uint.atMost('second part', p1, 255);
-		somewhatSafe.uint.atMost('third part', p2, 255);
-		somewhatSafe.uint.atMost('fourth part', p3, 255);
+		safe.uint.atMost('first part', p0, 255);
+		safe.uint.atMost('second part', p1, 255);
+		safe.uint.atMost('third part', p2, 255);
+		safe.uint.atMost('fourth part', p3, 255);
 		return new IpV4(Uint8Array.of(p0, p1, p2, p3));
 	}
 
@@ -77,7 +77,7 @@ export class IpV4 {
 	 */
 	static fromString(value: string): IpV4 {
 		const parts = value.split('.');
-		somewhatSafe.len.exactly('parts', parts, 4);
+		safe.len.exactly('parts', parts, 4);
 
 		const p0 = UInt.parseDec(parts[0]);
 		const p1 = UInt.parseDec(parts[1]);

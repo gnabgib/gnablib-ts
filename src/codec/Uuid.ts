@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 import { hex } from './Hex.js';
 
 /**
@@ -32,7 +32,7 @@ const ind_var1_prefix = 0x80; //10xx xxxx
  */
 export function v4FromBytes(bytes: Uint8Array): string {
 	let ret = '';
-	somewhatSafe.int.gte('UUID bytes.length', bytes.length, 16);
+	safe.int.gte('UUID bytes.length', bytes.length, 16);
 	let idx = 0;
 	eachByte2: for (const byte of bytes) {
 		switch (idx++) {

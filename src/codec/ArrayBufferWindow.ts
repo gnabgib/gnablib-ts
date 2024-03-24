@@ -15,7 +15,7 @@ import type {
 	ReadonlyUint8Array,
 } from '../primitive/ReadonlyTypedArray.js';
 import { isLE } from '../endian/platform.js';
-import { somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 
 export class ArrayBufferWindowReader {
 	private readonly _view: DataView;
@@ -540,12 +540,12 @@ export class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		somewhatSafe.uint.atMost('start',start,buffer.byteLength-1);
+		safe.uint.atMost('start',start,buffer.byteLength-1);
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {
 			//Note when end===start (allowed) the window has 0 length
-			somewhatSafe.int.inRangeInc('end',end,start,buffer.byteLength);
+			safe.int.inRangeInc('end',end,start,buffer.byteLength);
 		}
 		if (buffer instanceof ArrayBufferWindow) {
 			this._buffer = buffer._buffer;

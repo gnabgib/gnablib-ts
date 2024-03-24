@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { utf } from '../../primitive/Utf.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IMatcher } from '../interfaces/IMatcher.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -13,7 +13,7 @@ export class CharMatch implements IMatcher {
 
 	constructor(code: number | string) {
 		if (typeof code === 'string') {
-			somewhatSafe.int.gte('code.length', code.length, 1);
+			safe.int.gte('code.length', code.length, 1);
 			this._code = code.charCodeAt(0);
 		} else {
 			this._code = code;
@@ -44,7 +44,7 @@ export class InsensitiveMatch implements IMatcher {
 
 	constructor(code: number | string) {
 		if (typeof code === 'string') {
-			somewhatSafe.int.gte('code.length', code.length, 1);
+			safe.int.gte('code.length', code.length, 1);
 			code = code.charCodeAt(0);
 		}
 		if (utf.asciiCased(code)) {

@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { escape } from '../regexp/index.js';
-import { somewhatSafe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 
 //codePointAt >> charCodeAt
 // - charCodeAt is constrained to UTF16 0-65535 values, while codePointAt allows any UTF32/UTF8 character
@@ -9,7 +9,7 @@ import { somewhatSafe } from '../safe/safe.js';
 
 export const stringExt = {
 	wrap: function (source: string, width: number, join?: string): string {
-		somewhatSafe.int.gte('width',width,1);
+		safe.int.gte('width',width,1);
 		const ret = [];
 		const size = Math.ceil(source.length / width);
 		for (let i = 0; i < size; i++) {

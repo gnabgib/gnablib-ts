@@ -5,7 +5,7 @@ import type { IHash } from '../interfaces/IHash.js';
 import { Sha1, Sha256, Sha512 } from '../hash/index.js';
 import { Hmac } from '../mac/index.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 
 //(PKCS #5: Password-Based Cryptography Specification Version 2.1)[https://www.rfc-editor.org/rfc/rfc8018] (2017)
 //(Wiki: PBKDF2)[https://en.wikipedia.org/wiki/PBKDF2]
@@ -27,8 +27,8 @@ export function pbkdf2(
 	keySize: number
 ): Uint8Array {
 	//  PBKDF2 (<PRF>, P, S, c, dkLen)
-	somewhatSafe.int.inRangeInc('keySize', keySize, 1, 0xffffffff);
-	somewhatSafe.int.gte('count',count,1);//Lock the original value as the minimum complexity
+	safe.int.inRangeInc('keySize', keySize, 1, 0xffffffff);
+	safe.int.gte('count',count,1);//Lock the original value as the minimum complexity
 	const pBytes =
 		password instanceof Uint8Array ? password : utf8.toBytes(password);
 	const sBytes = salt instanceof Uint8Array ? salt : utf8.toBytes(salt);

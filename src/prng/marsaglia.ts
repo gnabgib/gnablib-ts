@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { superSafe as safe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
@@ -14,6 +14,7 @@ import { IRandInt } from './interfaces/IRandInt.js';
  */
 export function marsaglia(seed: number): IRandInt {
 	safe.int.inRangeInc('seed', seed, 1, 99);
+	seed|=0;
 	/** Return a new number [0-9] */
 	function rand(): number {
 		const units = seed % 10;

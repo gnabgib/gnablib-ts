@@ -5,7 +5,7 @@ import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { utf8 } from '../../codec/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { somewhatSafe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { ContentError } from '../../error/ContentError.js';
@@ -30,7 +30,7 @@ abstract class AUtf8 extends ACudColType implements IValid<string> {
 			if (!this.nullable) return TypeProblem.Null('Utf8');
 			return undefined;
 		}
-		somewhatSafe.len.atMost('input', input, this._maxStrLen);
+		safe.len.atMost('input', input, this._maxStrLen);
 	}
 
 	unknownBin(value?: string): Uint8Array {
@@ -42,7 +42,7 @@ abstract class AUtf8 extends ACudColType implements IValid<string> {
 			throw new TypeError('String required');
 		}
 		const b = utf8.toBytes(value);
-		somewhatSafe.len.atMost('value-bytes', b, this._maxStrLen);
+		safe.len.atMost('value-bytes', b, this._maxStrLen);
 
 		const ret = new Uint8Array(this._lenBytes + b.length);
 		let lenPtr = this._lenBytes - 1;
