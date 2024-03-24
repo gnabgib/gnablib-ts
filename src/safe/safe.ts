@@ -15,11 +15,6 @@ import { LengthError } from '../error/LengthError.js';
 import { ILengther } from '../primitive/interfaces/ILengther.js';
 import { ISafe, ISafeFloat, ISafeLen, ISafeStr } from './interfaces/ForSafe.js';
 
-function uint_atMost(noun: string, test: number, lte: number): void {
-	if (test >= 0 && test <= lte) return;
-	throw new InclusiveRangeError(noun, test, 0, lte);
-}
-
 const safeFloat: ISafeFloat = {
 	/**
 	 * Whether `test` is a float, which all numbers are.. but note you probably still
@@ -27,19 +22,14 @@ const safeFloat: ISafeFloat = {
 	 * @param test
 	 * @returns
 	 */
-	is: function (test: unknown): test is number {
+	is: function (noun: string, test: unknown): test is number {
 		if (typeof test === 'number') return true;
-		throw new TypeError(`Not a float: ${test}`);
+		throw new TypeError(`${noun} not a float: ${test}`);
 	},
 	//coerce:+value
 
 	lt(noun: string, test: number, lt: number) {
 		if (test < lt) return;
-		//Range constraint (note the message won't mention zero but that's ok?)
-		throw new LTError(noun, test, lt);
-	},
-	zeroTo(noun: string, test: number, lt: number) {
-		if (test >= 0 && test < lt) return;
 		//Range constraint (note the message won't mention zero but that's ok?)
 		throw new LTError(noun, test, lt);
 	},
@@ -93,9 +83,9 @@ const safeLen: ISafeLen = {
 export const safe: ISafe = {
 	int: {
 		/** Confirm `test` is a number (or throws) */
-		is: function (test: unknown): test is number {
+		is: function (noun: string, test: unknown): test is number {
 			if (typeof test === 'number') return true;
-			throw new TypeError(`Not a number: ${test}`);
+			throw new TypeError(`${noun} not a number: ${test}`);
 		},
 		//coerce: input|0
 
@@ -123,13 +113,20 @@ export const safe: ISafe = {
 		},
 	},
 	uint: {
-		is: function (test: unknown): test is number {
+		is: function (noun: string, test: unknown): test is number {
 			if (typeof test === 'number' && test >= 0) return true;
-			throw new TypeError(`Expecting a number >0, got ${test}`);
+			throw new TypeError(`${noun} not number >=0, got ${test}`);
 		},
 		//coerce: input|0
 
-		atMost: uint_atMost,
+		atMost: function (noun: string, test: number, lte: number): void {
+			if (test >= 0 && test <= lte) return;
+			throw new InclusiveRangeError(noun, test, 0, lte);
+		},
+		oneTo: function (noun: string, test: number, lte: number): void {
+			if (test >= 1 && test <= lte) return;
+			throw new InclusiveRangeError(noun, test, 1, lte);
+		},
 	},
 	float: safeFloat,
 	string: safeString,
@@ -140,10 +137,10 @@ export const safe: ISafe = {
 export const superSafe: ISafe = {
 	int: {
 		/** Confirm `test` is a integer (or throws) */
-		is: function (test: unknown): test is number {
+		is: function (noun: string, test: unknown): test is number {
 			// TS-BUG: `isInteger(number: unknown)`: boolean; should be `isInteger(number: unknown): number is number;`
 			if (Number.isSafeInteger(test)) return true;
-			throw new TypeError(`Not an integer: ${test}`);
+			throw new TypeError(`${noun} not an integer: ${test}`);
 		},
 		//coerce: input|0
 
@@ -178,14 +175,21 @@ export const superSafe: ISafe = {
 		},
 	},
 	uint: {
-		is: function (test: unknown): test is number {
+		is: function (noun: string, test: unknown): test is number {
 			// TS-BUG: `isSafeInteger(number: unknown)`: boolean; should be `isSafeInteger(number: unknown): number is number;`
 			if (Number.isSafeInteger(test) && (test as number) >= 0) return true;
-			throw new TypeError(`Expecting a number >0, got ${test}`);
+			throw new TypeError(`${noun} not integer >=0, got ${test}`);
 		},
 		//coerce: input|0
 
-		atMost: uint_atMost,
+		atMost: function (noun: string, test: number, lte: number): void {
+			if (Number.isSafeInteger(test) && test >= 0 && test <= lte) return;
+			throw new InclusiveRangeError(noun, test, 0, lte);
+		},
+		oneTo: function (noun: string, test: number, lte: number): void {
+			if (Number.isSafeInteger(test) && test >= 1 && test <= lte) return;
+			throw new InclusiveRangeError(noun, test, 1, lte);
+		},
 	},
 	float: safeFloat,
 	string: safeString,

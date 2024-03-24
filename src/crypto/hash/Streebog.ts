@@ -14,7 +14,7 @@ class Ctx {
 	private readonly _digestSizeBytes;
 
 	constructor(digestSize256: number) {
-		safe.int.inRangeInc('digestSize256',digestSize256,1,2);
+		safe.uint.oneTo('digestSize256',digestSize256,2);
 		this._digestSizeBytes = digestSize256 * 256;
 		if (digestSize256 === 1) {
 			for (let i = 0; i < blockSize512Bytes; i++) this._h[i] = 0x01;

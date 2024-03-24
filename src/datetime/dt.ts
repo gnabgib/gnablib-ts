@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { safe as safe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 import { BitReader } from '../primitive/BitReader.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 import { WindowStr } from '../primitive/WindowStr.js';
@@ -263,10 +263,10 @@ class Core {
 
 	protected _time_valid(p: number): void {
 		const [h, i, s, u] = rTime(this._d, p);
-		safe.int.lte('hour', h, 23);
-		safe.int.lte('minute', i, 59);
-		safe.int.lte('second', s, 59);
-		safe.int.lte('microsecond', u, 999999);
+		safe.int.lt('hour', h, 24);
+		safe.int.lt('minute', i, 60);
+		safe.int.lt('second', s, 60);
+		safe.int.lt('microsecond', u, 1000000);
 	}
 
 	/** Days since the Unix epoch (1970-01-01) */
@@ -301,8 +301,8 @@ class Core {
 
 	protected static vetDate(y: number, m: number, d: number): void {
 		/*vetYear*/ safe.int.inRangeInc('year', y, minIsoYear, maxIsoYear);
-		/*vetMonth*/ safe.int.inRangeInc('month', m, 1, 12);
-		/*vetDay*/ safe.int.inRangeInc('day', d, 1, Month.lastDay(m, y));
+		/*vetMonth*/ safe.uint.oneTo('month', m, 12);
+		/*vetDay*/ safe.uint.oneTo('day', d, Month.lastDay(m, y));
 	}
 	protected static vetTime(h: number, i: number, s: number, u: number): void {
 		/*vetHour*/ safe.uint.atMost('hour', h, 23);
@@ -918,10 +918,10 @@ export class Year extends Core implements ISerializer {
 	public static newGregorian(year: number, ad = true): Year {
 		const dv = new DataView(new ArrayBuffer(yearBytes));
 		if (ad) {
-			safe.int.inRangeInc('year', year, 1, maxIsoYear);
+			safe.uint.oneTo('year', year, maxIsoYear);
 			wYear(dv, 0, year);
 		} else {
-			safe.int.inRangeInc('-year', year, 1, 10001);
+			safe.uint.oneTo('-year', year, 10001);
 			wYear(dv, 0, 1 - year);
 		}
 		return new Year(dv);
@@ -1101,7 +1101,7 @@ export class Month extends Core implements ISerializer {
 
 	/** Create a new month of the year, range 1-12 */
 	public static new(v: number): Month {
-		/*vetMonth*/ safe.int.inRangeInc('month', v, 1, 12);
+		/*vetMonth*/ safe.uint.oneTo('month', v, 12);
 		const dv = new DataView(new ArrayBuffer(monthBytes));
 		wMonth(dv, 0, v);
 		return new Month(dv);
@@ -1262,7 +1262,7 @@ export class Day extends Core implements ISerializer {
 
 	/** Create a new day of the month, range 1-31 */
 	public static new(v: number): Day {
-		/*vetDay*/ safe.int.inRangeInc('day', v, 1, 31);
+		/*vetDay*/ safe.uint.oneTo('day', v, 31);
 		const dv = new DataView(new ArrayBuffer(dayBytes));
 		wDay(dv, 0, v);
 		return new Day(dv);
@@ -1709,7 +1709,7 @@ export class Hour extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Hour {
-		safe.int.lte('hour', rHour(this._d, this._pos), 23);
+		safe.int.lt('hour', rHour(this._d, this._pos), 24);
 		return this;
 	}
 
@@ -1724,10 +1724,10 @@ export class Hour extends Core implements ISerializer {
 	}
 
 	/** Create a new hour, range 0-23 */
-	public static new(v: number): Hour {
-		/*vetHour*/ safe.uint.atMost('hour', v, 23);
+	public static new(hour: number): Hour {
+		/*vetHour*/ safe.uint.atMost('hour', hour, 23);
 		const dv = new DataView(new ArrayBuffer(hourBytes));
-		wHour(dv, 0, v);
+		wHour(dv, 0, hour);
 		return new Hour(dv);
 	}
 
@@ -1878,7 +1878,7 @@ export class Minute extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Minute {
-		safe.int.lte('minute', rMin(this._d, this._pos), 59);
+		safe.int.lt('minute', rMin(this._d, this._pos), 60);
 		return this;
 	}
 
@@ -1893,10 +1893,10 @@ export class Minute extends Core implements ISerializer {
 	}
 
 	/** Create a new minute, range 0-59 */
-	public static new(v: number): Minute {
-		/*vetMinute*/ safe.uint.atMost('minute', v, 59);
+	public static new(minute: number): Minute {
+		/*vetMinute*/ safe.uint.atMost('minute', minute, 59);
 		const dv = new DataView(new ArrayBuffer(minBytes));
-		wMin(dv, 0, v);
+		wMin(dv, 0, minute);
 		return new Minute(dv);
 	}
 
@@ -2047,7 +2047,7 @@ export class Second extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Second {
-		safe.int.lte('second', rSec(this._d, this._pos), 59);
+		safe.int.lt('second', rSec(this._d, this._pos), 60);
 		return this;
 	}
 
@@ -2062,10 +2062,10 @@ export class Second extends Core implements ISerializer {
 	}
 
 	/** Create a new second, range 0-59 */
-	public static new(v: number): Second {
-		/*vetSecond*/ safe.uint.atMost('second', v, 59);
+	public static new(second: number): Second {
+		/*vetSecond*/ safe.uint.atMost('second', second, 59);
 		const dv = new DataView(new ArrayBuffer(secBytes));
-		wSec(dv, 0, v);
+		wSec(dv, 0, second);
 		return new Second(dv);
 	}
 
@@ -2206,7 +2206,7 @@ export class Millisecond extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Millisecond {
-		safe.int.lte('millisecond', rMilli(this._d, this._pos), 999);
+		safe.int.lt('millisecond', rMilli(this._d, this._pos), 1000);
 		return this;
 	}
 
@@ -2221,10 +2221,10 @@ export class Millisecond extends Core implements ISerializer {
 	}
 
 	/** Create a new Millisecond, range 0-999 */
-	public static new(v: number): Millisecond {
-		/*vetMilli*/ safe.uint.atMost('millisecond', v, 999);
+	public static new(millisecond: number): Millisecond {
+		/*vetMilli*/ safe.uint.atMost('millisecond', millisecond, 999);
 		const dv = new DataView(new ArrayBuffer(milliBytes));
-		wMilli(dv, 0, v);
+		wMilli(dv, 0, millisecond);
 		return new Millisecond(dv);
 	}
 
@@ -2374,7 +2374,7 @@ export class Microsecond extends Core implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Microsecond {
-		safe.int.lte('microsecond', rMicro(this._d, this._pos), 999999);
+		safe.int.lt('microsecond', rMicro(this._d, this._pos), 1000000);
 		return this;
 	}
 
@@ -2389,10 +2389,10 @@ export class Microsecond extends Core implements ISerializer {
 	}
 
 	/** Create a new Microsecond, range 0-999999 */
-	public static new(v: number): Microsecond {
-		/*vetMicro*/ safe.uint.atMost('microsecond', v, 999999);
+	public static new(microsecond: number): Microsecond {
+		/*vetMicro*/ safe.uint.atMost('microsecond', microsecond, 999999);
 		const dv = new DataView(new ArrayBuffer(microBytes));
-		wMicro(dv, 0, v);
+		wMicro(dv, 0, microsecond);
 		return new Microsecond(dv);
 	}
 
@@ -2890,10 +2890,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	 */
 	public validate(): TimeOnlyMs {
 		const [h, i, s, ms] = rTimeMs(this._d, this._pos);
-		safe.int.lte('hour', h, 23);
-		safe.int.lte('minute', i, 59);
-		safe.int.lte('second', s, 59);
-		safe.int.lte('millisecond', ms, 999);
+		safe.int.lt('hour', h, 24);
+		safe.int.lt('minute', i, 60);
+		safe.int.lt('second', s, 60);
+		safe.int.lt('millisecond', ms, 1000);
 		return this;
 	}
 

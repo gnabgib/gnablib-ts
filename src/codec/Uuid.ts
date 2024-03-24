@@ -32,7 +32,7 @@ const ind_var1_prefix = 0x80; //10xx xxxx
  */
 export function v4FromBytes(bytes: Uint8Array): string {
 	let ret = '';
-	safe.int.gte('UUID bytes.length', bytes.length, 16);
+	safe.len.atLeast('UUID bytes', bytes, 16);
 	let idx = 0;
 	eachByte2: for (const byte of bytes) {
 		switch (idx++) {

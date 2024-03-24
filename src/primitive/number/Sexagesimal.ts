@@ -58,7 +58,8 @@ export class Sexagesimal implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Sexagesimal {
-		safe.uint.atMost('value', this.valueOf(), 59);
+		//Because this is internal (and stored as uint) we don't need to check >0
+		safe.int.lt('value',this._v[0],60);
 		return this;
 	}
 

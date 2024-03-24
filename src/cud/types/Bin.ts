@@ -30,7 +30,7 @@ abstract class ABin extends ACudColType implements IValid<Uint8Array> {
 		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('input');
 		} else {
-			safe.len.inRangeInc('input', input, 0, maxLen);
+			safe.len.atMost('input', input, maxLen);
 		}
 	}
 

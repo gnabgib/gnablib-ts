@@ -13,7 +13,7 @@ export class CharMatch implements IMatcher {
 
 	constructor(code: number | string) {
 		if (typeof code === 'string') {
-			safe.int.gte('code.length', code.length, 1);
+			safe.len.atLeast('code', code, 1);
 			this._code = code.charCodeAt(0);
 		} else {
 			this._code = code;
@@ -44,7 +44,7 @@ export class InsensitiveMatch implements IMatcher {
 
 	constructor(code: number | string) {
 		if (typeof code === 'string') {
-			safe.int.gte('code.length', code.length, 1);
+			safe.len.atLeast('code', code, 1);
 			code = code.charCodeAt(0);
 		}
 		if (utf.asciiCased(code)) {

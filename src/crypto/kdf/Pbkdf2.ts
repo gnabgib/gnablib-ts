@@ -27,7 +27,7 @@ export function pbkdf2(
 	keySize: number
 ): Uint8Array {
 	//  PBKDF2 (<PRF>, P, S, c, dkLen)
-	safe.int.inRangeInc('keySize', keySize, 1, 0xffffffff);
+	safe.uint.oneTo('keySize', keySize, 0xffffffff);
 	safe.int.gte('count',count,1);//Lock the original value as the minimum complexity
 	const pBytes =
 		password instanceof Uint8Array ? password : utf8.toBytes(password);

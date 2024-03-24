@@ -136,7 +136,7 @@ export class Nfa {
         // [x]->[x]->..(min) ->()->[x]->()->[x]->()..(max)
         //                      \        \_________//^
         //                       \________________/
-        safe.int.gte('min',min,0);
+        safe.uint.is('min',min);
         if (max===undefined) {
             max=min;
         } else {

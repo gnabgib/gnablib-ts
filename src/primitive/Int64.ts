@@ -380,8 +380,7 @@ export class Int64 {
 	}
 
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Int64 {
-		const end = sourcePos + 8;
-		safe.uint.atMost('sourceBytes', end, sourceBytes.length);
+		safe.len.atLeast('sourceBytes',sourceBytes,sourcePos+8);
 		const high =
 			(sourceBytes[sourcePos++] << 24) |
 			(sourceBytes[sourcePos++] << 16) |
@@ -398,7 +397,7 @@ export class Int64 {
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Int64 {
 		safe.uint.atMost('len', len, 8);
 		const end = sourcePos + len;
-		safe.uint.atMost('sourceBytes', end, sourceBytes.length);
+		safe.len.atLeast('sourceBytes',sourceBytes,end);
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

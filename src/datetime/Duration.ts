@@ -47,6 +47,7 @@ const usPerMin = 60000000; //60*1000000
 const usPerSec = 1000000;
 const daysPerCD = 146097;
 const hPerCD = 3506328; // 146097 * 24
+/** maxDays (inclusive) */
 const maxDays = 134117046; //Number of days in 918CD*400 = 367200y
 const maxDH = 3218809104; //134117046*24 ~~2^32
 //We chose 500 here because that's less than a month of time, but large enough
@@ -55,6 +56,7 @@ const maxTimeLikeHours = 500;
 
 const monthFrac = 720;
 const mfPerYear = 8640; //720*12
+/** maxYears (inclusive) */
 const maxYears = 367200;
 const maxYM = 4406400; // 367200*24
 const maxYMf = 3172608000; // 4406400*720 ~~2^32
@@ -201,10 +203,11 @@ abstract class ADurationCore {
 	}
 
 	protected _validate(): void {
-		safe.uint.atMost('hour', this._storage[this._hPos], 24);
-		safe.uint.atMost('minute', this._storage[this._hPos + 1], 60);
-		safe.uint.atMost('second', this._storage[this._hPos + 2], 60);
-		safe.uint.atMost('microsecond', this.microsecond, usPerSec);
+		//Technically we'd use `safe.uint.atMost`, but since unsigned ints are stored, we don't need to check for >0
+		safe.int.lt('hour', this._storage[this._hPos], hPerDay);
+		safe.int.lt('minute', this._storage[this._hPos + 1], 60);
+		safe.int.lt('second', this._storage[this._hPos + 2], 60);
+		safe.int.lt('microsecond', this.microsecond, usPerSec);
 	}
 
 	//Extract the current value into two integers, both u32
@@ -403,7 +406,8 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): DurationExact {
-		safe.int.lt('day', this.day, maxDays + 1); //maxDays is inclusive
+		//Technically we'd use `safe.uint.atMost`, but since unsigned ints are stored, we don't need to check for >0
+		safe.int.lte('day',this.day,maxDays);
 		this._validate();
 		//Make sure the combined value isn't GT max
 		if (this.gt(maxE)) throw new LTError('duration', this, maxE);
@@ -780,7 +784,8 @@ export class Duration extends ADurationCore implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Duration {
-		safe.int.lt('year', this.year, maxYears + 1); //maxYears is inclusive
+		//Technically we'd use `safe.uint.atMost`, but since unsigned ints are stored, we don't need to check for >0
+		safe.int.lte('year',this.year,maxYears);
 		safe.float.lt('month', this.month, mPerYear);
 		safe.int.lt('day', this.day, daysPerCD);
 		this._validate();

@@ -72,7 +72,8 @@ export class Nano implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Nano {
-		safe.uint.atMost('value', this.valueOf(), 999999999);
+		//Because this is internal (and stored as uint) we don't need to check >0
+		safe.int.lt('value',this.valueOf(),1000000000);
 		return this;
 	}
 

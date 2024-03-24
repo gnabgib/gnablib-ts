@@ -7,7 +7,7 @@ import { config } from './Config.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const { cyan: method, gray, yellow: num } = color;
 const { reset, underline } = style;
-const file=gray+underline;
+const file = gray + underline;
 
 export class StackEntry {
 	constructor(
@@ -38,7 +38,7 @@ export class StackEntry {
 
 	inColor(): string {
 		//If undefined, config.color will be false (second param for get bool), however if the
-		// tty file has been visited, config.color will be true unless the environment tells 
+		// tty file has been visited, config.color will be true unless the environment tells
 		// it otherwise.. so:
 		// no env check - no color (default)
 		// env check and all clear - color
@@ -58,7 +58,7 @@ export class StackEntry {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		//By default try and render in color during debugging 
+		//By default try and render in color during debugging
 		return this.inColor();
 	}
 

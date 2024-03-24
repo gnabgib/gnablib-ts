@@ -141,7 +141,7 @@ function n32bytes(n: number, pos: number, u: Uint8Array): number {
 	return pos;
 }
 function uintMinBytes(n: number): Uint8Array {
-	safe.uint.is(n);
+	safe.uint.is('n',n);
 	//Since JS supports ints up to 2^52, we'll need 7 bytes max
 	const ret = new Uint8Array(7);
 	if (n === 0) return ret.subarray(0, 1);
@@ -161,7 +161,7 @@ function uintMinBytes(n: number): Uint8Array {
 	return ret.subarray(0, pos);
 }
 function intMinBytes(n: number): Uint8Array {
-	safe.int.is(n);
+	safe.int.is('n',n);
 	const ret = new Uint8Array(7);
 	if (n === 0) return ret.subarray(0, 1);
 	let pos = 0;

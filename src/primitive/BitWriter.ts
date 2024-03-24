@@ -37,7 +37,7 @@ export class BitWriter {
 	 * @param bitCount Number of bits to write 1-32
 	 */
 	writeNumber(value: number, bitCount: number): void {
-		safe.int.inRangeInc('bitCount', bitCount, 1, 32);
+		safe.uint.oneTo('bitCount', bitCount, 32);
 
 		//for a bitPos offset of anything but 0, we need one extra byte
 		// 0 + 2 + 7 /8 = 1 	0 + 8 + 7 /8 = 1

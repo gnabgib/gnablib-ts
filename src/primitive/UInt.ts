@@ -376,7 +376,7 @@ export class UInt {
 	 * @param size Number of U32 elements 1-? (2=U64, 4=U128, 8=U256)
 	 */
 	static fromInt(uint51: number, size: number): UInt {
-		safe.int.gte('uint51',uint51,0);
+		safe.uint.is('uint51',uint51);
 		const a = new Uint32Array(size);
 		a[0] = uint51;
 		a[1] = uint51 / maxU32Plus1;
@@ -562,7 +562,7 @@ export class UIntMut extends UInt {
 	 * @returns
 	 */
 	static fromInt(uint51: number, size: number): UIntMut {
-		safe.int.gte('uint51',uint51,0);
+		safe.uint.is('uint51',uint51);
 		const a = new Uint32Array(size);
 		a[0] = uint51;
 		a[1] = uint51 / maxU32Plus1;

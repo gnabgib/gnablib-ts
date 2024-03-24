@@ -134,7 +134,7 @@ class Gf8 implements IGf<Uint8Array> {
 	private readonly _logTable: Uint8Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safe.int.inRangeInc('pow2Size', pow2Size, 1, 8);
+		safe.uint.oneTo('pow2Size', pow2Size, 8);
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -171,7 +171,7 @@ class Gf8 implements IGf<Uint8Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safe.int.gte('degree', degree, 0);
+		safe.uint.is('degree',degree);
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -324,7 +324,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safe.int.gte('degree', degree, 0);
+		safe.uint.is('degree',degree);
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -386,7 +386,7 @@ class Gf16 implements IGf<Uint16Array> {
 	private readonly _logTable: Uint16Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safe.int.inRangeInc('pow2Size', pow2Size, 1, 16);
+		safe.uint.oneTo('pow2Size', pow2Size, 16);
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -423,7 +423,7 @@ class Gf16 implements IGf<Uint16Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safe.int.gte('degree', degree, 0);
+		safe.uint.is('degree',degree);
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -594,7 +594,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safe.int.gte('degree', degree, 0);
+		safe.uint.is('degree',degree);		
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;

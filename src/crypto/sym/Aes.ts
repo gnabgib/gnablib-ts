@@ -2,7 +2,7 @@
 
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { safe as safe } from '../../safe/safe.js';
+import { safe } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 const blockSize = 16;

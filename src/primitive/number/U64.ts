@@ -655,7 +655,7 @@ export class U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64 {
-		safe.int.gte('uint51', uint51, 0);
+		safe.uint.is('uint51',uint51);
 		return new U64(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -747,7 +747,7 @@ export class U64 {
 		if (uint64 instanceof U64) {
 			return uint64;
 		} else {
-			safe.int.gte('uint64', uint64, 0);
+			safe.uint.is('uint64',uint64);
 			return new U64(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}
@@ -929,7 +929,7 @@ export class U64Mut extends U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64Mut {
-		safe.int.gte('uint51', uint51, 0);
+		safe.uint.is('uint51',uint51);
 		return new U64Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -989,7 +989,7 @@ export class U64Mut extends U64 {
 		if (uint64 instanceof U64) {
 			return uint64.mut();
 		} else {
-			safe.int.gte('uint64', uint64, 0);
+			safe.uint.is('uint64',uint64);
 			return new U64Mut(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
 		}
 	}

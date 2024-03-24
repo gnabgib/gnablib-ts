@@ -117,9 +117,9 @@ export const fpb16 = {
 	/**
 	 * Decode 16 bit IEEE754 (big endian) data into a floating point binary number
 	 * DOESN'T confirm there's enough space in `bytes`
-	 * @param bytes 
-	 * @param pos 
-	 * @returns 
+	 * @param bytes
+	 * @param pos
+	 * @returns
 	 */
 	fromBytesUnsafe: function (bytes: Uint8Array, pos: number): number {
 		const sign = signMul(bytes[pos]);
@@ -149,7 +149,7 @@ export const fpb16 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		safe.int.lte('pos',pos,bytes.length-2);
+		safe.uint.atMost('pos', pos, bytes.length - 2);
 		return fpb16.fromBytesUnsafe(bytes, pos);
 	},
 };
@@ -230,9 +230,9 @@ export const fpb32 = {
 	/**
 	 * Decode 32 bit IEEE754 (big endian) data into a floating point binary number
 	 * DOESN'T confirm there's enough space in `bytes`
-	 * @param bytes 
-	 * @param pos 
-	 * @returns 
+	 * @param bytes
+	 * @param pos
+	 * @returns
 	 */
 	fromBytesUnsafe: function (bytes: Uint8Array, pos: number): number {
 		const sign = signMul(bytes[pos]);
@@ -265,7 +265,7 @@ export const fpb32 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		safe.int.lte('pos',pos,bytes.length-4);
+		safe.uint.atMost('pos', pos, bytes.length - 4);
 		return fpb32.fromBytesUnsafe(bytes, pos);
 	},
 };
@@ -347,9 +347,9 @@ export const fpb64 = {
 
 	/**
 	 * Decode 64 bit IEEE754 (big endian) data into a floating point binary number
-	 * @param bytes 
-	 * @param pos 
-	 * @returns 
+	 * @param bytes
+	 * @param pos
+	 * @returns
 	 */
 	fromBytesUnsafe: function (bytes: Uint8Array, pos: number): number {
 		const sign = signMul(bytes[pos]);
@@ -389,7 +389,7 @@ export const fpb64 = {
 	 * @returns
 	 */
 	fromBytes: function (bytes: Uint8Array, pos = 0): number {
-		safe.int.lte('pos',pos,bytes.length-8);
+		safe.uint.atMost('pos', pos, bytes.length - 8);
 		return fpb64.fromBytesUnsafe(bytes, pos);
 	},
 };

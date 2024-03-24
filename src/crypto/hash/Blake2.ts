@@ -83,7 +83,7 @@ class Blake2_32bit implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		safe.uint.atMost('key.length', key.length, 32);
+		safe.len.atMost('key', key, 32);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -346,7 +346,7 @@ class Blake2_64bit implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		safe.uint.atMost('key.length', key.length, 64);
+		safe.len.atMost('key', key, 64);
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -623,7 +623,7 @@ export class Blake2s extends Blake2_32bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
-		safe.int.inRangeInc('digestSize', digestSize, 1, 32);
+		safe.uint.oneTo('digestSize', digestSize, 32);
 		safe.uint.atMost('fanOut', fanOut, 255);
 		p[0] = digestSize;
 		p[1] = key.length;
@@ -689,7 +689,7 @@ export class Blake2b extends Blake2_64bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
-		safe.int.inRangeInc('digestSize', digestSize, 1, 64);
+		safe.uint.oneTo('digestSize', digestSize, 64);
 		safe.uint.atMost('fanOut', fanOut, 255);
 		p[0] = digestSize;
 		p[1] = key.length;

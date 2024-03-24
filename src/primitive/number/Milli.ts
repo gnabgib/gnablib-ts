@@ -58,7 +58,8 @@ export class Milli implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Milli {
-		safe.uint.atMost('value', (this._v[0] << 8) | this._v[1], 999);
+		//Because this is internal (and stored as uint) we don't need to check >0
+		safe.int.lt('value',this.valueOf(),1000);
 		return this;
 	}
 

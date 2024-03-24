@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safe as safe } from '../safe/safe.js';
+import { safe } from '../safe/safe.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'WindowStr';
 const NOT_FOUND = -1;
@@ -175,11 +175,8 @@ export class WindowStr {
 	 * @pure
 	 */
 	lastIndexOf(searchString: string, length?: number): number {
-		if (length == undefined) {
-			length = this._len;
-		} else {
-			safe.uint.atMost('length', length, this._len);
-		}
+		if (length == undefined) length = this._len;
+		else safe.uint.atMost('length', length, this._len);
 		const lastIndexPos = this._start + length - searchString.length;
 		//Because JS treats <=0 as 0 in lastIndexPos we need to catch negative
 		if (lastIndexPos < 0) return NOT_FOUND;
@@ -197,23 +194,22 @@ export class WindowStr {
 	 * @returns Index or -1
 	 * @pure
 	 */
-	lastIndexOfAny(search:string[],length?:number):number {
-		if (length == undefined) {
-			length = this._len;
-		} else {
+	lastIndexOfAny(search: string[], length?: number): number {
+		if (length == undefined) length = this._len;
+		else {
 			safe.uint.atMost('length', length, this._len);
-			length+=this._start;
+			length += this._start;
 		}
-		let latest=this._start-1;
-		for(const s of search) {
-			const pos=this._src.lastIndexOf(s,length-s.length);
-			if (pos<latest) continue;
-			latest=pos;
+		let latest = this._start - 1;
+		for (const s of search) {
+			const pos = this._src.lastIndexOf(s, length - s.length);
+			if (pos < latest) continue;
+			latest = pos;
 		}
 		//Make sure something was found
-		if (latest==this._start-1) return NOT_FOUND;
+		if (latest == this._start - 1) return NOT_FOUND;
 		//Correct scope
-		latest -=this._start;
+		latest -= this._start;
 		return latest;
 	}
 
@@ -258,15 +254,15 @@ export class WindowStr {
 	 * a multi-step parse that fails at a later step.  Like a transaction that auto-
 	 * commits
 	 */
-	getReset(): () => [number,number] {
+	getReset(): () => [number, number] {
 		const s = this._start;
 		const l = this._len;
 		return () => {
-			const sd=this._start-s;
-			const ld=this._len+this._start;
+			const sd = this._start - s;
+			const ld = this._len + this._start;
 			this._start = s;
 			this._len = l;
-			return [sd,ld];
+			return [sd, ld];
 		};
 	}
 
@@ -296,7 +292,7 @@ export class WindowStr {
 	 */
 	shrink(startBy?: number, lengthBy?: number): WindowStr {
 		if (!startBy) startBy = 0;
-		else safe.uint.atMost('startBy', startBy,  this._len);
+		else safe.uint.atMost('startBy', startBy, this._len);
 		if (!lengthBy) lengthBy = 0;
 		else safe.uint.atMost('lengthBy', lengthBy, this._len - startBy);
 
@@ -315,11 +311,8 @@ export class WindowStr {
 	span(start: number, length?: number): WindowStr {
 		//If start is low, add length (-1 will give you the last char)
 		safe.uint.atMost('start', start, this._len);
-		if (length == undefined) {
-			length = this._len - start;
-		} else {
-			safe.uint.atMost('length', length, this._len - start);
-		}
+		if (length == undefined) length = this._len - start;
+		else safe.uint.atMost('length', length, this._len - start);
 		return new WindowStr(this._src, this._start + start, length);
 	}
 
@@ -386,7 +379,7 @@ export class WindowStr {
 		);
 	}
 
-	trim(chars?:string[]):WindowStr {
+	trim(chars?: string[]): WindowStr {
 		if (!chars) chars = WHITESPACE;
 		restart: while (this._len > 0) {
 			for (const c of chars) {

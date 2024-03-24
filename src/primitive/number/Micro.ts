@@ -58,7 +58,8 @@ export class Micro implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Micro {
-		safe.uint.atMost('value', this.valueOf(), 999999);
+		//Because this is internal (and stored as uint) we don't need to check >0
+		safe.int.lt('value',this.valueOf(),1000000);
 		return this;
 	}
 

@@ -578,7 +578,7 @@ export class BnfRepeat implements IBnfRepeat {
 	 */
 	private constructor(rule: IBnf, min: number, max: number, name?: string) {
 		//max = infinity, but we cannot measure that..this is a decent equiv for now
-		safe.int.gte('min', min, 0);
+		safe.uint.is('min', min);
 		safe.int.gte('max', max, min);
 		this.rule = rule;
 		this.min = min;
