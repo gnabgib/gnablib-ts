@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
@@ -13,8 +13,8 @@ import { IRandInt } from './interfaces/IRandInt.js';
  * @returns function to produce integers in the range 0 - 9
  */
 export function marsaglia(seed: number): IRandInt {
-	safe.uint.oneTo('seed', seed, 99);
-	seed|=0;
+	sNum('seed', seed).natural().atMost(99).throwNot();
+	seed |= 0;
 	/** Return a new number [0-9] */
 	function rand(): number {
 		const units = seed % 10;

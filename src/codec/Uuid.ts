@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../safe/safe.js';
+import { sLen } from '../safe/safe.js';
 import { hex } from './Hex.js';
 
 /**
@@ -32,7 +32,7 @@ const ind_var1_prefix = 0x80; //10xx xxxx
  */
 export function v4FromBytes(bytes: Uint8Array): string {
 	let ret = '';
-	safe.len.atLeast('UUID bytes', bytes, 16);
+	sLen('UUID bytes', bytes).atLeast(16).throwNot();
 	let idx = 0;
 	eachByte2: for (const byte of bytes) {
 		switch (idx++) {

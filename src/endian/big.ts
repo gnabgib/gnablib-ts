@@ -3,7 +3,7 @@
 import { Uint64 } from '../primitive/Uint64.js';
 import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
 import { Int64 } from '../primitive/Int64.js';
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 /**
  * Copy the contents of @param sourceBytes at position @param sourcePos into @param target
@@ -24,12 +24,14 @@ export function u64IntoArrFromBytes(
 	sourcePos = 0
 ): void {
 	const byteCount = targetSize * size64Bytes;
-	safe.uint.atMost(
-		'sourcePos',
-		sourcePos,
-		sourceBytes.length - byteCount
-	);
-	safe.uint.atMost('targetPos', targetPos, target.length - targetSize);
+	sNum('sourcePos', sourcePos)
+		.unsigned()
+		.atMost(sourceBytes.length - byteCount)
+		.throwNot();
+	sNum('targetPos', targetPos)
+		.unsigned()
+		.atMost(target.length - targetSize)
+		.throwNot();
 
 	const n = sourcePos + byteCount;
 	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
@@ -149,11 +151,10 @@ export function u32IntoBytes(
 	targetBytes: Uint8Array,
 	targetPos = 0
 ): void {
-	safe.uint.atMost(
-		'targetBytes',
-		targetPos,
-		targetBytes.length - size32Bytes
-	);
+	sNum('targetPos', targetPos)
+		.unsigned()
+		.atMost(targetBytes.length - size32Bytes)
+		.throwNot();
 	targetBytes[targetPos] = u32 >> 24;
 	targetBytes[targetPos + 1] = u32 >> 16;
 	targetBytes[targetPos + 2] = u32 >> 8;

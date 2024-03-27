@@ -4,7 +4,7 @@ import { asLE } from '../../endian/platform.js';
 import { ContentError } from '../../error/ContentError.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
-import { safe } from '../../safe/safe.js';
+import { sLen } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
 const blockSize = 64; //16*32bit = 512bit
@@ -120,8 +120,9 @@ class Salsa implements IFullCrypt {
 			kb = key.slice(16, 32);
 			asLE.i32(kb, 0, 4);
 			rc = sigma;
-		} else throw new ContentError('should be 16 or 32','key.length',key.length);
-		safe.len.exactly('nonce', nonce, 8); //64 bit nonce
+		} else
+			throw new ContentError('should be 16 or 32', 'key.length', key.length);
+		sLen('nonce', nonce).exactly(8).throwNot(); //64 bit nonce
 
 		//CONSTANTS
 		this.#state[0] = rc[0];
@@ -209,9 +210,8 @@ function hSalsa(
 	input: Uint8Array,
 	rounds: number
 ): void {
-	safe.len.atLeast('output', output, 32); //256 bit output
-	safe.len.exactly('key', key, 32); //256 bit key
-	safe.len.atLeast('input', input, 16); //128 bit input
+	sLen('output', output).atLeast(32).throwNot(); //256 bit output
+	sLen('key', key).exactly(32).throwNot(); //256 bit key
 	const b = new SalsaBlock(rounds);
 	/* C K K K
 	 * K C I I
@@ -256,7 +256,7 @@ function hSalsa(
 
 class XSalsa extends Salsa {
 	constructor(key: Uint8Array, nonce: Uint8Array, count: U64, rounds: number) {
-		safe.len.exactly('nonce', nonce, 24); //192 bit nonce
+		sLen('nonce', nonce).exactly(24).throwNot(); //192 bit nonce
 
 		//Generate z (hSalsa output)
 		const z = new Uint8Array(32);
@@ -304,6 +304,7 @@ export function hSalsa20(
 	key: Uint8Array,
 	input: Uint8Array
 ): void {
+	sLen('input', input).atLeast(16).throwNot(); //128 bit input
 	hSalsa(output, key, input, 20);
 }
 

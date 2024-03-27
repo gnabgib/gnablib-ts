@@ -4,10 +4,10 @@ import { FromBinResult } from '../../primitive/FromBinResult.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
-import { safe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { ContentError } from '../../error/ContentError.js';
+import { sLen } from '../../safe/safe.js';
 
 const len1Byte = 255;
 const len2Byte = 65536; //65k
@@ -30,7 +30,7 @@ abstract class ABin extends ACudColType implements IValid<Uint8Array> {
 		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('input');
 		} else {
-			safe.len.atMost('input', input, maxLen);
+			sLen('input', input).atMost(maxLen).throwNot();
 		}
 	}
 
@@ -56,7 +56,7 @@ export class Bin1 extends ABin {
 				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
-		safe.len.atMost('value', value, len1Byte);
+		sLen('value', value).atMost(len1Byte).throwNot();
 		const ret = new Uint8Array(1 + value.length);
 		ret[0] = value.length;
 		ret.set(value, 1);
@@ -109,7 +109,7 @@ export class Bin2 extends ABin {
 				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
-		safe.len.atMost('value', value, len2Byte);
+		sLen('value', value).atMost(len2Byte).throwNot();
 		const ret = new Uint8Array(2 + value.length);
 		ret[0] = value.length >> 8;
 		ret[1] = value.length;
@@ -163,7 +163,7 @@ export class Bin3 extends ABin {
 				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
-		safe.len.atMost('value', value, len3Byte);
+		sLen('value', value).atMost(len3Byte).throwNot();
 		const ret = new Uint8Array(3 + value.length);
 		ret[0] = value.length >> 16;
 		ret[1] = value.length >> 8;
@@ -220,7 +220,7 @@ export class Bin4ish extends ABin {
 				throw new ContentError('cannot be null', 'Bin', undefined);
 			return new Uint8Array([0]);
 		}
-		safe.len.atMost('value', value, len4Byte);
+		sLen('value', value).atMost(len4Byte).throwNot();
 		const ret = new Uint8Array(4 + value.length);
 		ret[0] = value.length >>> 24;
 		ret[1] = value.length >> 16;

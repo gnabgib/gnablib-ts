@@ -2,7 +2,7 @@
 
 import { hex } from '../codec/Hex.js';
 import { NotSupportedError } from '../error/NotSupportedError.js';
-import { safe } from '../safe/safe.js';
+import { sLen, sNum } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 //const maxI32 = 2147483647; // 0x7fffffff
@@ -21,8 +21,8 @@ export class Int64 {
 		// when using hex for numbers (which we frequently do for readability)
 		// JS considers them unsigned, so 0xFFFFFFFF isn't -1, it's +4M so..
 		//We allow between ~ -2M and +4M (even though you should choose one or the other range)
-		safe.int.inRangeInc('lowI32', lowI32, minI32, maxU32);
-		safe.int.inRangeInc('highI32', highI32, minI32, maxU32);
+		sNum('lowI32', lowI32).atLeast(minI32).atMost(maxU32).throwNot();
+		sNum('highI32', highI32).atLeast(minI32).atMost(maxU32).throwNot();
 		this.highU32 = highI32 >>> 0;
 		this.lowU32 = lowI32 >>> 0;
 	}
@@ -145,7 +145,7 @@ export class Int64 {
 	 * @returns shifted value
 	 */
 	lShift(by: number): Int64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		const o = this.lShiftOut(by);
 		return new Int64(o[3], o[2]);
 	}
@@ -156,7 +156,7 @@ export class Int64 {
 	 * @returns rotated value
 	 */
 	lRot(by: number): Int64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		const o = this.lShiftOut(by);
 		return new Int64(o[3] | o[1], o[2] | o[0]);
 	}
@@ -167,7 +167,7 @@ export class Int64 {
 	 * @returns shifted value
 	 */
 	rShift(by: number): Int64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		//Shifting right can be emulated by using the shift-out registers of
 		// a left shift.  eg. In <<1 the outgoing register has 1 bit in it,
 		// the same result as >>>63
@@ -181,7 +181,7 @@ export class Int64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): Int64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		const o = this.lShiftOut(64 - by);
 		return new Int64(o[3] | o[1], o[2] | o[0]);
 	}
@@ -380,7 +380,9 @@ export class Int64 {
 	}
 
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Int64 {
-		safe.len.atLeast('sourceBytes',sourceBytes,sourcePos+8);
+		sLen('sourceBytes', sourceBytes)
+			.atLeast(sourcePos + 8)
+			.throwNot();
 		const high =
 			(sourceBytes[sourcePos++] << 24) |
 			(sourceBytes[sourcePos++] << 16) |
@@ -395,9 +397,9 @@ export class Int64 {
 	}
 
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Int64 {
-		safe.uint.atMost('len', len, 8);
+		sNum('len', len).unsigned().atMost(8).throwNot();
 		const end = sourcePos + len;
-		safe.len.atLeast('sourceBytes',sourceBytes,end);
+		sLen('sourceBytes', sourceBytes).atLeast(end).throwNot();
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

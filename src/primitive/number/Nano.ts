@@ -1,14 +1,16 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../../safe/safe.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
 import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
+import { sLen, sNum } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Nano';
+/** max value (exclusive) */
+const max = 1000000000;
 
 /** Nano/Billionths (0-999999999 range) */
 export class Nano implements ISerializer {
@@ -73,7 +75,7 @@ export class Nano implements ISerializer {
 	 */
 	public validate(): Nano {
 		//Because this is internal (and stored as uint) we don't need to check >0
-		safe.int.lt('value',this.valueOf(),1000000000);
+		sNum('value', this.valueOf()).lt(max).throwNot();
 		return this;
 	}
 
@@ -101,15 +103,15 @@ export class Nano implements ISerializer {
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(self.storageBytes);
-		safe.len.atLeast('storage', storage, self.storageBytes);
+		sLen('storage', storage).atLeast(self.storageBytes).throwNot();
 		return storage;
 	}
 
 	/** Create a new nano/billionth, range 0-999999999 */
-	public static new(v: number, storage?: Uint8Array): Nano {
-		safe.uint.atMost('value', v, 999999999);
+	public static new(nano: number, storage?: Uint8Array): Nano {
+		sNum('nano', nano).unsigned().lt(max).throwNot();
 		const stor = self.setupStor(storage);
-		self.writeValue(stor, v);
+		self.writeValue(stor, nano);
 		return new Nano(stor);
 	}
 
@@ -134,7 +136,7 @@ export class Nano implements ISerializer {
 			);
 		}
 		const iVal = parseInt(digits, 10);
-		safe.uint.atMost(name, iVal, 999999999);
+		sNum(name, iVal).unsigned().lt(max).throwNot();
 		self.writeValue(storage, iVal);
 		input.shrink(digits.length);
 	}

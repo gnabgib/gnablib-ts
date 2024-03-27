@@ -1,6 +1,5 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
-
-import { safe } from '../safe/safe.js';
+import { sLen } from '../safe/safe.js';
 
 const mask = [0xff, 0x7f, 0x3f, 0x1f, 0xf, 0x7, 0x3, 0x1];
 
@@ -43,7 +42,7 @@ export class BitReader {
 	readNumber(bitCount: number): number {
 		//Make sure there's data in the buffer
 		const byteCountNeeded = (this._bitPtr + bitCount + 7) >>> 3;
-		safe.len.atLeast('(internal)buffer', this._buff, byteCountNeeded);
+		sLen('(internal)buffer', this._buff).atLeast(byteCountNeeded).throwNot();
 
 		let byteBitSpace = 8 - this.bitPos;
 		let ptr = this._bitPtr >>> 3;

@@ -2,7 +2,7 @@
 
 import { ContentError } from '../error/ContentError.js';
 import { IUucodeEncodeOpts } from './interfaces/IUucodeEncodeOpts.js';
-import { safe } from '../safe/safe.js';
+import { sLen } from '../safe/safe.js';
 /**
  * Support: (Uint8Array)
  * Chrome, Android webview, ChromeM >=38
@@ -40,7 +40,7 @@ function mapUueCharToInt(char: string): number {
  * @returns
  */
 function mapLine(bytes: Uint8Array, charMap: (int: number) => string): string {
-	safe.len.atMost('bytes',bytes,45);
+	sLen('bytes', bytes).atMost(45).throwNot();
 	//Start with size char
 	let ret = charMap(bytes.length);
 	let i = 0;

@@ -1,14 +1,16 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../../safe/safe.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
 import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
+import { sLen, sNum } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Sexagesimal';
+/** max value (exclusive) */
+const max = 60;
 
 /** Sexagesimal (0-59 range) */
 export class Sexagesimal implements ISerializer {
@@ -59,7 +61,7 @@ export class Sexagesimal implements ISerializer {
 	 */
 	public validate(): Sexagesimal {
 		//Because this is internal (and stored as uint) we don't need to check >0
-		safe.int.lt('value',this._v[0],60);
+		sNum('value', this._v[0]).lt(max).throwNot();
 		return this;
 	}
 
@@ -76,15 +78,15 @@ export class Sexagesimal implements ISerializer {
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(self.storageBytes);
-		safe.len.atLeast('storage', storage, self.storageBytes);
+		sLen('storage', storage).atLeast(self.storageBytes).throwNot();
 		return storage;
 	}
 
 	/** Create a new sexagesimal number, range 0-59 */
-	public static new(v: number, storage?: Uint8Array): Sexagesimal {
-		safe.uint.atMost('value', v, 59);
+	public static new(sexa: number, storage?: Uint8Array): Sexagesimal {
+		sNum('sexa', sexa).unsigned().lt(max).throwNot();
 		const stor = self.setupStor(storage);
-		stor[0] = v;
+		stor[0] = sexa;
 		return new Sexagesimal(stor);
 	}
 
@@ -109,7 +111,7 @@ export class Sexagesimal implements ISerializer {
 			);
 		}
 		const iVal = parseInt(digits, 10);
-		safe.uint.atMost('value', iVal, 59);
+		sNum('value', iVal).unsigned().lt(max).throwNot();
 		storage[0] = iVal;
 		input.shrink(digits.length);
 	}

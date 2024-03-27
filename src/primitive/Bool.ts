@@ -1,9 +1,9 @@
-import { safe } from '../safe/safe.js';
 import { BitReader } from './BitReader.js';
 import { BitWriter } from './BitWriter.js';
 import { WindowStr } from './WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from './interfaces/ISerializer.js';
+import { sLen } from '../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Bool';
@@ -95,7 +95,7 @@ export class _BoolCore implements ISerializer {
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(self.storageBytes);
-		safe.len.atLeast('storage', storage, self.storageBytes);
+		sLen('storage', storage).atLeast(self.storageBytes).throwNot();
 		return storage;
 	}
 

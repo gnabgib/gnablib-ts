@@ -5,10 +5,10 @@ import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
 import { utf8 } from '../../codec/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { safe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { ContentError } from '../../error/ContentError.js';
+import { sLen } from '../../safe/safe.js';
 
 abstract class AUtf8 extends ACudColType implements IValid<string> {
 	protected abstract get _lenBytes(): number;
@@ -30,19 +30,19 @@ abstract class AUtf8 extends ACudColType implements IValid<string> {
 			if (!this.nullable) return TypeProblem.Null('Utf8');
 			return undefined;
 		}
-		safe.len.atMost('input', input, this._maxStrLen);
+		sLen('input', input).atMost(this._maxStrLen).throwNot();
 	}
 
 	unknownBin(value?: string): Uint8Array {
 		if (value == undefined) {
-			if (!this.nullable) 
+			if (!this.nullable)
 				throw new ContentError('cannot be null', 'String', undefined);
 			return new Uint8Array([0]);
 		} else if (!(typeof value === 'string')) {
 			throw new TypeError('String required');
 		}
 		const b = utf8.toBytes(value);
-		safe.len.atMost('value-bytes', b, this._maxStrLen);
+		sLen('value-bytes', b).atMost(this._maxStrLen).throwNot();
 
 		const ret = new Uint8Array(this._lenBytes + b.length);
 		let lenPtr = this._lenBytes - 1;

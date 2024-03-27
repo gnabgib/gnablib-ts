@@ -6,7 +6,6 @@
  * share is they have access to innards for some ops, but don't expose themselves to lib-users
  */
 
-import { safe } from '../safe/safe.js';
 import { AtMostError } from '../error/AtMostError.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 import { BitReader } from '../primitive/BitReader.js';
@@ -20,6 +19,7 @@ import {
 	IDurationExactParts,
 	IDurationParts,
 } from './interfaces/IDurationParts.js';
+import { sFloat, sNum } from '../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -203,11 +203,15 @@ abstract class ADurationCore {
 	}
 
 	protected _validate(): void {
-		//Technically we'd use `safe.uint.atMost`, but since unsigned ints are stored, we don't need to check for >0
-		safe.int.lt('hour', this._storage[this._hPos], hPerDay);
-		safe.int.lt('minute', this._storage[this._hPos + 1], 60);
-		safe.int.lt('second', this._storage[this._hPos + 2], 60);
-		safe.int.lt('microsecond', this.microsecond, usPerSec);
+		//We don't need to check the lower bound (>0), since they're unsigned in storage
+		sNum('hour', this._storage[this._hPos]).lt(hPerDay).throwNot();
+		sNum('minute', this._storage[this._hPos + 1])
+			.lt(60)
+			.throwNot();
+		sNum('second', this._storage[this._hPos + 2])
+			.lt(60)
+			.throwNot();
+		sNum('microsecond', this.microsecond).lt(usPerSec).throwNot();
 	}
 
 	//Extract the current value into two integers, both u32
@@ -406,8 +410,8 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): DurationExact {
-		//Technically we'd use `safe.uint.atMost`, but since unsigned ints are stored, we don't need to check for >0
-		safe.int.lte('day',this.day,maxDays);
+		//We don't need to check the lower bound (>0), since they're unsigned in storage
+		sNum('day', this.day).atMost(maxDays).throwNot();
 		this._validate();
 		//Make sure the combined value isn't GT max
 		if (this.gt(maxE)) throw new LTError('duration', this, maxE);
@@ -575,7 +579,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		i = us % 60;
 		us = Math.floor(us / 60);
 		h = us % hPerDay;
-		us = Math.floor(us / 24);
+		us = Math.floor(us / hPerDay);
 		d = us;
 
 		//Days can only exceed max if us was floating point.. which it could have been
@@ -784,10 +788,10 @@ export class Duration extends ADurationCore implements ISerializer {
 	 * @returns self (chainable)
 	 */
 	public validate(): Duration {
-		//Technically we'd use `safe.uint.atMost`, but since unsigned ints are stored, we don't need to check for >0
-		safe.int.lte('year',this.year,maxYears);
-		safe.float.lt('month', this.month, mPerYear);
-		safe.int.lt('day', this.day, daysPerCD);
+		//We don't need to check the lower bound (>0), since they're unsigned in storage
+		sNum('year', this.year).atMost(maxYears).throwNot();
+		sFloat('month', this.month).lt(mPerYear).throwNot();
+		sNum('day', this.day).lt(daysPerCD).throwNot();
 		this._validate();
 		return this;
 	}

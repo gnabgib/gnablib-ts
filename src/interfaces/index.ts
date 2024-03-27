@@ -49,12 +49,10 @@ export {
 } from '../runtime/interfaces/ForLog.js';
 // Safe
 export type {
-	ISafeInt,
-	ISafeUint,
-	ISafeFloat,
-	ISafeLen,
+	ISafeNum,
 	ISafeStr,
-	ISafe,
+	ISafeBool,
+	ISafeLen,
 } from '../safe/interfaces/ForSafe.js';
 // Test
 export type { errorSetting } from '../test/interfaces/errorSetting.js';

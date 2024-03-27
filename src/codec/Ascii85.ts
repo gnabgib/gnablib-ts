@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { ScalingUint8Array } from '../primitive/TypedArrayExt.js';
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 import { IAscii85EncodeOpts } from './interfaces/IAscii85EncodeOpts.js';
 
 // const tbl = '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstu';
@@ -16,7 +16,7 @@ export const ascii85 = {
 	fromBytes: function (bytes: Uint8Array, opts?: IAscii85EncodeOpts): string {
 		let lineLength = defLineLength;
 		if (opts?.lineLength) {
-			safe.int.gte('opts.lineLength',opts.lineLength,1);
+			sNum('opts.lineLength',opts.lineLength).natural().throwNot();
 			lineLength = opts.lineLength;
 		}
 		let pad = false;

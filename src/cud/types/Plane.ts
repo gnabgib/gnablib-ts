@@ -2,13 +2,13 @@
 
 import { utf8 } from '../../codec/Utf8.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { safe } from '../../safe/safe.js';
+import { sLen } from '../../safe/safe.js';
 
 export class Plane {
 	readonly char: string;
 	readonly human: string;
 	private constructor(char: string, human: string) {
-		safe.len.exactly('char',char,1);
+		sLen('char', char).exactly(1).throwNot();
 		this.char = char;
 		this.human = human;
 	}

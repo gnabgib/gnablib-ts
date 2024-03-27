@@ -1,2 +1,2 @@
 //safe barrel file
-export {safe, superSafe} from './safe.js';
+export * as safe2 from './safe.js';

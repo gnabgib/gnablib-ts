@@ -7,11 +7,11 @@ import { Int64 } from '../../primitive/Int64.js';
 import { TableName } from '../TableName.js';
 import { ColName } from '../ColName.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
-import { safe } from '../../safe/safe.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { RangeProblem } from '../../error/probs/RangeProblem.js';
 import { ContentError } from '../../error/ContentError.js';
+import { sLen } from '../../safe/safe.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = new Int64(0, 0);
@@ -77,7 +77,7 @@ export abstract class ARef
 	unknownBin(value?: number | Int64): Uint8Array {
 		let i64: Int64;
 		if (value == undefined) {
-			if (!this.nullable) 
+			if (!this.nullable)
 				throw new ContentError('cannot be null', 'Ref', undefined);
 			return new Uint8Array([0]);
 		} else if (value instanceof Int64) {
@@ -90,7 +90,7 @@ export abstract class ARef
 			throw new TypeError('Integer or Int64 required');
 		}
 		const n = i64.toMinBytes();
-		safe.len.atMost('i64-bytes', n, this._maxByteLen);
+		sLen('i64-bytes', n).atMost(this._maxByteLen).throwNot();
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;

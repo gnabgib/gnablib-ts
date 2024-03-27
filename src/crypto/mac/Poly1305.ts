@@ -2,13 +2,13 @@
 
 import { asLE } from '../../endian/platform.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
-import { safe } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 import { IHash } from '../interfaces/IHash.js';
 import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
 import { ChaCha20, XChaCha20 } from '../sym/ChaCha.js';
 import { Salsa20, XSalsa20 } from '../sym/Salsa.js';
 import { LengthError } from '../../error/LengthError.js';
+import { sLen } from '../../safe/safe.js';
 
 const tagSize = 16;
 
@@ -41,7 +41,7 @@ export class Poly1305 implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array) {
-		safe.len.exactly('key', key, 32); //256
+		sLen('key', key).exactly(32).throwNot(); //256 bits
 
 		const r16 = new Uint16Array(key.slice(0, 16).buffer);
 		//Make sure data is LE
@@ -267,8 +267,7 @@ export class Poly1305 implements IHash {
 	static fromCrypt(c: IFullCrypt): Poly1305 {
 		//Make sure the crypt generates at least 32 bits
 		//(otherwise we'll have a counter rollover which is out of spec)
-		if (c.blockSize < 32)
-			throw new LengthError(32,'c.blockSize',c.blockSize);
+		if (c.blockSize < 32) throw new LengthError(32, 'c.blockSize', c.blockSize);
 		//While we only need 32 bits, we want to consume a full block so the counter increments
 		//(assuming it's a counter based scheme, which it is if it's a Salsa/ChaCha variant)
 		const key = new Uint8Array(c.blockSize);
@@ -367,7 +366,7 @@ class Poly1305Aead implements IAeadCrypt {
 		}
 		this._stage = stage_done;
 		//Make sure the provided tag is the right size
-		safe.len.exactly('tag', tag, tagSize);
+		sLen('tag', tag).exactly(tagSize).throwNot();
 
 		const foundTag = this._hash.sumIn();
 

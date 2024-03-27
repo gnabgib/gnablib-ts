@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../../safe/safe.js';
+import { sNum } from '../../safe/safe.js';
 
 const blockSize256Bytes = 32; //512bits
 const blockSize512Bytes = 64; //512bits
@@ -14,7 +14,7 @@ class Ctx {
 	private readonly _digestSizeBytes;
 
 	constructor(digestSize256: number) {
-		safe.uint.oneTo('digestSize256',digestSize256,2);
+		sNum('digestSize256',digestSize256).natural().atMost(2).throwNot();
 		this._digestSizeBytes = digestSize256 * 256;
 		if (digestSize256 === 1) {
 			for (let i = 0; i < blockSize512Bytes; i++) this._h[i] = 0x01;

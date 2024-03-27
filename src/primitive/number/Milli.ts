@@ -1,14 +1,16 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../../safe/safe.js';
 import { BitReader } from '../BitReader.js';
 import { BitWriter } from '../BitWriter.js';
 import { WindowStr } from '../WindowStr.js';
 import { ContentError } from '../../error/ContentError.js';
 import { ISerializer } from '../interfaces/ISerializer.js';
+import { sLen, sNum } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Milli';
+/** max value (exclusive) */
+const max = 1000;
 
 /** Milli/Thousandths (0-999 range) */
 export class Milli implements ISerializer {
@@ -59,7 +61,7 @@ export class Milli implements ISerializer {
 	 */
 	public validate(): Milli {
 		//Because this is internal (and stored as uint) we don't need to check >0
-		safe.int.lt('value',this.valueOf(),1000);
+		sNum('value', this.valueOf()).lt(max).throwNot();
 		return this;
 	}
 
@@ -93,15 +95,15 @@ export class Milli implements ISerializer {
 	/** If storage empty, builds new, or vets it's the right size */
 	protected static setupStor(storage?: Uint8Array): Uint8Array {
 		if (!storage) return new Uint8Array(self.storageBytes);
-		safe.len.atLeast('storage', storage, self.storageBytes);
+		sLen('storage', storage).atLeast(self.storageBytes).throwNot();
 		return storage;
 	}
 
 	/** Create a new milli/thousandth, range 0-999 */
-	public static new(v: number, storage?: Uint8Array): Milli {
-		safe.uint.atMost('value', v, 999);
+	public static new(milli: number, storage?: Uint8Array): Milli {
+		sNum('milli', milli).unsigned().lt(max).throwNot();
 		const stor = self.setupStor(storage);
-		self.writeValue(stor, v);
+		self.writeValue(stor, milli);
 		return new Milli(stor);
 	}
 
@@ -131,7 +133,7 @@ export class Milli implements ISerializer {
 			effDigits = (digits + '000').substring(0, 3);
 		}
 		const iVal = parseInt(effDigits, 10);
-		safe.uint.atMost(name, iVal, 999);
+		sNum(name, iVal).unsigned().lt(max).throwNot();
 		self.writeValue(storage, iVal);
 		input.shrink(digits.length);
 	}

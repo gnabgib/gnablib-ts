@@ -9,7 +9,8 @@ import { utf } from '../primitive/Utf.js';
 import type { WindowStr } from '../primitive/WindowStr.js';
 import { IBnf } from './interfaces/IBnf.js';
 import { IBnfRepeat } from './interfaces/IBnfRepeat.js';
-import { safe } from '../safe/safe.js';
+import { sLen, sNum } from '../safe/safe.js';
+
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 //Augmented Backus-Naur Form
@@ -54,7 +55,7 @@ export class BnfChar implements IBnf {
 				caseInsensitive = value.caseInsensitive;
 			}
 		} else {
-			safe.len.exactly('value', value, 1);
+			sLen('value', value).exactly(1).throwNot();
 			this.ord = value.charCodeAt(0);
 		}
 		this.caseInsensitive = BnfChar.smartSensitive(this.ord, caseInsensitive);
@@ -156,7 +157,7 @@ export class BnfRange implements IBnf, Iterable<BnfChar> {
 		if (this.start.caseInsensitive || this.end.caseInsensitive)
 			throw new RangeError('You can only specify case sensitive characters.');
 		this.nonPrintable = this.start.nonPrintable || this.end.nonPrintable;
-		safe.int.gte('end.ord', this.end.ord, this.start.ord + 1);
+		sNum('end.ord', this.end.ord).gt(this.start.ord).throwNot();
 		this.name = name;
 	}
 
@@ -267,7 +268,7 @@ export class BnfString implements IBnf, Iterable<BnfChar>, Iterable<IBnf> {
 			this.nonPrintable = nonPrint;
 			ci = ci_all_undef ? undefined : ci_mixed ? 'mix' : caseInsensitive;
 		} else {
-			safe.len.atLeast('value', value, 2);
+			sLen('value', value).atLeast(2).throwNot();
 			let nonPrint = false;
 			let ci_all_undef = true;
 			this._chars = value.split('').map((c) => {
@@ -578,8 +579,8 @@ export class BnfRepeat implements IBnfRepeat {
 	 */
 	private constructor(rule: IBnf, min: number, max: number, name?: string) {
 		//max = infinity, but we cannot measure that..this is a decent equiv for now
-		safe.uint.is('min', min);
-		safe.int.gte('max', max, min);
+		sNum('min', min).unsigned().throwNot();
+		sNum('max', max).atLeast(min).throwNot();
 		this.rule = rule;
 		this.min = min;
 		this.max = max;

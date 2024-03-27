@@ -2,7 +2,7 @@
 
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { safe } from '../../safe/safe.js';
+import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 const blockSize = 16;
@@ -529,7 +529,9 @@ export class Aes implements IBlockCrypt {
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		safe.len.atLeast('block', block, byteStart + blockSize);
+		sLen('block', block)
+			.atLeast(byteStart + blockSize)
+			.throwNot();
 		this._decBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 
@@ -541,7 +543,9 @@ export class Aes implements IBlockCrypt {
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {
 		const byteStart = offset * blockSize;
-		safe.len.atLeast('block', block, byteStart + blockSize);
+		sLen('block', block)
+			.atLeast(byteStart + blockSize)
+			.throwNot();
 		this._encBlock(block.subarray(byteStart, byteStart + blockSize));
 	}
 }

@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 //https://en.wikipedia.org/wiki/Densely_packed_decimal
 
@@ -102,8 +102,8 @@ export function toDense2Unsafe(d0: number, d1: number): number {
  * @returns Packed form, 7 bits long (0x7F mask)
  */
 export function toDense2(d0: number, d1: number): number {
-	safe.uint.atMost('d0', d0, 9);
-	safe.uint.atMost('d1', d1, 9);
+	sNum('d0', d0).unsigned().atMost(9).throwNot();
+	sNum('d1', d1).unsigned().atMost(9).throwNot();
 	return toDense2Unsafe(d0, d1);
 }
 
@@ -185,7 +185,7 @@ export function fromDense3Unsafe(value: number): bcd {
  * @returns Binary coded decimal MSD:d0,d1,d2 (3 nibbles=12 bits long)
  */
 export function fromDense3(value: number): bcd {
-	safe.uint.atMost('value', value, 0x3ff);
+	sNum('value', value).unsigned().atMost(0x3ff).throwNot();
 	return fromDense3Unsafe(value);
 }
 
@@ -339,9 +339,9 @@ export function toDense3Unsafe(d0: number, d1: number, d2: number): number {
  * @returns Packed form, 10 bits long (0x3FF mask)
  */
 export function toDense3(d0: number, d1: number, d2: number): number {
-	safe.uint.atMost('d0', d0, 9);
-	safe.uint.atMost('d1', d1, 9);
-	safe.uint.atMost('d2', d2, 9);
+	sNum('d0', d0).unsigned().atMost(9).throwNot();
+	sNum('d1', d1).unsigned().atMost(9).throwNot();
+	sNum('d2', d2).unsigned().atMost(9).throwNot();
 	return toDense3Unsafe(d0, d1, d2);
 }
 
@@ -356,7 +356,7 @@ export function push2DigitsToBytes(
 	bytes: Uint8Array,
 	bitPos: number
 ): number {
-	safe.uint.atMost('value', value, 99);
+	sNum('value', value).unsigned().lt(100).throwNot();
 	const packBits = 7;
 	const startBitPos = bitPos & 0x7;
 	const bytePos = bitPos >> 3;
@@ -390,7 +390,7 @@ export function push3DigitsToBytes(
 	bytes: Uint8Array,
 	bitPos: number
 ): number {
-	safe.uint.atMost('value', value, 999);
+	sNum('value', value).unsigned().lt(1000).throwNot();
 	const packBits = 10;
 	const startBitPos = bitPos & 0x7;
 	const bytePos = bitPos >> 3;

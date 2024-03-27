@@ -1,6 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../safe/safe.js';
+import { sLen, sNum } from '../safe/safe.js';
 
 const mask = [0xff, 0x7f, 0x3f, 0x1f, 0xf, 0x7, 0x3, 0x1];
 
@@ -37,14 +37,14 @@ export class BitWriter {
 	 * @param bitCount Number of bits to write 1-32
 	 */
 	writeNumber(value: number, bitCount: number): void {
-		safe.uint.oneTo('bitCount', bitCount, 32);
+		sNum('bitCount', bitCount).natural().atMost(32).throwNot();
 
 		//for a bitPos offset of anything but 0, we need one extra byte
 		// 0 + 2 + 7 /8 = 1 	0 + 8 + 7 /8 = 1
 		// 2 + 6 + 7 /8 = 1	 	0 + 9 + 7 /8 = 2
 		//console.log(`t.bc=${this.#bitCount} bc=${bitCount}`);
-		const byteCountNeed = (this._bitCount + bitCount + 7) >>> 3;
-		safe.len.atLeast('(internal)buffer', this._buff, byteCountNeed);
+		const byteCountNeeded = (this._bitCount + bitCount + 7) >>> 3;
+		sLen('(internal)buffer', this._buff).atLeast(byteCountNeeded).throwNot();
 
 		let ptr = this._bitCount >>> 3;
 		let byteBitSpace = 8 - this.bitPos;

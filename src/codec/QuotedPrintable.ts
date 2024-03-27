@@ -3,7 +3,7 @@
 import { ContentError } from '../error/ContentError.js';
 import { hex } from './Hex.js';
 import { IQuotedPrintableEncodeOpts } from './interfaces/IQuotedPrintableEncodeOpts.js';
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 //https://en.wikipedia.org/wiki/Quoted-printable
 //https://datatracker.ietf.org/doc/html/rfc2045#section-6.7
@@ -23,7 +23,7 @@ export const quotedPrintable = {
 		let maxLineLength: number;
 		if (opts?.lineLength != undefined) {
 			//Lower bound is 3 because a single char can encode to 3 chars (eg 61)
-			safe.int.inRangeInc('opts.lineLength', opts.lineLength, 3, 998);
+			sNum('opts.lineLength', opts.lineLength).atLeast(3).atMost(998).throwNot();
 			maxLineLength = opts.lineLength;
 		} else {
 			maxLineLength = 76;

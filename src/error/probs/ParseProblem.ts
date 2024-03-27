@@ -1,6 +1,5 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 import { color } from '../../cli/csi-tables.js';
-import { config } from '../../runtime/Config.js';
 import { IProblem } from './interfaces/IProblem.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -92,6 +91,8 @@ export class ParseProblem implements IProblem {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		/* c8 ignore next*/
-		return config.getBool('color') ? this.inColor() : this.toString();
+		return this.inColor();
+		//We cannot consult config without creating a cyclical loop (config can generate problems)
+		//return config.getBool('color') ? this.inColor() : this.toString();
 	}
 }

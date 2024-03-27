@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 const ord_low = 33; //!
 const ord_high = 126; //~
@@ -18,7 +18,7 @@ const ord_high = 126; //~
  * @returns Encoded data
  */
 export function shift(input: Uint8Array, diff = 47): Uint8Array {
-	safe.int.inRangeInc('diff',diff,-93,93);
+	sNum('diff',diff).atLeast(-93).atMost(93).throwNot();
 	const ret = new Uint8Array(input.length);
 	//1000001 = x41 = 65 = A
 	//1100001 = x61 = 97 = a

@@ -1,69 +1,65 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { ILengther } from '../../primitive/interfaces/ILengther.js';
-
-/** Integer safety checks */
-export interface ISafeInt {
-	/** May throw if $test is not an integer */
-	is(noun: string, test: unknown): test is number;
-
-	/** May throw if $test <$lowIn or >highInc  */
-	inRangeInc(noun: string, test: number, lowInc: number, highInc: number): void;
-	/** May throw if $test < $gte */
-	gte(noun: string, test: number, gte: number): void;
-	/** Make sure that $test is <$lt */
-	lt(noun: string, test: number, lt: number): void;
-	/** Make sure that $test is <=$lt */
-	lte(noun: string, test: number, lte: number): void;
+export interface ISafeNum {
+	/** Value as number (you should access via {@link cast}) */
+	get value(): number;
+	/** Throw an error (if fails validation) or return self (chainable) */
+	throwNot(): void | ISafeNum;
+	/** Cast value, will either return value or throw an error (if fails validation) */
+	cast(): number | never;
+	/** Return whether a cast will pass (ie. not throw) */
+	is(): this is ISafeNum;
+	/** Coerce input to number, note any prior problems will be cleared */
+	coerce(): ISafeNum;
+	/** Make sure value is <= $lte */
+	atMost(lte: number): ISafeNum;
+	/** Make sure value is < $lt */
+	lt(lt: number): ISafeNum;
+	/** Make sure value is >= $gte */
+	atLeast(gte: number): ISafeNum;
+	/** Make sure value is > $gt */
+	gt(gt: number): ISafeNum;
+	/** Same as `atLeast(0)` */
+	unsigned(): ISafeNum;
+	/** Same as `atLeast(1)` - there is some contention as to whether 0 is natural https://en.wikipedia.org/wiki/Natural_number */
+	natural(): ISafeNum;
 }
 
-export interface ISafeUint {
-	/** May throw is $test is not an integer, >=0 */
-	is(noun: string, test: unknown): test is number;
-
-	/** Make sure that $test >=0 <=$lte */
-	atMost(noun: string, test: number, lte: number): void;
-	/** Make sure $test>=1 <=$lte */
-	oneTo(noun: string, test: number, lte: number): void;
-}
-
-export interface ISafeFloat {
-	/** May throw if $test is not a float */
-	is(noun:string, test: unknown): test is number;
-
-	/** Make sure that $test is <$lt */
-	lt(noun: string, test: number, lt: number): void;
-}
-
-/** Length safety checks */
-export interface ISafeLen {
-	/** Make sure that $test is at least $need elements in size (Invalid $name; need $need have $test.length) */
-	atLeast(name: string, test: ILengther, need: number): void;
-	/** Make sure that $test is exactly $need elements in size (Invalid $noun; need $need have $test.length) */
-	exactly(noun: string, test: ILengther, need: number): void;
-	/** Make sure that $test is <=$highInc and >=$lowInc */
-	inRangeInc(
-		noun: string,
-		test: ILengther,
-		lowInc: number,
-		highInc: number
-	): void;
-	/** Make sure that $test.length is <= highInc */
-	atMost(noun: string, test: ILengther, highInc: number): void;
-}
-
-/** String safety checks */
 export interface ISafeStr {
-	/** May throw if $test is not a string */
-	is(test: unknown): test is string;
-	/** Null/undefined or empty string are converted to undefined, other values are coerced to string and returned */
-	nullEmpty(v: unknown): string | undefined;
+	/** Value as string (you should access via {@link cast}) */
+	get value(): string;
+	/** Throw an error (if fails validation) or return self (chainable) */
+	throwNot(): void | ISafeStr;
+	/** Cast value, will either return value or throw an error (if fails validation) */
+	cast(): string | never;
+	/** Return whether a cast will pass (ie. not throw) */
+	is(): this is ISafeStr;
+	/** Coerce input to string, note any prior problems will be cleared */
+	coerce(): ISafeStr;
 }
 
-export interface ISafe {
-	int: ISafeInt;
-	uint: ISafeUint;
-	float: ISafeFloat;
-	string: ISafeStr;
-	len: ISafeLen;
+export interface ISafeBool {
+	/** Value as string (you should access via {@link cast}) */
+	get value(): boolean;
+	/** Throw an error (if fails validation) or return self (chainable) */
+	throwNot(): void | ISafeBool;
+	/** Cast value, will either return value or throw an error (if fails validation) */
+	cast(): boolean | never;
+	/** Return whether a cast will pass (ie. not throw) */
+	is(): this is ISafeBool;
+	/** Coerce input to string, note any prior problems will be cleared */
+	coerce(): ISafeBool;
+}
+
+export interface ISafeLen {
+	/** Throw an error (if fails validation) or return self (chainable) */
+	throwNot(): void | ISafeLen;
+	/** Return whether a cast will pass (ie. not throw) */
+	is(): this is ISafeLen;
+	/** Make sure length is == $eq */
+	exactly(eq: number): ISafeLen;
+	/** Make sure length is <= $lte */
+	atMost(lte: number): ISafeLen;
+	/** Make sure length is >= $gte */
+	atLeast(gte: number): ISafeLen;
 }

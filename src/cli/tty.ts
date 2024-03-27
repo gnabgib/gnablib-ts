@@ -2,7 +2,7 @@
 
 import { stringExt } from '../primitive/StringExt.js';
 import { config } from '../runtime/Config.js';
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 config
 	.define('color', true)
@@ -377,7 +377,7 @@ export class Color extends StyleSet {
 	 * @returns
 	 */
 	static grey24(value: number): Color {
-		safe.uint.atMost('value', value, 23);
+		sNum('value', value).unsigned().lt(24).throwNot();
 		const start = 232;
 		return new Color([fg_expand, color_index, start + value]);
 	}
@@ -391,9 +391,9 @@ export class Color extends StyleSet {
 	 * @returns
 	 */
 	static rgb6(r: number, g: number, b: number): Color {
-		safe.uint.atMost('r', r, 5);
-		safe.uint.atMost('g', g, 5);
-		safe.uint.atMost('b', b, 5);
+		sNum('r', r).unsigned().lt(6).throwNot();
+		sNum('g', g).unsigned().lt(6).throwNot();
+		sNum('b', b).unsigned().lt(6).throwNot();
 		const start = 16;
 		//Grid starts at 16, r goes up by 36, g by 6, b by 1
 		return new Color([fg_expand, color_index, start + r * 36 + g * 6 + b]);
@@ -458,7 +458,7 @@ export class BgColor extends StyleSet {
 	 * @returns
 	 */
 	static grey24(value: number): BgColor {
-		safe.uint.atMost('value', value, 23);
+		sNum('value', value).unsigned().lt(24).throwNot();
 		const start = 232;
 		return new BgColor([bg_expand, color_index, start + value]);
 	}
@@ -472,9 +472,9 @@ export class BgColor extends StyleSet {
 	 * @returns
 	 */
 	static rgb6(r: number, g: number, b: number): BgColor {
-		safe.uint.atMost('r', r, 5);
-		safe.uint.atMost('g', g, 5);
-		safe.uint.atMost('b', b, 5);
+		sNum('r', r).unsigned().lt(6).throwNot();
+		sNum('g', g).unsigned().lt(6).throwNot();
+		sNum('b', b).unsigned().lt(6).throwNot();
 		//Grid starts at 16, r goes up by 36, g by 6, b by 1
 		const start = 16;
 		return new BgColor([bg_expand, color_index, start + r * 36 + g * 6 + b]);

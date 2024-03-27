@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 const ord_a = 97;
 const ord_z = 122;
@@ -13,7 +13,7 @@ const ord_z = 122;
  * @returns
  */
 export function shift(bytes: Uint8Array, dist = 13): Uint8Array {
-	safe.int.inRangeInc('dist', dist, -25, 25);
+	sNum('dist',dist).atLeast(-25).atMost(25).throwNot();
 	const ret = new Uint8Array(bytes.length);
 	//1000001 = x41 = 65 = A
 	//1100001 = x61 = 97 = a

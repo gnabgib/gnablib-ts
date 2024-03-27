@@ -5,8 +5,8 @@ import { Uint64, Uint64ish } from '../../primitive/Uint64.js';
 import type { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64 } from '../../primitive/number/U64.js';
-import { safe } from '../../safe/safe.js';
 import { LengthError } from '../../error/LengthError.js';
+import { sLen, sNum } from '../../safe/safe.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)
 // [BLAKE2 — fast secure hashing](https://www.blake2.net/)
@@ -83,7 +83,7 @@ class Blake2_32bit implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		safe.len.atMost('key', key, 32);
+		sLen('key', key).atMost(32).throwNot();
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -346,7 +346,7 @@ class Blake2_64bit implements IHash {
 	private _bPos = 0;
 
 	constructor(key: Uint8Array, params: Uint8Array) {
-		safe.len.atMost('key', key, 64);
+		sLen('key', key).atMost(64).throwNot();
 		this.#key = key;
 		this.#params = params;
 		this.reset();
@@ -623,8 +623,8 @@ export class Blake2s extends Blake2_32bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
-		safe.uint.oneTo('digestSize', digestSize, 32);
-		safe.uint.atMost('fanOut', fanOut, 255);
+		sNum('digestSize', digestSize).natural().atMost(32).throwNot();
+		sNum('fanOut', fanOut).unsigned().atMost(255).throwNot();
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;
@@ -637,7 +637,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!salt || salt.length == 0) {
 			//nop
 		} else if (salt.length != saltSize32) {
-			safe.len.exactly('salt', salt, saltSize32);
+			sLen('salt', salt).exactly(saltSize32).throwNot();
 		} else {
 			p.set(salt, 16);
 		}
@@ -645,7 +645,7 @@ export class Blake2s extends Blake2_32bit {
 		if (!personalization || personalization.length == 0) {
 			//nop
 		} else if (personalization.length != saltSize32) {
-			safe.len.exactly('personalization', personalization, saltSize32);
+			sLen('personalization', personalization).exactly(saltSize32).throwNot();
 		} else {
 			p.set(personalization, 24);
 		}
@@ -689,8 +689,8 @@ export class Blake2b extends Blake2_64bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
-		safe.uint.oneTo('digestSize', digestSize, 64);
-		safe.uint.atMost('fanOut', fanOut, 255);
+		sNum('digestSize', digestSize).natural().atMost(64).throwNot();
+		sNum('fanOut', fanOut).unsigned().atMost(255).throwNot();
 		p[0] = digestSize;
 		p[1] = key.length;
 		p[2] = fanOut;

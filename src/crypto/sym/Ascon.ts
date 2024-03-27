@@ -4,7 +4,7 @@ import { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
 import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
-import { safe } from '../../safe/safe.js';
+import { sLen } from '../../safe/safe.js';
 
 // prettier-ignore
 /** Round constants (expand into 64bit) 2.6.1 */
@@ -182,8 +182,9 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		bRound: number
 	) {
 		super(rate, aRound, bRound);
-		safe.len.atMost('key', key, 20); //0-160 bits
-		safe.len.exactly('nonce', nonce, 16); //128 bits
+		//We don't need to test key here since the implementations do
+		//sLen('key',key).atMost(20).throwNot(); //0-160 bits
+		sLen('nonce', nonce).exactly(16).throwNot(); //128 bits
 		//Note rate/aRound/bRound are tunable but not expected to be exposed so no need for safety checks)
 		this.#key = key;
 
@@ -358,7 +359,7 @@ export class Ascon128 extends _AsconAead {
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, 8, 12, 6);
-		safe.len.exactly('key', key, 16); //128 bits
+		sLen('key', key).exactly(16).throwNot(); //128 bits
 	}
 }
 
@@ -385,7 +386,7 @@ export class Ascon128a extends _AsconAead {
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, 16, 12, 8);
-		safe.len.exactly('key', key, 16); //128 bits
+		sLen('key', key).exactly(16).throwNot(); //128 bits
 	}
 }
 
@@ -412,7 +413,7 @@ export class Ascon80pq extends _AsconAead {
 	 */
 	constructor(key: Uint8Array, nonce: Uint8Array) {
 		super(key, nonce, 8, 12, 6);
-		safe.len.exactly('key', key, 20); //160 bits
+		sLen('key', key).exactly(20).throwNot(); //160 bits
 	}
 }
 

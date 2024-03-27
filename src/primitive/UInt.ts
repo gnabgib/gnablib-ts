@@ -3,7 +3,7 @@
 import { hex } from '../codec/Hex.js';
 import { asBE, asLE } from '../endian/platform.js';
 import { NotEnoughSpaceError } from '../error/NotEnoughSpaceError.js';
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = maxU32 + 1;
@@ -376,7 +376,7 @@ export class UInt {
 	 * @param size Number of U32 elements 1-? (2=U64, 4=U128, 8=U256)
 	 */
 	static fromInt(uint51: number, size: number): UInt {
-		safe.uint.is('uint51',uint51);
+		sNum('uint51', uint51).unsigned().throwNot();
 		const a = new Uint32Array(size);
 		a[0] = uint51;
 		a[1] = uint51 / maxU32Plus1;
@@ -562,7 +562,7 @@ export class UIntMut extends UInt {
 	 * @returns
 	 */
 	static fromInt(uint51: number, size: number): UIntMut {
-		safe.uint.is('uint51',uint51);
+		sNum('uint51', uint51).unsigned().throwNot();
 		const a = new Uint32Array(size);
 		a[0] = uint51;
 		a[1] = uint51 / maxU32Plus1;

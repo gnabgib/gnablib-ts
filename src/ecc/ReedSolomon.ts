@@ -3,7 +3,7 @@
 import { hex } from '../codec/Hex.js';
 import { ContentError } from '../error/ContentError.js';
 import { ZeroError } from '../error/ZeroError.js';
-import { safe } from '../safe/safe.js';
+import { sLen, sNum } from '../safe/safe.js';
 
 //https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 //Some source from: https://github.com/zxing/zxing
@@ -134,7 +134,7 @@ class Gf8 implements IGf<Uint8Array> {
 	private readonly _logTable: Uint8Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safe.uint.oneTo('pow2Size', pow2Size, 8);
+		sNum('pow2Size', pow2Size).natural().atMost(8).throwNot();
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -171,7 +171,7 @@ class Gf8 implements IGf<Uint8Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safe.uint.is('degree',degree);
+		sNum('degree', degree).unsigned().throwNot();
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -220,7 +220,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	readonly coefficients: Uint8Array;
 
 	constructor(field: IGf<Uint8Array>, coefficients: Uint8Array) {
-		safe.len.atLeast('Coefficients', coefficients, 1);
+		sLen('coefficients', coefficients).atLeast(1).throwNot();
 		this._field = field;
 		if (coefficients.length > 1 && coefficients[0] === 0) {
 			// Leading term must be non-zero for anything except the constant polynomial "0"
@@ -324,7 +324,7 @@ class GfPoly8 implements GfPoly<Uint8Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint8Array> {
-		safe.uint.is('degree',degree);
+		sNum('degree', degree).unsigned().throwNot();
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;
@@ -386,7 +386,7 @@ class Gf16 implements IGf<Uint16Array> {
 	private readonly _logTable: Uint16Array;
 
 	constructor(primitive: number, pow2Size: number, base: number) {
-		safe.uint.oneTo('pow2Size', pow2Size, 16);
+		sNum('pow2Size', pow2Size).natural().atMost(16).throwNot();
 		const size = 1 << pow2Size;
 		this.primitive = primitive;
 		this.base = base;
@@ -423,7 +423,7 @@ class Gf16 implements IGf<Uint16Array> {
 	}
 
 	buildMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safe.uint.is('degree',degree);
+		sNum('degree', degree).unsigned().throwNot();
 		if (coefficient === 0) {
 			return this.zero;
 		}
@@ -490,7 +490,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	readonly coefficients: Uint16Array;
 
 	constructor(field: Gf16, coefficients: Uint16Array) {
-		safe.len.atLeast('Coefficients', coefficients, 1);
+		sLen('coefficients', coefficients).atLeast(1).throwNot();
 		this._field = field;
 		if (coefficients.length > 1 && coefficients[0] === 0) {
 			// Leading term must be non-zero for anything except the constant polynomial "0"
@@ -594,7 +594,7 @@ class GfPoly16 implements GfPoly<Uint16Array> {
 	}
 
 	mulMonomial(degree: number, coefficient: number): GfPoly<Uint16Array> {
-		safe.uint.is('degree',degree);		
+		sNum('degree', degree).unsigned().throwNot();
 		if (coefficient === 0) return this._field.zero;
 
 		const n = this.coefficients.length;

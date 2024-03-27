@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 import { IRandSrc } from './interfaces/IRandSrc.js';
 
 /**
@@ -63,7 +63,7 @@ export class RandTk {
 	weightedCumulative(weights: number[]): number {
 		let last = 0;
 		for (let i = 0; i < weights.length; i++) {
-			safe.int.gte(`weights[${i}]`, weights[i], last);
+			sNum(`weights[${i}]`, weights[i]).atLeast(last).throwNot();
 			last = weights[i];
 		}
 		//Todo make sure weights are logical (w[n]>=0, w[n]>=w[n-1])

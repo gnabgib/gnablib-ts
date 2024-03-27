@@ -2,7 +2,7 @@
 
 import { hex } from '../codec/Hex.js';
 import { NotSupportedError } from '../error/NotSupportedError.js';
-import { safe } from '../safe/safe.js';
+import { sLen, sNum } from '../safe/safe.js';
 
 const maxU32 = 0xffffffff;
 const maxU32Plus1 = 0x100000000;
@@ -135,7 +135,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	lShift(by: number): Uint64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		const o = this.lShiftOut(by);
 		return new Uint64(o[3] >>> 0, o[2] >>> 0);
 	}
@@ -146,7 +146,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	lRot(by: number): Uint64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		const o = this.lShiftOut(by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -157,7 +157,7 @@ export class Uint64 {
 	 * @returns shifted value
 	 */
 	rShift(by: number): Uint64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		//Shifting right can be emulated by using the shift-out registers of
 		// a left shift.  eg. In <<1 the outgoing register has 1 bit in it,
 		// the same result as >>>63
@@ -171,7 +171,7 @@ export class Uint64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): Uint64 {
-		safe.uint.atMost('by', by, 64);
+		sNum('by', by).unsigned().atMost(64).throwNot();
 		const o = this.lShiftOut(64 - by);
 		return new Uint64((o[3] | o[1]) >>> 0, (o[2] | o[0]) >>> 0);
 	}
@@ -359,7 +359,9 @@ export class Uint64 {
 	 * @returns
 	 */
 	static fromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
-		safe.len.atLeast('sourceBytes',sourceBytes,sourcePos+8);
+		sLen('sourceBytes', sourceBytes)
+			.atLeast(sourcePos + 8)
+			.throwNot();
 		const high =
 			((sourceBytes[sourcePos++] << 24) |
 				(sourceBytes[sourcePos++] << 16) |
@@ -376,9 +378,9 @@ export class Uint64 {
 	}
 
 	static fromMinBytes(sourceBytes: Uint8Array, sourcePos = 0, len = 8): Uint64 {
-		safe.uint.atMost('len', len, 8);
+		sNum('len', len).unsigned().atMost(8).throwNot();
 		const end = sourcePos + len;
-		safe.len.atLeast('sourceBytes',sourceBytes,end);
+		sLen('sourceBytes', sourceBytes).atLeast(end).throwNot();
 
 		const padded = new Uint8Array(8);
 		const minInsertPoint = 8 - len;

@@ -1,9 +1,9 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { Uint64 } from '../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../codec/ieee754-fpb.js';
 import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
-import { safe } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
 
 /**
  * Output a 64 bit unsigned number from @param sourceBytes at position @param sourcePos
@@ -14,11 +14,10 @@ import { safe } from '../safe/safe.js';
  * @returns
  */
 export function u64FromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
-	safe.uint.atMost(
-		'sourcePos',
-		sourcePos,
-		sourceBytes.length - size64Bytes
-	);
+	sNum('sourcePos', sourcePos)
+		.unsigned()
+		.atMost(sourceBytes.length - size64Bytes)
+		.throwNot();
 	//We can use unsafe because we've already tested length
 	return new Uint64(
 		u32FromBytesUnsafe(sourceBytes, sourcePos),
@@ -46,12 +45,14 @@ export function u64IntoArrFromBytes(
 ): void {
 	const byteCount = targetSize * size64Bytes;
 	const n = sourcePos + byteCount;
-	safe.uint.atMost(
-		'sourcePos',
-		sourcePos,
-		sourceBytes.length - byteCount
-	);
-	safe.uint.atMost('targetPos', targetPos, target.length - targetSize);
+	sNum('sourcePos', sourcePos)
+		.unsigned()
+		.atMost(sourceBytes.length - byteCount)
+		.throwNot();
+	sNum('targetPos', targetPos)
+		.unsigned()
+		.atMost(target.length - targetSize)
+		.throwNot();
 
 	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
 		target[targetPos++] = new Uint64(
@@ -89,11 +90,10 @@ export function u64ArrIntoBytes(
 	targetPos = 0
 ): void {
 	const byteCount = sourceU64s.length * size64Bytes;
-	safe.uint.atMost(
-		'targetPos',
-		targetPos,
-		targetBytes.length - byteCount
-	);
+	sNum('targetPos', targetPos)
+		.unsigned()
+		.atMost(targetBytes.length - byteCount)
+		.throwNot();
 	for (let i = 0; i < sourceU64s.length; i++) {
 		const u64 = sourceU64s[i];
 		const rPos = targetPos + i * size64Bytes;
@@ -206,7 +206,10 @@ export function fp64ToBytes(float64: number): Uint8Array {
  * @returns
  */
 export function fp64FromBytes(bytes: Uint8Array, pos = 0): number {
-	safe.uint.atMost('pos', pos, bytes.length - 8);
+	sNum('pos', pos)
+		.unsigned()
+		.atMost(bytes.length - 8)
+		.throwNot();
 	return fpb64.fromBytesUnsafe(bytes.slice(pos, 8).reverse(), 0);
 }
 
@@ -226,7 +229,10 @@ export function fp32ToBytes(float32: number): Uint8Array {
  * @returns
  */
 export function fp32FromBytes(bytes: Uint8Array, pos = 0): number {
-	safe.uint.atMost('pos', pos, bytes.length - 4);
+	sNum('pos', pos)
+		.unsigned()
+		.atMost(bytes.length - 4)
+		.throwNot();
 	return fpb32.fromBytesUnsafe(bytes.slice(pos, 4).reverse(), 0);
 }
 
@@ -247,6 +253,9 @@ export function fp16ToBytes(float16: number): Uint8Array {
  * @returns
  */
 export function fp16FromBytes(bytes: Uint8Array, pos = 0): number {
-	safe.uint.atMost('pos', pos, bytes.length - 2);
+	sNum('pos', pos)
+		.unsigned()
+		.atMost(bytes.length - 2)
+		.throwNot();
 	return fpb16.fromBytesUnsafe(bytes.slice(pos, 2).reverse(), 0);
 }

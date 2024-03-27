@@ -4,7 +4,7 @@ import { callFrom } from '../../src/runtime/callFrom';
 import { config } from '../config';
 
 const tsts = suite('callFrom');
-const DEMO=true || config.getBool('demo');
+const DEMO=false || config.getBool('demo');
 
 const parseSet:[string,string][]=[
     ['Ignored\n',''],

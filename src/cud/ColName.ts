@@ -2,7 +2,7 @@
 
 import { utf8 } from '../codec/Utf8.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
-import { safe } from '../safe/safe.js';
+import { sLen } from '../safe/safe.js';
 
 const minLen = 1; //We don't support empty names
 const maxLen = 63;
@@ -37,7 +37,7 @@ export class ColName {
 	 */
 	static fromStr(name: string): ColName {
 		const bytes = utf8.toBytes(name);
-		safe.len.inRangeInc('name',name,minLen,maxLen);
+		sLen('name', name).atLeast(minLen).atMost(maxLen).throwNot();
 		return new ColName(name, bytes);
 	}
 
@@ -47,7 +47,7 @@ export class ColName {
 	 * @returns
 	 */
 	static fromUtf8Bytes(utf8bytes: Uint8Array): ColName {
-		safe.len.inRangeInc('utf8bytes',utf8bytes,minLen,maxLen);
+		sLen('utf8bytes', utf8bytes).atLeast(minLen).atMost(maxLen).throwNot();
 		const n = utf8.fromBytes(utf8bytes);
 		return new ColName(n, utf8bytes);
 	}

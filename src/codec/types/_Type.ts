@@ -45,7 +45,7 @@ import type {
 import { DateTimeLocal } from '../../datetime/dt.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
-import { safe } from '../../safe/safe.js';
+import { sNum } from '../../safe/safe.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -419,12 +419,12 @@ class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		safe.uint.atMost('start',start,buffer.byteLength);
+		sNum('start',start).unsigned().atMost(buffer.byteLength).throwNot();
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {
 			//Note when end===start (allowed) the window has 0 length
-			safe.int.inRangeInc('end',end,start,buffer.byteLength);
+			sNum('end',end).atLeast(start).atMost(buffer.byteLength).throwNot();
 		}
 		if (buffer instanceof ArrayBufferWindow) {
 			this._buffer = buffer._buffer;
