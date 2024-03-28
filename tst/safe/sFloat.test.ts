@@ -68,6 +68,7 @@ const coerceSet: [unknown, number][] = [
 
 	[{}, Number.NaN],
 	[{ a: 1, b: 'Sea' }, Number.NaN],
+	[[], 0],//This is a stupid JS default
 	[[1, 2], Number.NaN],
 
 	//symbol (throws)

@@ -52,8 +52,8 @@ for (const [test, isValid] of isSet) {
 }
 
 const coerceSet: [unknown, number][] = [
-	[null, 0],
-	[undefined, 0],
+	[null, Number.NaN],
+	[undefined, Number.NaN],
 
 	[true, 1],
 	[false, 0],
@@ -76,6 +76,7 @@ const coerceSet: [unknown, number][] = [
 
 	[{}, Number.NaN],
 	[{ a: 1, b: 'Sea' }, Number.NaN],
+	[[], 0],//This is a stupid JS default
 	[[1, 2], Number.NaN],
 
 	//symbol throws

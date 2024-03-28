@@ -2,7 +2,6 @@
 import { WindowStr } from '../primitive/WindowStr.js';
 import { color, style } from '../cli/csi-tables.js';
 import { ParseProblem } from '../error/probs/ParseProblem.js';
-import { config } from './Config.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const { cyan: method, gray, yellow: num } = color;
@@ -37,13 +36,6 @@ export class StackEntry {
 	}
 
 	inColor(): string {
-		//If undefined, config.color will be false (second param for get bool), however if the
-		// tty file has been visited, config.color will be true unless the environment tells
-		// it otherwise.. so:
-		// no env check - no color (default)
-		// env check and all clear - color
-		// env check and constraint (term)/request (no-color) - no color
-		if (!config.getBool('color')) return this.toString();
 		//Note we're managing color and style ourselves, so we have to remember reset
 		return (
 			`${method}${this.method} ${file}${this.file}${reset}` +

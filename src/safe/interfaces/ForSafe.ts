@@ -1,5 +1,8 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+/**
+ * Operations and further constraints on this numeric value
+ */
 export interface ISafeNum {
 	/** Value as number (you should access via {@link cast}) */
 	get value(): number;
@@ -25,6 +28,9 @@ export interface ISafeNum {
 	natural(): ISafeNum;
 }
 
+/**
+ * Operations to perform on this string
+ */
 export interface ISafeStr {
 	/** Value as string (you should access via {@link cast}) */
 	get value(): string;
@@ -38,6 +44,9 @@ export interface ISafeStr {
 	coerce(): ISafeStr;
 }
 
+/**
+ * Operations to perform on this boolean
+ */
 export interface ISafeBool {
 	/** Value as string (you should access via {@link cast}) */
 	get value(): boolean;
@@ -51,6 +60,9 @@ export interface ISafeBool {
 	coerce(): ISafeBool;
 }
 
+/**
+ * Operations and constraints on this item with length
+ */
 export interface ISafeLen {
 	/** Throw an error (if fails validation) or return self (chainable) */
 	throwNot(): void | ISafeLen;

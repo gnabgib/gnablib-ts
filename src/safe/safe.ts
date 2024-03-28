@@ -19,9 +19,10 @@ function coerceFloat(v: unknown): number {
 	//if (typeof v === 'symbol') return Number.NaN;
 	return +(v as number);
 }
+
 function coerceInt(v: unknown): number {
 	//By default null->0, and undefined->NaN.. mwoi, let's consistently 0
-	if (v == undefined) return 0;
+	if (v == undefined) return Number.NaN;
 	// //Fix symbol throwing
 	// if (typeof v === 'symbol') return Number.NaN;
 	return Math.trunc(+(v as number));
@@ -173,8 +174,6 @@ class SafeStr implements ISafeStr {
 		//Since sVal starts as an empty strings, we can nop for some inputs
 		//Fix undefined|null coercing to the words
 		if (this._uVal == undefined) return this;
-		//Fix symbol throwing (we don't want it to turn into a string)
-		else if (typeof this._uVal === 'symbol') return this;
 		else this._sVal = '' + this._uVal;
 		//Could also have used this._value.toString(), but it'll convert symbol->string
 
@@ -269,37 +268,137 @@ class SafeLen implements ISafeLen {
 	}
 }
 
+/**
+ * Safe number, could be integer or float, signed or unsigned, but only the
+ * number-type is enforced. Further range constraints are available (see
+ * return).
+ *
+ * **Coercions**
+ * - Null¹|undefined - NaN
+ * - Bool - 0|1
+ * - (number - number)
+ * - String - number(only digits/sign/decimal/e)|NaN
+ * - Object - NaN
+ * - Symbol - *throws*
+ * - Function - NaN
+ *
+ * ¹ - Differs from JS default
+ *
+ * @param noun Name of element (useful in debugging, trust me)
+ * @param test Item to test/you're not sure of provenance
+ */
 export function sNum(noun: string, test: unknown): ISafeNum {
 	const expect =
 		typeof test !== 'number' || Number.isNaN(test) ? 'number' : undefined;
 	return new SafeNum(noun, test, expect);
 }
 
+/**
+ * Safe integer, could be unsigned, limited to MIN_SAFE_INT - MAX_SAFE_INT range
+ * (by JS/limitations of using *binary-floating-64bit*).
+ * Further range constraints are available (see return).
+ *
+ * Will `coerce` by truncating decimal places (not by rounding)
+ *
+ * **Coercions**
+ * - Null¹|undefined - NaN
+ * - Bool - 0|1
+ * - (integer - integer)
+ * - float - integer
+ * - String - number(only digits/sign/decimal/e)|NaN
+ * - Object - NaN
+ * - Symbol - *throws*
+ * - Function - NaN
+ *
+ * ¹ - Differs from JS default
+ *
+ * @param noun Name of element (useful in debugging)
+ * @param test Item to test/you're not sure of provenance
+ */
 export function sInt(noun: string, test: unknown): ISafeNum {
-	//Note int-coerce: input|0, but only if value MIN_SAFE_INT - MAX_SAFE_INT
 	const expect = !Number.isSafeInteger(test) ? 'integer' : undefined;
 	return new SafeNum(noun, test, expect, coerceInt);
 }
 
+/**
+ * Safe float, could be integer or float, signed or unsigned, only the
+ * number-type is enforced.  Ostensibly the same as {@link sNum} except the
+ * problems report `float` instead of `number`.  {@link sNum} should be used
+ * as a "lower overhead sInt" while `sFloat` should be used when dealing
+ * with floating point numbers.
+ *
+ * **Coercions**
+ * - Null¹|undefined - NaN
+ * - Bool - 0|1
+ * - (number - number)
+ * - String - number(only digits/sign/decimal/e)|NaN
+ * - Object - NaN
+ * - Symbol - *throws*
+ * - Function - NaN
+ *
+ * ¹ - Differs from JS default
+ *
+ * @param noun Name of element (useful in debugging)
+ * @param test Item to test/you're not sure of provenance
+ */
 export function sFloat(noun: string, test: unknown): ISafeNum {
-	//ostensibly the same as sNum except for expect-string, but when sNum is used
-	// as a "less onerous sInt" calling sFloat would alarm, and likewise when
-	// confirming something is a float, sNum would alarm
 	const expect =
 		typeof test !== 'number' || Number.isNaN(test) ? 'float' : undefined;
 	return new SafeNum(noun, test, expect);
 }
 
+/**
+ * Safe string.
+ *
+ * **Coercions**
+ * - Null¹|undefined¹ - ''
+ * - Bool - 'true'|'false'
+ * - Number - string form
+ * - (string - string)
+ * - Object - '[object Object]' (etc)
+ * - Array - elements.toString().join(',')
+ * - Symbol - *throws*
+ * - Function - attempts to stringify
+ *
+ * ¹ - Differs from JS default
+ *
+ * @param noun Name of element (useful in debugging)
+ * @param test Item to test/you're not sure of provenance
+ */
 export function sStr(noun: string, test: unknown): ISafeStr {
 	const expect = typeof test !== 'string' ? 'string' : undefined;
 	return new SafeStr(noun, test, expect);
 }
 
+/**
+ * Safe boolean.
+ *
+ * **Coercions**
+ * - Null|undefined - false
+ * - (bool - bool)
+ * - Number - false(0)|true(!0)
+ * - String - false(empty)|true(!empty)
+ * - Object - true
+ * - Array - true
+ * - Symbol - true
+ * - Function - true
+ *
+ * @param noun Name of element (useful in debugging)
+ * @param test Item to test/you're not sure of provenance
+ */
 export function sBool(noun: string, test: unknown): ISafeBool {
 	const expect = typeof test !== 'boolean' ? 'boolean' : undefined;
 	return new SafeBool(noun, test, expect);
 }
 
+/**
+ * Safe lengthed item (eg string, array, TypedArray) - anything with a
+ * `get length():number` property.  Further range constraints are available
+ * (see return).
+ *
+ * @param noun Name of item
+ * @param test Item with length to test/you're not sure of provenance
+ */
 export function sLen(noun: string, test: ILengther): ISafeLen {
 	return new SafeLen(noun, test);
 }

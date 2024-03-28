@@ -7,7 +7,6 @@ import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../primitive/interfaces/ISerializer.js';
 import { parseDec } from '../primitive/number/Int.js';
 import { Duration, DurationExact } from './Duration.js';
-import { AtMostError } from '../error/AtMostError.js';
 import { sNum } from '../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -466,7 +465,7 @@ class Core {
 		//Check for day invariance
 		const [y, m, d] = rDate(to, p);
 		const dim = Month.lastDay(m, y);
-		if (d > dim) return new AtMostError('day', d, dim);
+		sNum('day',d).atMost(dim).throwNot();
 
 		input.shrink(input.length);
 		return;
@@ -519,7 +518,7 @@ class Core {
 			//Check for day invariance
 			const [y, m, d] = rDate(to, p);
 			const dim = Month.lastDay(m, y);
-			if (d > dim) return new AtMostError('day', d, dim);
+			sNum('day',d).atMost(dim).throwNot();
 
 			input.shrink(input.length);
 			return;

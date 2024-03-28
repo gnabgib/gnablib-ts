@@ -77,6 +77,7 @@ const coerceSet: [unknown, number][] = [
 
 	[{}, Number.NaN],
 	[{ a: 1, b: 'Sea' }, Number.NaN],
+	[[], 0],//This is a stupid JS default
 	[[1, 2], Number.NaN],
 
 	//symbol (throws)
@@ -86,7 +87,7 @@ const coerceSet: [unknown, number][] = [
 ];
 i = 0;
 for (const [test, coerce] of coerceSet) {
-	tsts(`coerce(${test})`, () => {
+	tsts(`${i++}: coerce(${test})`, () => {
 		if (Number.isNaN(coerce)) {
 			assert.is(Number.isNaN(sNum('$noun', test).coerce().value), true);
 		} else assert.is(sNum('$noun', test).coerce().value, coerce);

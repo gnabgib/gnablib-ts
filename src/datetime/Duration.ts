@@ -10,7 +10,6 @@ import { AtMostError } from '../error/AtMostError.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 import { BitReader } from '../primitive/BitReader.js';
 import { ISerializer } from '../primitive/interfaces/ISerializer.js';
-import { NegativeError } from '../error/NegativeError.js';
 import { ContentError } from '../error/ContentError.js';
 import { LTError } from '../error/LTError.js';
 import { Float, Int } from '../primitive/number/index.js';
@@ -244,21 +243,21 @@ abstract class ADurationCore {
 	protected static _convertHISUPartsToUs(parts: IDurationExactParts): number {
 		let us = 0;
 		if (parts.h) {
-			if (parts.h < 0) throw new NegativeError('hours', parts.h);
+			sNum('hours',parts.h).unsigned().throwNot();
 			us += parts.h * usPerHour;
 		}
 		if (parts.i) {
-			if (parts.i < 0) throw new NegativeError('minutes', parts.i);
+			sNum('minutes',parts.i).unsigned().throwNot();
 			us += parts.i * usPerMin;
 		}
 		if (parts.s) {
-			if (parts.s < 0) throw new NegativeError('seconds', parts.s);
+			sNum('seconds',parts.s).unsigned().throwNot();
 			us += parts.s * usPerSec;
 		}
 		//Round to nearest us, to help with floating point error eg 1.001 s = 1.0009999999
 		us = Math.round(us);
 		if (parts.us) {
-			if (parts.us < 0) throw new NegativeError('microseconds', parts.us);
+			sNum('microseconds', parts.us).unsigned().throwNot();
 			us += parts.us | 0;
 		}
 		return us;
@@ -529,8 +528,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		let us = ADurationCore._convertHISUPartsToUs(parts);
 		let d = 0;
 		if (parts.d) {
-			if (parts.d < 0) throw new NegativeError('days', parts.d);
-			if (parts.d > maxDays) throw new AtMostError('days', parts.d, maxDays);
+			sNum('days',parts.d).unsigned().atMost(maxDays).throwNot();
 			d = parts.d;
 		}
 		//Catch any fractional days and move them to micros
@@ -565,7 +563,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 * @param us range 0 - 9007199254740991 (~105k days/~285 years)
 	 */
 	public static fromUs(us: number): DurationExact {
-		if (us < 0) throw new NegativeError('microseconds', us);
+		sNum('microseconds', us).unsigned().throwNot();
 		//Microseconds
 		let d = 0,
 			h = 0,
@@ -584,7 +582,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 
 		//Days can only exceed max if us was floating point.. which it could have been
 		// so make sure we catch that.
-		if (d > maxDays) throw new AtMostError('days', d, maxDays);
+		sNum('days',d).atMost(maxDays).throwNot();
 		const stor = new Uint8Array(DurationExact.storageBytes);
 		DurationExact._loadDHISU(d, h, i, s, u, stor);
 		return new DurationExact(stor, dayBytesDe);
@@ -615,19 +613,12 @@ export class DurationExact extends ADurationCore implements ISerializer {
 					timeLike
 				);
 		}
-		if (Number.isNaN(s))
-			throw new ContentError('Expecting floating-point', 'seconds', s);
-		if (Number.isNaN(i))
-			throw new ContentError('Expecting integer', 'minutes', i);
-		if (Number.isNaN(h))
-			throw new ContentError('Expecting integer', 'hours', h);
+
 		//Like toTimeLike, we require hours to be max 500
-		if (h > maxTimeLikeHours)
-			throw new AtMostError('hours', h, maxTimeLikeHours);
+		sNum('hours',h).atMost(maxTimeLikeHours).throwNot();
 		//Unlike new, we don't accept s/m being >=60 (no leap seconds)
-		if (i > 59) throw new AtMostError('minutes', i, 59);
-		//Note the different error/test because seconds is currently floating-point (could be 59.999999 which is ok, but >59)
-		if (s >= 60) throw new LTError('seconds', s, 60);
+		sNum('minutes',i).lt(60).throwNot();
+		sNum('seconds',s).lt(60).throwNot();
 		const d = (h / hPerDay) | 0;
 		h = h % hPerDay;
 		const u = ((s % 1) * usPerSec) | 0;
@@ -992,18 +983,17 @@ export class Duration extends ADurationCore implements ISerializer {
 	public static new(parts: IDurationParts): Duration {
 		let m = 0;
 		if (parts.y) {
-			if (parts.y < 0) throw new NegativeError('years', parts.y);
-			if (parts.y > maxYears) throw new AtMostError('years', parts.y, maxYears);
+			sNum('years',parts.y).unsigned().atMost(maxYears).throwNot();
 			m = parts.y * mPerYear;
 		}
 		if (parts.m) {
-			if (parts.m < 0) throw new NegativeError('months', parts.m);
+			sNum('months',parts.m).unsigned().throwNot();
 			m += parts.m;
 		}
 		let us = ADurationCore._convertHISUPartsToUs(parts);
 		let d = 0;
 		if (parts.d) {
-			if (parts.d < 0) throw new NegativeError('days', parts.d);
+			sNum('days',parts.d).unsigned().throwNot();
 			//Catch any fractional days and move them to micros
 			d = parts.d;
 			const dRem = d % 1;

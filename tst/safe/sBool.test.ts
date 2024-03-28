@@ -66,6 +66,7 @@ const coerceSet: [unknown, boolean][] = [
 
 	[{}, true],
 	[{ a: 1, b: 'Sea' }, true],
+	[[], true],
 	[[1, 2], true],
 
 	[Symbol('nope'), true],

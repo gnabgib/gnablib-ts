@@ -67,9 +67,10 @@ const coerceSet: [unknown, string][] = [
 	//Not useful
 	[{}, '[object Object]'],
 	[{ a: 1, b: 'Sea' }, '[object Object]'],
+	[[], ''],
 	[[1, 2], '1,2'],
 
-	[Symbol('nope'), ''],
+	//symbol throws
 
 	//bigint (oos ES6)
 

@@ -108,6 +108,10 @@
 			"types": "./_o/type/primitive/number/index.d.ts",
 			"default": "./_o/dist/primitive/number/index.js"
 		},
+		"./prng": {
+			"types": "./_o/type/prnd/index.d.ts",
+			"default": "./_o/dist/prnd/index.js"
+		},
 		"./regexp": {
 			"types": "./_o/type/regexp/index.d.ts",
 			"default": "./_o/dist/regexp/index.js"
@@ -116,9 +120,9 @@
 			"types": "./_o/type/runtime/index.d.ts",
 			"default": "./_o/dist/runtime/index.js"
 		},
-		"./prng": {
-			"types": "./_o/type/prnd/index.d.ts",
-			"default": "./_o/dist/prnd/index.js"
+		"./safe": {
+			"types": "./_o/type/safe/index.d.ts",
+			"default": "./_o/dist/safe/index.js"
 		},
 		"./test": {
 			"types": "./_o/type/test/index.d.ts",
