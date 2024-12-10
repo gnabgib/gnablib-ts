@@ -23,8 +23,7 @@ config.define('test',false)
         // test|test:deep|test:deeper
         impEnvCalled++;
         let isTest=false;
-        if (v==='test') isTest=true;
-        else if (v?.startsWith('test:')) isTest=true;
+        if (v==='test' || v?.startsWith('test:')) isTest=true;
         
         //Normally you'd set config here, but that will mess up tests below.
         //if (isTest) set(true);
