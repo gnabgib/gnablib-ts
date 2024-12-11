@@ -1,5 +1,9 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
+//Just during dev: @todo REMOVE
+/* eslint-disable  @typescript-eslint/no-unused-vars */
+
+
 import { sNum } from '../../safe/safe.js';
 
 const blockSize256Bytes = 32; //512bits

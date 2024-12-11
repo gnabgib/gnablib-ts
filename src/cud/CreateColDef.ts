@@ -66,8 +66,6 @@ export class CreateColDef {
 
 		return new FromBinResult(
 			ptr - pos,
-            //We;ve a
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CreateColDef(nFrom.value!, tFrom.value!)
 		);
 	}

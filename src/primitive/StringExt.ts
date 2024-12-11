@@ -122,7 +122,6 @@ export const stringExt = {
 		for (let i = 0; i < aArr.length; i++) {
 			//This will never be null, so stop ESLint complaining
 			arr.push(
-				// eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
 				(~fNum & aArr[i].codePointAt(0)!) | (fNum & bArr[i].codePointAt(0)!)
 			);
 		}

@@ -99,13 +99,13 @@ const invert = {
 };
 
 const leave = {
-	// eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	i16(_b: Uint8Array, _pos = 0, _count = 1): void {},
-	// eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	i32(_b: Uint8Array, _pos = 0, _count = 1): void {},
-	// eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	i64(_b: Uint8Array, _pos = 0, _count = 1): void {},
-	// eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	i128(_b: Uint8Array, _pos = 0, _count = 1): void {},
 	set32(
 		b: Uint8Array,

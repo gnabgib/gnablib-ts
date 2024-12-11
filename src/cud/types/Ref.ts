@@ -172,19 +172,16 @@ export abstract class ARef
 			case ColType.Ref2:
 				return new FromBinResult(
 					len + ptr - pos,
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					new Ref2(tFrom.value!, cFrom.value!, nullable)
 				);
 			case ColType.Ref4:
 				return new FromBinResult(
 					len + ptr - pos,
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					new Ref4(tFrom.value!, cFrom.value!, nullable)
 				);
 			case ColType.Ref8:
 				return new FromBinResult(
 					len + ptr - pos,
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					new Ref8(tFrom.value!, cFrom.value!, nullable)
 				);
 		}

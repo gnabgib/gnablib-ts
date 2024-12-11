@@ -1,5 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
-
+//Just during dev:
+/* eslint-disable  @typescript-eslint/no-unused-vars */
 /*
     Common: Null, Int, Utf8, Bool, DateTime, Float, 
     Ext: Bin, ?Decimal(Money)
@@ -419,12 +420,12 @@ class ArrayBufferWindow {
 		start = 0,
 		end = -1
 	) {
-		sNum('start',start).unsigned().atMost(buffer.byteLength).throwNot();
+		sNum('start', start).unsigned().atMost(buffer.byteLength).throwNot();
 		if (end === -1) {
 			end = buffer.byteLength;
 		} else {
 			//Note when end===start (allowed) the window has 0 length
-			sNum('end',end).atLeast(start).atMost(buffer.byteLength).throwNot();
+			sNum('end', end).atLeast(start).atMost(buffer.byteLength).throwNot();
 		}
 		if (buffer instanceof ArrayBufferWindow) {
 			this._buffer = buffer._buffer;
@@ -753,7 +754,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 				const dFrom = DateTimeLocal.deserialize(br);
 				return new BinResult(1 + 8, dFrom);
 			} catch (e: unknown) {
-				return 'decode failed DateTime ' + (e as Error).message ?? '';
+				return 'decode failed DateTime ' + ((e as Error).message ?? '');
 			}
 
 		case Type.Utf8_0:

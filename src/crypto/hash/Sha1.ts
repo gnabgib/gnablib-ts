@@ -69,39 +69,44 @@ export class Sha1 implements IHash {
 			w[j] = this.#block32[j];
 			// (b&c)|((~b)&d) - Same as MD4-r1
 			t = U32.rol(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
-			//Rare use of comma!  Make it clear there's a 5 stage swap going on
+			// Rare use of comma!  Make it clear there's a 5 stage swap going on
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
 			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 20; j++) {
 			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			// (b&c)|((~b)&d) - Same as MD4-r1
 			t = U32.rol(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
 			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 40; j++) {
 			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
 			t = U32.rol(a, 5) + (b ^ c ^ d) + e + w[j] + rc[1];
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
 			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 60; j++) {
 			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r2
 			t = U32.rol(a, 5) + (((b | c) & d) | (b & c)) + e + w[j] + rc[2];
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
 			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 80; j++) {
 			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
 			t = U32.rol(a, 5) + (b ^ c ^ d) + e + w[j] + rc[3];
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
 			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
 		}
 
-		(this.#state[0] += a),
-			(this.#state[1] += b),
-			(this.#state[2] += c),
-			(this.#state[3] += d),
-			(this.#state[4] += e);
+		this.#state[0] += a;
+		this.#state[1] += b;
+		this.#state[2] += c;
+		this.#state[3] += d;
+		this.#state[4] += e;
 
 		//Reset block pointer
 		this._bPos = 0;

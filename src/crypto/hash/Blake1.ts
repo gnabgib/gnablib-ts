@@ -14,7 +14,6 @@ const digestSizeEls = 8;
 const blockSizeEls = 16; //4x4
 const b32rounds = 10; //Blake32 was submitted with 10 rounds, then increased to 14 and renamed blake256
 const b256rounds = 14;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const b64rounds = 14; //Blake64 was submitted with 14 rounds, then increased to 16 and renamed blake512
 const b512rounds = 16;
 const spaceForLen32 = 8; //Number of bytes needed to append length

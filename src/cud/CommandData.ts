@@ -134,7 +134,13 @@ export class CmdDataInsert extends ADataCols {
 		recId: number,
 		...cols: ColValue[]
 	): CmdDataInsert {
-		return new CmdDataInsert(userId, DateTimeLocal.now(), table, recId, ...cols);
+		return new CmdDataInsert(
+			userId,
+			DateTimeLocal.now(),
+			table,
+			recId,
+			...cols
+		);
 	}
 
 	static fromBinSub(
@@ -172,13 +178,11 @@ export class CmdDataInsert extends ADataCols {
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
 			//We know value (because success)
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(
 			len + e,
 			//We know value (because success)
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CmdDataInsert(u, s, t, iFrom.value!, ...cols)
 		);
 	}
@@ -241,13 +245,11 @@ export class CmdDataPut extends ADataCols {
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
 			//We know value (because success)
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(
 			len + e,
 			//We know value (because success)
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CmdDataPut(u, s, t, iFrom.value!, ...cols)
 		);
 	}
@@ -310,13 +312,11 @@ export class CmdDataPatch extends ADataCols {
 			ptr += col.byteLen;
 			spaceRem -= col.byteLen;
 			//We know value (because success)
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			cols.push(col.value!);
 		}
 		return new FromBinResult(
 			len + e,
 			//We know value (because success)
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new CmdDataPatch(u, s, t, iFrom.value!, ...cols)
 		);
 	}
@@ -359,8 +359,6 @@ export class CmdDataDelete extends ACmdData {
 			);
 		ptr += iFrom.byteLen;
 		//Check ptr==e?
-		//We know value (because success)
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return new FromBinResult(len + e, new CmdDataDelete(u, s, t, iFrom.value!));
 	}
 }

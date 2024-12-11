@@ -17,7 +17,7 @@ const wordMask = 0xffffffff;
 
 /**
  * [Rabbit](https://web.archive.org/web/20131211141248/http://www.cryptico.com/images/pages/rabbit_sasc_final.pdf)
- * ([Wiki](https://en.wikipedia.org/wiki/Rabbit_(cipher))
+ * [Wiki](https://en.wikipedia.org/wiki/Rabbit_(cipher)
  *
  * Rabbit is a stream cipher designed for high performance in software/hardware implementations.  *Due to ambiguities
  * in RFC-4503, this may not be compatible with other implementations.*

@@ -60,7 +60,6 @@ export const uri = {
 			);
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		function ignoreInvalid() {}
 
 		function copyInvalid(ord: number) {
@@ -80,7 +79,7 @@ export const uri = {
 				const pair = uriEncoded.substring(inPtr, inPtr + 2);
 				try {
 					ret[outPtr++] = hex.toByte(pair);
-				} catch (e) {
+				} catch {
 					//Not a pair, invalid hex chars
 					throw new ContentError('invalid escape', 'URI encoding', '%' + pair);
 				}

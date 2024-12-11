@@ -243,15 +243,15 @@ abstract class ADurationCore {
 	protected static _convertHISUPartsToUs(parts: IDurationExactParts): number {
 		let us = 0;
 		if (parts.h) {
-			sNum('hours',parts.h).unsigned().throwNot();
+			sNum('hours', parts.h).unsigned().throwNot();
 			us += parts.h * usPerHour;
 		}
 		if (parts.i) {
-			sNum('minutes',parts.i).unsigned().throwNot();
+			sNum('minutes', parts.i).unsigned().throwNot();
 			us += parts.i * usPerMin;
 		}
 		if (parts.s) {
-			sNum('seconds',parts.s).unsigned().throwNot();
+			sNum('seconds', parts.s).unsigned().throwNot();
 			us += parts.s * usPerSec;
 		}
 		//Round to nearest us, to help with floating point error eg 1.001 s = 1.0009999999
@@ -274,8 +274,6 @@ abstract class ADurationCore {
 		const reset = input.getReset();
 
 		const parts = { d: 0, h: 0, i: 0, s: 0 };
-		// quelle stupid for blanket complaints like this, especially ending in return
-		// eslint-disable-next-line no-constant-condition
 		while (true) {
 			const delimD = input.indexOfAny(['d', 'D']);
 			if (delimD > 0) {
@@ -528,7 +526,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		let us = ADurationCore._convertHISUPartsToUs(parts);
 		let d = 0;
 		if (parts.d) {
-			sNum('days',parts.d).unsigned().atMost(maxDays).throwNot();
+			sNum('days', parts.d).unsigned().atMost(maxDays).throwNot();
 			d = parts.d;
 		}
 		//Catch any fractional days and move them to micros
@@ -582,7 +580,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 
 		//Days can only exceed max if us was floating point.. which it could have been
 		// so make sure we catch that.
-		sNum('days',d).atMost(maxDays).throwNot();
+		sNum('days', d).atMost(maxDays).throwNot();
 		const stor = new Uint8Array(DurationExact.storageBytes);
 		DurationExact._loadDHISU(d, h, i, s, u, stor);
 		return new DurationExact(stor, dayBytesDe);
@@ -615,10 +613,10 @@ export class DurationExact extends ADurationCore implements ISerializer {
 		}
 
 		//Like toTimeLike, we require hours to be max 500
-		sNum('hours',h).atMost(maxTimeLikeHours).throwNot();
+		sNum('hours', h).atMost(maxTimeLikeHours).throwNot();
 		//Unlike new, we don't accept s/m being >=60 (no leap seconds)
-		sNum('minutes',i).lt(60).throwNot();
-		sNum('seconds',s).lt(60).throwNot();
+		sNum('minutes', i).lt(60).throwNot();
+		sNum('seconds', s).lt(60).throwNot();
 		const d = (h / hPerDay) | 0;
 		h = h % hPerDay;
 		const u = ((s % 1) * usPerSec) | 0;
@@ -983,17 +981,17 @@ export class Duration extends ADurationCore implements ISerializer {
 	public static new(parts: IDurationParts): Duration {
 		let m = 0;
 		if (parts.y) {
-			sNum('years',parts.y).unsigned().atMost(maxYears).throwNot();
+			sNum('years', parts.y).unsigned().atMost(maxYears).throwNot();
 			m = parts.y * mPerYear;
 		}
 		if (parts.m) {
-			sNum('months',parts.m).unsigned().throwNot();
+			sNum('months', parts.m).unsigned().throwNot();
 			m += parts.m;
 		}
 		let us = ADurationCore._convertHISUPartsToUs(parts);
 		let d = 0;
 		if (parts.d) {
-			sNum('days',parts.d).unsigned().throwNot();
+			sNum('days', parts.d).unsigned().throwNot();
 			//Catch any fractional days and move them to micros
 			d = parts.d;
 			const dRem = d % 1;
@@ -1052,8 +1050,6 @@ export class Duration extends ADurationCore implements ISerializer {
 		const reset = input.getReset();
 		let y = 0,
 			m = 0;
-		// quelle stupid for blanket complaints like this, especially ending in return
-		// eslint-disable-next-line no-constant-condition
 		while (true) {
 			const delimY = input.indexOfAny(['y', 'Y']);
 			if (delimY > 0) {
@@ -1071,7 +1067,7 @@ export class Duration extends ADurationCore implements ISerializer {
 				//This may throw, but we want the ymdhis error message (hence catch/break)
 				const exactParts = ADurationCore._parseDHIS(input);
 				return Duration.new({ y, m, ...exactParts });
-			} catch (e: unknown) {
+			} catch {
 				break;
 			}
 		}

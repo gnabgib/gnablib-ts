@@ -1,5 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
+//Just during dev: @todo REMOVE
+/* eslint-disable  @typescript-eslint/no-unused-vars */
+
 import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
 import { U64Mut } from '../../primitive/number/U64.js';
 import { sLen } from '../../safe/safe.js';

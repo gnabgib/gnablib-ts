@@ -111,7 +111,6 @@ export const ascii85 = {
 
 		const safeLen = ascii85.length - 4;
 		while (inPtr < safeLen) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const c0 = nextChar()!;
 			if (c0 === 'z') {
 				ret[outPtr++] = 0;
@@ -121,13 +120,9 @@ export const ascii85 = {
 				continue;
 			}
 			let num = charToInt(c0) * 85;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			num = (num + charToInt(nextChar()!)) * 85;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			num = (num + charToInt(nextChar()!)) * 85;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			num = (num + charToInt(nextChar()!)) * 85;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			num += charToInt(nextChar()!);
 			ret[outPtr++] = num >>> 24;
 			ret[outPtr++] = (num >> 16) & 0xff;
@@ -135,7 +130,6 @@ export const ascii85 = {
 			ret[outPtr++] = num & 0xff;
 		}
 		while (inPtr < ascii85.length) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const c0 = nextChar()!;
 			if (c0 === 'z') {
 				ret[outPtr++] = 0;

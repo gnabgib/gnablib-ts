@@ -7,19 +7,18 @@ const NOT_FOUND = -1;
 const WHITESPACE = [' ', '\t', '\n', '\r', '\v', '\f'];
 // file deepcode ignore BadWrapperObjectCreation: <please specify a reason of ignoring this>
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type WindowOrString = WindowStr | string;
 
 export class WindowStr {
 	//Strings are immutable in JS
 	//We want this to be the object type (for peerOf, otherwise we'd get content comparison)
-	// eslint-disable-next-line @typescript-eslint/ban-types
+	// eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
 	private readonly _src: String;
 	private _start: number;
 	private _len: number;
 
 	//We want source to be String not string
-	// eslint-disable-next-line @typescript-eslint/ban-types
+	// eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
 	protected constructor(source: String, start: number, len: number) {
 		this._src = source;
 		this._start = start;
@@ -76,7 +75,7 @@ export class WindowStr {
 		sNum('idx', idx).unsigned().lt(this.length).throwNot();
 		const cp = this._src.codePointAt(idx + this._start);
 		//if (cp === undefined) return '';
-		//@ts-ignore - We've already tested out of range idx (above), so we know it's a number
+		//@ts-expect-error - We've already tested out of range idx (above), so we know it's a number
 		return String.fromCodePoint(cp);
 	}
 
@@ -89,7 +88,7 @@ export class WindowStr {
 	 */
 	codePointAt(idx: number): number {
 		sNum('idx', idx).unsigned().lt(this.length).throwNot();
-		//@ts-ignore - We've already tested out of range idx (above), so we know it's a number
+		//@ts-expect-error - We've already tested out of range idx (above), so we know it's a number
 		return this._src.codePointAt(idx + this._start);
 	}
 
@@ -498,12 +497,12 @@ export class WindowStr {
 			next: function (): IteratorResult<string> {
 				if (next < end) {
 					const cp = src.codePointAt(next++);
-					//@ts-ignore - We know it's in range
+					//@ts-expect-error - We know it's in range
 					//If we're more than a single UTF16 codepoint value, eat a second character
 					if (cp > 65535) next++;
 					return {
 						done: false,
-						//@ts-ignore - We know it's in range
+						//@ts-expect-error - We know it's in range
 						value: String.fromCodePoint(cp),
 					};
 				}
@@ -535,7 +534,6 @@ export class WindowStr {
 				.unsigned()
 				.atMost(source.length - start)
 				.throwNot();
-		// eslint-disable-next-line @typescript-eslint/ban-types
 		return new WindowStr(new String(source), start, length);
 	}
 

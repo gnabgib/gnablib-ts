@@ -67,16 +67,12 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	ptr += eFrom.byteLen;
 
 	//We know values (because success)
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	if (pFrom.value!.isCtrl) {
 		return ACmdCtrl.fromBinSub(
 			s,
 			cByte,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			uFrom.value!,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			tFrom.value!,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			eFrom.value!,
 			bin,
 			ptr - pos,
@@ -86,11 +82,8 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 		return ACmdData.fromBinSub(
 			s,
 			cByte,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			uFrom.value!,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			tFrom.value!,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			eFrom.value!,
 			bin,
 			ptr - pos,

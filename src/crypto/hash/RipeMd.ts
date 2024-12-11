@@ -244,6 +244,8 @@ export class RipeMd128 extends RipeMd {
 	}
 
 	private static hash(v: Uint32Array, x: Uint32Array): void {
+		//Using the rare , to show these are big swaps
+		/* eslint-disable @typescript-eslint/no-unused-expressions */
 		let t: number;
 
 		let a = v[0],
@@ -258,16 +260,13 @@ export class RipeMd128 extends RipeMd {
 		for (let j = 0; j < 64; j++) {
 			const round = j >> 4;
 			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
 			t = U32.rol(
 				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
 				ss[j]
 			);
-			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
-		//Using the rare , to show this is a big swap
 		(t = v[1] + c + dd),
 			(v[1] = v[2] + d + aa),
 			(v[2] = v[3] + a + bb),
@@ -294,8 +293,9 @@ export class RipeMd160 extends RipeMd {
 	}
 
 	private static hash(v: Uint32Array, x: Uint32Array): void {
+		//Using the rare , to show these are big swaps
+		/* eslint-disable @typescript-eslint/no-unused-expressions */
 		let t: number;
-
 		let a = v[0],
 			b = v[1],
 			c = v[2],
@@ -310,12 +310,10 @@ export class RipeMd160 extends RipeMd {
 		for (let j = 0; j < 80; j++) {
 			const round = Math.floor(j / 16);
 			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			//Using the rare , to show this is a big swap
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
 			t =
 				ee +
 				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			//Using the rare , to show this is a big swap
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 
@@ -351,6 +349,8 @@ export class RipeMd256 extends RipeMd {
 	}
 
 	private static hash(v: Uint32Array, x: Uint32Array): void {
+		//Using the rare , to show these are big swaps
+		/* eslint-disable @typescript-eslint/no-unused-expressions */
 		let t: number;
 		let a = v[0],
 			b = v[1],
@@ -365,13 +365,11 @@ export class RipeMd256 extends RipeMd {
 		let round = 0;
 		for (; j < 16; j++) {
 			t = U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			//Using the rare , to show this is a big swap
 			(a = d), (d = c), (c = b), (b = t);
 			t = U32.rol(
 				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
 				ss[j]
 			);
-			//Using the rare , to show this is a big swap
 			(aa = dd), (dd = cc), (cc = bb), (bb = t);
 		}
 		(t = a), (a = aa), (aa = t);
@@ -441,6 +439,8 @@ export class RipeMd320 extends RipeMd {
 	}
 
 	private static hash(v: Uint32Array, x: Uint32Array): void {
+		//Using the rare , to show these are big swaps
+		/* eslint-disable @typescript-eslint/no-unused-expressions */
 		let t: number;
 		let a = v[0],
 			b = v[1],
@@ -457,12 +457,10 @@ export class RipeMd320 extends RipeMd {
 		let round = 0;
 		for (; j < 16; j++) {
 			t = e + U32.rol(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			//Using the rare , to show this is a big swap
 			(a = e), (e = d), (d = U32.rol(c, 10)), (c = b), (b = t);
 			t =
 				ee +
 				U32.rol(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			//Using the rare , to show this is a big swap
 			(aa = ee), (ee = dd), (dd = U32.rol(cc, 10)), (cc = bb), (bb = t);
 		}
 		(t = b), (b = bb), (bb = t);
@@ -511,7 +509,6 @@ export class RipeMd320 extends RipeMd {
 		}
 		(t = e), (e = ee), (ee = t);
 
-		//Using the rare , to show this is a big swap
 		(v[0] += a), (v[1] += b), (v[2] += c), (v[3] += d), (v[4] += e);
 		(v[5] += aa), (v[6] += bb), (v[7] += cc), (v[8] += dd), (v[9] += ee);
 	}

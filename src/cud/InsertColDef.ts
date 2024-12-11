@@ -67,7 +67,6 @@ export class InsertColDef {
 		ptr += tFrom.byteLen;
 
         //We know tFrom has value (because success)
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const dFrom = tFrom.value!.binUnknown(bin, ptr);
 		if (!dFrom.success)
 			return new FromBinResult<InsertColDef>(
@@ -79,7 +78,6 @@ export class InsertColDef {
 
 		return new FromBinResult(
 			ptr - pos,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new InsertColDef(nFrom.value!, tFrom.value!, dFrom.value)
 		);
 	}

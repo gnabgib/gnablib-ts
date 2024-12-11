@@ -65,7 +65,6 @@ export class ColValue {
 		ptr += tFrom.byteLen;
 
 		//We know values (because success)
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const vFrom = tFrom.value!.binUnknown(bin, ptr);
 		if (!vFrom.success)
 			return new FromBinResult<ColValue>(
@@ -77,7 +76,6 @@ export class ColValue {
 
 		return new FromBinResult(
 			ptr - pos,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			new ColValue(nFrom.value!, tFrom.value!, vFrom.value!)
 		);
 	}

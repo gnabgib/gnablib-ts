@@ -36,7 +36,7 @@ export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 	}
 	unknownBin(value?: DateTimeLocal): Uint8Array {
 		if (!value) {
-			if (!this.nullable) 
+			if (!this.nullable)
 				throw new ContentError('cannot be null', 'DateTime', undefined);
 			return new Uint8Array([0]);
 		}
@@ -94,7 +94,7 @@ export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 			return new FromBinResult(
 				0,
 				undefined,
-				'DateTimeCol.binUnknown bad value: ' + (e as Error).message ?? ''
+				'DateTimeCol.binUnknown bad value: ' + ((e as Error).message ?? '')
 			);
 		}
 	}

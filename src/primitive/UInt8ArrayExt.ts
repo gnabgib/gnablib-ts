@@ -112,7 +112,6 @@ export const uint8ArrayExt = {
 	 */
 	incrBE: function (b: Uint8Array): void {
 		let ptr = b.length - 1;
-		// eslint-disable-next-line no-constant-condition
 		while (true) {
 			b[ptr] += 1;
 			//Detect byte-overflow

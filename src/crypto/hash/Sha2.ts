@@ -158,6 +158,8 @@ class Sha2_32bit implements IHash {
 			const maj = ((a ^ b) & c) ^ (a & b); //Similar to MD4-r2 (| -> ^)
 			const temp2 = s0 + maj;
 
+			// Rare use of comma!  Make it clear there's a swap going on
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 			(h = g),
 				(g = f),
 				(f = e),
@@ -357,6 +359,8 @@ class Sha2_64bit implements IHash {
 			const maj = a.xor(b).and(c).xor(a.and(b)); //Similar to MD4-r2 (| -> ^)
 			const temp2 = s0.add(maj);
 
+			// Rare use of comma!  Make it clear there's a swap going on
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 			(h = g),
 				(g = f),
 				(f = e),

@@ -23,7 +23,10 @@ export const quotedPrintable = {
 		let maxLineLength: number;
 		if (opts?.lineLength != undefined) {
 			//Lower bound is 3 because a single char can encode to 3 chars (eg 61)
-			sNum('opts.lineLength', opts.lineLength).atLeast(3).atMost(998).throwNot();
+			sNum('opts.lineLength', opts.lineLength)
+				.atLeast(3)
+				.atMost(998)
+				.throwNot();
 			maxLineLength = opts.lineLength;
 		} else {
 			maxLineLength = 76;
@@ -74,7 +77,7 @@ export const quotedPrintable = {
 				if (pair === '\r\n') continue;
 				try {
 					ret[outPtr++] = hex.toByte(pair);
-				} catch (e) {
+				} catch {
 					//Not a pair, invalid hex chars
 					throw new ContentError(
 						'invalid escape',

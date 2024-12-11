@@ -425,7 +425,6 @@ export class BnfConcat implements IBnf, Iterable<IBnf> {
 				return new MatchFail(s.length - ptr.length);
 			}
 			ptr = match.remain;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			components.push(match.result!);
 			// if (match.components.length>0) {
 			//     if (match.result.name!==undefined) components.push(match.result);
@@ -514,10 +513,8 @@ export class BnfAlt implements IBnf, Iterable<IBnf> {
 				//We have to recreate the result to capture our name
 				const detail: IMatchDetail = {
 					name: this.name,
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					value: match.result!.value,
 				};
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				if (!this.suppressComponents) detail.components = [match.result!];
 				return new MatchSuccess(match.remain, detail);
 				// if (match.result.name!==undefined) {
@@ -619,7 +616,6 @@ export class BnfRepeat implements IBnfRepeat {
 			}
 			ptr = match.remain;
 			//There must be a result if it didn't fail
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			components.push(match.result!);
 		}
 		//May have up to max matches
@@ -628,7 +624,6 @@ export class BnfRepeat implements IBnfRepeat {
 			if (match.fail || match.remain == undefined) break;
 			ptr = match.remain;
 			//There must be a result if it didn't fail
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			components.push(match.result!);
 			// if (match.components.length>0) {
 			//     components.push(...match.components);

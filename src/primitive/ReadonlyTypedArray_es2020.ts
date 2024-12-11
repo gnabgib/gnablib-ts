@@ -13,11 +13,6 @@ type TypedArrayMutableProperties =
 
 export * from './ReadonlyTypedArray.js';
 
-// @ts-expect-error: es2016 doesn't support BigInt64Array
-interface BigInt64Array extends BigInt64Array {}
-// @ts-expect-error: es2016 doesn't support BigUint64Array
-interface BigUint64Array extends BigUint64Array {}
-
 export interface ReadonlyBigInt64Array
 	extends Omit<BigInt64Array, TypedArrayMutableProperties> {
 	readonly [n: number]: bigint;
