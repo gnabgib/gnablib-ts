@@ -1,6 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
-//Just during dev:
+
+//Just during dev: @todo REMOVE
 /* eslint-disable  @typescript-eslint/no-unused-vars */
+
 /*
     Common: Null, Int, Utf8, Bool, DateTime, Float, 
     Ext: Bin, ?Decimal(Money)

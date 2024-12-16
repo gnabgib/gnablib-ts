@@ -8,6 +8,7 @@ import { IRandInt } from './interfaces/IRandInt.js';
  * rand()
  *
  * *NOT cryptographically secure*
+ * 
  * @param seed Starting state - valid integer
  * @returns function to produce integers in range 0 - 32767
  */
