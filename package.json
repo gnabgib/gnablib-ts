@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.4.41",
+	"version": "0.4.42",
 	"description": "A lean, zero dependency library to provide a useful base for your project.",
 	"type": "module",
 	"scripts": {
@@ -310,8 +310,7 @@
 		"typescript-eslint": "^8.18.0",
 		"uvu": "^0.5.6"
 	},
-	"optDevDependencies": {
-	},
+	"optDevDependencies": {},
 	"publishConfig": {
 		"devDependencies": {
 			"@eslint/js": null,
