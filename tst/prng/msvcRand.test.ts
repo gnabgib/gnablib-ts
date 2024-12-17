@@ -1,11 +1,11 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { msvcRand } from '../../src/prng/msvcRand';
+import { msvc } from '../../src/prng/';
 
-const tsts = suite('msvcRand');
-tsts(`msvcRand`, () => {
+const tsts = suite('msvc');
+tsts(`msvc`, () => {
 	// https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/rand?view=msvc-170
-	const r = msvcRand(1792);
+	const r = msvc(1792);
 	assert.equal(r(),5890);
 	assert.equal(r(),1279);
 	assert.equal(r(),19497);

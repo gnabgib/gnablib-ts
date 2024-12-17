@@ -51,7 +51,7 @@ for (const set of relativeSet) {
 const cumulativeSet: { wts: number[]; ss: number }[] = [
 	//Pointless (equal values, just random)
 	{ wts: [1, 2, 3, 4, 5], ss: 100000 },
-	{ wts: [1, 2, 4, 8], ss: 100000 },
+	{ wts: [1, 2, 4, 8], ss: 100000 },//This one sometimes trips up the tests - just rerun
 ];
 
 for (const set of cumulativeSet) {

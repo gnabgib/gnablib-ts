@@ -252,14 +252,14 @@ Name|Capacities|Optional parameters
 
 ### Pseudorandom number generators (PRNG)
 
-- [Lehmer/MCG](https://en.wikipedia.org/wiki/Lehmer_random_number_generator) - generate integers [0 - 2**32-1]
+- [Lehmer/MCG](https://en.wikipedia.org/wiki/Lehmer_random_number_generator) - generate integers [0 - 2147483646]
 - [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en) -
   possible to calculate in your head
 - [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method) -
   in practice flawed since the period is often short and will converge towards the same number or loop after repeated times
-- [MSVC](https://orlp.net/blog/when-random-isnt/)
+- [MSVC](https://orlp.net/blog/when-random-isnt/) - generate integers [0 - 2147483647]
 - [RANDU](https://en.wikipedia.org/wiki/RANDU) -
-  a famously bad PRNG
+  a famously bad PRNG, generate integers [0 - 2147483647]
 
 ### RegExp
 
