@@ -1,5 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
+import { U64, U64Mut } from '../primitive/number/U64.js';
 import { IRandInt } from './interfaces/IRandInt.js';
 
 function lcg32(seed: number, mul: number, add: number, mod: number): IRandInt {
@@ -12,19 +13,42 @@ function lcg32(seed: number, mul: number, add: number, mod: number): IRandInt {
 }
 // Lehmer generator where mul-bits<=21 (Max safe int=2**53-1), and mod is base2 aligned,
 // so we can mask instead
-function lcg32b2(seed: number, mul: number, add: number, mask: number,shift:number): IRandInt {
+function lcg32b2(
+	seed: number,
+	mul: number,
+	add: number,
+	mask: number,
+	shift: number
+): IRandInt {
 	let s = seed;
 	/** Get the next random number */
 	return () => {
-		s = (s * mul + add) &mask;
-		return s>>>shift;
+		s = (s * mul + add) & mask;
+		return s >>> shift;
+	};
+}
+
+function lcg64(seed: number, mul: number, add: number): IRandInt {
+	//Note `mod` is here, because the shift-31 below is related to the mod size,
+	// so this would only work with mod=0x7fffffff, maybe we should instead accept a
+	// power of 2 size (eg 2^31) which is used as the shift, and creates the mod.
+	// But for now there's only one algo that uses this.
+	const mod = 0x7fffffff;
+	const a64 = U64.fromInt(add);
+	let s = seed;
+	/** Get the next random number */
+	return () => {
+		const prod = U64Mut.fromInt(s).mulEq32(mul).addEq(a64);
+		let x = (prod.low & mod) + prod.rShiftEq(31).low;
+		x = (x & mod) + (x >>> 31);
+		return (s = x);
 	};
 }
 
 /**
  * Build a [Lehmer](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)
  * random generator, known as [MINSTD_RAND0](https://oeis.org/A096550) or MCG16807 from 1988.
- * Used in Apple CarbonLib, C++11
+ * Used in Apple CarbonLib, C++11, IBM SIMPL/I, IBM APL, PRIMOS, IMSL Scientific library
  *
  * multiplier = 16807 = 7^5 : an odd composite
  *
@@ -70,44 +94,6 @@ export function MCG69621(seed = 1): IRandInt {
 	return lcg32(seed, 69621, 0, 0x7fffffff);
 }
 
-function lcg64(seed:number,mul:number,add:number,mod:number): IRandInt {
-    //Schrage's method
-    const q=(mod/mul)>>>0;//2147483647/62089911 = 34
-    const r=mod%mul;//2147483647%62089911 = 36426673 |26b
-    let s = seed;
-    /** Get the next random number */
-	return () => {
-        const div=(s/q)>>>0;
-        const rem=s%q;
-        // const s1=(rem*mul)>>0;
-        // const t1=(div*r)>>0;
-        const s1=rem*mul;
-        const t1=(div*r)>>0;//doesn't work
-
-        //t1=66521406712429 | 953231981 dword
-        s=s1-t1;
-        //console.log(div,rem,s1,t1,s,'div/rem/s/t/result')
-        //while(s<0)s+=mod;
-        if (s<0) s+=mod;
-        //console.log(s,'result final')
-        return s;
-	};
-}
-function lcg64b(seed:number,mul:number,add:number,mod:number): IRandInt {
-    let s = seed;
-    /** Get the next random number */
-	return () => {
-        const l=(s&0x7fff)*mul;
-        const h=(s>>>15)*mul;
-        s=l+((h&0xffff)<<15)+(h>>16);
-        s=(s&0x7fffffff)+(s>>31);
-        return s;
-	};
-}
-//++847344462
-//--847375438 (lcg64)
-//--845594501 )16
-//--845574200 15
 /**
  * Build a [Lehmer](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)
  * random generator, known as MCG62089911
@@ -120,7 +106,9 @@ function lcg64b(seed:number,mul:number,add:number,mod:number): IRandInt {
  * @param seed Starting state - valid integer
  * @returns function to produce integers in the range 0 - 2147483647
  */
-//export function MCG62089911(seed=1):IRandInt { return lcg64(seed,62089911,0,0x7fffffff); }
+export function MCG62089911(seed = 1): IRandInt {
+	return lcg64(seed, 62089911, 0);
+}
 
 /**
  * Build a [MSVC](https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use)
@@ -128,15 +116,17 @@ function lcg64b(seed:number,mul:number,add:number,mod:number): IRandInt {
  * rand()
  *
  * Mul=214013
- * Add=2531011 
+ * Add=2531011
  * Mod=0x7fffffff
- * 
+ *
  * *NOT cryptographically secure*
- * 
+ *
  * @param seed Starting state - valid integer
  * @returns function to produce integers in range 0 - 32767
  */
-export function msvc(seed = 1): IRandInt { return lcg32b2(seed,214013,2531011,0x7fffffff,16); }
+export function msvc(seed = 1): IRandInt {
+	return lcg32b2(seed, 214013, 2531011, 0x7fffffff, 16);
+}
 
 /**
  * Build a [RANDU](https://en.wikipedia.org/wiki/RANDU)
@@ -146,10 +136,12 @@ export function msvc(seed = 1): IRandInt { return lcg32b2(seed,214013,2531011,0x
  * Mul=65539
  * Add=0
  * Mod=0x7fffffff
- * 
+ *
  * *NOT cryptographically secure*
  *
  * @param seed Starting state - valid integer
  * @returns function to produce integers in the range 0 - 2147483647
  */
-export function randu(seed = 1): IRandInt { return lcg32b2(seed,65539,0,0x7fffffff,0); }
+export function randu(seed = 1): IRandInt {
+	return lcg32b2(seed, 65539, 0, 0x7fffffff, 0);
+}
