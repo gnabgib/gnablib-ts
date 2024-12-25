@@ -284,7 +284,10 @@
 		"args",
 		"arguments",
 		"stacktrace",
-		"debug"
+		"debug",
+		"Lehmer PRNG",
+		"Mersenne Twister",
+		"SplitMix64"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

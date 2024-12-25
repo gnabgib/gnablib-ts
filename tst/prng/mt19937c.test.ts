@@ -44,6 +44,4 @@ tsts(`mt19937c(1000)`, () => {
     assert.equal(rng(), 1341017984);
 });
 
-
-
 tsts.run();

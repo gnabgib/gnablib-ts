@@ -1,8 +1,8 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { IRandInt } from './interfaces/IRandInt.js';
+import { IRandUInt } from './interfaces/IRandInt.js';
 
-function mt(seed: number): IRandInt {
+function mt(seed: number): IRandUInt {
 	const umask = 0x80000000; //0xFFFFFFFF << r
 	const lmask = 0x7fffffff; //0xFFFFFFFF >> (w-r=1)
 	const a = 0x9908b0df;
@@ -13,8 +13,9 @@ function mt(seed: number): IRandInt {
 	//console.log(`s[0]=${seed}`);
 	for (let i = 1; i < state.length; i++) {
 		const l = state[i - 1] ^ (state[i - 1] >>> 30);
-		//f=1812433253=x6C078965, but we only have 52 bits.. and this is 31bits long, so let's split into 12+20 bits,
-		// and do each multiply separately so we don't loose resolution (although the first may go FP)
+		//f=1812433253=x6C078965, but we only have 53 bits.. and this is 31bits long, so let's split into 12+20 bits,
+		// and do each multiply separately so we don't loose resolution (although the first may go FP, it'll be zeros
+        // low)
 		// Note the last 0 is hard to spot, it's x6C0<<24
 		state[i] = ((0x6c000000 * l) >>> 0) + 0x78965 * l + i;
 	}
@@ -25,18 +26,21 @@ function mt(seed: number): IRandInt {
 		let y;
 		for (; i < 227; i++) {
 			y = (state[i] & umask) | (state[i + 1] & lmask);
-			state[i] = state[i + 397] ^ (y >>> 1) ^ (y & 1 ? a : 0);
+			state[i] = state[i + 397] ^ (y >>> 1);
+            if (y&1) state[i] ^= a;
 		}
 		for (; i < 623; i++) {
 			y = (state[i] & umask) | (state[i + 1] & lmask);
-			state[i] = state[i - 227] ^ (y >>> 1) ^ (y & 1 ? a : 0);
+			state[i] = state[i - 227] ^ (y >>> 1);
+            if (y&1) state[i] ^= a;
 		}
-		y = (state[623] & umask) | (state[0] & lmask);
-		state[623] = state[396] ^ (y >>> 1) ^ (y & 1 ? a : 0);
+		y = (state[i] & umask) | (state[0] & lmask);
+		state[i] = state[396] ^ (y >>> 1);
+        if (y&1) state[i] ^= a;
 		idx = 0;
 	}
 
-	/** Get the next random number */
+	/** Get the next random number uint32 [0 - 4294967295] */
 	return () => {
 		if (idx >= 624) twist();
 		let y = state[idx++];
@@ -66,7 +70,7 @@ function mt(seed: number): IRandInt {
  * @param seed
  * @returns Generator
  */
-export function mt19937(seed = 19650218): IRandInt {
+export function mt19937(seed = 19650218): IRandUInt {
 	return mt(seed);
 }
 
@@ -90,6 +94,6 @@ export function mt19937(seed = 19650218): IRandInt {
  * @param seed
  * @returns Generator
  */
-export function mt19937c(seed = 5489): IRandInt {
+export function mt19937c(seed = 5489): IRandUInt {
 	return mt(seed);
 }
