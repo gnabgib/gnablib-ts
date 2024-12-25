@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { MCG69621 } from '../../src/prng/lcg';
+import { mcg69621 } from '../../src/prng/lcg';
 
-const tsts = suite('MCG69621');
+const tsts = suite('mcg69621');
 //Todo find a source
 const seq: number[] = [
 	69621, 552116347, 1082396834, 201323037, 1832878655, 1219051368, 874078441,
@@ -24,21 +24,21 @@ const seq: number[] = [
 ];
 
 let seed = 1;
-const rng = MCG69621(seed);
+const rng = mcg69621(seed);
 
 for (const expect of seq) {
 	const n = rng();
 	seed = n;
-	tsts(`MCG69621(${seed})`, () => {
+	tsts(`mcg69621(${seed})`, () => {
 		assert.equal(n, expect);
 	});
 }
 
-const r2 = MCG69621();
+const r2 = mcg69621();
 for(let i=1;i<10000;i++) {
 	r2();
 }
-tsts('MCG69621(1)[10000]',()=>{assert.equal(r2(),190055451);});
+tsts('mcg69621(1)[10000]',()=>{assert.equal(r2(),190055451);});
 
 
 tsts.run();

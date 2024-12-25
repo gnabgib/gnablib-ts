@@ -58,6 +58,13 @@ npm run cover:report
 ```
 Artifacts will be output as HTML into `/_o/cover/**` (excluded from git)
 
+### Document
+
+```bash
+npm run doc
+```
+Build documentation, output to `/_o/doc/**`
+
 
 ### Build
 

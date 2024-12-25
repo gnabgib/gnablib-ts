@@ -59,7 +59,7 @@ function lcg64(seed: number, mul: number, add: number): IRandInt {
  * @param seed Starting state - valid integer
  * @returns function to produce integers in the range 0 - 2147483647
  */
-export function MCG16807(seed = 1): IRandInt {
+export function mcg16807(seed = 1): IRandInt {
 	return lcg32(seed, 16807, 0, 0x7fffffff);
 }
 
@@ -75,7 +75,7 @@ export function MCG16807(seed = 1): IRandInt {
  * @param seed Starting state - valid integer
  * @returns function to produce integers in the range 0 - 2147483647
  */
-export function MCG48271(seed = 1): IRandInt {
+export function mcg48271(seed = 1): IRandInt {
 	return lcg32(seed, 48271, 0, 0x7fffffff);
 }
 
@@ -90,7 +90,7 @@ export function MCG48271(seed = 1): IRandInt {
  * @param seed Starting state - valid integer
  * @returns function to produce integers in the range 0 - 2147483647
  */
-export function MCG69621(seed = 1): IRandInt {
+export function mcg69621(seed = 1): IRandInt {
 	return lcg32(seed, 69621, 0, 0x7fffffff);
 }
 
@@ -106,7 +106,7 @@ export function MCG69621(seed = 1): IRandInt {
  * @param seed Starting state - valid integer
  * @returns function to produce integers in the range 0 - 2147483647
  */
-export function MCG62089911(seed = 1): IRandInt {
+export function mcg62089911(seed = 1): IRandInt {
 	return lcg64(seed, 62089911, 0);
 }
 

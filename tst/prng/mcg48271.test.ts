@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { MCG48271 } from '../../src/prng/lcg';
+import { mcg48271 } from '../../src/prng/lcg';
 
-const tsts = suite('MCG48271');
+const tsts = suite('mcg48271');
 //https://oeis.org/A221556/b221556.txt
 const seq: number[] = [
 	48271, 182605794, 1291394886, 1914720637, 2078669041, 407355683, 1105902161,
@@ -24,20 +24,20 @@ const seq: number[] = [
 ];
 
 let seed = 1;
-const rng = MCG48271(seed);
+const rng = mcg48271(seed);
 
 for (const expect of seq) {
 	const n = rng();
 	seed = n;
-	tsts(`MCG48271(${seed})`, () => {
+	tsts(`mcg48271(${seed})`, () => {
 		assert.equal(n, expect);
 	});
 }
 
-const r2 = MCG48271();
+const r2 = mcg48271();
 for(let i=1;i<10000;i++) {
 	r2();
 }
-tsts('MCG48271(1)[10000]',()=>{assert.equal(r2(),399268537);});
+tsts('mcg48271(1)[10000]',()=>{assert.equal(r2(),399268537);});
 
 tsts.run();
