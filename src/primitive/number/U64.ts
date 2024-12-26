@@ -1119,6 +1119,13 @@ export class U64MutArray {
 		);
 	}
 
+	mut(): U64MutArray {
+		return new U64MutArray(
+			this.buf.slice(this.bufPos, this.bufPos + this.length + this.length),
+			0
+		);
+	}
+
 	/**
 	 * Create a section of this array which SHARES the same memory
 	 * NOTE: This is the same semantics as TypedArray.subarray, which feels ambiguous with Go:slices

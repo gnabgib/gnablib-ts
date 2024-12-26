@@ -261,7 +261,7 @@ Name|Capacities|Optional parameters
 - [MSVC](https://orlp.net/blog/when-random-isnt/) - generate integers [0 - 2147483647]
 - [RANDU](https://en.wikipedia.org/wiki/RANDU) -
   a famously bad PRNG, generate integers [0 - 2147483647]
-- SplitMix64, the default pseudo-random number generator algorithm in Java
+- SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
 
 ### RegExp
 
