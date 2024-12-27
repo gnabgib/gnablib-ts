@@ -13,11 +13,12 @@ function mt(seed: number): IRandUInt {
 	//console.log(`s[0]=${seed}`);
 	for (let i = 1; i < state.length; i++) {
 		const l = state[i - 1] ^ (state[i - 1] >>> 30);
+		state[i]=Math.imul(0x6C078965,l)+i;
 		//f=1812433253=x6C078965, but we only have 53 bits.. and this is 31bits long, so let's split into 12+20 bits,
 		// and do each multiply separately so we don't loose resolution (although the first may go FP, it'll be zeros
         // low)
-		// Note the last 0 is hard to spot, it's x6C0<<24
-		state[i] = ((0x6c000000 * l) >>> 0) + 0x78965 * l + i;
+		// Note the last 0 is hard to spot, it's x6C0<<20
+		//state[i] = ((0x6c000000 * l) >>> 0) + 0x78965 * l + i;
 	}
 	twist();
 

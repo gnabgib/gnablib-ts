@@ -261,8 +261,8 @@ Name|Capacities|Optional parameters
 - [MSVC](https://orlp.net/blog/when-random-isnt/) - generate integers [0 - 2147483647]
 - [RANDU](https://en.wikipedia.org/wiki/RANDU) -
   a famously bad PRNG, generate integers [0 - 2147483647]
-- SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
-- [XorShift]() 
+- SplitMix32 - generate integers [0 - 4294967295], SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
+- [XorShift](https://www.jstatsoft.org/article/view/v008i14) 
 32 range [0 - 4294967295], 
 64 range [0 - 18446744073709551615], 
 128 range [0 - 4294967295], 
