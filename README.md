@@ -262,6 +262,11 @@ Name|Capacities|Optional parameters
 - [RANDU](https://en.wikipedia.org/wiki/RANDU) -
   a famously bad PRNG, generate integers [0 - 2147483647]
 - SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
+- [XorShift]() 
+32 range [0 - 4294967295], 
+64 range [0 - 18446744073709551615], 
+128 range [0 - 4294967295], 
+128+ & 128+v8 range [0 - 18446744073709551615]
 
 ### RegExp
 

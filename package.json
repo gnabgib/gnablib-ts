@@ -290,7 +290,12 @@
 		"debug",
 		"Lehmer PRNG",
 		"Mersenne Twister",
-		"SplitMix64"
+		"SplitMix64",
+		"PRNG",
+		"XorShift32",
+		"XorShift64",
+		"XorShift128",
+		"XorShift128plus"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

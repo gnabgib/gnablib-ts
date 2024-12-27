@@ -871,5 +871,5 @@ export class U128 {
 	// 	}
 	// }
 }
-const zero = U128.fromIntUnsafe(0);
+const zero = U128.fromUint32Quad(0,0,0,0);
 const max = U128.fromUint32Quad(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
