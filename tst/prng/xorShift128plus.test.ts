@@ -1,7 +1,7 @@
 
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xorShift128plus } from '../../src/prng/xorShift';
+import { xorShift128plus } from '../../src/prng/xorShift128plus';
 import { U128 } from '../../src/primitive/number';
 import { hex } from '../../src/codec/Hex';
 
@@ -36,7 +36,7 @@ const rng_x159A55E500000000075BCD15 = xorShift128plus(U128.fromUint32Quad(123456
 let i = 0;
 for (const expect of seq_x159A55E500000000075BCD15) {
 	const act = rng_x159A55E500000000075BCD15();
-	tsts(`xorShift128(x159A55E500000000075BCD15)[${i}]`, () => {
+	tsts(`xorShift128+(x159A55E500000000075BCD15)[${i}]`, () => {
         assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
@@ -70,7 +70,25 @@ const rng_x159A55E50000000099BA1D93 = xorShift128plus(U128.fromUint32Quad(257911
 i = 0;
 for (const expect of seq_x159A55E50000000099BA1D93) {
 	const act = rng_x159A55E50000000099BA1D93();
-	tsts(`xorShift128(x159A55E50000000099BA1D93)[${i}]`, () => {
+	tsts(`xorShift128+(x159A55E50000000099BA1D93)[${i}]`, () => {
+        assert.equal(hex.fromBytes(act.toBytesBE()), expect);
+	});
+	i++;
+}
+
+
+//Unsourced, but shows that without a seed reasonable PRNG are generated
+const seq0:string[] =[
+	'509946A41CD733A3',
+    '020EE24BB357EE47',
+    '5FB8E9CD63BB975E',
+    '757FCA8DFDD73032',
+]
+const rng0=xorShift128plus();
+i=0;
+for (const expect of seq0) {
+	const act = rng0();
+	tsts(`xorShift128+()[${i}]`, () => {
         assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;

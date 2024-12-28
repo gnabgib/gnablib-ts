@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xorShift32 } from '../../src/prng/xorShift';
+import { xorShift32 } from '../../src/prng/xorShift32';
 
 const tsts = suite('xorShift32');
 //https://www.jstatsoft.org/article/view/v008i14

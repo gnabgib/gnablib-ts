@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xorShift128 } from '../../src/prng/xorShift';
+import { xorShift128 } from '../../src/prng/xorShift128';
 import { U128 } from '../../src/primitive/number';
 
 const tsts = suite('xorShift128');

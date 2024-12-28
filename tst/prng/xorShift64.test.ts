@@ -1,7 +1,7 @@
 
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xorShift64 } from '../../src/prng/xorShift';
+import { xorShift64 } from '../../src/prng/xorShift64';
 import { U64 } from '../../src/primitive/number';
 import { hex } from '../../src/codec/Hex';
 
@@ -69,6 +69,23 @@ i = 0;
 for (const expect of seq_11234) {
 	const act = rng_11234();
 	tsts(`xorShift64(11234)[${i}]`, () => {
+        assert.equal(hex.fromBytes(act.toBytesBE()), expect);
+	});
+	i++;
+}
+
+//Unsourced, but shows that without a seed reasonable PRNG are generated
+const seq0:string[] =[
+    '79690975FBDE15B0',
+    '2A337357AE2CC59B',
+    '2FEF107A27529AD0',
+    'E4093DF8432A8BE5',
+]
+const rng0=xorShift64();
+i=0;
+for (const expect of seq0) {
+	const act = rng0();
+	tsts(`xorShift64()[${i}]`, () => {
         assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;

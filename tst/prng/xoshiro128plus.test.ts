@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xoshiro128plus } from '../../src/prng/xoshiro';
+import { xoshiro128plus } from '../../src/prng/xoshiro128';
 import { U128 } from '../../src/primitive/number';
 
 const tsts = suite('xoshiro128+');
@@ -43,6 +43,23 @@ let i = 0;
 for (const expect of seq_1) {
 	const act = rng1();
 	tsts(`xoshiro128+([0,1,2,3])[${i}]`, () => {
+		assert.equal(act, expect);
+	});
+	i++;
+}
+
+//No corroboration for these vectors, but proving xoshiro128 works well without seeding
+const seq0:number[]=[
+    49376,
+    95971011,
+    3157991041,
+    4193534618,
+];
+const rng0=xoshiro128plus();
+i = 0;
+for (const expect of seq0) {
+	const act = rng0();
+	tsts(`xoshiro128+()[${i}]`, () => {
 		assert.equal(act, expect);
 	});
 	i++;

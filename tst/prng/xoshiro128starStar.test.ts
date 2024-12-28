@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xoshiro128starStar } from '../../src/prng/xoshiro';
+import { xoshiro128starStar } from '../../src/prng/xoshiro128';
 import { U128 } from '../../src/primitive/number';
 
 const tsts = suite('xoshiro128**');

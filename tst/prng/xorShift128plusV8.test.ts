@@ -1,7 +1,7 @@
 
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xorShift128plusV8 } from '../../src/prng/xorShift';
+import { xorShift128plusV8 } from '../../src/prng/xorShift128plus';
 import { U128 } from '../../src/primitive/number';
 import { hex } from '../../src/codec/Hex';
 
