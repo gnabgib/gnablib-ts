@@ -296,7 +296,8 @@
 		"XorShift32",
 		"XorShift64",
 		"XorShift128",
-		"XorShift128plus"
+		"XorShift128plus",
+		"XoShiRo128"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

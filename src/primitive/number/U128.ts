@@ -636,6 +636,10 @@ export class U128 {
 	// 	return U64Mut.fromArray(this.arr.slice(this.pos, this.pos + 2));
 	// }
 
+    mut32():Uint32Array {
+        return this.arr.slice(this.pos, this.pos + sizeU32);
+    }
+
 	/**
 	 * Mutate - create a new @see {@link U64MutArray} with a copy of this value
 	 */

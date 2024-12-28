@@ -1,7 +1,7 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { U128 } from '../primitive/number/U128.js';
-import { U64, U64MutArray } from '../primitive/number/U64.js';
+import { U64 } from '../primitive/number/U64.js';
 import { IRandUInt } from './interfaces/IRandInt.js';
 import { IRandU64 } from './interfaces/IRandU64.js';
 
@@ -58,23 +58,19 @@ export function xorShift64(seed?: U64): IRandU64 {
  *
  * *NOT cryptographically secure*
  *
- * @param seed Must be non-zero
+ * @param seed Must be non-zero, default value from the paper
  * @returns Generator
  */
-export function xorShift128(
-	x = 123456789,
-	y = 362436069,
-	z = 521288629,
-	w = 88675123
-): IRandUInt {
+export function xorShift128(seed?: U128): IRandUInt {
+    const s = seed!=undefined ? seed.mut32() : Uint32Array.of(123456789, 362436069, 521288629, 88675123);
 	/** Get the next random number uint64 [0 - 18446744073709551615] */
 	return () => {
-		let t = x ^ (x << 11);
-		x = y;
-		y = z;
-		z = w;
-		w = w ^ (w >>> 19) ^ (t ^ (t >>> 8));
-		return w >>> 0;
+		let t = s[0] ^ (s[0] << 11);
+		s[0] = s[1];
+		s[1] = s[2];
+		s[2] = s[3];
+		s[3] = s[3] ^ (s[3] >>> 19) ^ (t ^ (t >>> 8));
+		return s[3] >>> 0;
 	};
 }
 
@@ -109,6 +105,9 @@ function xorShift128plus_(
  * Generates numbers in the range [0 - 18446744073709551615]
  *
  * *NOT cryptographically secure*
+ * 
+ * Related:
+ * [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
  *
  * @param seed Must be non-zero
  * @returns Generator
@@ -127,6 +126,9 @@ export function xorShift128plus(seed: U128): IRandU64 {
  * Generates numbers in the range [0 - 18446744073709551615]
  *
  * *NOT cryptographically secure*
+ * 
+ * Related:
+ * [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
  *
  * @param seed Must be non-zero
  * @returns Generator
