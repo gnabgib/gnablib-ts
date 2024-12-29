@@ -257,6 +257,7 @@ Name|Capacities|Optional parameters
 - [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method) -
   in practice flawed since the period is often short and will converge towards the same number or loop after repeated times
 - [MSVC](https://orlp.net/blog/when-random-isnt/) - generate integers [0 - 2147483647]
+- MulBerry32 - generate integers [0 - 4294967295]
 - [RANDU](https://en.wikipedia.org/wiki/RANDU) -
   a famously bad PRNG, generate integers [0 - 2147483647]
 - SplitMix32 - generate integers [0 - 4294967295], SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]

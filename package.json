@@ -301,7 +301,8 @@
 		"XoShiRo128",
 		"XoShiRo256",
 		"XoRoShiRo64",
-		"XoRoShiRo128"
+		"XoRoShiRo128",
+		"Mulberry32"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
