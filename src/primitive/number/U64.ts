@@ -12,6 +12,7 @@ const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
 const maxU32Plus1 = 0x100000000;
 const sizeBytes = 8;
+const sizeU32=2;
 const rotMask64 = 0x3f;
 const rotMask32 = 0x1f;
 
@@ -172,7 +173,7 @@ export class U64 {
 	 * @returns
 	 */
 	xor(u64: U64): U64 {
-		const arr = this.arr.slice(this.pos, this.pos + 2);
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._xorEq(arr, 0, u64);
 		return new U64(arr);
 	}
@@ -183,7 +184,7 @@ export class U64 {
 	 * @returns
 	 */
 	or(u64: U64): U64 {
-		const arr = this.arr.slice(this.pos, this.pos + 2);
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._orEq(arr, 0, u64);
 		return new U64(arr);
 	}
@@ -194,7 +195,7 @@ export class U64 {
 	 * @returns
 	 */
 	and(u64: U64): U64 {
-		const arr = this.arr.slice(this.pos, this.pos + 2);
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._andEq(arr, 0, u64);
 		return new U64(arr);
 	}
@@ -319,7 +320,7 @@ export class U64 {
 	 * @returns
 	 */
 	add(u64: U64): U64 {
-		const arr = this.arr.slice(this.pos, this.pos + 2);
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._addEq(arr, 0, u64);
 		return new U64(arr, 0);
 	}
@@ -330,7 +331,7 @@ export class U64 {
 	 * @returns
 	 */
 	sub(u64: U64): U64 {
-		const arr = this.arr.slice(this.pos, this.pos + 2);
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._subEq(arr, 0, u64);
 		return new U64(arr, 0);
 	}
@@ -341,7 +342,7 @@ export class U64 {
 	 * @returns
 	 */
 	mul(u64: U64): U64 {
-		const arr = this.arr.slice(this.pos, this.pos + 2);
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._mulEq(arr, 0, u64);
 		return new U64(arr);
 	}
@@ -562,15 +563,22 @@ export class U64 {
 	 * @returns
 	 */
 	clone(): U64 {
-		return new U64(this.arr.slice(this.pos, this.pos + 2));
+		return new U64(this.arr.slice(this.pos, this.pos + sizeU32));
 	}
 
 	/**
 	 * Mutate - create a new @see {@link U64Mut} with a copy of this value
 	 */
 	mut(): U64Mut {
-		return U64Mut.fromArray(this.arr.slice(this.pos, this.pos + 2));
+		return U64Mut.fromArray(this.arr.slice(this.pos, this.pos + sizeU32));
 	}
+
+	/**
+	 * Mutate - create a copy of the Uint32Array within
+	 */
+	mut32():Uint32Array {
+        return this.arr.slice(this.pos, this.pos + sizeU32);
+    }
 
 	/**
 	 * String version of this value, in big endian
@@ -614,7 +622,7 @@ export class U64 {
 	 * @returns Uint8Array[8]
 	 */
 	toBytesLE(): Uint8Array {
-		const r8 = new Uint8Array(this.arr.slice(this.pos, this.pos + 2).buffer);
+		const r8 = new Uint8Array(this.arr.slice(this.pos, this.pos + sizeU32).buffer);
 		asLE.i32(r8, 0);
 		asLE.i32(r8, 4);
 		return r8;
@@ -734,7 +742,7 @@ export class U64 {
 	 * @returns
 	 */
 	static fromBuffer(src: ArrayBuffer, bytePos = 0): U64 {
-		return new U64(new Uint32Array(src, bytePos, 2));
+		return new U64(new Uint32Array(src, bytePos, sizeU32));
 	}
 
 	/**
@@ -914,7 +922,7 @@ export class U64Mut extends U64 {
 	 * @returns
 	 */
 	clone(): U64Mut {
-		return new U64Mut(this.arr.slice(this.pos, this.pos + 2));
+		return new U64Mut(this.arr.slice(this.pos, this.pos + sizeU32));
 	}
 
 	/**
@@ -931,7 +939,7 @@ export class U64Mut extends U64 {
 	 * Zero out this value
 	 */
 	zero(): void {
-		this.arr.fill(0, this.pos, this.pos + 2);
+		this.arr.fill(0, this.pos, this.pos + sizeU32);
 	}
 
 	/** @hidden */

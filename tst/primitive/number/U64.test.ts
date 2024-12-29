@@ -768,6 +768,25 @@ tsts(`clone`,()=>{
 	assert.equal(a.eq(U64.fromInt(1)),true);
 });
 
+tsts(`mut`,()=>{
+	const a=U64.fromInt(1);
+	assert.equal(a.eq(U64.fromInt(1)),true);
+	const b=a.mut().add(a);
+	assert.equal(b.eq(U64.fromInt(2)),true,'b changed');
+	assert.equal(a.eq(U64.fromInt(1)),true,'a the same');
+});
+
+tsts(`mut32`,()=>{
+	const a=U64.fromUint32Pair(1,2);
+	assert.equal(a.toString(),'0000000200000001');
+	const u32=a.mut32();
+	u32[0]=3;
+	u32[1]=4;
+	assert.equal(u32[0],3,'mut32 has been modified');
+	assert.equal(a.toString(),'0000000200000001','u64 is the same');
+});
+
+
 tsts(`fromArray`,()=>{
 	const a=U64.fromArray(Uint32Array.of(1,0));
 	assert.equal(a.eq(U64.fromInt(1)),true);

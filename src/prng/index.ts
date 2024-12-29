@@ -36,6 +36,9 @@
  * {@link prng.xoshiro256pp xoshiro256++},
  * {@link prng.xoshiro256ss xoshiro256**}
  * generate numbers using the _XoShiRo256_ PRNG in the range [0 - 18446744073709551615]
+ * - {@link prng.xoroshiro64s xoroshiro64*},
+ * {@link prng.xoroshiro64ss xoroshiro64**}
+ * generate numbers using the _XoRoShiRo64_ PRNG in the range [0 - 4294967295]
  * - {@link prng.xoroshiro128p xoroshiro128+},
  * {@link prng.xoroshiro128pp xoroshiro128++},
  * {@link prng.xoroshiro128ss xoroshiro128**}
@@ -61,6 +64,7 @@ export { xorShift128 } from './xorShift128.js';
 export { xorShift128plus, xorShift128plusV8 } from './xorShift128plus.js';
 export { xoshiro128p, xoshiro128pp, xoshiro128ss } from './xoshiro128.js';
 export { xoshiro256p, xoshiro256pp, xoshiro256ss } from './xoshiro256.js';
+export { xoroshiro64s, xoroshiro64ss } from './xoroshiro64.js';
 export {
 	xoroshiro128p,
 	xoroshiro128pp,

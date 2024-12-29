@@ -4,7 +4,7 @@ import { U128 } from '../primitive/number/U128.js';
 import { U64, U64Mut, U64MutArray } from '../primitive/number/U64.js';
 import { IRandU64 } from './interfaces/IRandU64.js';
 
-export function xoroshiro128(
+function xoroshiro128(
 	ret: (s0: U64Mut, s1: U64Mut) => U64,
 	seed: U128 | undefined,
 	a: number,

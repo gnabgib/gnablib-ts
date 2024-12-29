@@ -300,6 +300,7 @@
 		"XorShift128plus",
 		"XoShiRo128",
 		"XoShiRo256",
+		"XoRoShiRo64",
 		"XoRoShiRo128"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",

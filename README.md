@@ -261,12 +261,13 @@ Name|Capacities|Optional parameters
   a famously bad PRNG, generate integers [0 - 2147483647]
 - SplitMix32 - generate integers [0 - 4294967295], SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
 - [XorShift](https://www.jstatsoft.org/article/view/v008i14) 
-32 range [0 - 4294967295], 
-64 range [0 - 18446744073709551615], 
-128 range [0 - 4294967295], 
-128+ & 128+v8 range [0 - 18446744073709551615]
+XorShift32 range [0 - 4294967295], 
+XorShift64 range [0 - 18446744073709551615], 
+XorShift128 range [0 - 4294967295], 
+XorShift128+ & XorShift128+v8 range [0 - 18446744073709551615]
 - [XoShiRo128](https://prng.di.unimi.it/#intro) - xoshiro128+, xoshiro128++, xoshiro128** - generate integers [0 - 4294967295]
 - [XoShiRo256](https://prng.di.unimi.it/#intro) - xoshiro256+, xoshiro256++, xoshiro256** - generate integers [0 - 18446744073709551615]
+- [XoRoShiRo64](https://prng.di.unimi.it/#intro) - xoroshiro64*, xoroshiro64** - generate integers [0 - 4294967295]
 - [XoRoShiRo128](https://prng.di.unimi.it/#intro) - xoroshiro128+, xoroshiro128++, xoroshiro128** - generate integers [0 - 18446744073709551615]
 
 
