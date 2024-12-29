@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xoshiro128plus } from '../../src/prng/xoshiro128';
+import { xoshiro128p } from '../../src/prng/xoshiro128';
 import { U128 } from '../../src/primitive/number';
 
 const tsts = suite('xoshiro128+');
@@ -38,7 +38,7 @@ const seq_1: number[] = [
     1471426682,
 ];
 
-const rng1 = xoshiro128plus(U128.fromUint32Quad(0,1,2,3));
+const rng1 = xoshiro128p(U128.fromUint32Quad(0,1,2,3));
 let i = 0;
 for (const expect of seq_1) {
 	const act = rng1();
@@ -55,7 +55,7 @@ const seq0:number[]=[
     3157991041,
     4193534618,
 ];
-const rng0=xoshiro128plus();
+const rng0=xoshiro128p();
 i = 0;
 for (const expect of seq0) {
 	const act = rng0();

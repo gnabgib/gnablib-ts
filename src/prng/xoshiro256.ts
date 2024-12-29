@@ -58,7 +58,7 @@ function xoshiro256(
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator
  */
-export function xoshiro256plus(seed?: U256): IRandU64 {
+export function xoshiro256p(seed?: U256): IRandU64 {
 	return xoshiro256((s) => s.at(0).add(s.at(3)), seed);
 }
 
@@ -79,7 +79,7 @@ export function xoshiro256plus(seed?: U256): IRandU64 {
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator
  */
-export function xoshiro256plusPlus(seed?: U256): IRandU64 {
+export function xoshiro256pp(seed?: U256): IRandU64 {
 	return xoshiro256(function (s) {
 		const r = s.at(0).add(s.at(3)).mut();
 		r.lRotEq(23).addEq(s.at(0));
@@ -105,7 +105,7 @@ export function xoshiro256plusPlus(seed?: U256): IRandU64 {
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator
  */
-export function xoshiro256starStar(seed?: U256): IRandU64 {
+export function xoshiro256ss(seed?: U256): IRandU64 {
 	const u64_5 = U64.fromInt(5);
 	const u64_9 = U64.fromInt(9);
 	return xoshiro256(function (s) {

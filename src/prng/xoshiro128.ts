@@ -43,7 +43,7 @@ function xoshiro128(
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator
  */
-export function xoshiro128plus(seed?: U128): IRandUInt {
+export function xoshiro128p(seed?: U128): IRandUInt {
 	return xoshiro128((s) => s[0] + s[3], seed);
 }
 
@@ -64,7 +64,7 @@ export function xoshiro128plus(seed?: U128): IRandUInt {
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator
  */
-export function xoshiro128plusPlus(seed?: U128): IRandUInt {
+export function xoshiro128pp(seed?: U128): IRandUInt {
 	return xoshiro128(function (s) {
 		let r = s[0] + s[3];
 		r = (r << 7) | (r >>> 25); //ROL 7
@@ -89,7 +89,7 @@ export function xoshiro128plusPlus(seed?: U128): IRandUInt {
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator
  */
-export function xoshiro128starStar(seed?: U128): IRandUInt {
+export function xoshiro128ss(seed?: U128): IRandUInt {
 	return xoshiro128(function (s) {
 		let r = s[1] * 5;
 		r = (r << 7) | (r >>> 25); //ROL 7

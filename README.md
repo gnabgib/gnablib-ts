@@ -267,6 +267,8 @@ Name|Capacities|Optional parameters
 128+ & 128+v8 range [0 - 18446744073709551615]
 - [XoShiRo128](https://prng.di.unimi.it/#intro) - xoshiro128+, xoshiro128++, xoshiro128** - generate integers [0 - 4294967295]
 - [XoShiRo256](https://prng.di.unimi.it/#intro) - xoshiro256+, xoshiro256++, xoshiro256** - generate integers [0 - 18446744073709551615]
+- [XoRoShiRo128](https://prng.di.unimi.it/#intro) - xoroshiro128+, xoroshiro128++, xoroshiro128** - generate integers [0 - 18446744073709551615]
+
 
 ### RegExp
 

@@ -28,10 +28,19 @@
  * in the range [0 - 18446744073709551615],
  * {@link prng.xorShift128plusV8 xorShift128+V8} generate numbers using the same parameters as
  * [V8](https://v8.dev/), which differ from Vigna's default
- * - {@link prng.xoshiro128plus xoshiro128plus}, 
- * {@link prng.xoshiro128plusPlus xoshiro128plusPlus}, 
- * {@link prng.xoshiro128starStar xoshiro128starStar}
+ * - {@link prng.xoshiro128p xoshiro128+},
+ * {@link prng.xoshiro128pp xoshiro128++},
+ * {@link prng.xoshiro128ss xoshiro128**}
  * generate numbers using the _XoShiRo128_ PRNG in the range [0 - 4294967295]
+ * - {@link prng.xoshiro256p xoshiro256+},
+ * {@link prng.xoshiro256pp xoshiro256++},
+ * {@link prng.xoshiro256ss xoshiro256**}
+ * generate numbers using the _XoShiRo256_ PRNG in the range [0 - 18446744073709551615]
+ * - {@link prng.xoroshiro128p xoroshiro128+},
+ * {@link prng.xoroshiro128pp xoroshiro128++},
+ * {@link prng.xoroshiro128ss xoroshiro128**}
+ * generate numbers using the _XoRoShiRo128_ PRNG in the range [0 - 18446744073709551615]
+ *
  * @module
  */
 export { marsaglia } from './marsaglia.js';
@@ -45,15 +54,16 @@ export {
 } from './lcg.js';
 export { middleSquare } from './middleSquare.js';
 export { mt19937, mt19937c } from './mersenneTwister.js';
-export { splitMix64 } from './splitMix.js';
+export { splitMix32, splitMix64 } from './splitMix.js';
 export { xorShift32 } from './xorShift32.js';
 export { xorShift64 } from './xorShift64.js';
 export { xorShift128 } from './xorShift128.js';
 export { xorShift128plus, xorShift128plusV8 } from './xorShift128plus.js';
+export { xoshiro128p, xoshiro128pp, xoshiro128ss } from './xoshiro128.js';
+export { xoshiro256p, xoshiro256pp, xoshiro256ss } from './xoshiro256.js';
 export {
-	xoshiro128plus,
-	xoshiro128plusPlus,
-	xoshiro128starStar,
-} from './xoshiro128.js';
-//export { xorShift32, xorShift64, xorShift128, xorShift128plus, xorShift128plusV8 } from './xorShift128plus.js';
+	xoroshiro128p,
+	xoroshiro128pp,
+	xoroshiro128ss,
+} from './xoroshiro128.js';
 //Interfaces: see src/interfaces/index.ts

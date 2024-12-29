@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xoshiro256starStar } from '../../src/prng/xoshiro256';
+import { xoshiro256ss } from '../../src/prng/xoshiro256';
 import { U256, U64 } from '../../src/primitive/number';
 import { hex } from '../../src/codec/Hex';
 
@@ -14,7 +14,7 @@ const seq100: string[] = [
     '8852F10B70A289F7'
 ];
 
-const rng100 = xoshiro256starStar(U256.fromUint32Octo(0xF13CF544,0x23259B94,0xC6B89FE4,0x03BC38D6,0xFBD2E5CD,0x3E540F97,0x68859A70,0x40DBD7E6));
+const rng100 = xoshiro256ss(U256.fromUint32Octo(0xF13CF544,0x23259B94,0xC6B89FE4,0x03BC38D6,0xFBD2E5CD,0x3E540F97,0x68859A70,0x40DBD7E6));
 let i = 0;
 for (const expect of seq100) {
 	const act = rng100();
@@ -55,7 +55,7 @@ const seq0: string[] = [
     '0ECBDF7FFCD727E5',
 ];
 
-const rng0 = xoshiro256starStar();
+const rng0 = xoshiro256ss();
 i = 0;
 for (const expect of seq0) {
 	const act = rng0();
@@ -90,7 +90,7 @@ const seq_1: string[] = [
     '8B721B33265CC975',
 ];
 
-const rng_1 = xoshiro256starStar(U256.fromU64Quad(
+const rng_1 = xoshiro256ss(U256.fromU64Quad(
     U64.fromBytesBE(hex.toBytes('96a1743c36ed852f')),
     U64.fromBytesBE(hex.toBytes('8c0ac25732c50c9f')),
     U64.fromBytesBE(hex.toBytes('ec65ea85c2947a21')),

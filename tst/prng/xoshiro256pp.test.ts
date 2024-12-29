@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xoshiro256plusPlus } from '../../src/prng/xoshiro256';
+import { xoshiro256pp } from '../../src/prng/xoshiro256';
 import { U256, U64 } from '../../src/primitive/number';
 import { hex } from '../../src/codec/Hex';
 
@@ -30,7 +30,7 @@ const seq0: string[] = [
     '673235793F7908E1',
 ];
 
-const rng0 = xoshiro256plusPlus();
+const rng0 = xoshiro256pp();
 let i = 0;
 for (const expect of seq0) {
 	const act = rng0();
@@ -66,7 +66,7 @@ const seq_1: string[] = [
 	'13999C602F7C1112',
 ];
 
-const rng_1 = xoshiro256plusPlus(U256.fromU64Quad(
+const rng_1 = xoshiro256pp(U256.fromU64Quad(
     U64.fromBytesBE(hex.toBytes('96a1743c36ed852f')),
     U64.fromBytesBE(hex.toBytes('8c0ac25732c50c9f')),
     U64.fromBytesBE(hex.toBytes('ec65ea85c2947a21')),
