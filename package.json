@@ -225,6 +225,7 @@
 		"UInt32",
 		"UInt64",
 		"UInt128",
+		"UInt256",
 		"UInt64MutArray",
 		"RegEx-Escape",
 		"Weighted Random",

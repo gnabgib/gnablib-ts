@@ -7,6 +7,7 @@ export { U16 } from './U16.js';
 export { U32, U32Mut, U32MutArray, type U32ish } from './U32.js';
 export { U64, U64Mut, U64MutArray, type U64ish } from './U64.js';
 export { U128 } from './U128.js';
+export { U256 } from './U256.js';
 export * as Int from './Int.js';
 export * as UInt from './UInt.js';
 export * as Float from './Float.js';
