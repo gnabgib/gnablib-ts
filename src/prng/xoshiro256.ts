@@ -4,6 +4,18 @@ import { U256 } from '../primitive/number/U256.js';
 import { U64, U64MutArray } from '../primitive/number/U64.js';
 import { IRandU64 } from './interfaces/IRandU64.js';
 
+/**
+ * XoShiRo256++/XoShiRo256** are all-purpose 64bit generators (not **cryptographically secure**).  If you're
+ * only looking to generate float64, XoShiRo256+, which is slightly faster (~15%) can be used by using
+ * only the top 53 bits - the lower bits have low linear complexity.
+ */
+
+/**
+ * 
+ * @param ret 
+ * @param seed 
+ * @returns 
+ */
 function xoshiro256(
 	ret: (s: U64MutArray) => U64,
 	seed: U256 | undefined

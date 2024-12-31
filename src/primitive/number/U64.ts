@@ -12,9 +12,7 @@ const maxU32 = 0xffffffff;
 const maxU16 = 0xffff;
 const maxU32Plus1 = 0x100000000;
 const sizeBytes = 8;
-const sizeU32=2;
-const rotMask64 = 0x3f;
-const rotMask32 = 0x1f;
+const sizeU32 = 2;
 
 export type U64ish = U64 | number;
 
@@ -210,63 +208,23 @@ export class U64 {
 		);
 	}
 
-	// prettier-ignore
-	protected shift(by: number): number[] {
-		//Alright, so there's effort to avoid branching (and therefore branch-stalls)
-		// in this code.. which makes it slightly trickier to follow.  Effectively
-		// instead of picking the calc to make based on @see by size (branching)
-		// we calculate all calcs and zero the ones that are out of scope.
+	protected shift(by: number): Uint32Array {
+		const by32 = by & 0x1f; //aka mod 32
+		let byPos = by >>> 5; //&3; //aka divide by 32,then capped to 0-3
+		const invBy32 = 32 - by32; //Inverse (for the second shift)
 
-		//JS will only let us shift %32.. so n<<32=n<<0, and n<<33=n<<1
-		//This is effectively how JS will treat @see by untouched
-		const by32 = by & rotMask32; //aka mod 32
-		const byPos = by >> 5; //aka divide by 32
-		const invBy32 = (32 - by32) | 0; //Inverse (for the second shift)
+		// Detect by32 being 0, or more accurately invBy32 being 32.. which is treated
+		// as 0 in JS and leads to elements ORing and merging (a right mess) - we need
+		// to zero the shift in that case.
+		const zeroRshift = 1 - (invBy32 >>> 5);
 
-		//  Lookup: 0->0, 1..64->1
-		// We can achieve this with 1-(((by-1)>>31)&1)
-		// NOTE: Because 64 is far less than 2^32 we don't need to worry about other
-		//  values also having 2^31 set
-		//      0: 1-(((0-1)>>31)&1) = 1-(1&1) = 0
-		//      1: 1-(((1-1)>>31)&1) = 1-(0&1) = 1
-		//      2: 1-(((2-1)>>31)&1) = 1-(0&1) = 0
-		//      64:1-(((64-1)>>31)&1) = 1-(0&1)= 0
-		const by32Not0 = (1 - (((by32 - 1) >> 31) & 1)) | 0;
-
-		//  Lookup: 0->1, 1->0, 2->0
-		// We can achieve this with (2-byPos)>>1
-		//      0:(2-0)>>1=1
-		//      1:(2-1)>>1=0
-		//      2:(2-2)>>1=0
-		const byPosEq0 = (2 - byPos) >> 1;
-
-		//  Lookup: 0->0, 1->1, 2->0
-		// We can achieve this with byPos&1 (the only odd value)
-		//      0: 0&1 = 0
-		//      1: 1&1 = 1
-		//      2: 2&1 = 0
-		const byPosEq1 = byPos & 1;
-
-		//  Lookup: 0->0, 1->0, 2->1
-		// We can achieve this with (byPos>>1)&1
-		// NOTE: We don't need sign-aware shift (or: it doesn't matter)
-		//  since by should not be negative (this is actually enforced in the outward
-		//  facing methods @see lShift, @see lRot, @see rShift, @see rRot)
-		//      0: (0>>1)&1 = 0&1 = 0
-		//      1: (1>>1)&1 = 0&1 = 0
-		//      2: (2>>1)&1 = 1&1 = 1
-		const byPosEq2 = (byPos >> 1) & 1;
-
-		return [
-			(byPosEq2 * this.arr[this.pos + 1]) |
-				(byPosEq1 * by32Not0 * (this.arr[this.pos + 1] >>> invBy32)),
-			(byPosEq2 * this.arr[this.pos]) |
-				(byPosEq1 * ((this.arr[this.pos + 1] << by32) | (by32Not0 * (this.arr[this.pos] >>> invBy32)))) |
-				(byPosEq0 * by32Not0 * (this.arr[this.pos + 1] >>> invBy32)),
-			(byPosEq1 * (this.arr[this.pos] << by32)) |
-				(byPosEq0 * ((this.arr[this.pos + 1] << by32) | (by32Not0 * (this.arr[this.pos] >>> invBy32)))),
-			byPosEq0 * (this.arr[this.pos] << by32),
-		];
+		const ret = new Uint32Array(4);
+		ret[byPos] = this.arr[this.pos] << by32;
+		ret[byPos + 1] =
+			(this.arr[this.pos + 1] << by32) |
+			((zeroRshift * this.arr[this.pos]) >>> invBy32);
+		ret[byPos + 2] = (zeroRshift * this.arr[this.pos + 1]) >>> invBy32;
+		return ret;
 	}
 
 	/**
@@ -277,8 +235,7 @@ export class U64 {
 	 */
 	lShift(by: number): U64 {
 		const s = this.shift(by);
-		// [hh hl lh ll]
-		return new U64(Uint32Array.of(s[3], s[2]));
+		return new U64(s.subarray(0, 2));
 	}
 
 	/**
@@ -287,9 +244,10 @@ export class U64 {
 	 * @returns shifted value
 	 */
 	lRot(by: number): U64 {
-		const s = this.shift(by & rotMask64);
-		// [hh hl lh ll]
-		return new U64(Uint32Array.of(s[3] | s[1], s[2] | s[0]));
+		const s = this.shift(by & 63);
+		s[0] |= s[2];
+		s[1] |= s[3];
+		return new U64(s.subarray(0, 2));
 	}
 
 	/**
@@ -300,8 +258,7 @@ export class U64 {
 	 */
 	rShift(by: number): U64 {
 		const s = this.shift(64 - by);
-		// [hh hl lh ll]
-		return new U64(Uint32Array.of(s[1], s[0]));
+		return new U64(s.subarray(2));
 	}
 
 	/**
@@ -310,8 +267,10 @@ export class U64 {
 	 * @returns rotated value
 	 */
 	rRot(by: number): U64 {
-		const s = this.shift(64 - by);
-		return new U64(Uint32Array.of(s[3] | s[1], s[2] | s[0]));
+		const s = this.shift(64 - (by & 63));
+		s[0] |= s[2];
+		s[1] |= s[3];
+		return new U64(s.subarray(0, 2));
 	}
 
 	/**
@@ -576,9 +535,9 @@ export class U64 {
 	/**
 	 * Mutate - create a copy of the Uint32Array within
 	 */
-	mut32():Uint32Array {
-        return this.arr.slice(this.pos, this.pos + sizeU32);
-    }
+	mut32(): Uint32Array {
+		return this.arr.slice(this.pos, this.pos + sizeU32);
+	}
 
 	/**
 	 * String version of this value, in big endian
@@ -622,7 +581,9 @@ export class U64 {
 	 * @returns Uint8Array[8]
 	 */
 	toBytesLE(): Uint8Array {
-		const r8 = new Uint8Array(this.arr.slice(this.pos, this.pos + sizeU32).buffer);
+		const r8 = new Uint8Array(
+			this.arr.slice(this.pos, this.pos + sizeU32).buffer
+		);
 		asLE.i32(r8, 0);
 		asLE.i32(r8, 4);
 		return r8;
@@ -781,7 +742,7 @@ export class U64 {
 		}
 	}
 }
-const zero = U64.fromIntUnsafe(0);
+const zero = U64.fromUint32Pair(0, 0);
 const max = U64.fromUint32Pair(0xffffffff, 0xffffffff);
 
 export class U64Mut extends U64 {
@@ -832,9 +793,8 @@ export class U64Mut extends U64 {
 	 */
 	lShiftEq(by: number): U64Mut {
 		const s = this.shift(by);
-		// [hh hl lh ll]
-		this.arr[this.pos] = s[3];
-		this.arr[this.pos + 1] = s[2];
+		this.arr[this.pos] = s[0];
+		this.arr[this.pos + 1] = s[1];
 		return this;
 	}
 
@@ -844,10 +804,9 @@ export class U64Mut extends U64 {
 	 * @returns this (chainable)
 	 */
 	lRotEq(by: number): U64Mut {
-		const s = this.shift(by & rotMask64);
-		// [hh hl lh ll]
-		this.arr[this.pos] = s[3] | s[1];
-		this.arr[this.pos + 1] = s[2] | s[0];
+		const s = this.shift(by & 63);
+		this.arr[this.pos] = s[0] | s[2];
+		this.arr[this.pos + 1] = s[1] | s[3];
 		return this;
 	}
 
@@ -859,9 +818,8 @@ export class U64Mut extends U64 {
 	 */
 	rShiftEq(by: number): U64Mut {
 		const s = this.shift(64 - by);
-		// [hh hl lh ll]
-		this.arr[this.pos] = s[1];
-		this.arr[this.pos + 1] = s[0];
+		this.arr[this.pos] = s[2];
+		this.arr[this.pos + 1] = s[3];
 		return this;
 	}
 
@@ -871,9 +829,9 @@ export class U64Mut extends U64 {
 	 * @returns this (chainable)
 	 */
 	rRotEq(by: number): U64Mut {
-		const s = this.shift(64 - by);
-		this.arr[this.pos] = s[3] | s[1];
-		this.arr[this.pos + 1] = s[2] | s[0];
+		const s = this.shift(64 - (by & 63));
+		this.arr[this.pos] = s[0] | s[2];
+		this.arr[this.pos + 1] = s[1] | s[3];
 		return this;
 	}
 

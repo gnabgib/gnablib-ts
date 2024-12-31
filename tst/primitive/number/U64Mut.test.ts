@@ -249,6 +249,9 @@ const lRotTest:[string,number,string][] = [
 	['0123456789ABCDEF', 60, 'F0123456789ABCDE'],
 	['0123456789ABCDEF', 63, '8091A2B3C4D5E6F7'],
 	['0123456789ABCDEF', 64, '0123456789ABCDEF'],
+	//We can exceed
+	['0123456789ABCDEF', 65, '02468ACF13579BDE'],//Same as 1
+	['0123456789ABCDEF', -1, '8091A2B3C4D5E6F7'],//Same as 63
 ];
 for (const [start,by,expect] of lRotTest) {
 	tsts(`${start} ROL= ${by}`, () => {
@@ -362,6 +365,9 @@ const rRotTest:[string,number,string][] = [
 	['0123456789ABCDEF', 60, '123456789ABCDEF0'],
 	['0123456789ABCDEF', 63, '02468ACF13579BDE'],
 	['0123456789ABCDEF', 64, '0123456789ABCDEF'],
+	//We can exceed
+	['0123456789ABCDEF', 65, '8091A2B3C4D5E6F7'],//Same as 1
+	['0123456789ABCDEF', -1, '02468ACF13579BDE'],//Same as 63	
 ];
 for (const [start,by,expect] of rRotTest) {
 	tsts(`${start} ROR= ${by}`, () => {

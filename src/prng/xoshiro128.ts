@@ -3,6 +3,19 @@
 import { U128 } from '../primitive/number/U128.js';
 import { IRandUInt } from './interfaces/IRandInt.js';
 
+/**
+ * XoShiRo128++/XoShiRo128** are all-purpose 32bit generators (not **cryptographically secure**).  If you're
+ * only looking to generate float32, XoShiRo128+, which is slightly faster (~15%) can be used by using
+ * only the top 24 bits - the lower bits have low linear complexity.
+ */
+
+
+/**
+ * 
+ * @param ret 
+ * @param seed 
+ * @returns 
+ */
 function xoshiro128(
 	ret: (s: Uint32Array) => number,
 	seed: U128 | undefined

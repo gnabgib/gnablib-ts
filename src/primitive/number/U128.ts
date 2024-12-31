@@ -7,6 +7,9 @@ import { U64, U64MutArray } from './U64.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT_U128 = 'U128';
+const DBG_RPT_U128Mut = 'U128Mut';
+const maxU32 = 0xffffffff;
+const maxU16 = 0xffff;
 const sizeBytes = 16;
 const sizeU32 = 4;
 const maxU32Plus1 = 0x100000000;
@@ -35,6 +38,13 @@ function fromBytesLE(source: Uint8Array, pos = 0): Uint32Array {
 	const c32 = new Uint32Array(cpy.buffer);
 	//No need to swap bytes
 	return c32;
+}
+
+function notEq(arr: Uint32Array, pos: number) {
+	arr[pos] = ~arr[pos];
+	arr[pos + 1] = ~arr[pos + 1];
+	arr[pos + 2] = ~arr[pos + 2];
+	arr[pos + 3] = ~arr[pos + 3];
 }
 
 export class U128 {
@@ -84,16 +94,16 @@ export class U128 {
 	}
 
 	//_valueOf doesn't work with U128 (except as a 4 part Uint32array)
-	// /**
-	//  * This is only used by U64Mut (notice it's protected), so we can look inside v.arr
-	//  * @param v
-	//  */
-	// protected _setValue(v: U128): void {
-	// 	this.arr[this.pos] = v.arr[v.pos];
-	// 	this.arr[this.pos + 1] = v.arr[v.pos + 1];
-	//     this.arr[this.pos + 2] = v.arr[v.pos + 2];
-	//     this.arr[this.pos + 3] = v.arr[v.pos + 3];
-	// }
+	/**
+	 * This is only used by U64Mut (notice it's protected), so we can look inside v.arr
+	 * @param v
+	 */
+	protected _setValue(v: U128): void {
+		this.arr[this.pos] = v.arr[v.pos];
+		this.arr[this.pos + 1] = v.arr[v.pos + 1];
+		this.arr[this.pos + 2] = v.arr[v.pos + 2];
+		this.arr[this.pos + 3] = v.arr[v.pos + 3];
+	}
 	protected _xorEq(a: Uint32Array, aPos: number, b: U128) {
 		a[aPos] ^= b.arr[b.pos];
 		a[aPos + 1] ^= b.arr[b.pos + 1];
@@ -112,76 +122,105 @@ export class U128 {
 		a[aPos + 2] &= b.arr[b.pos + 2];
 		a[aPos + 3] &= b.arr[b.pos + 3];
 	}
-	// protected _addEq(a: Uint32Array, aPos: number, b: U64) {
-	// 	const l = a[aPos] + b.arr[b.pos];
-	// 	//Carry can only be 0/1
-	// 	const c = l > maxU32 ? 1 : 0;
-	// 	a[aPos] = l;
-	// 	a[aPos + 1] += b.arr[b.pos + 1] + c;
-	// }
-	// protected static _negEq(a: U64Mut) {
-	// 	//Not
-	// 	a.arr[a.pos] = ~a.arr[a.pos];
-	// 	a.arr[a.pos + 1] = ~a.arr[a.pos + 1];
+	protected _addEq(a: Uint32Array, aPos: number, b: U128) {
+		let sum = a[aPos] + b.arr[b.pos];
+		let carry = sum > maxU32 ? 1 : 0;
+		a[aPos] = sum;
 
-	// 	a.arr[a.pos] += 1;
-	// 	//If overflow add to next block
-	// 	if (a.arr[a.pos] == 0) {
-	// 		a.arr[a.pos + 1] += 1;
-	// 	}
-	// }
-	// protected _subEq(a: Uint32Array, aPos: number, b: U64) {
-	// 	const b2 = b.mut();
-	// 	U64._negEq(b2);
-	// 	this._addEq(a, aPos, b2);
-	// }
-	// protected _mulEq(a: Uint32Array, aPos: number, b64: U64) {
-	// 	//Long multiplication!
-	// 	// FFFF*FFFF (biggest possible uint16s) = FFFE0001
-	// 	// FFFFFFFF*FFFFFFFF (biggest possible uint32s) = FFFFFFFE00000001
-	// 	// - We can't multiple U32 because JS only goes to U51 before switching
-	// 	// to floating point
-	// 	const a0 = a[aPos] & maxU16;
-	// 	const a1 = a[aPos] >>> 16;
-	// 	const a2 = a[aPos + 1] & maxU16;
-	// 	const a3 = a[aPos + 1] >>> 16;
-	// 	const b0 = b64.arr[b64.pos] & maxU16;
-	// 	const b1 = b64.arr[b64.pos] >>> 16;
-	// 	const b2 = b64.arr[b64.pos + 1] & maxU16;
-	// 	const b3 = b64.arr[b64.pos + 1] >>> 16;
+		sum = a[aPos + 1] + b.arr[b.pos + 1] + carry;
+		carry = sum > maxU32 ? 1 : 0;
+		a[aPos + 1] = sum;
 
-	// 	const m0 = a0 * b0;
-	// 	const c0 = m0 >>> 16;
-	// 	const m1 = a0 * b1 + a1 * b0 + c0;
-	// 	const c1 = (m1 / 0x10000) | 0; //Can be >32bits
-	// 	const m2 = a0 * b2 + a1 * b1 + a2 * b0 + c1;
-	// 	const c2 = (m2 / 0x10000) | 0; //Can be >32bits
-	// 	const m3 = a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0 + c2; //(m2>>>16);
-	// 	//Note there are 3 more stages if we had space)
-	// 	a[aPos] = (m0 & maxU16) | ((m1 & maxU16) << 16);
-	// 	a[aPos + 1] = (m2 & maxU16) | ((m3 & maxU16) << 16);
-	// }
-	// protected _mulEq32(a: Uint32Array, aPos: number, b32: number) {
-	// 	//Long multiplication!
-	// 	// When we know we're multiplying by a 32bit integer this saves a few stages
-	// 	// although processors are fast at mathematics (creation of b2/b3, addition into m2/m3)
-	// 	const a0 = a[aPos] & maxU16;
-	// 	const a1 = a[aPos] >>> 16;
-	// 	const a2 = a[aPos + 1] & maxU16;
-	// 	const a3 = a[aPos + 1] >>> 16;
-	// 	const b0 = b32 & maxU16;
-	// 	const b1 = b32 >>> 16;
+		sum = a[aPos + 2] + b.arr[b.pos + 2] + carry;
+		carry = sum > maxU32 ? 1 : 0;
+		a[aPos + 2] = sum;
 
-	// 	const m0 = a0 * b0;
-	// 	const c0 = m0 >>> 16;
-	// 	const m1 = a0 * b1 + a1 * b0 + c0;
-	// 	const c1 = (m1 / 0x10000) | 0; //Can be >32bits
-	// 	const m2 = a1 * b1 + a2 * b0 + c1;
-	// 	const c2 = (m2 / 0x10000) | 0; //Can be >32bits
-	// 	const m3 = a2 * b1 + a3 * b0 + c2; //(m2>>>16);
-	// 	a[aPos] = (m0 & maxU16) | ((m1 & maxU16) << 16);
-	// 	a[aPos + 1] = (m2 & maxU16) | ((m3 & maxU16) << 16);
-	// }
+		//Don't need to carry check the last element
+		a[aPos + 3] += b.arr[b.pos + 3] + carry;
+	}
+	protected static _negEq(a: U128Mut) {
+		notEq(a.arr, a.pos);
+		a.arr[a.pos] += 1;
+		//If overflow add to next block
+		if (a.arr[a.pos] == 0) {
+			a.arr[a.pos + 1] += 1;
+			if (a.arr[a.pos + 1] == 0) {
+				a.arr[a.pos + 2] += 1;
+				if (a.arr[a.pos + 2] == 0) {
+					a.arr[a.pos + 3] += 1;
+				}
+			}
+		}
+	}
+	protected _subEq(a: Uint32Array, aPos: number, b: U128) {
+		const b2 = b.mut();
+		U128._negEq(b2);
+		this._addEq(a, aPos, b2);
+	}
+	protected _mulEq(a: Uint32Array, aPos: number, b: U128) {
+		//Long multiplication!
+		// FFFF*FFFF (biggest possible uint16s) = FFFE0001
+		// FFFFFFFF*FFFFFFFF (biggest possible uint32s) = FFFFFFFE00000001
+		// - We can't multiple U32 because JS only goes to U51 before switching
+		// to floating point
+		const a0 = a[aPos] & maxU16;
+		const a1 = a[aPos] >>> 16;
+		const a2 = a[aPos + 1] & maxU16;
+		const a3 = a[aPos + 1] >>> 16;
+		const a4 = a[aPos + 2] & maxU16;
+		const a5 = a[aPos + 2] >>> 16;
+		const a6 = a[aPos + 3] & maxU16;
+		const a7 = a[aPos + 3] >>> 16;
+
+		const b0 = b.arr[b.pos] & maxU16;
+		const b1 = b.arr[b.pos] >>> 16;
+		const b2 = b.arr[b.pos + 1] & maxU16;
+		const b3 = b.arr[b.pos + 1] >>> 16;
+		const b4 = b.arr[b.pos + 2] & maxU16;
+		const b5 = b.arr[b.pos + 2] >>> 16;
+		const b6 = b.arr[b.pos + 3] & maxU16;
+		const b7 = b.arr[b.pos + 3] >>> 16;
+
+		const m0 = a0 * b0;
+		let carry = m0 >>> 16;
+		const m1 = a0 * b1 + a1 * b0 + carry;
+		carry = (m1 / 0x10000) | 0; //Can be >32bits
+		const m2 = a0 * b2 + a1 * b1 + a2 * b0 + carry;
+		carry = (m2 / 0x10000) | 0; //Can be >32bits
+		const m3 = a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0 + carry; //(m2>>>16);
+		carry = (m3 / 0x10000) | 0; //Can be >32bits
+		const m4 = a0 * b4 + a1 * b3 + a2 * b2 + a3 * b1 + a4 * b0 + carry;
+		carry = (m4 / 0x10000) | 0; //Can be >32bits
+		const m5 =
+			a0 * b5 + a1 * b4 + a2 * b3 + a3 * b2 + a4 * b1 + a5 * b0 + carry;
+		carry = (m5 / 0x10000) | 0; //Can be >32bits
+		const m6 =
+			a0 * b6 +
+			a1 * b5 +
+			a2 * b4 +
+			a3 * b3 +
+			a4 * b2 +
+			a5 * b1 +
+			a6 * b0 +
+			carry;
+		carry = (m6 / 0x10000) | 0; //Can be >32bits
+		const m7 =
+			a0 * b7 +
+			a1 * b6 +
+			a2 * b5 +
+			a3 * b4 +
+			a4 * b3 +
+			a5 * b2 +
+			a6 * b1 +
+			a7 * b0 +
+			carry;
+		//Note there are more stages if we had space
+
+		a[aPos] = (m0 & maxU16) | ((m1 & maxU16) << 16);
+		a[aPos + 1] = (m2 & maxU16) | ((m3 & maxU16) << 16);
+		a[aPos + 2] = (m4 & maxU16) | ((m5 & maxU16) << 16);
+		a[aPos + 3] = (m6 & maxU16) | ((m7 & maxU16) << 16);
+	}
 
 	/**
 	 * `this` ⊕ `u128`
@@ -221,152 +260,119 @@ export class U128 {
 	 * @returns
 	 */
 	not(): U128 {
-		return new U128(
-			Uint32Array.of(
-				~this.arr[this.pos],
-				~this.arr[this.pos + 1],
-				~this.arr[this.pos + 2],
-				~this.arr[this.pos + 3]
-			)
-		);
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
+		notEq(arr, 0);
+		return new U128(arr);
 	}
 
-	// // prettier-ignore
-	// protected shift(by: number): number[] {
-	// 	//Alright, so there's effort to avoid branching (and therefore branch-stalls)
-	// 	// in this code.. which makes it slightly trickier to follow.  Effectively
-	// 	// instead of picking the calc to make based on @see by size (branching)
-	// 	// we calculate all calcs and zero the ones that are out of scope.
+	protected shift(by: number): Uint32Array {
+		const by32 = by & 0x1f; //aka mod 32
+		let byPos = by >>> 5; //&3; //aka divide by 32,then capped to 0-3
+		const invBy32 = 32 - by32; //Inverse (for the second shift)
 
-	// 	//JS will only let us shift %32.. so n<<32=n<<0, and n<<33=n<<1
-	// 	//This is effectively how JS will treat @see by untouched
-	// 	const by32 = by & rotMask32; //aka mod 32
-	// 	const byPos = by >> 5; //aka divide by 32
-	// 	const invBy32 = (32 - by32) | 0; //Inverse (for the second shift)
+		// Detect by32 being 0, or more accurately invBy32 being 32.. which is treated
+		// as 0 in JS and leads to elements ORing and merging (a right mess) - we need
+		// to zero the shift in that case.
+		const zeroRshift = 1 - (invBy32 >>> 5);
 
-	// 	//  Lookup: 0->0, 1..64->1
-	// 	// We can achieve this with 1-(((by-1)>>31)&1)
-	// 	// NOTE: Because 64 is far less than 2^32 we don't need to worry about other
-	// 	//  values also having 2^31 set
-	// 	//      0: 1-(((0-1)>>31)&1) = 1-(1&1) = 0
-	// 	//      1: 1-(((1-1)>>31)&1) = 1-(0&1) = 1
-	// 	//      2: 1-(((2-1)>>31)&1) = 1-(0&1) = 0
-	// 	//      64:1-(((64-1)>>31)&1) = 1-(0&1)= 0
-	// 	const by32Not0 = (1 - (((by32 - 1) >> 31) & 1)) | 0;
+		const ret = new Uint32Array(8);
 
-	// 	//  Lookup: 0->1, 1->0, 2->0
-	// 	// We can achieve this with (2-byPos)>>1
-	// 	//      0:(2-0)>>1=1
-	// 	//      1:(2-1)>>1=0
-	// 	//      2:(2-2)>>1=0
-	// 	const byPosEq0 = (2 - byPos) >> 1;
+		ret[byPos] = this.arr[this.pos] << by32;
+		ret[byPos + 1] =
+			(this.arr[this.pos + 1] << by32) |
+			((zeroRshift * this.arr[this.pos]) >>> invBy32);
+		ret[byPos + 2] =
+			(this.arr[this.pos + 2] << by32) |
+			((zeroRshift * this.arr[this.pos + 1]) >>> invBy32);
+		ret[byPos + 3] =
+			(this.arr[this.pos + 3] << by32) |
+			((zeroRshift * this.arr[this.pos + 2]) >>> invBy32);
+		ret[byPos + 4] = (zeroRshift * this.arr[this.pos + 3]) >>> invBy32;
+		return ret;
+	}
 
-	// 	//  Lookup: 0->0, 1->1, 2->0
-	// 	// We can achieve this with byPos&1 (the only odd value)
-	// 	//      0: 0&1 = 0
-	// 	//      1: 1&1 = 1
-	// 	//      2: 2&1 = 0
-	// 	const byPosEq1 = byPos & 1;
+	/**
+	 * Shift bits left by `by` places zeros are brought in
+	 * (Same as <<)
+	 * @param by integer 0-128
+	 * @returns shifted value
+	 */
+	lShift(by: number): U128 {
+		const s = this.shift(by);
+		return new U128(s.subarray(0, 4));
+	}
 
-	// 	//  Lookup: 0->0, 1->0, 2->1
-	// 	// We can achieve this with (byPos>>1)&1
-	// 	// NOTE: We don't need sign-aware shift (or: it doesn't matter)
-	// 	//  since by should not be negative (this is actually enforced in the outward
-	// 	//  facing methods @see lShift, @see lRot, @see rShift, @see rRot)
-	// 	//      0: (0>>1)&1 = 0&1 = 0
-	// 	//      1: (1>>1)&1 = 0&1 = 0
-	// 	//      2: (2>>1)&1 = 1&1 = 1
-	// 	const byPosEq2 = (byPos >> 1) & 1;
+	/**
+	 * Rotate bits left by `by`, bringing the outgoing bits in on the right
+	 * @param by integer 0-127
+	 * @returns shifted value
+	 */
+	lRot(by: number): U128 {
+		const s = this.shift(by & 127);
+		s[0] |= s[4];
+		s[1] |= s[5];
+		s[2] |= s[6];
+		s[3] |= s[7];
+		return new U128(s.subarray(0, 4));
+	}
 
-	// 	return [
-	// 		(byPosEq2 * this.arr[this.pos + 1]) |
-	// 			(byPosEq1 * by32Not0 * (this.arr[this.pos + 1] >>> invBy32)),
-	// 		(byPosEq2 * this.arr[this.pos]) |
-	// 			(byPosEq1 * ((this.arr[this.pos + 1] << by32) | (by32Not0 * (this.arr[this.pos] >>> invBy32)))) |
-	// 			(byPosEq0 * by32Not0 * (this.arr[this.pos + 1] >>> invBy32)),
-	// 		(byPosEq1 * (this.arr[this.pos] << by32)) |
-	// 			(byPosEq0 * ((this.arr[this.pos + 1] << by32) | (by32Not0 * (this.arr[this.pos] >>> invBy32)))),
-	// 		byPosEq0 * (this.arr[this.pos] << by32),
-	// 	];
-	// }
+	/**
+	 * Shift bits right by `by` places, zeros are brought in (sign unaware)
+	 * (same as >>>)
+	 * @param by number 0-128
+	 * @returns shifted value
+	 */
+	rShift(by: number): U128 {
+		const s = this.shift(128 - by);
+		return new U128(s.subarray(4));
+	}
 
-	// /**
-	//  * Shift bits left by `by` places zeros are brought in
-	//  * (Same as <<)
-	//  * @param by integer 0-63
-	//  * @returns shifted value
-	//  */
-	// lShift(by: number): U64 {
-	// 	const s = this.shift(by);
-	// 	// [hh hl lh ll]
-	// 	return new U64(Uint32Array.of(s[3], s[2]));
-	// }
+	/**
+	 * Rotate bits right by `by` places, bringing the outgoing bits in on the left
+	 * @param by number 0-127
+	 * @returns rotated value
+	 */
+	rRot(by: number): U128 {
+		const s = this.shift(128 - (by & 127));
+		s[0] |= s[4];
+		s[1] |= s[5];
+		s[2] |= s[6];
+		s[3] |= s[7];
+		return new U128(s.subarray(0, 4));
+	}
 
-	// /**
-	//  * Rotate bits left by `by`, bringing the outgoing bits in on the right
-	//  * @param by integer 0-63
-	//  * @returns shifted value
-	//  */
-	// lRot(by: number): U64 {
-	// 	const s = this.shift(by & rotMask64);
-	// 	// [hh hl lh ll]
-	// 	return new U64(Uint32Array.of(s[3] | s[1], s[2] | s[0]));
-	// }
+	/**
+	 * `this` + `u128`
+	 * @param u128
+	 * @returns
+	 */
+	add(u128: U128): U128 {
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
+		this._addEq(arr, 0, u128);
+		return new U128(arr, 0);
+	}
 
-	// /**
-	//  * Shift bits right by `by` places, zeros are brought in (sign unaware)
-	//  * (same as >>>)
-	//  * @param by number 0-63
-	//  * @returns shifted value
-	//  */
-	// rShift(by: number): U64 {
-	// 	const s = this.shift(64 - by);
-	// 	// [hh hl lh ll]
-	// 	return new U64(Uint32Array.of(s[1], s[0]));
-	// }
+	/**
+	 * `this` - `u128`
+	 * @param u128
+	 * @returns
+	 */
+	sub(u128: U128): U128 {
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
+		this._subEq(arr, 0, u128);
+		return new U128(arr, 0);
+	}
 
-	// /**
-	//  * Rotate bits right by `by` places, bringing the outgoing bits in on the left
-	//  * @param by number 0-64
-	//  * @returns rotated value
-	//  */
-	// rRot(by: number): U64 {
-	// 	const s = this.shift(64 - by);
-	// 	return new U64(Uint32Array.of(s[3] | s[1], s[2] | s[0]));
-	// }
-
-	// /**
-	//  * `this` + `u64`
-	//  * @param u64
-	//  * @returns
-	//  */
-	// add(u64: U64): U64 {
-	// 	const arr = this.arr.slice(this.pos, this.pos + 2);
-	// 	this._addEq(arr, 0, u64);
-	// 	return new U64(arr, 0);
-	// }
-
-	// /**
-	//  * `this` - `u64`
-	//  * @param u64
-	//  * @returns
-	//  */
-	// sub(u64: U64): U64 {
-	// 	const arr = this.arr.slice(this.pos, this.pos + 2);
-	// 	this._subEq(arr, 0, u64);
-	// 	return new U64(arr, 0);
-	// }
-
-	// /**
-	//  * `this` * `u64`
-	//  * @param u64
-	//  * @returns
-	//  */
-	// mul(u64: U64): U64 {
-	// 	const arr = this.arr.slice(this.pos, this.pos + 2);
-	// 	this._mulEq(arr, 0, u64);
-	// 	return new U64(arr);
-	// }
+	/**
+	 * `this` * `u128`
+	 * @param u128
+	 * @returns
+	 */
+	mul(u128: U128): U128 {
+		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
+		this._mulEq(arr, 0, u128);
+		return new U128(arr);
+	}
 
 	/**
 	 * Whether `this`==`u128`
@@ -629,26 +635,26 @@ export class U128 {
 		return new U128(this.arr.slice(this.pos, this.pos + sizeU32));
 	}
 
-	// /**
-	//  * Mutate - create a new @see {@link U64Mut} with a copy of this value
-	//  */
-	// mut(): U64Mut {
-	// 	return U64Mut.fromArray(this.arr.slice(this.pos, this.pos + 2));
-	// }
+	/**
+	 * Mutate - create a new @see {@link U128Mut} with a copy of this value
+	 */
+	mut(): U128Mut {
+		return U128Mut.fromArray(this.arr.slice(this.pos, this.pos + sizeU32));
+	}
 
-    mut32():Uint32Array {
-        return this.arr.slice(this.pos, this.pos + sizeU32);
-    }
+	/**
+	 * Mutate - create a copy of the Uint32Array within
+	 */
+	mut32(): Uint32Array {
+		return this.arr.slice(this.pos, this.pos + sizeU32);
+	}
 
 	/**
 	 * Mutate - create a new @see {@link U64MutArray} with a copy of this value
 	 */
 	mut64(): U64MutArray {
-		return U64MutArray.fromBytes(
-			this.arr.buffer,
-			this.arr.byteOffset + this.pos * 4,
-			sizeBytes
-		);
+		const cpy = this.arr.slice(this.pos, this.pos + sizeU32);
+		return U64MutArray.fromBytes(cpy.buffer, cpy.byteOffset, sizeBytes);
 	}
 
 	/**
@@ -760,7 +766,10 @@ export class U128 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U128 {
-		sNum('uint51', uint51).unsigned().throwNot();
+		sNum('uint51', uint51)
+			.unsigned()
+			.atMost(Number.MAX_SAFE_INTEGER)
+			.throwNot();
 		return new U128(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0));
 	}
 
@@ -859,21 +868,251 @@ export class U128 {
 	static get zero(): U128 {
 		return zero;
 	}
-
-	// /**
-	//  * Given a number create a new Uint64
-	//  * Given a U64return it
-	//  * @param uint64
-	//  * @returns
-	//  */
-	// static coerce(uint64: U64ish): U64 {
-	// 	if (uint64 instanceof U64) {
-	// 		return uint64;
-	// 	} else {
-	// 		sNum('uint64', uint64).unsigned().throwNot();
-	// 		return new U64(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
-	// 	}
-	// }
 }
-const zero = U128.fromUint32Quad(0,0,0,0);
+const zero = U128.fromUint32Quad(0, 0, 0, 0);
 const max = U128.fromUint32Quad(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff);
+
+export class U128Mut extends U128 {
+	/**
+	 * @see value ⊕= `u128`
+	 * @param u128
+	 * @returns this (chainable)
+	 */
+	xorEq(u128: U128): U128Mut {
+		this._xorEq(this.arr, this.pos, u128);
+		return this;
+	}
+
+	/**
+	 * @see value ∨= `u128`
+	 * @param u128
+	 * @returns this (chainable)
+	 */
+	orEq(u128: U128): U128Mut {
+		this._orEq(this.arr, this.pos, u128);
+		return this;
+	}
+
+	/**
+	 * @see value ∧= `u128`
+	 * @param u128
+	 * @returns this (chainable)
+	 */
+	andEq(u128: U128): U128Mut {
+		this._andEq(this.arr, this.pos, u128);
+		return this;
+	}
+
+	/**
+	 * ¬= @see value
+	 * @returns this (chainable)
+	 */
+	notEq(): U128Mut {
+		notEq(this.arr, this.pos);
+		return this;
+	}
+
+	/**
+	 * @see value ROL @param by
+	 * @param by integer 0-128
+	 * @returns this (chainable)
+	 */
+	lShiftEq(by: number): U128Mut {
+		const s = this.shift(by);
+		this.arr[this.pos] = s[0];
+		this.arr[this.pos + 1] = s[1];
+		this.arr[this.pos + 2] = s[2];
+		this.arr[this.pos + 3] = s[3];
+		return this;
+	}
+
+	/**
+	 * Rotate bits left by @see by, bringing the outgoing bits in on the right
+	 * @param by integer 0-127
+	 * @returns this (chainable)
+	 */
+	lRotEq(by: number): U128Mut {
+		const s = this.shift(by & 127);
+		this.arr[this.pos] = s[0] | s[4];
+		this.arr[this.pos + 1] = s[1] | s[5];
+		this.arr[this.pos + 2] = s[2] | s[6];
+		this.arr[this.pos + 3] = s[3] | s[7];
+		return this;
+	}
+
+	/**
+	 * Shift bits right by @see by places, zeros are brought in (sign unaware)
+	 * (same as >>>)
+	 * @param by number 0-128
+	 * @returns shifted value
+	 */
+	rShiftEq(by: number): U128Mut {
+		const s = this.shift(128 - by);
+		this.arr[this.pos] = s[4];
+		this.arr[this.pos + 1] = s[5];
+		this.arr[this.pos + 2] = s[6];
+		this.arr[this.pos + 3] = s[7];
+		return this;
+	}
+
+	/**
+	 * @see value ROR @param by
+	 * @param by integer 0-127
+	 * @returns this (chainable)
+	 */
+	rRotEq(by: number): U128Mut {
+		const s = this.shift(128 - (by & 127));
+		this.arr[this.pos] = s[0] | s[4];
+		this.arr[this.pos + 1] = s[1] | s[5];
+		this.arr[this.pos + 2] = s[2] | s[6];
+		this.arr[this.pos + 3] = s[3] | s[7];
+		return this;
+	}
+
+	/**
+	 * @see value += @param b
+	 * @param b
+	 * @returns @see value + @param b
+	 */
+	addEq(b: U128): U128Mut {
+		this._addEq(this.arr, this.pos, b);
+		return this;
+	}
+
+	/**
+	 * @see value -= @param b
+	 * @param b
+	 * @returns @see value -= @param b
+	 */
+	subEq(b: U128): U128Mut {
+		this._subEq(this.arr, this.pos, b);
+		return this;
+	}
+
+	/**
+	 * @see value *= @param b
+	 * @param b
+	 * @returns @see value * @param b
+	 */
+	mulEq(b: U128): U128Mut {
+		this._mulEq(this.arr, this.pos, b);
+		return this;
+	}
+
+	/**
+	 * Create a copy of this U128Mut
+	 * @returns
+	 */
+	clone(): U128Mut {
+		return new U128Mut(this.arr.slice(this.pos, this.pos + sizeU32));
+	}
+
+	/**
+	 * Update value
+	 * @param u128
+	 * @returns
+	 */
+	set(u128: U128): U128Mut {
+		super._setValue(u128);
+		return this;
+	}
+
+	/**
+	 * Zero out this value
+	 */
+	zero(): void {
+		this.arr.fill(0, this.pos, this.pos + sizeU32);
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return DBG_RPT_U128Mut;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `${DBG_RPT_U128Mut}(${this.toString()})`;
+	}
+
+	/**
+	 * Build from an integer - note JS can only support up to 51bit ints
+	 * @param uint51
+	 * @returns
+	 */
+	static fromIntUnsafe(uint51: number): U128Mut {
+		return new U128Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0));
+	}
+
+	/**
+	 * Build from an integer - note JS can only support up to 51bit ints
+	 * @param uint51 0-Number.MAX_SAFE_INT
+	 * @returns
+	 */
+	static fromInt(uint51: number): U128Mut {
+		sNum('uint51', uint51)
+			.unsigned()
+			.atMost(Number.MAX_SAFE_INTEGER)
+			.throwNot();
+		return new U128Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0));
+	}
+
+	/**
+	 * Build from four 32bit unsigned integers (truncated if oversized)
+	 * @param uint32low
+	 * @param uint32high
+	 * @returns
+	 */
+	static fromUint32Quad(
+		uint32lowLow: number,
+		uint32lowHigh: number,
+		uint32highLow: number,
+		uint32highHigh: number
+	): U128Mut {
+		return new U128Mut(
+			Uint32Array.of(uint32lowLow, uint32lowHigh, uint32highLow, uint32highHigh)
+		);
+	}
+
+	/**
+	 * Build from two 64bit unsigned ints
+	 * @param u64low
+	 * @param u64high
+	 * @returns
+	 */
+	static fromU64Pair(u64low: U64, u64high: U64): U128Mut {
+		return new U128Mut(
+			Uint32Array.of(u64low.low, u64low.high, u64high.low, u64high.high)
+		);
+	}
+
+	/**
+	 * Created a "view" into an existing Uint32Array
+	 * **NOTE** the memory is shared, changing a value in @param source will mutate the state
+	 * @param source
+	 * @param pos Position to link (default 0), note this is an array-position not bytes
+	 * @returns
+	 */
+	static fromArray(source: Uint32Array, pos = 0): U128Mut {
+		return new U128Mut(source, pos);
+	}
+
+	/**
+	 * Create from a copy of `src` assuming the bytes are in big endian order
+	 * @param src
+	 * @param pos
+	 * @returns
+	 */
+	static fromBytesBE(src: Uint8Array, pos = 0): U128Mut {
+		return new U128Mut(fromBytesBE(src, pos));
+	}
+
+	/**
+	 * Create from a copy of `src` assuming the bytes are in little endian order
+	 * @param src
+	 * @param pos
+	 * @returns
+	 */
+	static fromBytesLE(src: Uint8Array, pos = 0): U128Mut {
+		return new U128Mut(fromBytesLE(src, pos));
+	}
+}
