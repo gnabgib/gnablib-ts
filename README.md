@@ -236,7 +236,7 @@ Name|Capacities|Optional parameters
 - Readonly TypedArray
 - Scaling TypedArray
 - StringBuilder
-- UInt16, UInt32, UInt64, UInt128, UInt256
+- UInt16, UInt32, UInt64, UInt128, UInt256, UInt512
 - U32MutArra, U64MutArray
 - UInt, UIntMut
 - WindowStr
