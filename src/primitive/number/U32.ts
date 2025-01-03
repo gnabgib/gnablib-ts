@@ -50,9 +50,6 @@ export class U32 {
 	protected _valueOf(v: U32): number {
 		return v.arr[v.pos];
 	}
-	protected _setValue(v: U32): void {
-		this.arr[this.pos] = v.arr[v.pos];
-	}
 	protected static _mulEq(a: Uint32Array, aPos: number, b32: U32): number {
 		const b0 = b32.arr[b32.pos] & maxU16;
 		const b1 = b32.arr[b32.pos] >>> 16;
@@ -353,22 +350,7 @@ export class U32 {
 		return (i32 >>> by) | (i32 << (sizeBits - by));
 	}
 
-	/**
-	 * Treat `$a32`, `$b32` as signed/unsigned 32bit numbers, and multiply without
-	 * going into floating point.
-	 * NOTE: JS will sign the result, (fix by `>>>0`)
-	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @returns `$a32` * `$b32`, NOTE you may wish to `>>>0`
-	 */
-	static mul(a32: number, b32: number): number {
-		const b0 = b32 & maxU16;
-		const b1 = (b32 >>> 16) & maxU16;
-		a32 &= maxU32;
-		// a*b0 = [a1*b0 | a0*b0]
-		// a*b1 = [a1*b1 | a1*b0]
-		return a32 * b0 + ((a32 * b1) << 16);
-	}
+	//static mul(a32: number, b32: number): number : use Math.imul instead
 
 	/**
 	 * Compare two numbers for equality in constant time
@@ -495,7 +477,7 @@ export class U32 {
 	 * @returns
 	 */
 	static iFromBytesBE(src: Uint8Array, pos = 0): number {
-		const rem = src.length - pos - sizeBytes;
+		const rem = sizeBytes - (src.length - pos);
 		let ret =
 			(src[pos] << 24) |
 			(src[pos + 1] << 16) |
@@ -504,7 +486,7 @@ export class U32 {
 		//If there's not enough space, downshift the result
 		// (sizeBytes+rem) turns the negative number into the amount of byte shifting to do
 		// <<3 turns the byte shift into bit shift (aka *8)
-		if (rem < 0) ret >>>= (sizeBytes + rem) << 3;
+		if (rem > 0) ret >>>= rem << 3;
 		return ret;
 	}
 
@@ -801,6 +783,30 @@ export class U32MutArray {
 
 	toString(): string {
 		return 'len=' + this.length;
+	}
+
+	/**
+	 * Value as a stream of bytes (big-endian order) COPY
+	 * @returns Uint8Array
+	 */
+	toBytesBE(): Uint8Array {
+		const r = new Uint8Array(
+			this.buf.slice(this.bufPos, this.bufPos + this.arr.length).buffer
+		);
+		asBE.i32(r, 0, this.arr.length);
+		return r;
+	}
+
+	/**
+	 * Value as a stream of bytes (little-endian order) COPY
+	 * @returns Uint8Array
+	 */
+	toBytesLE(): Uint8Array {
+		const r = new Uint8Array(
+			this.buf.slice(this.bufPos, this.bufPos + this.arr.length).buffer
+		);
+		asLE.i32(r, 0, this.arr.length);
+		return r;
 	}
 
 	/** @hidden */

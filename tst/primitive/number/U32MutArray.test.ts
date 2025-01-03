@@ -2,6 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { U32MutArray } from '../../../src/primitive/number';
 import util from 'util';
+import { hex } from '../../../src/codec/Hex';
 
 const tsts = suite('U32MutArray');
 
@@ -10,6 +11,53 @@ tsts('gen',()=>{
     const arr=U32MutArray.fromLen(len);
     assert.is(arr.length,len);
     for(let i=0;i<len;i++) assert.is(arr.at(i).value,0);
+});
+
+tsts('set',()=>{
+    const arr=U32MutArray.fromLen(3);
+    assert.equal(hex.fromBytes(arr.toBytesBE()),'000000000000000000000000')
+    const b=U32MutArray.fromLen(1);
+    b.at(0).value=0xbeef;
+    assert.equal(hex.fromBytes(b.toBytesBE()),'0000BEEF')
+    arr.set(b,1);
+    assert.equal(hex.fromBytes(arr.toBytesBE()),'000000000000BEEF00000000')
+});
+
+tsts('xorEq',()=>{
+    const a=U32MutArray.fromLen(3);
+    a.at(0).value=1;
+    a.at(1).value=2;
+    a.at(2).value=4;
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
+    const b=U32MutArray.fromLen(2);
+    b.at(0).value=2;
+    b.at(1).value=160;
+    //b.barf();
+    assert.equal(hex.fromBytes(b.toBytesBE()),'00000002000000A0')
+    a.xorEq(b);
+    assert.equal(hex.fromBytes(a.toBytesBE()),'00000003000000A200000004')
+});
+
+tsts('zero',()=>{
+    const a=U32MutArray.fromLen(3);
+    a.at(0).value=1;
+    a.at(1).value=2;
+    a.at(2).value=4;
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
+    a.zero();
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000000000000')
+});
+
+tsts('clone',()=>{
+    const a=U32MutArray.fromLen(3);
+    a.at(0).value=1;
+    a.at(1).value=2;
+    a.at(2).value=4;
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
+    const b=a.clone();
+    b.at(0).value=0xBE;
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
+    assert.equal(hex.fromBytes(b.toBytesBE()),'000000BE0000000200000004')
 });
 
 tsts('[Symbol.toStringTag]', () => {
@@ -23,6 +71,17 @@ tsts('util.inspect',()=>{
     const u=util.inspect(o);
     assert.is(u.startsWith('U32MutArray('),true);
 });
+
+const fromBytesTests:string[]=[
+    '0123456789ABCDEF'
+];
+for (const hexVal of fromBytesTests) {
+	tsts(`fromBytes(${hexVal}})`, () => {
+        const b=hex.toBytes(hexVal);
+        const v=U32MutArray.fromBytes(b.buffer);
+        assert.equal(hex.fromBytes(v.toBytesLE()),hexVal)
+	});
+}
 
 // tsts('general',()=>{
 //     const o=U32MutArray.fromLen(13);

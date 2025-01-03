@@ -18,11 +18,11 @@ const p32_2 = 2246822519;
 const p32_3 = 3266489917;
 const p32_4 = 668265263;
 const p32_5 = 374761393;
-const p64_1 = U64.fromUint32Pair(0x85ebca87, 0x9e3779b1);//11400714785074694791
-const p64_2 = U64.fromUint32Pair(0x27d4eb4f, 0xc2b2ae3d);//14029467366897019727
-const p64_3 = U64.fromUint32Pair(0x9e3779f9, 0x165667b1);//1609587929392839161
-const p64_4 = U64.fromUint32Pair(0xc2b2ae63, 0x85ebca77);//9650029242287828579
-const p64_5 = U64.fromUint32Pair(0x165667c5, 0x27d4eb2f);//2870177450012600261
+const p64_1 = U64.fromUint32Pair(0x85ebca87, 0x9e3779b1); //11400714785074694791
+const p64_2 = U64.fromUint32Pair(0x27d4eb4f, 0xc2b2ae3d); //14029467366897019727
+const p64_3 = U64.fromUint32Pair(0x9e3779f9, 0x165667b1); //1609587929392839161
+const p64_4 = U64.fromUint32Pair(0xc2b2ae63, 0x85ebca77); //9650029242287828579
+const p64_5 = U64.fromUint32Pair(0x165667c5, 0x27d4eb2f); //2870177450012600261
 
 export class XxHash32 implements IHash {
 	/**
@@ -55,10 +55,10 @@ export class XxHash32 implements IHash {
 	 */
 	private _ingestBytes = 0;
 
-    /**
-     * Build a new XxHash32 (non-crypto) hash generator
-     * @param seed Optional 32bit seed number
-     */
+	/**
+	 * Build a new XxHash32 (non-crypto) hash generator
+	 * @param seed Optional 32bit seed number
+	 */
 	constructor(seed = 0) {
 		this._seed = seed;
 		this.reset();
@@ -66,20 +66,20 @@ export class XxHash32 implements IHash {
 
 	private hash(): void {
 		asLE.i32(this._block, 0, 4);
-		this._state[0] = U32.mul(
-			U32.rol(this._state[0] + U32.mul(this._block32[0], p32_2), 13),
+		this._state[0] = Math.imul(
+			U32.rol(this._state[0] + Math.imul(this._block32[0], p32_2), 13),
 			p32_1
 		);
-		this._state[1] = U32.mul(
-			U32.rol(this._state[1] + U32.mul(this._block32[1], p32_2), 13),
+		this._state[1] = Math.imul(
+			U32.rol(this._state[1] + Math.imul(this._block32[1], p32_2), 13),
 			p32_1
 		);
-		this._state[2] = U32.mul(
-			U32.rol(this._state[2] + U32.mul(this._block32[2], p32_2), 13),
+		this._state[2] = Math.imul(
+			U32.rol(this._state[2] + Math.imul(this._block32[2], p32_2), 13),
 			p32_1
 		);
-		this._state[3] = U32.mul(
-			U32.rol(this._state[3] + U32.mul(this._block32[3], p32_2), 13),
+		this._state[3] = Math.imul(
+			U32.rol(this._state[3] + Math.imul(this._block32[3], p32_2), 13),
 			p32_1
 		);
 
@@ -120,7 +120,7 @@ export class XxHash32 implements IHash {
 		let result = this._ingestBytes;
 		if (this._ingestBytes >= blockSize32Bytes) {
 			result +=
-                U32.rol(this._state[0], 1) +
+				U32.rol(this._state[0], 1) +
 				U32.rol(this._state[1], 7) +
 				U32.rol(this._state[2], 12) +
 				U32.rol(this._state[3], 18);
@@ -132,45 +132,48 @@ export class XxHash32 implements IHash {
 		let i = 0;
 		for (; nToAdd >= 4; i++) {
 			asLE.i32(this._block, i * 4);
-			result = U32.mul(U32.rol(result + U32.mul(this._block32[i], p32_3), 17), p32_4);
+			result = Math.imul(
+				U32.rol(result + Math.imul(this._block32[i], p32_3), 17),
+				p32_4
+			);
 			nToAdd -= 4;
 		}
 		//Switch i to byte-pos
 		i *= 4;
 		for (; i < this._bPos; i++) {
-			result = U32.mul(U32.rol(result + this._block[i] * p32_5, 11), p32_1);
+			result = Math.imul(U32.rol(result + this._block[i] * p32_5, 11), p32_1);
 		}
 		result ^= result >>> 15;
-		result = U32.mul(result, p32_2);
+		result = Math.imul(result, p32_2);
 		result ^= result >>> 13;
-		result = U32.mul(result, p32_3);
+		result = Math.imul(result, p32_3);
 		result ^= result >>> 16;
 		return result;
 	}
 
-    /**
+	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
 		return this.sumIn();
 	}
 	/**
-     * Sum the hash (doesn't mutate internal state, here for compat)
-     */
+	 * Sum the hash (doesn't mutate internal state, here for compat)
+	 */
 	sumIn(): Uint8Array {
-		const r32=Uint32Array.of(this._sum());
+		const r32 = Uint32Array.of(this._sum());
 		//Copy the first element and convert to bytes
 		const r8 = new Uint8Array(r32.slice(0, 1).buffer);
 		asBE.i32(r8);
 		return r8;
 	}
 
-    /**
-     * Sum the hash with the all content written so far (does not mutate state)
-     * @returns Unsigned 32bit integer (0-0xffffffff)
-     */
+	/**
+	 * Sum the hash with the all content written so far (does not mutate state)
+	 * @returns Unsigned 32bit integer (0-0xffffffff)
+	 */
 	sum32(): number {
-		return this._sum()>>>0;
+		return this._sum() >>> 0;
 	}
 
 	/**
@@ -313,7 +316,7 @@ export class XxHash64 implements IHash {
 		}
 	}
 
-    /**
+	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
 	 */
 	sum(): Uint8Array {
@@ -321,8 +324,8 @@ export class XxHash64 implements IHash {
 	}
 
 	/**
-     * Sum the hash (doesn't mutate internal state, here for compat)
-     */
+	 * Sum the hash (doesn't mutate internal state, here for compat)
+	 */
 	sumIn(): Uint8Array {
 		const result = U64Mut.fromIntUnsafe(0);
 		if (this._ingestBytes.gte(U64.fromInt(blockSize64Bytes))) {
@@ -331,8 +334,8 @@ export class XxHash64 implements IHash {
 				.addEq(this._state.at(1).lRot(7))
 				.addEq(this._state.at(2).lRot(12))
 				.addEq(this._state.at(3).lRot(18));
-            //We must .mut() the states because we don't want to change the
-            // running context
+			//We must .mut() the states because we don't want to change the
+			// running context
 			result.set(
 				this._state
 					.at(0)

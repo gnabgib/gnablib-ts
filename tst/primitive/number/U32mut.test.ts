@@ -314,7 +314,7 @@ for (const [start,by,result] of rRot) {
 	});
 }
 
-const add=[
+const addEqTests=[
     // A+0=A: Anything plus zero is anything (like or)
     [0x00000000,0xFFFFFFFF,0xFFFFFFFF],
     [0x00000000,0x01234567,0x01234567],
@@ -341,7 +341,7 @@ const add=[
     [0x00000001,0x00000002,0x00000003],
     [0x00000001,0xFFFFFFFF,0x00000000],//Overflow
 ];
-for (const [a,b,result] of add) {
+for (const [a,b,result] of addEqTests) {
 	tsts(a + ' + ' + b, () => {
         const u=U32Mut.fromInt(a);
         u.addEq(U32Mut.fromInt(b));
@@ -349,7 +349,21 @@ for (const [a,b,result] of add) {
 	});
 }
 
-const mul=[
+const subEqTests = [
+	[1, 1, 0],
+	[2, 1, 1],
+	[0, 1, 0xffffffff],
+	[0, 2, 0xfffffffe],
+];
+for (const [a, b, result] of subEqTests) {
+	tsts(a + ' - ' + b, () => {
+		const u = U32Mut.fromInt(a);
+        u.subEq(U32.fromInt(b));
+		assert.is(u.value, result);
+	});
+}
+
+const mulEqTests=[
 	[0x00000001,0x00000002,0x00000002],
 	[0x0000FFFF,0x0000FFFF,0xFFFE0001],
 	[0x000FFFFF,0x000FFFFF,0xFFE00001],
@@ -378,7 +392,7 @@ const mul=[
 	[0x11111111,0x66666666,0x2C5F92C6],
 	[0x11111111,0x55555555,0xA4FA4FA5],
 ];
-for (const [a,b,result] of mul) {
+for (const [a,b,result] of mulEqTests) {
 	tsts(a + ' * ' + b, () => {
         const u=U32Mut.fromInt(a);
         u.mulEq(U32Mut.fromInt(b));
@@ -430,6 +444,19 @@ for (const [start,expect] of fromInt) {
         } else {
             assert.is(U32Mut.fromInt(start).value,expect);
         }
+    });
+}
+
+const fromIntUnsafeTests:[number,number][]=[
+    [0,0],
+    [1,1],
+    [0xffffffff,0xffffffff],
+    [-1,0xffffffff],
+    [0x1ffffffff,0xffffffff]
+];
+for (const [start,expect] of fromIntUnsafeTests) {
+    tsts(`fromIntUnsafe(${start})`,()=> {
+        assert.is(U32Mut.fromIntUnsafe(start).value,expect);
     });
 }
 

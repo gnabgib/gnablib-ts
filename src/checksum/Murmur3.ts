@@ -60,8 +60,8 @@ export class Murmur3_32 implements IHash {
 	hash(): void {
 		//#block=k1, #state=h1
 		asLE.i32(this._block);
-		this._state ^= U32.mul(U32.rol(U32.mul(this._block32[0], c1), r1), c2);
-		this._state = U32.mul(U32.rol(this._state, r2), m) + n;
+		this._state ^= Math.imul(U32.rol(Math.imul(this._block32[0], c1), r1), c2);
+		this._state = Math.imul(U32.rol(this._state, r2), m) + n;
 
 		this._bPos = 0;
 	}
@@ -100,16 +100,16 @@ export class Murmur3_32 implements IHash {
 		if (alt._bPos > 0) {
 			alt._block.fill(0, alt._bPos);
 			asLE.i32(alt._block);
-			alt._state ^= U32.mul(U32.rol(U32.mul(alt._block32[0], c1), r1), c2);
+			alt._state ^= Math.imul(U32.rol(Math.imul(alt._block32[0], c1), r1), c2);
 		}
 
 		alt._state ^= alt._ingestBytes;
 
 		//fmix
 		alt._state ^= alt._state >>> 16;
-		alt._state = U32.mul(alt._state, c3);
+		alt._state = Math.imul(alt._state, c3);
 		alt._state ^= alt._state >>> 13;
-		alt._state = U32.mul(alt._state, c4);
+		alt._state = Math.imul(alt._state, c4);
 		alt._state ^= alt._state >>> 16;
 	}
 

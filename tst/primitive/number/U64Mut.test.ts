@@ -379,7 +379,7 @@ for (const [start,by,expect] of rRotTest) {
 }
 
 // prettier-ignore
-const addTest=[
+const addEqTest=[
     // A+0=A: Anything plus zero is anything (like or)
     ['0000000000000000','FFFFFFFFFFFFFFFF','FFFFFFFFFFFFFFFF'],
     ['0000000000000000','0123456789ABCDEF','0123456789ABCDEF'],
@@ -408,7 +408,7 @@ const addTest=[
     ['0000000000000001','0000000000000002','0000000000000003'],
     ['0000000000000001','FFFFFFFFFFFFFFFF','0000000000000000'],//Overflow
 ];
-for (const [a,b,expect] of addTest) {
+for (const [a,b,expect] of addEqTest) {
 	tsts(`${a} += ${b}`, () => {
 		const aBytes = hex.toBytes(a);
 		const aUint = U64Mut.fromBytesBE(aBytes);
@@ -416,6 +416,22 @@ for (const [a,b,expect] of addTest) {
 		const bUint = U64.fromBytesBE(bBytes);
 		aUint.addEq(bUint);
 		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+	});
+}
+
+const subEqTest:[number,number,string][]=[
+	[1,1,'0000000000000000'],
+	[2,1,'0000000000000001'],
+	[0,2,'FFFFFFFFFFFFFFFE'],
+	[0xffffffff,1,'00000000FFFFFFFE'],
+	[1,0,'0000000000000001'],
+];
+for (const [a,b,expect] of subEqTest) {
+	tsts(`${a} - ${b}`, () => {
+		const aUint = U64Mut.fromInt(a);
+		const bUint = U64.fromInt(b);
+		const res = aUint.subEq(bUint);
+		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 	});
 }
 
@@ -490,6 +506,13 @@ tsts(`clone`,()=>{
 	assert.equal(b.eq(U64.fromInt(2)),true);
 });
 
+tsts(`zero`,()=>{
+	const a=U64Mut.fromUint32Pair(0x89abcdef,0x01234567);
+	assert.is(hex.fromBytes(a.toBytesBE()), '0123456789ABCDEF');
+	a.zero();
+	assert.is(hex.fromBytes(a.toBytesBE()), '0000000000000000');
+});
+
 tsts(`coerce`,()=>{
 	const a=U64Mut.coerce(1);
 	assert.equal(a.eq(U64.fromInt(1)),true);
@@ -508,6 +531,36 @@ tsts('util.inspect',()=>{
     const u=util.inspect(o);
     assert.is(u.startsWith('U64Mut('),true);
 });
+
+tsts(`fromIntUnsafe`,()=>{
+    const a=U64Mut.fromIntUnsafe(0);
+    assert.instance(a,U64Mut)
+	assert.equal(a.eq(U64Mut.zero),true,'0');
+    assert.equal(U64Mut.fromIntUnsafe(0xffffffff).eq(U64.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
+    assert.equal(U64Mut.fromIntUnsafe(9.5e15).eq(U64.fromUint32Pair(0x1D5DC000,0x21C033)),true,'9.5e15 truncates');
+    assert.equal(U64Mut.fromIntUnsafe(-1).eq(U64.fromIntUnsafe(0xffffffff)),true,'-1 becomes unsigned (0xffffffff)');
+});
+
+tsts(`fromInt`,()=>{
+	assert.equal(U64Mut.fromInt(0).eq(U64.zero),true,'0');
+    assert.equal(U64Mut.fromInt(0xffffffff).eq(U64.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
+    assert.throws(()=>{const c=U64Mut.fromInt(9.5e15);})
+    assert.throws(()=>{const d=U64Mut.fromInt(-1);})
+});
+
+const toBytesTests:string[]=[
+	'0123456789ABCDEF',
+];
+for(const expect of toBytesTests) {
+	tsts(`toBytesLE(${expect})`, () => {
+		const u=U64Mut.fromBytesLE(hex.toBytes(expect));
+		assert.equal(hex.fromBytes(u.toBytesLE()),expect);
+	});
+	tsts(`toBytesBE(${expect})`, () => {
+		const u=U64Mut.fromBytesBE(hex.toBytes(expect));
+		assert.equal(hex.fromBytes(u.toBytesBE()),expect);
+	});
+}
 
 // tsts('general',()=>{
 //     const o=U64Mut.fromInt(1);

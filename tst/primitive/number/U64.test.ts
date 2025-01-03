@@ -6,6 +6,12 @@ import util from 'util';
 
 const tsts = suite('U64');
 
+tsts(`U64.low|high`,()=>{
+	const u=U64.fromBytesBE(hex.toBytes('FEDCBA9876543210'));
+	assert.equal(u.low,0x76543210);
+	assert.equal(u.high,0xFEDCBA98);
+})
+
 // prettier-ignore
 const xorTest=[
     // A^0=A: Anything xor zero is anything
@@ -836,6 +842,23 @@ tsts('util.inspect',()=>{
     const u=util.inspect(o);
     assert.is(u.startsWith('U64('),true);
 });
+
+tsts(`fromIntUnsafe`,()=>{
+    const a=U64.fromIntUnsafe(0);
+    assert.instance(a,U64)
+	assert.equal(a.eq(U64.zero),true,'0');
+    assert.equal(U64.fromIntUnsafe(0xffffffff).eq(U64.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
+    assert.equal(U64.fromIntUnsafe(9.5e15).eq(U64.fromUint32Pair(0x1D5DC000,0x21C033)),true,'9.5e15 truncates');
+    assert.equal(U64.fromIntUnsafe(-1).eq(U64.fromIntUnsafe(0xffffffff)),true,'-1 becomes unsigned (0xffffffff)');
+});
+
+tsts(`fromInt`,()=>{
+	assert.equal(U64.fromInt(0).eq(U64.zero),true,'0');
+    assert.equal(U64.fromInt(0xffffffff).eq(U64.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
+    assert.throws(()=>{const c=U64.fromInt(9.5e15);})
+    assert.throws(()=>{const d=U64.fromInt(-1);})
+});
+
 
 // tsts('general',()=>{
 //     const o=U64.fromInt(1);

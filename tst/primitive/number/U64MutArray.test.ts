@@ -137,6 +137,53 @@ tsts('util.inspect',()=>{
     assert.is(u.startsWith('U64MutArray('),true);
 });
 
+tsts('zero',()=>{
+    const a=U64MutArray.fromLen(3);
+    a.at(0).set(U64.fromInt(1));
+    a.at(1).set(U64.fromInt(2));
+    a.at(2).set(U64.fromInt(4));
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000100000000000000020000000000000004')
+    a.zero();
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000000000000000000000000000000000000')
+});
+
+tsts('mut',()=>{
+    const a=U64MutArray.fromLen(3);
+    a.at(0).set(U64.fromInt(1));
+    a.at(1).set(U64.fromInt(2));
+    a.at(2).set(U64.fromInt(4));
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000100000000000000020000000000000004')
+    const b=a.mut();
+    assert.equal(hex.fromBytes(b.toBytesBE()),'000000000000000100000000000000020000000000000004')
+    b.at(2).set(U64.fromInt(8));
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000100000000000000020000000000000004')
+    assert.equal(hex.fromBytes(b.toBytesBE()),'000000000000000100000000000000020000000000000008')
+});
+
+tsts('span',()=>{
+    const a=U64MutArray.fromLen(3);
+    a.at(0).set(U64.fromInt(1));
+    a.at(1).set(U64.fromInt(2));
+    a.at(2).set(U64.fromInt(4));
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000100000000000000020000000000000004');
+    const b=a.span(1,1);
+    b.at(0).set(U64.fromInt(8));
+    assert.equal(hex.fromBytes(b.toBytesBE()),'0000000000000008');
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000100000000000000080000000000000004');
+
+    const c=a.span(undefined,1);
+    c.at(0).set(U64.fromInt(0xffffffff));
+    assert.equal(hex.fromBytes(a.toBytesBE()),'00000000FFFFFFFF00000000000000080000000000000004');
+});
+
+tsts('toBytesLE',()=>{
+    const a=U64MutArray.fromLen(3);
+    a.at(0).set(U64.fromInt(1));
+    a.at(1).set(U64.fromInt(2));
+    a.at(2).set(U64.fromInt(4));
+    assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000100000000000000020000000000000004')
+    assert.equal(hex.fromBytes(a.toBytesLE()),'010000000000000002000000000000000400000000000000')
+});
 // tsts('general',()=>{
 //     const o=U64MutArray.fromLen(2);
 //     console.log(o);

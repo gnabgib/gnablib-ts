@@ -436,6 +436,12 @@ tsts('fromArray', () => {
 	assert.is(u1.value, 29); //no change
 });
 
+tsts('fromBuffer',()=>{
+	const a=Uint32Array.of(0x12345678);
+	const u=U32.fromBuffer(a.buffer);
+	assert.equal(u.toString(),'12345678')
+});
+
 tsts('zero/min/max', () => {
 	assert.is(U32.zero.value, 0, 'zero');
 	assert.is(U32.min.value, 0, 'min');
@@ -760,6 +766,76 @@ for (const [a, b, match] of sameSignTests) {
 	});
 }
 
+const averageTests:[number,number,number][]=[
+	[1,3,2],
+	[10,30,20],
+];
+for (const [a,b,avg] of averageTests) {
+	tsts(`average(${a},${b})`, () => {
+		assert.is(U32.average(a, b), avg);
+	});
+}
+
+const fromBytesLeTests:[Uint8Array,number,number][]=[
+	[Uint8Array.of(0x12,0x34,0x56,0x78),0,0x78563412],
+	[Uint8Array.of(0x78,0x56,0x34,0x12),0,0x12345678],
+	[Uint8Array.of(0x78,0x56,0x34,0x12),1,0x123456],
+	[Uint8Array.of(0x78,0x56),0,0x5678],
+];
+for(const [u8,pos,expect] of fromBytesLeTests) {
+	tsts(`${u8}[${pos}]`, () => {
+		assert.equal(U32.iFromBytesLE(u8,pos),expect);
+	});
+}
+
+const fromBytesBeTests:[Uint8Array,number,number][]=[
+	[Uint8Array.of(0x12,0x34,0x56,0x78),0,0x12345678],
+	[Uint8Array.of(0x78,0x56,0x34,0x12),0,0x78563412],
+	[Uint8Array.of(0x12,0x34,0x56,0x78),1,0x345678],
+	[Uint8Array.of(0x12,0x34,0x56,0x78),2,0x5678],
+	[Uint8Array.of(0x12,0x34,0x56,0x78),3,0x78],
+	[Uint8Array.of(0x78,0x56,0x34,0x12),1,0x563412],
+	[Uint8Array.of(0x56,0x78),0,0x5678],
+];
+for(const [u8,pos,expect] of fromBytesBeTests) {
+	tsts(`${u8}[${pos}]`, () => {
+		assert.equal(U32.iFromBytesBE(u8,pos),expect);
+	});
+}
+
+const toBytesLETests:[number,string][]=[
+	[0x12345678,'78563412'],
+	[0x78563412,'12345678'],
+];
+for(const [num,expect] of toBytesLETests) {
+	tsts(`toBytesLE(${num})`, () => {
+		assert.equal(hex.fromBytes(U32.toBytesLE(num)),expect);
+	});
+}
+
+const toBytesBETests:[number,string][]=[
+	[0x12345678,'12345678'],
+	[0x78563412,'78563412'],
+];
+for(const [num,expect] of toBytesBETests) {
+	tsts(`toBytesBE(${num})`, () => {
+		assert.equal(hex.fromBytes(U32.toBytesBE(num)),expect);
+	});
+}
+
+const lsbTests:[number,number,number][]=[
+	[0x12345678,0,0x78],
+	[0x12345678,1,0x56],
+	[0x12345678,2,0x34],
+	[0x12345678,3,0x12],
+];
+for(const [u32,which,expect] of lsbTests) {
+	tsts(`lsb(${u32}[which])`, () => {
+		const u=U32.fromInt(u32);
+		assert.equal(u.lsb(which), expect);
+	});
+}
+
 tsts('[Symbol.toStringTag]', () => {
     const o=U32.fromInt(13);
 	const str = Object.prototype.toString.call(o);
@@ -771,6 +847,13 @@ tsts('util.inspect',()=>{
     const u=util.inspect(o);
     assert.is(u.startsWith('U32('),true);
 });
+
+tsts('clone',()=>{
+	const a=U32.fromInt(1);
+	const b=a.clone();
+	assert.equal(a.toString(),b.toString());
+
+})
 
 // tsts('general',()=>{
 //     const o=U32.fromInt(13);

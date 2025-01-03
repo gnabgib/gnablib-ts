@@ -33,12 +33,13 @@ function lcg64(seed: number, mul: number, add: number): IRandInt {
 	// so this would only work with mod=0x7fffffff, maybe we should instead accept a
 	// power of 2 size (eg 2^31) which is used as the shift, and creates the mod.
 	// But for now there's only one algo that uses this.
+	const mul64=U64.fromInt(mul);
 	const mod = 0x7fffffff;
 	const a64 = U64.fromInt(add);
 	let s = seed;
 	/** Get the next random number */
 	return () => {
-		const prod = U64Mut.fromInt(s).mulEq32(mul).addEq(a64);
+		const prod = U64Mut.fromInt(s).mulEq(mul64).addEq(a64);
 		let x = (prod.low & mod) + prod.rShiftEq(31).low;
 		x = (x & mod) + (x >>> 31);
 		return (s = x);

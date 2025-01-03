@@ -34,8 +34,7 @@ function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {
 
 function fromBytesLE(source: Uint8Array, pos = 0): Uint32Array {
 	const cpy = source.slice(pos, pos + sizeBytes);
-	asLE.i32(cpy, 0);
-	asLE.i32(cpy, 4);
+	asLE.i32(cpy, 0, 2);
 	const c32 = new Uint32Array(cpy.buffer);
 	//No need to swap bytes
 	return c32;
@@ -140,27 +139,6 @@ export class U64 {
 		const c2 = (m2 / 0x10000) | 0; //Can be >32bits
 		const m3 = a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0 + c2; //(m2>>>16);
 		//Note there are 3 more stages if we had space)
-		a[aPos] = (m0 & maxU16) | ((m1 & maxU16) << 16);
-		a[aPos + 1] = (m2 & maxU16) | ((m3 & maxU16) << 16);
-	}
-	protected _mulEq32(a: Uint32Array, aPos: number, b32: number) {
-		//Long multiplication!
-		// When we know we're multiplying by a 32bit integer this saves a few stages
-		// although processors are fast at mathematics (creation of b2/b3, addition into m2/m3)
-		const a0 = a[aPos] & maxU16;
-		const a1 = a[aPos] >>> 16;
-		const a2 = a[aPos + 1] & maxU16;
-		const a3 = a[aPos + 1] >>> 16;
-		const b0 = b32 & maxU16;
-		const b1 = b32 >>> 16;
-
-		const m0 = a0 * b0;
-		const c0 = m0 >>> 16;
-		const m1 = a0 * b1 + a1 * b0 + c0;
-		const c1 = (m1 / 0x10000) | 0; //Can be >32bits
-		const m2 = a1 * b1 + a2 * b0 + c1;
-		const c2 = (m2 / 0x10000) | 0; //Can be >32bits
-		const m3 = a2 * b1 + a3 * b0 + c2; //(m2>>>16);
 		a[aPos] = (m0 & maxU16) | ((m1 & maxU16) << 16);
 		a[aPos + 1] = (m2 & maxU16) | ((m3 & maxU16) << 16);
 	}
@@ -645,7 +623,10 @@ export class U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64 {
-		sNum('uint51', uint51).unsigned().throwNot();
+		sNum('uint51', uint51)
+			.unsigned()
+			.atMost(Number.MAX_SAFE_INTEGER)
+			.throwNot();
 		return new U64(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -866,16 +847,6 @@ export class U64Mut extends U64 {
 	}
 
 	/**
-	 * @see value *= @param b
-	 * @param b UInt32 integer
-	 * @returns @see value * @param b
-	 */
-	mulEq32(b: number): U64Mut {
-		this._mulEq32(this.arr, this.pos, b);
-		return this;
-	}
-
-	/**
 	 * Create a copy of this U64Mut
 	 * @returns
 	 */
@@ -926,7 +897,10 @@ export class U64Mut extends U64 {
 	 * @returns
 	 */
 	static fromInt(uint51: number): U64Mut {
-		sNum('uint51', uint51).unsigned().throwNot();
+		sNum('uint51', uint51)
+			.unsigned()
+			.atMost(Number.MAX_SAFE_INTEGER)
+			.throwNot();
 		return new U64Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
 	}
 
@@ -1103,7 +1077,7 @@ export class U64MutArray {
 			start = 0;
 		}
 		start += this.bufPos;
-		return new U64MutArray(this.buf, start, len);
+		return new U64MutArray(this.buf, start * 2, len);
 	}
 
 	/**
@@ -1130,6 +1104,11 @@ export class U64MutArray {
 		}
 		return r8;
 	}
+
+	/**
+	 * Value as a stream of bytes (little-endian order) COPY
+	 * @returns Uint8Array[8]
+	 */
 	toBytesLE(): Uint8Array {
 		const r32 = this.buf.slice(
 			this.bufPos,
