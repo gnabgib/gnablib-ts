@@ -100,7 +100,12 @@ export class U32 {
 	 * @returns @see value ROL @see param
 	 */
 	lRot(by: number): U32 {
-		return new U32(Uint32Array.of(U32.rol(this.arr[this.pos], by)));
+		by &= 31;
+		return new U32(
+			Uint32Array.of(
+				(this.arr[this.pos] << by) | (this.arr[this.pos] >>> (sizeBits - by))
+			)
+		);
 	}
 
 	/**
@@ -109,7 +114,9 @@ export class U32 {
 	 * @returns @see value << @param by
 	 */
 	lShift(by: number): U32 {
-		return new U32(Uint32Array.of(this.arr[this.pos] << (by & rotMask)));
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this.arr[this.pos] << by;
+		return new U32(arr);
 	}
 
 	/**
@@ -118,7 +125,12 @@ export class U32 {
 	 * @returns @see value ROR  @param by
 	 */
 	rRot(by: number): U32 {
-		return new U32(Uint32Array.of(U32.ror(this.arr[this.pos], by)));
+		by &= 31;
+		return new U32(
+			Uint32Array.of(
+				(this.arr[this.pos] >>> by) | (this.arr[this.pos] << (sizeBits - by))
+			)
+		);
 	}
 
 	/**
@@ -127,7 +139,9 @@ export class U32 {
 	 * @returns @see value >> @param by
 	 */
 	rShift(by: number): U32 {
-		return new U32(Uint32Array.of(this.arr[this.pos] >>> (by & rotMask)));
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this.arr[this.pos] >>> by;
+		return new U32(arr);
 	}
 
 	/**
@@ -560,7 +574,9 @@ export class U32Mut extends U32 {
 	 * @returns this (chainable)
 	 */
 	lRotEq(by: number): U32Mut {
-		this.arr[this.pos] = U32.rol(this.arr[this.pos], by);
+		by &= 31;
+		this.arr[this.pos] =
+			(this.arr[this.pos] << by) | (this.arr[this.pos] >>> (sizeBits - by));
 		return this;
 	}
 
@@ -570,7 +586,9 @@ export class U32Mut extends U32 {
 	 * @returns this (chainable)
 	 */
 	lShiftEq(by: number): U32Mut {
-		this.arr[this.pos] <<= by & rotMask;
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this.arr[this.pos] << by;
+		this.arr[this.pos] = arr[0];
 		return this;
 	}
 
@@ -580,7 +598,9 @@ export class U32Mut extends U32 {
 	 * @returns this (chainable)
 	 */
 	rRotEq(by: number): U32Mut {
-		this.arr[this.pos] = U32.ror(this.arr[this.pos], by);
+		by &= 31;
+		this.arr[this.pos] =
+			(this.arr[this.pos] >>> by) | (this.arr[this.pos] << (sizeBits - by));
 		return this;
 	}
 
@@ -590,7 +610,9 @@ export class U32Mut extends U32 {
 	 * @returns this (chainable)
 	 */
 	rShiftEq(by: number): U32Mut {
-		this.arr[this.pos] >>>= by & rotMask;
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this.arr[this.pos] >>> by;
+		this.arr[this.pos] = arr[0];
 		return this;
 	}
 

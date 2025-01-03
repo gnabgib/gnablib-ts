@@ -171,6 +171,11 @@ const lRot=[
     [0xFFFFFFFF,13,0xFFFFFFFF],
     [0xFFFFFFFF,29,0xFFFFFFFF],
     [0xFFFFFFFF,32,0xFFFFFFFF],
+
+    [0x12345678, 1, 0x2468ACF0],
+	[0x12345678, 31, 0x91A2B3C],
+	[0x12345678, 32, 0x12345678],
+	[0x12345678, 33, 0x2468ACF0],
 ];
 for (const [start,by,result] of lRot) {
 	tsts(start + ' rol ' + by, () => {
@@ -204,6 +209,11 @@ const lShift=[
     [0xFFFFFFFF,3,0xFFFFFFF8],
     [0xFFFFFFFF,13,0xFFFFE000],
     [0xFFFFFFFF,29,0xE0000000],
+
+    //Can exceed
+	[0xffffffff, 32, 0],
+	[0xffffffff, 33, 0],
+
 ];
 for (const [start,by,result] of lShift) {
 	tsts(start + ' << ' + by, () => {
@@ -237,6 +247,10 @@ const rShift=[
     [0xFFFFFFFF,3,0x1FFFFFFF],
     [0xFFFFFFFF,13,0x0007FFFF],
     [0xFFFFFFFF,29,0x00000007],
+
+    //Can exceed
+	[0xffffffff, 32, 0],
+	[0xffffffff, 33, 0],
 ];
 for (const [start,by,result] of rShift) {
 	tsts(start + ' >> ' + by, () => {
@@ -286,6 +300,11 @@ const rRot=[
     [0xFFFFFFFF,13,0xFFFFFFFF],
     [0xFFFFFFFF,29,0xFFFFFFFF],
     [0xFFFFFFFF,32,0xFFFFFFFF],
+
+    [0x12345678, 1, 0x91A2B3C],
+	[0x12345678, 31, 0x2468ACF0],
+	[0x12345678, 32, 0x12345678],
+	[0x12345678, 33, 0x91A2B3C],
 ];
 for (const [start,by,result] of rRot) {
 	tsts(start + ' ror ' + by, () => {
