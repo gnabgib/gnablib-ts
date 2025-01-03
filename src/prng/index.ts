@@ -16,10 +16,14 @@
  * in the range [0 - 32767]
  * - {@link prng.mt19937 mt19937} {@link prng.mt19937c mt19937c} generate numbers using the _Mersenne Twister_ PRNG
  * in the range [0 - 4294967295]
+ * - {@link prng.mulberry32 mulberry32} generate numbers in the range [0 - 4294967295],
+ * - {@link prng.pcg32 pcg32} generate numbers in the range [0 - 4294967295]
+ * - {@link prng.pcg64 pcg64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.randu randu} generate numbers using the _RANDU_ PRNG
  * in the range [0 - 2147483647]
  * - {@link prng.splitMix64 splitMix64} generate numbers using the _SplitMix_ PRNG
  * in the range [0 - 18446744073709551615]
+ * - {@link prng.well512 well512} generate numbers in the range [0 - 4294967295]
  * - {@link prng.xorShift32 xorShift32} generate numbers using the _XorShift_ PRNG
  * in the range [0 - 4294967295],
  * {@link prng.xorShift64 xorShift64} generate numbers in the range [0 - 18446744073709551615],
@@ -57,7 +61,11 @@ export {
 } from './lcg.js';
 export { middleSquare } from './middleSquare.js';
 export { mt19937, mt19937c } from './mersenneTwister.js';
+export { mulberry32 } from './mulberry32.js';
+export { pcg32 } from './pcg32.js';
+export { pcg64 } from './pcg64.js';
 export { splitMix32, splitMix64 } from './splitMix.js';
+export { well512 } from './well512.js';
 export { xorShift32 } from './xorShift32.js';
 export { xorShift64 } from './xorShift64.js';
 export { xorShift128 } from './xorShift128.js';

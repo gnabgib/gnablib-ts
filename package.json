@@ -305,7 +305,8 @@
 		"XoRoShiRo128",
 		"Mulberry32",
 		"PCG",
-		"PCG64"
+		"PCG64",
+		"WELL512"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
