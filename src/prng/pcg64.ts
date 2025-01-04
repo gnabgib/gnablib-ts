@@ -8,16 +8,13 @@ import { IRandU64 } from './interfaces/IRandU64.js';
  * Permuted Congruential Generator (PCG) using 128bit state, 64bit return as described in
  * [PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation](https://www.pcg-random.org/pdf/hmc-cs-2014-0905.pdf)
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [PCG, A Family of Better Random Number Generators](https://www.pcg-random.org/)
  *
  * @param seed
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function pcg64(seed?: U128, inc?: U128): IRandU64 {
 	const u128_1 = U128.fromUint32Quad(1, 0, 0, 0);

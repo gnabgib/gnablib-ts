@@ -16,7 +16,7 @@ function xorShift128plus_(
 			? seed.mut64()
 			: U64MutArray.fromBytes(
 					Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
-			  ); /** Get the next random number uint64 [0 - 18446744073709551615] */
+			  );
 	return () => {
 		const s1 = s.at(0).mut();
 		const s0 = s.at(1);
@@ -37,15 +37,13 @@ function xorShift128plus_(
  *
  * `a=23`, `b=18`, `c=5`
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- * [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
+ * - [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
  *
  * @param seed Must be non-zero
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xorShift128plus(seed?: U128): IRandU64 {
 	return xorShift128plus_(seed, 23, 18, 5);
@@ -58,20 +56,14 @@ export function xorShift128plus(seed?: U128): IRandU64 {
  *
  * `a=23`, `b=17`, `c=27`
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- * [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
+ * - [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
  *
  * @param seed Must be non-zero
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xorShift128plusV8(seed?: U128): IRandU64 {
 	return xorShift128plus_(seed, 23, 17, 26);
 }
-
-// export function xoshiro128PlusPlus(seed:U128):IRandUInt {
-
-// }

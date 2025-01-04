@@ -1,24 +1,21 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
 import { U64, U64Mut } from '../primitive/number/U64.js';
-import { IRandUInt } from './interfaces/IRandInt.js';
+import { IRandU32 } from './interfaces/IRandInt.js';
 
 /**
  * Permuted Congruential Generator (PCG) using 64bit state, 32bit return as described in
  * [PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation](https://www.pcg-random.org/pdf/hmc-cs-2014-0905.pdf)
  *
- * Generates numbers in the range [0 - 4294967295]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [PCG, A Family of Better Random Number Generators](https://www.pcg-random.org/)
  *
  * @param seed
- * @returns Generator
+ * @returns Generator of uint32 [0 - 4294967295]
  */
-export function pcg32(seed?: U64, inc?: U64): IRandUInt {
+export function pcg32(seed?: U64, inc?: U64): IRandU32 {
 	const u64_1 = U64.fromUint32Pair(1, 0);
 
 	//Mul defined in source: https://github.com/imneme/pcg-c

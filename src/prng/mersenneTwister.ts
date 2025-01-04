@@ -1,8 +1,8 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
-import { IRandUInt } from './interfaces/IRandInt.js';
+import { IRandU32 } from './interfaces/IRandInt.js';
 
-function mt(seed: number): IRandUInt {
+function mt(seed: number): IRandU32 {
 	const umask = 0x80000000; //0xFFFFFFFF << r
 	const lmask = 0x7fffffff; //0xFFFFFFFF >> (w-r=1)
 	const a = 0x9908b0df;
@@ -60,18 +60,16 @@ function mt(seed: number): IRandUInt {
  * with
  * [2002](http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/MT2002/CODES/readme-mt.txt)
  * updates.
- *
- * Related links:
- * [It is high time we let go of the Mersenne Twister](https://arxiv.org/abs/1910.06437)
- *
- * Generates numbers in the range [0 - 4294967295]
- *
+ * 
  * *NOT cryptographically secure*
  *
+ * Related links:
+ * - [It is high time we let go of the Mersenne Twister](https://arxiv.org/abs/1910.06437)
+ *
  * @param seed
- * @returns Generator
+ * @returns Generator of uint32 [0 - 4294967295]
  */
-export function mt19937(seed = 19650218): IRandUInt {
+export function mt19937(seed = 19650218): IRandU32 {
 	return mt(seed);
 }
 
@@ -80,21 +78,18 @@ export function mt19937(seed = 19650218): IRandUInt {
  * as implemented in  C++ with
  * [2002](http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/MT2002/CODES/readme-mt.txt)
  * updates.
- *
- * Related links:
- * [It is high time we let go of the Mersenne Twister](https://arxiv.org/abs/1910.06437)
- *
+ * 
  * Note the only difference is the seed, which is irrelevant if you seed yourself.
- *
- * Generates numbers in the range [0 - 4294967295]
- *
- * https://oeis.org/A221557
- *
+ * 
  * *NOT cryptographically secure*
+ * 
+ * Related links:
+ * - [It is high time we let go of the Mersenne Twister](https://arxiv.org/abs/1910.06437)
+ * - [OEIS Sequence](https://oeis.org/A221557)
  *
  * @param seed
- * @returns Generator
+ * @returns Generator of uint32 [0 - 4294967295]
  */
-export function mt19937c(seed = 5489): IRandUInt {
+export function mt19937c(seed = 5489): IRandU32 {
 	return mt(seed);
 }

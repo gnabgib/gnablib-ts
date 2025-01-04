@@ -1,7 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { sNum } from '../safe/safe.js';
-import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
  * Build a [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)
@@ -10,9 +9,9 @@ import { IRandInt } from './interfaces/IRandInt.js';
  * *NOT cryptographically secure*
  *
  * @param seed Starting two digit number (1-99)
- * @returns function to produce integers in the range 0 - 9
+ * @returns Generator of [0 - 9]
  */
-export function marsaglia(seed: number): IRandInt {
+export function marsaglia(seed: number) {
 	sNum('seed', seed).natural().atMost(99).throwNot();
 	seed |= 0;
 	/** Return a new number [0-9] */

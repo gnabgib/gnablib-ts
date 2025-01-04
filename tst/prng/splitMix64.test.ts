@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { splitMix64 } from '../../src/prng/splitMix';
+import { splitMix64 } from '../../src/prng/splitMix64';
 import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec';
 

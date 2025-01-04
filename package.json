@@ -307,7 +307,7 @@
 		"PCG",
 		"PCG64",
 		"WELL512",
-		"RC4"
+		"ARC4"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

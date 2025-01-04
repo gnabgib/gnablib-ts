@@ -1,4 +1,4 @@
-/** Note: Because JS doesn't distinguish between int/float this signature matches IRandInt */
+/** Note: Because JS doesn't distinguish between int/float this signature matches IRandInt|U16|U32 */
 export interface IRandFloat {
 	/**
 	 * Generate a random float [0-1)

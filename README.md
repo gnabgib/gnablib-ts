@@ -250,6 +250,7 @@ Name|Capacities|Optional parameters
 
 ### Pseudorandom number generators (PRNG)
 
+- [ARC4/RC4/Arcfour](https://en.wikipedia.org/wiki/RC4) arc4_32 range [0 - 4294967295], arc4_64 range [0 - 18446744073709551615]
 - [Lehmer/MCG](https://en.wikipedia.org/wiki/Lehmer_random_number_generator) - generate integers [0 - 2147483646]
 - [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en) -
   possible to calculate in your head
@@ -261,7 +262,6 @@ Name|Capacities|Optional parameters
 - [Permuted Congruential Generator (PCG)](https://www.pcg-random.org/), PCG32 range [0 - 4294967295], PCG64 range [0 - 18446744073709551615]
 - [RANDU](https://en.wikipedia.org/wiki/RANDU) -
   a famously bad PRNG, generate integers [0 - 2147483647]
-- [RC4/ACR4](https://en.wikipedia.org/wiki/RC4) RC4_32 range [0 - 4294967295], RC4_64 range [0 - 18446744073709551615]
 - SplitMix32 - generate integers [0 - 4294967295], SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
 - [Well512](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear) generate integers [0 - 4294967295]
 - [XorShift](https://www.jstatsoft.org/article/view/v008i14) 

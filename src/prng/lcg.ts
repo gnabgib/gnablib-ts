@@ -1,9 +1,9 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { U64, U64Mut } from '../primitive/number/U64.js';
-import { IRandInt } from './interfaces/IRandInt.js';
+import { IRandU16, IRandU31 } from './interfaces/IRandInt.js';
 
-function lcg32(seed: number, mul: number, add: number, mod: number): IRandInt {
+function lcg32(seed: number, mul: number, add: number, mod: number) {
 	let s = seed;
 	/** Get the next random number */
 	return () => {
@@ -19,7 +19,7 @@ function lcg32b2(
 	add: number,
 	mask: number,
 	shift: number
-): IRandInt {
+) {
 	let s = seed;
 	/** Get the next random number */
 	return () => {
@@ -28,7 +28,7 @@ function lcg32b2(
 	};
 }
 
-function lcg64(seed: number, mul: number, add: number): IRandInt {
+function lcg64(seed: number, mul: number, add: number) {
 	//Note `mod` is here, because the shift-31 below is related to the mod size,
 	// so this would only work with mod=0x7fffffff, maybe we should instead accept a
 	// power of 2 size (eg 2^31) which is used as the shift, and creates the mod.
@@ -58,9 +58,9 @@ function lcg64(seed: number, mul: number, add: number): IRandInt {
  * *NOT cryptographically secure*
  *
  * @param seed Starting state - valid integer
- * @returns function to produce integers in the range 0 - 2147483647
+ * @returns Generator of uint31 [0 - 2147483647]
  */
-export function mcg16807(seed = 1): IRandInt {
+export function mcg16807(seed = 1): IRandU31 {
 	return lcg32(seed, 16807, 0, 0x7fffffff);
 }
 
@@ -74,9 +74,9 @@ export function mcg16807(seed = 1): IRandInt {
  * *NOT cryptographically secure*
  *
  * @param seed Starting state - valid integer
- * @returns function to produce integers in the range 0 - 2147483647
+ * @returns Generator of uint31 [0 - 2147483647]
  */
-export function mcg48271(seed = 1): IRandInt {
+export function mcg48271(seed = 1): IRandU31 {
 	return lcg32(seed, 48271, 0, 0x7fffffff);
 }
 
@@ -89,9 +89,9 @@ export function mcg48271(seed = 1): IRandInt {
  * *NOT cryptographically secure*
  *
  * @param seed Starting state - valid integer
- * @returns function to produce integers in the range 0 - 2147483647
+ * @returns Generator of uint31 [0 - 2147483647]
  */
-export function mcg69621(seed = 1): IRandInt {
+export function mcg69621(seed = 1): IRandU31 {
 	return lcg32(seed, 69621, 0, 0x7fffffff);
 }
 
@@ -105,9 +105,9 @@ export function mcg69621(seed = 1): IRandInt {
  * *NOT cryptographically secure*
  *
  * @param seed Starting state - valid integer
- * @returns function to produce integers in the range 0 - 2147483647
+ * @returns Generator of uint31 [0 - 2147483647]
  */
-export function mcg62089911(seed = 1): IRandInt {
+export function mcg62089911(seed = 1): IRandU31 {
 	return lcg64(seed, 62089911, 0);
 }
 
@@ -123,9 +123,9 @@ export function mcg62089911(seed = 1): IRandInt {
  * *NOT cryptographically secure*
  *
  * @param seed Starting state - valid integer
- * @returns function to produce integers in range 0 - 32767
+ * @returns Generator of uint16 [0 - 32767]
  */
-export function msvc(seed = 1): IRandInt {
+export function msvc(seed = 1): IRandU16 {
 	return lcg32b2(seed, 214013, 2531011, 0x7fffffff, 16);
 }
 
@@ -141,8 +141,8 @@ export function msvc(seed = 1): IRandInt {
  * *NOT cryptographically secure*
  *
  * @param seed Starting state - valid integer
- * @returns function to produce integers in the range 0 - 2147483647
+ * @returns Generator of uint31 [0 - 2147483647]
  */
-export function randu(seed = 1): IRandInt {
+export function randu(seed = 1): IRandU31 {
 	return lcg32b2(seed, 65539, 0, 0x7fffffff, 0);
 }

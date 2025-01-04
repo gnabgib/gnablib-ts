@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { splitMix32 } from '../../src/prng/splitMix';
+import { splitMix32 } from '../../src/prng/splitMix32';
 
 const tsts = suite('splitMix32');
 //https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf

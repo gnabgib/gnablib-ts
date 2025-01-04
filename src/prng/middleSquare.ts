@@ -1,7 +1,6 @@
 /*! Copyright 2024 the gnablib contributors MPL-1.1 */
 
 import { ContentError } from '../error/ContentError.js';
-import { IRandInt } from './interfaces/IRandInt.js';
 
 /**
  * Build a [middle-square](https://en.wikipedia.org/wiki/Middle-square_method)
@@ -14,9 +13,9 @@ import { IRandInt } from './interfaces/IRandInt.js';
  *
  * @param seed Starting state, subsequent numbers will have the same number of (base 10) digits, must be>0 and have an even number of digits
  * @param n Number of digits, only need be provided if seed should padded, must be >=2 and even
- * @returns function to produce integers in range 0 - (10**n -1)
+ * @returns Generator of numbers [0 - (10**n -1)]
  */
-export function middleSquare(seed: number, n?: number): IRandInt {
+export function middleSquare(seed: number, n?: number) {
 	let s = seed >>> 0; //cast to u32
 	//If n isn't defined, count from seed.. note you really don't need
 	// to provide n unless the seed should be zero padded.

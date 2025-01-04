@@ -19,8 +19,6 @@ function xoroshiro128(
 			: U64MutArray.fromBytes(
 					Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
 			  );
-
-	/** Get the next random number uint32 [0 - 18446744073709551615] */
 	return () => {
 		const s0 = s.at(0);
 		const s1 = s.at(1);
@@ -39,18 +37,15 @@ function xoroshiro128(
  *
  * **Note** these are the updated a/b/c parameters from 2018 (preferred)
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [C source](https://prng.di.unimi.it/xoroshiro128plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
  * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xoroshiro128p(seed?: U128): IRandU64 {
 	return xoroshiro128(
@@ -70,18 +65,15 @@ export function xoroshiro128p(seed?: U128): IRandU64 {
  *
  * **Note** these are the original a/b/c parameters from 2016, prefer {@link xoroshiro128p xoroshiro128+}
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [C source](https://prng.di.unimi.it/xoroshiro128plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
  * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xoroshiro128p_2016(seed?: U128): IRandU64 {
 	return xoroshiro128(
@@ -99,18 +91,15 @@ export function xoroshiro128p_2016(seed?: U128): IRandU64 {
  * XoRoShiRo128++ using xor-rotate-shift-rotate, with 128bit state, 64bit return as described in
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [C source](https://prng.di.unimi.it/xoroshiro128plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
  * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xoroshiro128pp(seed?: U128): IRandU64 {
 	return xoroshiro128(
@@ -128,24 +117,21 @@ export function xoroshiro128pp(seed?: U128): IRandU64 {
  * XoRoShiRo128** using xor-rotate-shift-rotate, with 128bit state, 64bit return as described in
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [C source](https://prng.di.unimi.it/xoroshiro128starstar.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
  * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xoroshiro128ss(seed?: U128): IRandU64 {
 	const u64_5 = U64.fromInt(5);
 	const u64_9 = U64.fromInt(9);
 	return xoroshiro128(
-		function (s0, s1) {
+		function (s0) {
 			return s0.mut().mulEq(u64_5).lRotEq(7).mulEq(u64_9);
 		},
 		seed,

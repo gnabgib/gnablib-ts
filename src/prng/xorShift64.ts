@@ -7,19 +7,16 @@ import { IRandU64 } from './interfaces/IRandU64.js';
  * XorShift with 64bit state, 64bit return as described in
  * [XorShift RNGs](https://www.jstatsoft.org/article/view/v008i14) section 3
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * @param seed Must be non-zero
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xorShift64(seed?: U64): IRandU64 {
 	const s =
 		seed != undefined
 			? seed.mut()
 			: U64Mut.fromUint32Pair(0xcbbf7a44, 0x139408d);
-	/** Get the next random number uint64 [0 - 18446744073709551615] */
 	return () => {
 		s.xorEq(s.lShift(13));
 		s.xorEq(s.rShift(7));

@@ -6,6 +6,8 @@
  * that approximate a sequence of random numbers. The PRNG-generated sequence is not truly
  * random, because it can be controlled by the initial value (`seed`).
  *
+ * - {@link prng.arc4_32 arc4_32} generate numbers in the range [0 - 4294967295]
+ * - {@link prng.arc4_32 arc4_64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.marsaglia marsaglia} generate numbers using the _Marsaglia_ PRNG
  * in the range [0 - 9]
  * - {@link prng.mcg16807 mcg16807}, {@link prng.mcg48271 mcg48271}, {@link prng.mcg69621 mcg69621}, {@link prng.mcg62089911 mcg62089911}  Generate numbers using the _Lehmer_ PRNG
@@ -21,8 +23,6 @@
  * - {@link prng.pcg64 pcg64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.randu randu} generate numbers using the _RANDU_ PRNG
  * in the range [0 - 2147483647]
- * - {@link prng.rc4_32 rc4_32} generate numbers in the range [0 - 4294967295]
- * - {@link prng.rc4_32 rc4_64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.splitMix64 splitMix64} generate numbers using the _SplitMix_ PRNG
  * in the range [0 - 18446744073709551615]
  * - {@link prng.well512 well512} generate numbers in the range [0 - 4294967295]
@@ -52,6 +52,7 @@
  *
  * @module
  */
+export { arc4_32, arc4_64 } from './arc4.js';
 export { marsaglia } from './marsaglia.js';
 export {
 	mcg16807,
@@ -66,8 +67,8 @@ export { mt19937, mt19937c } from './mersenneTwister.js';
 export { mulberry32 } from './mulberry32.js';
 export { pcg32 } from './pcg32.js';
 export { pcg64 } from './pcg64.js';
-export { rc4_32, rc4_64 } from './rc4.js';
-export { splitMix32, splitMix64 } from './splitMix.js';
+export { splitMix32 } from './splitMix32.js';
+export { splitMix64 } from './splitMix64.js';
 export { well512 } from './well512.js';
 export { xorShift32 } from './xorShift32.js';
 export { xorShift64 } from './xorShift64.js';

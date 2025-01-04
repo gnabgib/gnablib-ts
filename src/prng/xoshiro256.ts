@@ -11,10 +11,10 @@ import { IRandU64 } from './interfaces/IRandU64.js';
  */
 
 /**
- * 
- * @param ret 
- * @param seed 
- * @returns 
+ *
+ * @param ret
+ * @param seed
+ * @returns
  */
 function xoshiro256(
 	ret: (s: U64MutArray) => U64,
@@ -26,15 +26,12 @@ function xoshiro256(
 		seed != undefined
 			? seed.mut64()
 			: U64MutArray.fromBytes(
+				// prettier-ignore
 					Uint32Array.of(
-						0x7b1dcdaf,
-						0xe220a839,
-						0xa1b965f4,
-						0x6e789e6a,
-						0x8009454f,
-						0x06c45d18,
-						0x724c81ec,
-						0xf88bb8a8
+						0x7b1dcdaf,0xe220a839,
+						0xa1b965f4,0x6e789e6a,
+						0x8009454f,0x06c45d18,
+						0x724c81ec,0xf88bb8a8
 					)
 			  );
 
@@ -57,18 +54,15 @@ function xoshiro256(
  * [XoShiRo256+](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  * using xor-shift-rotate, has 256bit state, and 64bit return
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [C source](https://prng.di.unimi.it/xoshiro256plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
  * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xoshiro256p(seed?: U256): IRandU64 {
 	return xoshiro256((s) => s.at(0).add(s.at(3)), seed);
@@ -78,18 +72,15 @@ export function xoshiro256p(seed?: U256): IRandU64 {
  * [XoShiRo256++](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  * using xor-shift-rotate, has 256bit state, and 64bit return
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [C source](https://prng.di.unimi.it/xoshiro256plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
  * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xoshiro256pp(seed?: U256): IRandU64 {
 	return xoshiro256(function (s) {
@@ -103,19 +94,16 @@ export function xoshiro256pp(seed?: U256): IRandU64 {
  * [XoShiRo256**](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  * using xor-shift-rotate, has 256bit state, and 64bit return
  *
- * Generates numbers in the range [0 - 18446744073709551615]
- *
  * *NOT cryptographically secure*
  *
  * Related:
- *
  * - [C source](https://prng.di.unimi.it/xoshiro256starstar.c)
  * - [A Quick Look at Xoshiro256** (2018)](https://www.pcg-random.org/posts/a-quick-look-at-xoshiro256.html)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
  * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator
+ * @returns Generator of uint64 [0 - 18446744073709551615]
  */
 export function xoshiro256ss(seed?: U256): IRandU64 {
 	const u64_5 = U64.fromInt(5);
