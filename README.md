@@ -257,11 +257,13 @@ Name|Capacities|Optional parameters
 - [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) - generate integers [0 - 4294967295]
 - [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method) -
   in practice flawed since the period is often short and will converge towards the same number or loop after repeated times
-- [MSVC](https://orlp.net/blog/when-random-isnt/) - generate integers [0 - 2147483647]
+- MSVC (LGC) - generate integers [0 - 32767]
 - MulBerry32 - generate integers [0 - 4294967295]
 - [Permuted Congruential Generator (PCG)](https://www.pcg-random.org/), PCG32 range [0 - 4294967295], PCG64 range [0 - 18446744073709551615]
-- [RANDU](https://en.wikipedia.org/wiki/RANDU) -
+- [RANDU (LCG)](https://en.wikipedia.org/wiki/RANDU) -
   a famously bad PRNG, generate integers [0 - 2147483647]
+- [Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt) 
+SFC16 range [0 - 32767], SFC32 range [0 - 4294967295]
 - SplitMix32 - generate integers [0 - 4294967295], SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
 - [Well512](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear) generate integers [0 - 4294967295]
 - [XorShift](https://www.jstatsoft.org/article/view/v008i14) 

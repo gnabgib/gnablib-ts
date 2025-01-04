@@ -1,4 +1,4 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 /**
  * # [Pseudorandom number generator (PRNG)](https://en.wikipedia.org/wiki/Pseudorandom_number_generator)
  *
@@ -23,6 +23,7 @@
  * - {@link prng.pcg64 pcg64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.randu randu} generate numbers using the _RANDU_ PRNG
  * in the range [0 - 2147483647]
+ * - {@link prng.sfc16 sfc16} generate in the range [0 - 32767], {@link prng.sfc32 sfc32} generate in the range [0 - 4294967295]
  * - {@link prng.splitMix64 splitMix64} generate numbers using the _SplitMix_ PRNG
  * in the range [0 - 18446744073709551615]
  * - {@link prng.well512 well512} generate numbers in the range [0 - 4294967295]
@@ -67,6 +68,7 @@ export { mt19937, mt19937c } from './mersenneTwister.js';
 export { mulberry32 } from './mulberry32.js';
 export { pcg32 } from './pcg32.js';
 export { pcg64 } from './pcg64.js';
+export { sfc16, sfc32 } from './sfc.js';
 export { splitMix32 } from './splitMix32.js';
 export { splitMix64 } from './splitMix64.js';
 export { well512 } from './well512.js';

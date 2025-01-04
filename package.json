@@ -307,7 +307,9 @@
 		"PCG",
 		"PCG64",
 		"WELL512",
-		"ARC4"
+		"ARC4",
+		"SFC16",
+		"SFC32"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
