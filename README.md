@@ -261,6 +261,7 @@ Name|Capacities|Optional parameters
 - [Permuted Congruential Generator (PCG)](https://www.pcg-random.org/), PCG32 range [0 - 4294967295], PCG64 range [0 - 18446744073709551615]
 - [RANDU](https://en.wikipedia.org/wiki/RANDU) -
   a famously bad PRNG, generate integers [0 - 2147483647]
+- [RC4/ACR4](https://en.wikipedia.org/wiki/RC4) RC4_32 range [0 - 4294967295], RC4_64 range [0 - 18446744073709551615]
 - SplitMix32 - generate integers [0 - 4294967295], SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
 - [Well512](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear) generate integers [0 - 4294967295]
 - [XorShift](https://www.jstatsoft.org/article/view/v008i14) 

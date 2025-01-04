@@ -21,6 +21,8 @@
  * - {@link prng.pcg64 pcg64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.randu randu} generate numbers using the _RANDU_ PRNG
  * in the range [0 - 2147483647]
+ * - {@link prng.rc4_32 rc4_32} generate numbers in the range [0 - 4294967295]
+ * - {@link prng.rc4_32 rc4_64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.splitMix64 splitMix64} generate numbers using the _SplitMix_ PRNG
  * in the range [0 - 18446744073709551615]
  * - {@link prng.well512 well512} generate numbers in the range [0 - 4294967295]
@@ -64,6 +66,7 @@ export { mt19937, mt19937c } from './mersenneTwister.js';
 export { mulberry32 } from './mulberry32.js';
 export { pcg32 } from './pcg32.js';
 export { pcg64 } from './pcg64.js';
+export { rc4_32, rc4_64 } from './rc4.js';
 export { splitMix32, splitMix64 } from './splitMix.js';
 export { well512 } from './well512.js';
 export { xorShift32 } from './xorShift32.js';

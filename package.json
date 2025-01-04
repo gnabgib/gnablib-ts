@@ -306,7 +306,8 @@
 		"Mulberry32",
 		"PCG",
 		"PCG64",
-		"WELL512"
+		"WELL512",
+		"RC4"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
