@@ -309,7 +309,8 @@
 		"WELL512",
 		"ARC4",
 		"SFC16",
-		"SFC32"
+		"SFC32",
+		"SFC64"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

@@ -54,7 +54,7 @@ export function sfc16(seed?:Uint16Array):IRandU16 {
  *
  * *NOT cryptographically secure*
  *
- * @param seed An array of 2-3 elements (>3 only the first 3 will be used)
+ * @param seed An array of 2-3 elements
  * @returns Generator of uint32 [0 - 4294967295]
  */
 export function sfc32(seed?: Uint32Array): IRandU32 {

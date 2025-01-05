@@ -188,7 +188,7 @@ export class U64 {
 
 	protected shift(by: number): Uint32Array {
 		const by32 = by & 0x1f; //aka mod 32
-		let byPos = by >>> 5; //&3; //aka divide by 32,then capped to 0-3
+		const byPos = by >>> 5; //&3; //aka divide by 32,then capped to 0-3
 		const invBy32 = 32 - by32; //Inverse (for the second shift)
 
 		// Detect by32 being 0, or more accurately invBy32 being 32.. which is treated
@@ -1138,6 +1138,13 @@ export class U64MutArray {
 	static fromLen(len: number): U64MutArray {
 		const arr = new Uint32Array(len << 1);
 		return new U64MutArray(arr, 0, len);
+	}
+
+	/** Build an array from a series of U32 numbers (little endian order) */
+	static fromU32s(...u32s:number[]):U64MutArray {
+		if ((u32s.length&1)==1) throw new Error('Must have an even number of u32s');
+		const arr=Uint32Array.of(...u32s);
+		return new U64MutArray(arr, 0);
 	}
 
 	/**

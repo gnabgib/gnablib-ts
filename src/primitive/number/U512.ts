@@ -2,7 +2,6 @@
 
 import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
-import { sNum } from '../../safe/safe.js';
 
 //Todo: docs
 

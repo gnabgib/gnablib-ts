@@ -184,6 +184,18 @@ tsts('toBytesLE',()=>{
     assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000100000000000000020000000000000004')
     assert.equal(hex.fromBytes(a.toBytesLE()),'010000000000000002000000000000000400000000000000')
 });
+
+tsts('fromU32s',()=>{
+    const a=U64MutArray.fromU32s(2,1,4,3);
+    assert.equal(a.at(0).toString(),'0000000100000002');
+    assert.equal(a.at(1).toString(),'0000000300000004');
+    assert.equal(a.length,2);
+});
+
+tsts('fromU32s odd throws',()=>{
+    assert.throws(()=>U64MutArray.fromU32s(1));
+});
+
 // tsts('general',()=>{
 //     const o=U64MutArray.fromLen(2);
 //     console.log(o);

@@ -250,31 +250,53 @@ Name|Capacities|Optional parameters
 
 ### Pseudorandom number generators (PRNG)
 
-- [ARC4/RC4/Arcfour](https://en.wikipedia.org/wiki/RC4) arc4_32 range [0 - 4294967295], arc4_64 range [0 - 18446744073709551615]
-- [Lehmer/MCG](https://en.wikipedia.org/wiki/Lehmer_random_number_generator) - generate integers [0 - 2147483646]
-- [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en) -
-  possible to calculate in your head
-- [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) - generate integers [0 - 4294967295]
-- [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method) -
-  in practice flawed since the period is often short and will converge towards the same number or loop after repeated times
-- MSVC (LGC) - generate integers [0 - 32767]
-- MulBerry32 - generate integers [0 - 4294967295]
-- [Permuted Congruential Generator (PCG)](https://www.pcg-random.org/), PCG32 range [0 - 4294967295], PCG64 range [0 - 18446744073709551615]
-- [RANDU (LCG)](https://en.wikipedia.org/wiki/RANDU) -
-  a famously bad PRNG, generate integers [0 - 2147483647]
-- [Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt) 
-SFC16 range [0 - 32767], SFC32 range [0 - 4294967295]
-- SplitMix32 - generate integers [0 - 4294967295], SplitMix64, the default pseudo-random number generator algorithm in Java - generate integers [0 - 18446744073709551615]
-- [Well512](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear) generate integers [0 - 4294967295]
-- [XorShift](https://www.jstatsoft.org/article/view/v008i14) 
-XorShift32 range [0 - 4294967295], 
-XorShift64 range [0 - 18446744073709551615], 
-XorShift128 range [0 - 4294967295], 
-XorShift128+ & XorShift128+v8 range [0 - 18446744073709551615]
-- [XoShiRo128](https://prng.di.unimi.it/#intro) - xoshiro128+, xoshiro128++, xoshiro128** - generate integers [0 - 4294967295]
-- [XoShiRo256](https://prng.di.unimi.it/#intro) - xoshiro256+, xoshiro256++, xoshiro256** - generate integers [0 - 18446744073709551615]
-- [XoRoShiRo64](https://prng.di.unimi.it/#intro) - xoroshiro64*, xoroshiro64** - generate integers [0 - 4294967295]
-- [XoRoShiRo128](https://prng.di.unimi.it/#intro) - xoroshiro128+, xoroshiro128++, xoroshiro128** - generate integers [0 - 18446744073709551615]
+Name|Variant|State*|Range
+---|----|----|---
+:warning: [ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|arc4_32|256|U32
+:warning:|arc4_64|256|U64
+:no_entry_sign: [Lehmer/LCG/MCG](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|*|4|U31
+:warning: [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|-|2496|U32
+:no_entry_sign: MSVC (LGC)|-|4|U16
+MulBerry32|-|4|U32
+[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|PCG32|8|U32
+||PCG64|16|U64
+[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|SFC16|8|U16
+||SFC32|16|U32
+||SFC64|32|U64
+[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|SplitMix32|4|U32
+||SplitMix64|8|U64
+[WELL](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|Well512|64|U32
+:no_entry_sign: [XorShift](https://www.jstatsoft.org/article/view/v008i14)|XorShift32|4|U32
+:no_entry_sign:|XorShift64|8|U64
+||XorShift128|16|U32
+[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|XorShift128+|16|U64
+[XoShiRo](https://prng.di.unimi.it/#intro)|xoshiro128+|16|U32
+||xoshiro128++|16|U32
+||xoshiro128**|16|U32
+||xoshiro256+|32|U64
+||xoshiro256++|32|U64
+||xoshiro256**|32|U64
+[XoRoShiRo](https://prng.di.unimi.it/#intro)|xoroshiro64*|8|U32
+||xoroshiro64**|8|U32
+||xoroshiro128+|16|U64
+||xoroshiro128++|16|U64
+||xoroshiro128**|16|U64
+*Honorable mentions*
+:no_entry_sign: [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)|-|1|[0 - 9]
+:no_entry_sign: [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method)|-|4|n digits
+:no_entry_sign: [RANDU (LCG)](https://en.wikipedia.org/wiki/RANDU)|-|4|U31
+
+*State in bytes
+
+U16
+: [0 - 32767 | 0xFFFF]  
+U31
+: [0 - 2147483647 | 0x7FFFFFFF]  
+U32
+: [0 - 4294967295 | 0xFFFFFFFF]  
+U64
+: [0 - 18446744073709551615 | 0xFFFFFFFFFFFFFFFF]
+
 
 
 ### RegExp

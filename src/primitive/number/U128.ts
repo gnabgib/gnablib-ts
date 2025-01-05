@@ -267,7 +267,7 @@ export class U128 {
 
 	protected shift(by: number): Uint32Array {
 		const by32 = by & 0x1f; //aka mod 32
-		let byPos = by >>> 5; //&3; //aka divide by 32,then capped to 0-3
+		const byPos = by >>> 5; //&3; //aka divide by 32,then capped to 0-3
 		const invBy32 = 32 - by32; //Inverse (for the second shift)
 
 		// Detect by32 being 0, or more accurately invBy32 being 32.. which is treated
