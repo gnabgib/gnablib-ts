@@ -21,7 +21,7 @@ export function splitMix64(seed = U64.zero): IRandU64 {
 	const s = seed.mut();
 
 	return () => {
-		const z = s.addEq(golden_gamma).clone();
+		const z = s.addEq(golden_gamma).mut();
 		z.xorEq(z.rShift(30)).mulEq(bMul);
 		z.xorEq(z.rShift(27)).mulEq(cMul);
 		return z.xorEq(z.rShift(31));

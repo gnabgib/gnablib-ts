@@ -501,9 +501,9 @@ tsts(`clone`,()=>{
 	const b=a.clone();
 	assert.equal(a.eq(U64.fromInt(1)),true);
 	
-	b.set(U64.fromInt(2));
-	assert.equal(a.eq(U64.fromInt(1)),true);
-	assert.equal(b.eq(U64.fromInt(2)),true);
+	a.set(U64.fromInt(2));
+	assert.equal(a.eq(U64.fromInt(2)),true);
+	assert.equal(b.eq(U64.fromInt(1)),true);
 });
 
 tsts(`zero`,()=>{

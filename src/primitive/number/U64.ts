@@ -847,14 +847,6 @@ export class U64Mut extends U64 {
 	}
 
 	/**
-	 * Create a copy of this U64Mut
-	 * @returns
-	 */
-	clone(): U64Mut {
-		return new U64Mut(this.arr.slice(this.pos, this.pos + sizeU32));
-	}
-
-	/**
 	 * Update value
 	 * @param u64
 	 * @returns
@@ -1121,6 +1113,13 @@ export class U64MutArray {
 		return r8;
 	}
 
+	/**
+	 * Create a copy of the Uint32Array within
+	 */
+	toU32arr(): Uint32Array {
+		return this.buf.slice(this.bufPos, this.bufPos + this.length + this.length);
+	}
+
 	toString(): string {
 		return 'len=' + this.length;
 	}
@@ -1141,9 +1140,10 @@ export class U64MutArray {
 	}
 
 	/** Build an array from a series of U32 numbers (little endian order) */
-	static fromU32s(...u32s:number[]):U64MutArray {
-		if ((u32s.length&1)==1) throw new Error('Must have an even number of u32s');
-		const arr=Uint32Array.of(...u32s);
+	static fromU32s(...u32s: number[]): U64MutArray {
+		if ((u32s.length & 1) == 1)
+			throw new Error('Must have an even number of u32s');
+		const arr = Uint32Array.of(...u32s);
 		return new U64MutArray(arr, 0);
 	}
 

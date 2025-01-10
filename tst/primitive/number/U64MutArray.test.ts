@@ -185,6 +185,20 @@ tsts('toBytesLE',()=>{
     assert.equal(hex.fromBytes(a.toBytesLE()),'010000000000000002000000000000000400000000000000')
 });
 
+tsts('toU32arr',()=>{
+    const a=U64MutArray.fromU32s(2,1,4,3);
+    assert.equal(a.at(0).toString(),'0000000100000002');
+    assert.equal(a.at(1).toString(),'0000000300000004');
+    const arr=a.toU32arr();
+    assert.equal(hex.fromU32s(arr),'00000002000000010000000400000003');
+    //Prove that changing the original doesn't change the copy
+    a.at(0).set(U64.fromIntUnsafe(0x1111));
+    assert.equal(a.at(0).toString(),'0000000000001111');
+    assert.equal(hex.fromU32s(arr),'00000002000000010000000400000003');
+    //assert.equal(a.length,2);
+
+});
+
 tsts('fromU32s',()=>{
     const a=U64MutArray.fromU32s(2,1,4,3);
     assert.equal(a.at(0).toString(),'0000000100000002');
