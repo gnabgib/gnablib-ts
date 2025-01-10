@@ -254,6 +254,9 @@ Name|Variant|State*|Range
 ---|----|----|---
 :warning: [ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|arc4_32|256|U32
 :warning:|arc4_64|256|U64
+[GJRand](https://gjrand.sourceforge.net/)|gjrand32_32|128|U32
+||gjrand32|256|U32
+||gjrand64|256|U64
 :no_entry_sign: [Lehmer/LCG/MCG](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|*|4|U31
 :warning: [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|-|2496|U32
 :no_entry_sign: MSVC (LGC)|-|4|U16

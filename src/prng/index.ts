@@ -8,6 +8,9 @@
  *
  * - {@link prng.arc4_32 arc4_32} generate numbers in the range [0 - 4294967295]
  * - {@link prng.arc4_32 arc4_64} generate numbers in the range [0 - 18446744073709551615]
+ * - {@link prng.gjrand32 gjrand32} generate numbers in the range [0 - 4294967295],
+ * {@link prng.gjrand32_32 gjrand32_32} generate numbers in the range [0 - 4294967295],
+ * {@link prng.gjrand64 gjrand64} generate numbers in the range [0 - 18446744073709551615]
  * - {@link prng.marsaglia marsaglia} generate numbers using the _Marsaglia_ PRNG
  * in the range [0 - 9]
  * - {@link prng.mcg16807 mcg16807}, {@link prng.mcg48271 mcg48271}, {@link prng.mcg69621 mcg69621}, {@link prng.mcg62089911 mcg62089911}  Generate numbers using the _Lehmer_ PRNG
@@ -56,6 +59,8 @@
  * @module
  */
 export { arc4_32, arc4_64 } from './arc4.js';
+export { gjrand32_32 } from './gjrand32.js';
+export { gjrand32, gjrand64 } from './gjrand64.js';
 export { marsaglia } from './marsaglia.js';
 export {
 	mcg16807,
