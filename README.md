@@ -256,24 +256,25 @@ Use one of these if you can, alphabetically sorted.  *gjrand32_32* is only somew
 
 Name|Variant|State*|‡|Range
 -|-|-:|-|-:
-[GJRand](https://gjrand.sourceforge.net/)|~gjrand32_32|16||U32
+[GJRand 2005](https://gjrand.sourceforge.net/)|~gjrand32_32|16||U32
 ||gjrand32|32||U32
 ||gjrand64|32|‡|U64
-[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|PCG32|8|‡|U32
+[Permuted Congruential Generator (PCG) 2014](https://www.pcg-random.org/)|PCG32|8|‡|U32
 ||PCG64|16|‡|U64
-[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|SFC16|8||U16
+[Small Fast Counting (SFC) 2010](https://pracrand.sourceforge.net/RNG_engines.txt)|SFC16|8||U16
 ||SFC32|16||U32
 ||SFC64|32|‡|U64
-[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|SplitMix32|4||U32
+[SplitMix 2014](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|SplitMix32|4||U32
 ||SplitMix64|8|‡|U64
-[Well equidistributed long-period linear (WELL)](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|Well512|64||U32
-[XoRoShiRo](https://prng.di.unimi.it/#intro)|xoroshiro64*|8||U32
+[Tychei](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)|Tychei|16||U32
+[Well equidistributed long-period linear (WELL) 2006](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|Well512|64||U32
+[XoRoShiRo 2018](https://prng.di.unimi.it/#intro)|xoroshiro64*|8||U32
 ||xoroshiro64**|8||U32
 ||xoroshiro128+|16|‡|U64
 ||xoroshiro128++|16|‡|U64
 ||xoroshiro128**|16|‡|U64
-[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|XorShift128+|16|‡|U64
-[XoShiRo](https://prng.di.unimi.it/#intro)|xoshiro128+|16||U32
+[XorShift+ 2003](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|XorShift128+|16|‡|U64
+[XoShiRo 2018](https://prng.di.unimi.it/#intro)|xoshiro128+|16||U32
 ||xoshiro128++|16||U32
 ||xoshiro128**|16||U32
 ||xoshiro256+|32|‡|U64
@@ -299,11 +300,11 @@ Best not to use these, there are some dragons in these waters (so if you're choo
 
 Name|Variant|State*|Range
 -|-|-:|-:
-[ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|arc4_32|32|U32
+[ARC4/RC4/Arcfour/Arc4random 1997](https://en.wikipedia.org/wiki/RC4)|arc4_32|32|U32
 ||arc4_64|32|U64
-[Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|-|2496|U32
+[Mersenne Twister 1998](https://en.wikipedia.org/wiki/Mersenne_Twister)|-|2496|U32
 MulBerry32|-|4|U32
-[XorShift](https://www.jstatsoft.org/article/view/v008i14)|XorShift128|16|U32
+[XorShift 2003](https://www.jstatsoft.org/article/view/v008i14)|XorShift128|16|U32
 
 #### Bad PRNGs
 
@@ -312,7 +313,7 @@ If you're curious about the lineage, or need for compatibility with an old decis
 
 Name|Variant|State*|Range
 -|-|-:|-:
-[Lehmer/LCG/MCG](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|all|4|U31
+[Lehmer/LCG/MCG 1988](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|all|4|U31
 [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)|-|1|[0 - 9]
 [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method)|-|4|n digits
 MSVC (LGC)|-|4|U16

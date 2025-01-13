@@ -312,7 +312,8 @@
 		"SFC32",
 		"SFC64",
 		"GJRand32",
-		"GJRand64"
+		"GJRand64",
+		"Tychei"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
