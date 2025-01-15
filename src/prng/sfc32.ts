@@ -5,12 +5,13 @@ import { sLen } from '../safe/safe.js';
 import { APrng32 } from './APrng32.js';
 
 /**
- * Inverted Tyche random numbers using 128bit state, 32bit return.  As defined in
- * [Fast and Small Nonlinear Pseudorandom Number Generators for Computer Simulation](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)
+ * [Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)
+ * random generator using 128bit state, 32bit return as described in
+ * [PractRand](https://pracrand.sourceforge.net/)
  *
  * *NOT cryptographically secure*
  */
-export class Tychei extends APrng32 {
+export class Sfc32 extends APrng32 {
 	protected readonly _state: Uint32Array;
 	readonly saveable: boolean;
 	readonly bitGen = 32;
@@ -21,17 +22,13 @@ export class Tychei extends APrng32 {
 		this.saveable = saveable;
 	}
 
-	// prettier-ignore
 	rawNext(): number {
-		this._state[1] = ((this._state[1] << 25) | (this._state[1] >>> 7)) ^ this._state[2];
-		this._state[2] -= this._state[3];
-		this._state[3] = ((this._state[3] << 24) | (this._state[3] >>> 8)) ^ this._state[0];
-		this._state[0] -= this._state[1];
-		this._state[1] = ((this._state[1] << 20) | (this._state[1] >>> 12)) ^ this._state[2];
-		this._state[2] -= this._state[3];
-		this._state[3] = ((this._state[3] << 16) | (this._state[3] >>> 16)) ^ this._state[0];
-		this._state[0] -= this._state[1];
-		return this._state[0];
+		const t = this._state[0] + this._state[1] + this._state[3];
+		this._state[3] += 1;
+		this._state[0] = this._state[1] ^ (this._state[1] >>> 9); //rshift=9
+		this._state[1] = this._state[2] + (this._state[2] << 3); //lshift=3
+		this._state[2] = ((this._state[2] << 21) | (this._state[2] >>> 11)) + t; //barrel_shift/p=21
+		return t >>> 0;
 	}
 
 	/**
@@ -50,49 +47,62 @@ export class Tychei extends APrng32 {
 
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
-		return 'tychei';
+		return 'sfc32';
 	}
 
 	/** Build using a reasonable default seed */
 	static new(saveable = false) {
-		// const ret = new Tychei(
-		// 	Uint32Array.of(0, 0, 2654435769, 1367130551),
+		// //Default is the first 3 results of SplitMix32(0)
+		// const ret=new Sfc32(
+		// 	Uint32Array.of(2462723854, 1020716019, 454327756, 1),
 		// 	saveable
 		// );
-		// for (let i = 0; i < 20; i++) ret.rawNext();
-		//The above code produces the following state
-		return new Tychei(
-			Uint32Array.of(2248327305, 1386259388, 71442316, 3496167757),
+		// for (let i = 0; i < 15; i++) ret.rawNext();
+		//This state comes from the above seed-process
+		return new Sfc32(
+			Uint32Array.of(2027658023, 3605857311, 2741163597, 16),
 			saveable
 		);
 	}
 
 	/**
-	 * Build by providing 2 seeds, each treated as uint32
+	 * Build by providing 2-3 seeds, each treated as uint32
 	 * @param seed0 Only the lower 32bits will be used
 	 * @param seed1 Only the lower 32bits will be used
+	 * @param seed2 Only the lower 32bits will be used, if provided
 	 * @param saveable Whether the generator's state can be saved
 	 * @returns
 	 */
-	static seed(seed0: number, seed1: number, saveable = false) {
-		const ret = new Tychei(
-			Uint32Array.of(seed1, seed0, 2654435769, 1367130551),
-			saveable
-		);
-		for (let i = 0; i < 20; i++) ret.rawNext();
+	static seed(seed0: number, seed1: number, seed2?: number, saveable = false) {
+		const u32 = new Uint32Array(4);
+		let drop: number;
+		if (seed2 != undefined) {
+			u32[0] = seed0;
+			u32[1] = seed1;
+			u32[2] = seed2;
+			drop = 15;
+		} else {
+			u32[1] = seed0;
+			u32[2] = seed1;
+			drop = 12;
+		}
+		u32[3] = 1;
+		const ret = new Sfc32(u32, saveable);
+
+		for (let i = 0; i < drop; i++) ret.rawNext();
 		return ret;
 	}
 
 	/**
-	 * Restore from state extracted via Tychei.save().
+	 * Restore from state extracted via Sfc32.save().
 	 * Will throw if state is incorrect length
 	 * @param state Saved state, must be exactly 16 bytes long
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(16).throwNot();
 		const s2 = state.slice();
-		asLE.i32(s2, 0, 2);
+		asLE.i32(s2, 0, 4);
 		const s32 = new Uint32Array(s2.buffer);
-		return new Tychei(s32, saveable);
+		return new Sfc32(s32, saveable);
 	}
 }

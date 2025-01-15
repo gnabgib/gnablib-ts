@@ -43,7 +43,7 @@ function xoroshiro128(
  * - [C source](https://prng.di.unimi.it/xoroshiro128plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
+ * @param seed Must be non-zero, it's recommended you use
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator of uint64 [0 - 18446744073709551615]
  */
@@ -71,7 +71,7 @@ export function xoroshiro128p(seed?: U128): IRandU64 {
  * - [C source](https://prng.di.unimi.it/xoroshiro128plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
+ * @param seed Must be non-zero, it's recommended you use
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator of uint64 [0 - 18446744073709551615]
  */
@@ -97,7 +97,7 @@ export function xoroshiro128p_2016(seed?: U128): IRandU64 {
  * - [C source](https://prng.di.unimi.it/xoroshiro128plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
+ * @param seed Must be non-zero, it's recommended you use
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator of uint64 [0 - 18446744073709551615]
  */
@@ -123,7 +123,7 @@ export function xoroshiro128pp(seed?: U128): IRandU64 {
  * - [C source](https://prng.di.unimi.it/xoroshiro128starstar.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
+ * @param seed Must be non-zero, it's recommended you use
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator of uint64 [0 - 18446744073709551615]
  */

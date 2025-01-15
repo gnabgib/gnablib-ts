@@ -1,21 +1,35 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { msvc } from '../../src/prng/';
+import { Mcg } from '../../src/prng/';
 
-const tsts = suite('msvc');
-tsts(`msvc`, () => {
-	// https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/rand?view=msvc-170
-	const r = msvc(1792);
-	assert.equal(r(),5890);
-	assert.equal(r(),1279);
-	assert.equal(r(),19497);
-	assert.equal(r(),1207);
-	assert.equal(r(),11420);
-	assert.equal(r(),3377);
-	assert.equal(r(),15317);
-	assert.equal(r(),29489);
-	assert.equal(r(),9716);
-	assert.equal(r(),23323)
-    //console.log(r());
-});
+const tsts = suite('Mcg.msvc');
+
+//Unsourced
+const seq_def: number[] = [
+	2745024, 1210316419, 415139642, 1736732949, 1256316804, 1030492215,
+];
+const rng_def = Mcg.newMsvc();
+let i = 0;
+for (const expect of seq_def) {
+	const act = rng_def.rawNext();
+	tsts(`Mcg.msvc().rawNext[${i}]`, () => {
+		assert.equal(act, expect);
+	});
+	i++;
+}
+
+// source: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/rand?view=msvc-170
+const seq_1792: number[] = [
+	5890, 1279, 19497, 1207, 11420, 3377, 15317, 29489, 9716, 23323,
+];
+const rng_1792 = Mcg.seedMsvc(1792);
+i = 0;
+for (const expect of seq_1792) {
+	const act = rng_1792.rawNext();
+	tsts(`Mcg.msvc(1792).rawNext[${i}]`, () => {
+		assert.equal(act, expect);
+	});
+	i++;
+}
+
 tsts.run();

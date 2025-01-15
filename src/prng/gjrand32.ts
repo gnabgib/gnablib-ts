@@ -1,6 +1,8 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
-import { IRandU32 } from './interfaces/IRandInt.js';
+import { asLE } from '../endian/platform.js';
+import { sLen } from '../safe/safe.js';
+import { APrng32 } from './APrng32.js';
 
 /**
  * GJrand random numbers using 128bit state, 32bit return.
@@ -18,50 +20,92 @@ import { IRandU32 } from './interfaces/IRandInt.js';
  * @param seeds 1, 2, or 4 numbers, which will be treated as U32 to seed the PRNG
  * @returns Generator of uint32 [0 - 4294967295]
  */
-export function gjrand32_32(...seeds: number[]): IRandU32 {
-	//This is the resulting state of calling gjrand32_32(0) after the 14 next()
-	const s = new Uint32Array(4);
+export class Gjrand32_32 extends APrng32 {
+	protected readonly _state: Uint32Array;
+	readonly saveable: boolean;
+	readonly bitGen = 32;
 
-	function next() {
-		s[1] += s[2];
-		s[0] = (s[0] << 16) | (s[0] >>> 16); //lRot p=16
-		s[2] ^= s[1];
-		s[3] += 0x96a5; //d_inc=0x96a5
-		s[0] += s[1];
-		s[2] = (s[2] << 11) | (s[2] >>> 21); //lRot q=11
-		s[1] ^= s[0];
-		s[0] += s[2];
-		s[1] = (s[2] << 19) | (s[2] >>> 13); //lRot r=19
-		s[2] += s[0];
-		s[1] += s[3];
-		return s[0];
+	protected constructor(state: Uint32Array, saveable: boolean) {
+		super();
+		this._state = state;
+		this.saveable = saveable;
 	}
 
-	// prettier-ignore
-	switch (seeds.length) {
-        case 0:
-            //gjrand_init(0) - we've precalculated this state (seed with 0 and 14*next());
-            s[0]=2341650679;
-            s[1]=368028163;
-            s[2]=2033345459;
-            s[3]=539910;
-            //No need to next because of precompute
-            break;
-        case 1:
-            //gjrand_init
-            s[0]=seeds[0];
-            s[2]=1000001;
-            for (let i = 0; i < 14; i++) next();
-            break;
-        case 2:
-            //gjrand_init64
-            s[0]=seeds[0];
-            s[1]=seeds[1];
-            s[2]=2000001;
-            for (let i = 0; i < 14; i++) next();
-            break;
-        default:
-            throw new Error('There should be 1 or 2 seeds provided');
-        }
-	return next;
+	rawNext(): number {
+		this._state[1] += this._state[2];
+		this._state[0] = (this._state[0] << 16) | (this._state[0] >>> 16); //lRot p=16
+		this._state[2] ^= this._state[1];
+		this._state[3] += 0x96a5; //d_inc=0x96a5
+		this._state[0] += this._state[1];
+		this._state[2] = (this._state[2] << 11) | (this._state[2] >>> 21); //lRot q=11
+		this._state[1] ^= this._state[0];
+		this._state[0] += this._state[2];
+		this._state[1] = (this._state[2] << 19) | (this._state[2] >>> 13); //lRot r=19
+		this._state[2] += this._state[0];
+		this._state[1] += this._state[3];
+		return this._state[0];
+	}
+
+	/**
+	 * Export a copy of the internal state as a byte array (can be used with restore methods).
+	 * Note the generator must have been built with `saveable=true` (default false)
+	 * for this to work, an empty array is returned when the generator isn't saveable.
+	 * @returns
+	 */
+	save(): Uint8Array {
+		if (!this.saveable) return new Uint8Array(0);
+		const exp = this._state.slice();
+		const ret = new Uint8Array(exp.buffer);
+		asLE.i32(ret, 0, 4);
+		return ret;
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'gjrand32_32';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//gjrand_init(0) - we've precalculated this state (seed with 0 and 14*next());
+		return new Gjrand32_32(
+			Uint32Array.of(2341650679, 368028163, 2033345459, 539910),
+			saveable
+		);
+	}
+
+	/**
+	 * Build by providing 1-2 seeds, each treated as uint32.
+	 * @param seed0 Only the lower 32bits will be used
+	 * @param seed1 Only the lower 32bits will be used, if provided
+	 * @param saveable Whether the generator's state can be saved
+	 * @returns
+	 */
+	static seed(seed0: number, seed1?: number, saveable = false) {
+		const state = Uint32Array.of(seed0, 0, 0, 0);
+		if (seed1 != undefined) {
+			//gjrand_init64
+			state[1] = seed1;
+			state[2] = 2000001;
+		} else {
+			//gjrand_init
+			state[2] = 1000001;
+		}
+		const ret = new Gjrand32_32(state, saveable);
+		for (let i = 0; i < 14; i++) ret.rawNext();
+		return ret;
+	}
+
+	/**
+	 * Restore from state extracted via Gjrand32_32.save().
+	 * Will throw if state is incorrect length
+	 * @param state Saved state, must be exactly 16 bytes long
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(16).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 4);
+		const s32 = new Uint32Array(s2.buffer);
+		return new Gjrand32_32(s32, saveable);
+	}
 }

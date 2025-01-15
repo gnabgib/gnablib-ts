@@ -60,7 +60,7 @@ function xoshiro256(
  * - [C source](https://prng.di.unimi.it/xoshiro256plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
+ * @param seed Must be non-zero, it's recommended you use
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator of uint64 [0 - 18446744073709551615]
  */
@@ -78,7 +78,7 @@ export function xoshiro256p(seed?: U256): IRandU64 {
  * - [C source](https://prng.di.unimi.it/xoshiro256plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
+ * @param seed Must be non-zero, it's recommended you use
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator of uint64 [0 - 18446744073709551615]
  */
@@ -101,7 +101,7 @@ export function xoshiro256pp(seed?: U256): IRandU64 {
  * - [A Quick Look at Xoshiro256** (2018)](https://www.pcg-random.org/posts/a-quick-look-at-xoshiro256.html)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
+ * @param seed Must be non-zero, it's recommended you use
  * {@link prng.splitMix64 splitMix64} on a numeric seed.
  * @returns Generator of uint64 [0 - 18446744073709551615]
  */

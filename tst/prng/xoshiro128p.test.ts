@@ -1,9 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xoshiro128p } from '../../src/prng/xoshiro128';
-import { U128 } from '../../src/primitive/number';
+import { Xoshiro128p } from '../../src/prng/xoshiro128';
 
-const tsts = suite('xoshiro128+');
+const tsts = suite('Xoshiro128+');
 //These test vectors were found in another library, sourced from the CPP reference impl
 const seq_1: number[] = [
     3,
@@ -37,33 +36,54 @@ const seq_1: number[] = [
     2265703464,
     1471426682,
 ];
-
-const rng1 = xoshiro128p(U128.fromUint32Quad(0,1,2,3));
+const rng_1=Xoshiro128p.seed(0,1,2,3);
 let i = 0;
 for (const expect of seq_1) {
-	const act = rng1();
-	tsts(`xoshiro128+([0,1,2,3])[${i}]`, () => {
+	const act = rng_1.rawNext();
+	tsts(`Xoshiro128+([0,1,2,3]).rawNext[${i}]`, () => {
 		assert.equal(act, expect);
 	});
 	i++;
 }
 
-//No corroboration for these vectors, but proving xoshiro128 works well without seeding
-const seq0:number[]=[
+//No corroboration for these vectors, but show it works with default seed
+const seq_def:number[]=[
     49376,
     95971011,
     3157991041,
     4193534618,
 ];
-const rng0=xoshiro128p();
-i = 0;
-for (const expect of seq0) {
-	const act = rng0();
-	tsts(`xoshiro128+()[${i}]`, () => {
+const rng_def=Xoshiro128p.new();
+i=0;
+for (const expect of seq_def) {
+	const act = rng_def.rawNext();
+	tsts(`Xoshiro128+().rawNext[${i}]`, () => {
 		assert.equal(act, expect);
 	});
 	i++;
 }
 
+tsts(`Xoshiro128+(,false) save returns empty, restore throws`,()=>{
+    const r=Xoshiro128p.new();
+    const sav=r.save();
+    assert.equal(sav.length,0);
+    assert.throws(()=>Xoshiro128p.restore(sav));
+})
+
+tsts(`Xoshiro128+().save/restore loop`,()=>{
+    const r=Xoshiro128p.new(true);
+    //Read the first number
+    assert.equal(r.rawNext(),seq_def[0]);
+    const sav=r.save();
+    assert.equal(sav.length,16);
+    //Read the next two numbers after the save
+    assert.equal(r.rawNext(),seq_def[1]);
+    assert.equal(r.rawNext(),seq_def[2]);
+    //r2 should still be 1 number in
+    const r2=Xoshiro128p.restore(sav);    
+    assert.equal(r2.rawNext(),seq_def[1]);
+
+    assert.is(Object.prototype.toString.call(r).indexOf("xoshiro128+")>0,true,'toString is set');
+});
 
 tsts.run();

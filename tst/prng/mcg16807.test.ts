@@ -1,10 +1,11 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { mcg16807 } from '../../src/prng/lcg';
+import { Mcg } from '../../src/prng/mcg';
 
-const tsts = suite('mcg16807');
+const tsts = suite('Mcg.16807');
+
 //source: https://oeis.org/A096550/b096550.txt
-const seq: number[] = [
+const seq_def: number[] = [
 	16807, 282475249, 1622650073, 984943658, 1144108930, 470211272, 101027544,
 	1457850878, 1458777923, 2007237709, 823564440, 1115438165, 1784484492,
 	74243042, 114807987, 1137522503, 1441282327, 16531729, 823378840, 143542612,
@@ -23,22 +24,55 @@ const seq: number[] = [
 	753799505, 1102246882, 1269406752, 1816731566, 884936716, 1807130337,
 	578354438, 892053144,
 ];
-
-let seed = 1;
-const rng = mcg16807(seed);
-
-for (const expect of seq) {
-	const n = rng();
-	seed = n;
-	tsts(`mcg16807(${seed})`, () => {
-		assert.equal(n, expect);
+const rng_def=Mcg.new16807();
+let i=0;
+for (const expect of seq_def) {
+	const act = rng_def.rawNext();
+	tsts(`Mcg.16807().rawNext[${i}]`, () => {
+		assert.equal(act, expect);
 	});
+	i++;
+}
+for(;i<9998;i++) rng_def.rawNext();
+tsts('Mcg.16807().rawNext[9998]',()=>{assert.equal(rng_def.rawNext(),1484786315);});
+
+//Unsourced
+const seq_42:number[]=[
+	705894,
+	1126542223,
+	1579310009,
+	565444343,
+];
+const rng_42=Mcg.seed16807(42);
+i=0;
+for (const expect of seq_42) {
+	const act = rng_42.rawNext();
+	tsts(`Mcg.16807(42).rawNext[${i}]`, () => {
+		assert.equal(act, expect);
+	});
+	i++;
 }
 
-const r2 = mcg16807();
-for(let i=1;i<9999;i++) {
-	r2();
-}
-tsts('mcg16807(1)[9999]',()=>{assert.equal(r2(),1484786315);});
+tsts(`Mcg(,false) save returns empty, restore throws`,()=>{
+	const r=Mcg.new16807();
+	const sav=r.save();
+	assert.equal(sav.length,0);
+	assert.throws(()=>Mcg.restore(sav));
+})
+
+tsts(`Mcg().save/restore loop`,()=>{
+	const r=Mcg.new16807(true);
+	assert.equal(r.rawNext(),seq_def[0],'r consume[0]');
+	const sav=r.save();
+	assert.equal(sav.length,17,'save length');
+	assert.equal(r.rawNext(),seq_def[1],'r consume[1]');
+	assert.equal(r.rawNext(),seq_def[2],'r consume[2]');
+
+	const r2=Mcg.restore(sav);    
+	assert.equal(r2.rawNext(),seq_def[1],'r2 still at [1]');
+	assert.equal(r.rawNext(),seq_def[3],'r consume[3]');
+
+	assert.is(Object.prototype.toString.call(r).indexOf("mcg")>0,true,'toString is set');
+});
 
 tsts.run();

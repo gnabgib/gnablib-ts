@@ -1,7 +1,8 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
-import { U128 } from '../primitive/number/U128.js';
-import { IRandU32 } from './interfaces/IRandInt.js';
+import { asLE } from '../endian/platform.js';
+import { sLen } from '../safe/safe.js';
+import { APrng32 } from './APrng32.js';
 
 /**
  * XoShiRo128++/XoShiRo128** are all-purpose 32bit generators (not **cryptographically secure**).  If you're
@@ -9,32 +10,45 @@ import { IRandU32 } from './interfaces/IRandInt.js';
  * only the top 24 bits - the lower bits have low linear complexity.
  */
 
-/**
- *
- * @param ret
- * @param seed
- * @returns
- */
-function xoshiro128(
-	ret: (s: Uint32Array) => number,
-	seed: U128 | undefined
-): IRandU32 {
-	//This default seed comes from [umontreal-simul code](https://github.com/umontreal-simul/TestU01-2009/)
-	const s =
-		seed != undefined ? seed.mut32() : Uint32Array.of(53, 30301, 71423, 49323);
+/** */
+abstract class AXoshiro128 extends APrng32 {
+	protected readonly _state: Uint32Array;
+	readonly saveable: boolean;
+	readonly bitGen = 32;
+	protected abstract _gen(): number;
 
-	return () => {
-		const r = ret(s);
+	protected constructor(state: Uint32Array, saveable: boolean) {
+		super();
+		this._state = state;
+		this.saveable = saveable;
+	}
 
-		const t = s[1] << 9;
-		s[2] ^= s[0];
-		s[3] ^= s[1];
-		s[1] ^= s[2];
-		s[0] ^= s[3];
-		s[2] ^= t;
-		s[3] = (s[3] << 11) | (s[3] >>> 21); //ROL 11
+	rawNext(): number {
+		const r = this._gen();
+
+		const t = this._state[1] << 9;
+		this._state[2] ^= this._state[0];
+		this._state[3] ^= this._state[1];
+		this._state[1] ^= this._state[2];
+		this._state[0] ^= this._state[3];
+		this._state[2] ^= t;
+		this._state[3] = (this._state[3] << 11) | (this._state[3] >>> 21); //ROL 11
 		return r >>> 0;
-	};
+	}
+
+	/**
+	 * Export a copy of the internal state as a byte array (can be used with restore methods).
+	 * Note the generator must have been built with `saveable=true` (default false)
+	 * for this to work, an empty array is returned when the generator isn't saveable.
+	 * @returns
+	 */
+	save(): Uint8Array {
+		if (!this.saveable) return new Uint8Array(0);
+		const exp = this._state.slice();
+		const ret = new Uint8Array(exp.buffer);
+		asLE.i32(ret, 0, 4);
+		return ret;
+	}
 }
 
 /**
@@ -46,13 +60,56 @@ function xoshiro128(
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro128plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint32 [0 - 4294967295]
  */
-export function xoshiro128p(seed?: U128): IRandU32 {
-	return xoshiro128((s) => s[0] + s[3], seed);
+export class Xoshiro128p extends AXoshiro128 {
+	protected _gen(): number {
+		return this._state[0] + this._state[3];
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoshiro128+';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//This default seed comes from [umontreal-simul code](https://github.com/umontreal-simul/TestU01-2009/)
+		return new Xoshiro128p(Uint32Array.of(53, 30301, 71423, 49323), saveable);
+	}
+
+	/**
+	 * Build by providing 4 seeds, each treated as uint32. They must not be all zero.  It's recommended
+	 * this is the product of {@link prng.SplitMix32 SplitMix32}
+	 * @param seed0 Only the lower 32bits will be used
+	 * @param seed1 Only the lower 32bits will be used
+	 * @param seed2 Only the lower 32bits will be used
+	 * @param seed3 Only the lower 32bits will be used
+	 * @param saveable Whether the generator's state can be saved
+	 * @returns
+	 */
+	static seed(
+		seed0: number,
+		seed1: number,
+		seed2: number,
+		seed3: number,
+		saveable = false
+	) {
+		const state = Uint32Array.of(seed0, seed1, seed2, seed3);
+		return new Xoshiro128p(state, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via Xoshiro128p.save().
+	 * Will throw if state is incorrect length
+	 * @param state Saved state, must be exactly 16 bytes long
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(16).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 4);
+		const s32 = new Uint32Array(s2.buffer);
+		return new Xoshiro128p(s32, saveable);
+	}
 }
 
 /**
@@ -64,17 +121,58 @@ export function xoshiro128p(seed?: U128): IRandU32 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro128plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint32 [0 - 4294967295]
  */
-export function xoshiro128pp(seed?: U128): IRandU32 {
-	return xoshiro128(function (s) {
-		let r = s[0] + s[3];
+export class Xoshiro128pp extends AXoshiro128 {
+	protected _gen(): number {
+		let r = this._state[0] + this._state[3];
 		r = (r << 7) | (r >>> 25); //ROL 7
-		return r + s[0];
-	}, seed);
+		return r + this._state[0];
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoshiro128++';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//This default seed comes from [umontreal-simul code](https://github.com/umontreal-simul/TestU01-2009/)
+		return new Xoshiro128pp(Uint32Array.of(53, 30301, 71423, 49323), saveable);
+	}
+
+	/**
+	 * Build by providing 4 seeds, each treated as uint32. They must not be all zero.  It's recommended
+	 * this is the product of {@link prng.SplitMix32 SplitMix32}
+	 * @param seed0 Only the lower 32bits will be used
+	 * @param seed1 Only the lower 32bits will be used
+	 * @param seed2 Only the lower 32bits will be used
+	 * @param seed3 Only the lower 32bits will be used
+	 * @param saveable Whether the generator's state can be saved
+	 * @returns
+	 */
+	static seed(
+		seed0: number,
+		seed1: number,
+		seed2: number,
+		seed3: number,
+		saveable = false
+	) {
+		const state = Uint32Array.of(seed0, seed1, seed2, seed3);
+		return new Xoshiro128pp(state, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via Xoshiro128pp.save().
+	 * Will throw if state is incorrect length
+	 * @param state Saved state, must be exactly 16 bytes long
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(16).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 4);
+		const s32 = new Uint32Array(s2.buffer);
+		return new Xoshiro128pp(s32, saveable);
+	}
 }
 
 /**
@@ -86,16 +184,57 @@ export function xoshiro128pp(seed?: U128): IRandU32 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro128starstar.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint32 [0 - 4294967295]
  */
-export function xoshiro128ss(seed?: U128): IRandU32 {
-	return xoshiro128(function (s) {
-		let r = s[1] * 5;
+export class Xoshiro128ss extends AXoshiro128 {
+	protected _gen(): number {
+		let r = this._state[1] * 5;
 		r = (r << 7) | (r >>> 25); //ROL 7
 		r *= 9;
 		return r >>> 0;
-	}, seed);
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoshiro128**';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//This default seed comes from [umontreal-simul code](https://github.com/umontreal-simul/TestU01-2009/)
+		return new Xoshiro128ss(Uint32Array.of(53, 30301, 71423, 49323), saveable);
+	}
+
+	/**
+	 * Build by providing 4 seeds, each treated as uint32. They must not be all zero.  It's recommended
+	 * this is the product of {@link prng.SplitMix32 SplitMix32}
+	 * @param seed0 Only the lower 32bits will be used
+	 * @param seed1 Only the lower 32bits will be used
+	 * @param seed2 Only the lower 32bits will be used
+	 * @param seed3 Only the lower 32bits will be used
+	 * @param saveable Whether the generator's state can be saved
+	 * @returns
+	 */
+	static seed(
+		seed0: number,
+		seed1: number,
+		seed2: number,
+		seed3: number,
+		saveable = false
+	) {
+		const state = Uint32Array.of(seed0, seed1, seed2, seed3);
+		return new Xoshiro128ss(state, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via Xoshiro128ss.save().
+	 * Will throw if state is incorrect length
+	 * @param state Saved state, must be exactly 16 bytes long
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(16).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 4);
+		const s32 = new Uint32Array(s2.buffer);
+		return new Xoshiro128ss(s32, saveable);
+	}
 }

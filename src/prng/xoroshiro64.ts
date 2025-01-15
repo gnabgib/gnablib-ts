@@ -1,25 +1,45 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
-import { U64 } from '../primitive/number/U64.js';
-import { IRandU32 } from './interfaces/IRandInt.js';
+import { asLE } from '../endian/platform.js';
+import { sLen } from '../safe/safe.js';
+import { APrng32 } from './APrng32.js';
 
-function xoroshiro64(
-	ret: (s: Uint32Array) => number,
-	seed: U64 | undefined
-): IRandU32 {
-	//SplitMix64(0) = E220A8397B1DCDAF | 16294208416658607535
-	// Which in U32 little-endian follows
-	const s =
-		seed != undefined ? seed.mut32() : Uint32Array.of(0x7b1dcdaf, 0xe220a839);
+abstract class AXoroshiro64 extends APrng32 {
+	protected readonly _state: Uint32Array;
+	readonly saveable: boolean;
+	readonly bitGen = 32;
+	protected abstract _gen(): number;
 
-	/** Get the next random number uint32 [0 - 18446744073709551615] */
-	return () => {
-		const r = ret(s);
-		s[1] ^= s[0];
-		s[0] = ((s[0] << 26) | (s[0] >>> 6)) ^ s[1] ^ (s[1] << 9); //lRot 26 a=26, b=9
-		s[1] = (s[1] << 13) | (s[1] >>> 19); //lRot 13 c=13
-		return r>>>0;
-	};
+	protected constructor(state: Uint32Array, saveable: boolean) {
+		super();
+		this._state = state;
+		this.saveable = saveable;
+	}
+
+	rawNext(): number {
+		const r = this._gen();
+		this._state[1] ^= this._state[0];
+		this._state[0] =
+			((this._state[0] << 26) | (this._state[0] >>> 6)) ^
+			this._state[1] ^
+			(this._state[1] << 9); //lRot 26 a=26, b=9
+		this._state[1] = (this._state[1] << 13) | (this._state[1] >>> 19); //lRot 13 c=13
+		return r >>> 0;
+	}
+
+	/**
+	 * Export a copy of the internal state as a byte array (can be used with restore methods).
+	 * Note the generator must have been built with `saveable=true` (default false)
+	 * for this to work, an empty array is returned when the generator isn't saveable.
+	 * @returns
+	 */
+	save(): Uint8Array {
+		if (!this.saveable) return new Uint8Array(0);
+		const exp = this._state.slice();
+		const ret = new Uint8Array(exp.buffer);
+		asLE.i32(ret, 0, 2);
+		return ret;
+	}
 }
 
 /**
@@ -31,15 +51,49 @@ function xoroshiro64(
  * Related:
  * - [C source](https://prng.di.unimi.it/xoroshiro64star.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint32 [0 - 4294967295]
  */
-export function xoroshiro64s(seed?: U64): IRandU32 {
-	return xoroshiro64(function (s) {
-		return Math.imul(s[0], 0x9e3779bb);
-	}, seed);
+export class Xoroshiro64s extends AXoroshiro64 {
+	protected _gen(): number {
+		return Math.imul(this._state[0], 0x9e3779bb);
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoroshiro64*';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//SplitMix64(0) = E220A8397B1DCDAF | 16294208416658607535
+		// Which in U32 little-endian is:
+		return new Xoroshiro64s(Uint32Array.of(0x7b1dcdaf, 0xe220a839), saveable);
+	}
+
+	/**
+	 * Build by providing 2 seeds, each treated as uint32. They must not be all zero.  It's recommended
+	 * this is the product of {@link prng.SplitMix32 SplitMix32}
+	 * @param seed0 Only the lower 32bits will be used
+	 * @param seed1 Only the lower 32bits will be used
+	 * @param saveable Whether the generator's state can be saved
+	 * @returns
+	 */
+	static seed(seed0: number, seed1: number, saveable = false) {
+		const s = Uint32Array.of(seed0, seed1);
+		return new Xoroshiro64s(s, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via Xoroshiro64s.save().
+	 * Will throw if state is incorrect length
+	 * @param state Saved state, must be exactly 16 bytes long
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(8).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 2);
+		const s32 = new Uint32Array(s2.buffer);
+		return new Xoroshiro64s(s32, saveable);
+	}
 }
 
 /**
@@ -51,14 +105,48 @@ export function xoroshiro64s(seed?: U64): IRandU32 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoroshiro64starstar.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use {@link prng.splitMix32 splitMix32},
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint32 [0 - 4294967295]
  */
-export function xoroshiro64ss(seed?: U64): IRandU32 {
-	return xoroshiro64(function (s) {
-		const r = Math.imul(s[0], 0x9e3779bb);
+export class Xoroshiro64ss extends AXoroshiro64 {
+	protected _gen(): number {
+		const r = Math.imul(this._state[0], 0x9e3779bb);
 		return Math.imul((r << 5) | (r >>> 27), 5);
-	}, seed);
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoroshiro64**';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//SplitMix64(0) = E220A8397B1DCDAF | 16294208416658607535
+		// Which in U32 little-endian is:
+		return new Xoroshiro64ss(Uint32Array.of(0x7b1dcdaf, 0xe220a839), saveable);
+	}
+
+	/**
+	 * Build by providing 2 seeds, each treated as uint32. They must not be all zero.  It's recommended
+	 * this is the product of {@link prng.SplitMix32 SplitMix32}
+	 * @param seed0 Only the lower 32bits will be used
+	 * @param seed1 Only the lower 32bits will be used
+	 * @param saveable Whether the generator's state can be saved
+	 * @returns
+	 */
+	static seed(seed0: number, seed1: number, saveable = false) {
+		const s = Uint32Array.of(seed0, seed1);
+		return new Xoroshiro64ss(s, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via Xoroshiro64ss.save().
+	 * Will throw if state is incorrect length
+	 * @param state Saved state, must be exactly 16 bytes long
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(8).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 2);
+		const s32 = new Uint32Array(s2.buffer);
+		return new Xoroshiro64ss(s32, saveable);
+	}
 }
