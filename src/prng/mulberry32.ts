@@ -12,15 +12,14 @@ import { APrng32 } from './APrng32.js';
  * Related:
  * - [Original mulberry32.c](https://gist.github.com/tommyettinger/46a874533244883189143505d203312c)
  */
-export class Mulberry32 extends APrng32 {
-	protected readonly _state: Uint32Array;
-	readonly saveable: boolean;
+export class Mulberry32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;
 
-	protected constructor(state: Uint32Array, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
+	protected trueSave() {
+		const exp = this._state.slice();
+		const ret = new Uint8Array(exp.buffer);
+		asLE.i32(ret, 0, 1);
+		return ret;
 	}
 
 	rawNext(): number {
@@ -29,20 +28,6 @@ export class Mulberry32 extends APrng32 {
 		r = Math.imul(r ^ (r >>> 15), r | 1);
 		r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
 		return (r ^ (r >>> 14)) >>> 0;
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const exp = this._state.slice();
-		const ret = new Uint8Array(exp.buffer);
-		asLE.i32(ret, 0, 1);
-		return ret;
 	}
 
 	/** @hidden */

@@ -5,19 +5,11 @@ import { U64, U64MutArray } from '../primitive/number/U64.js';
 import { sLen } from '../safe/safe.js';
 import { APrng64 } from './APrng64.js';
 
-abstract class AXorShift128p_ extends APrng64 {
-	protected readonly _state: U64MutArray;
-	readonly saveable: boolean;
+abstract class AXorShift128p_ extends APrng64<U64MutArray> {
 	readonly bitGen = 64;
 	protected abstract get _a(): number;
 	protected abstract get _b(): number;
 	protected abstract get _c(): number;
-
-	protected constructor(state: U64MutArray, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
-	}
 
 	rawNext(): U64 {
 		const s1 = this._state.at(0).mut();
@@ -32,17 +24,6 @@ abstract class AXorShift128p_ extends APrng64 {
 			.at(1)
 			.set(s1.xor(s0).xor(s1.rShift(this._b)).xor(s0.rShift(this._c)));
 		return ret;
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		return this._state.toBytesLE();
 	}
 }
 

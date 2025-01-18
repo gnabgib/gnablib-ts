@@ -17,17 +17,20 @@ const mul = U64.fromUint32Pair(0x4c957f2d, 0x5851f42d); //6364136223846793005
  * Related:
  * - [PCG, A Family of Better Random Number Generators](https://www.pcg-random.org/)
  */
-export class Pcg32 extends APrng32 {
-	protected readonly _state: U64Mut;
+export class Pcg32 extends APrng32<U64Mut> {
 	private readonly _inc: U64;
-	readonly saveable: boolean;
 	readonly bitGen = 32;
 
 	protected constructor(state: U64Mut, inc: U64, saveable: boolean) {
-		super();
-		this._state = state;
+		super(state, saveable);
 		this._inc = inc;
-		this.saveable = saveable;
+	}
+
+	protected trueSave() {
+		const ret = new Uint8Array(16);
+		ret.set(this._state.toBytesLE());
+		ret.set(this._inc.toBytesLE(), 8);
+		return ret;
 	}
 
 	rawNext(): number {
@@ -37,20 +40,6 @@ export class Pcg32 extends APrng32 {
 		const r = oldState.xorEq(oldState.rShift(18)).rShiftEq(27).low;
 		this._state.mulEq(mul).addEq(this._inc);
 		return ((r >>> rot) | (r << (32 - rot))) >>> 0;
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const ret = new Uint8Array(16);
-		ret.set(this._state.toBytesLE());
-		ret.set(this._inc.toBytesLE(), 8);
-		return ret;
 	}
 
 	/** @hidden */

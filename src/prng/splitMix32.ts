@@ -12,15 +12,13 @@ const fib_hash_const = 0x9e3779b9; //2654435769
  *
  * *NOT cryptographically secure*
  */
-export class SplitMix32 extends APrng32 {
-	protected readonly _state: Uint32Array;
-	readonly saveable: boolean;
+export class SplitMix32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;
 
-	protected constructor(state: Uint32Array, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
+	protected trueSave() {
+		const ret = new Uint8Array(this._state.slice().buffer);
+		asLE.i32(ret, 0, 1);
+		return ret;
 	}
 
 	rawNext(): number {
@@ -32,20 +30,6 @@ export class SplitMix32 extends APrng32 {
 		r = Math.imul(r, 0xc2b2ae35);
 		r ^= r >>> 16;
 		return r >>> 0;
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const exp = this._state.slice();
-		const ret = new Uint8Array(exp.buffer);
-		asLE.i32(ret, 0, 1);
-		return ret;
 	}
 
 	/** @hidden */

@@ -19,17 +19,17 @@ Improvement](https://people.computing.clemson.edu/~jmarty/courses/commonCourseCo
  * - [RFC4345: Improved Arcfour Modes for SSH Transport Layer Protocol](https://datatracker.ietf.org/doc/html/rfc4345)
  * - [RFC6229: Test Vectors for the Stream Cipher RC4](https://datatracker.ietf.org/doc/html/rfc6229)
  */
-export class Arc4 extends APrng32 {
-	protected readonly _state: Uint8Array;
+export class Arc4 extends APrng32<Uint8Array> {
 	private _i = 0;
 	private _j = 0;
-	readonly saveable: boolean;
 	readonly bitGen = 8;
 
-	protected constructor(state: Uint8Array, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
+	protected trueSave() {
+		const ret = new Uint8Array(258);
+		ret.set(this._state);
+		ret[256] = this._i;
+		ret[257] = this._j;
+		return ret;
 	}
 
 	rawNext(): number {
@@ -62,21 +62,6 @@ export class Arc4 extends APrng32 {
 			this._state[i] = this._state[j];
 			this._state[j] = t;
 		}
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const ret = new Uint8Array(258);
-		ret.set(this._state);
-		ret[256] = this._i;
-		ret[257] = this._j;
-		return ret;
 	}
 
 	/** @hidden */

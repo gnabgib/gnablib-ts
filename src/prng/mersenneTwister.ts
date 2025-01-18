@@ -17,16 +17,18 @@ import { APrng32 } from './APrng32.js';
  * Related links:
  * - [It is high time we let go of the Mersenne Twister](https://arxiv.org/abs/1910.06437)
  */
-export class Mt19937 extends APrng32 {
-	protected readonly _state: Uint32Array;
+export class Mt19937 extends APrng32<Uint32Array> {
 	private _ptr = 0;
-	readonly saveable: boolean;
 	readonly bitGen = 32;
 
-	protected constructor(state: Uint32Array, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
+	protected trueSave() {
+		const e8 = new Uint8Array(this._state.slice().buffer);
+		asLE.i32(e8, 0, 624);
+		const ret = new Uint8Array(2498);
+		ret.set(e8);
+		ret[2496] = this._ptr;
+		ret[2497] = this._ptr >>> 8;
+		return ret;
 	}
 
 	private twist() {
@@ -65,24 +67,6 @@ export class Mt19937 extends APrng32 {
 		y ^= (y << 15) & 0xefc60000; //TEMPERING_SHIFT_T & C
 		y ^= y >>> 18; //TEMPERING_SHIFT_L
 		return y >>> 0;
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const exp = this._state.slice();
-		const e8 = new Uint8Array(exp.buffer);
-		asLE.i32(e8, 0, 624);
-		const ret = new Uint8Array(2498);
-		ret.set(e8);
-		ret[2496] = this._ptr;
-		ret[2497] = this._ptr >>> 8;
-		return ret;
 	}
 
 	/** @hidden */

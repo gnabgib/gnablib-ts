@@ -15,34 +15,14 @@ const cMul = U64.fromUint32Pair(0x133111eb, 0x94d049bb);
  *
  * *NOT cryptographically secure*
  */
-export class SplitMix64 extends APrng64 {
-	protected readonly _state: U64Mut;
-	readonly saveable: boolean;
+export class SplitMix64 extends APrng64<U64Mut> {
 	readonly bitGen = 64;
-
-	protected constructor(state: U64Mut, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
-	}
 
 	rawNext(): U64 {
 		const z = this._state.addEq(golden_gamma).mut();
 		z.xorEq(z.rShift(30)).mulEq(bMul);
 		z.xorEq(z.rShift(27)).mulEq(cMul);
 		return z.xorEq(z.rShift(31));
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const ret = new Uint8Array(this._state.toBytesLE());
-		return ret;
 	}
 
 	/** @hidden */

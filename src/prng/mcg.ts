@@ -15,18 +15,22 @@ const MOD = 3;
  *
  * *NOT cryptographically secure*
  */
-export class Mcg extends APrng32 {
-	protected readonly _state: Uint32Array;
+export class Mcg extends APrng32<Uint32Array> {
 	protected readonly _shift: number;
-	readonly saveable: boolean;
 	readonly bitGen: number;
 
 	protected constructor(state: Uint32Array, shift: number, saveable: boolean) {
-		super();
-		this._state = state;
+		super(state,saveable);
 		this._shift = shift;
 		this.bitGen = 31 - shift;
-		this.saveable = saveable;
+	}
+
+	protected trueSave() {
+		const ret = new Uint8Array(17);
+		ret.set(new Uint8Array(this._state.buffer));
+		asLE.i32(ret, 0, 4);
+		ret[16] = this._shift;
+		return ret;
 	}
 
 	rawNext(): number {
@@ -34,21 +38,6 @@ export class Mcg extends APrng32 {
 			(this._state[SEED] * this._state[MUL] + this._state[ADD]) %
 			this._state[MOD];
 		return this._state[SEED] >>> this._shift;
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const ret = new Uint8Array(17);
-		ret.set(new Uint8Array(this._state.slice().buffer));
-		asLE.i32(ret, 0, 4);
-		ret[16] = this._shift;
-		return ret;
 	}
 
 	/** @hidden */

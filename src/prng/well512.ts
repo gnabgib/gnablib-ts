@@ -15,16 +15,20 @@ import { APrng32 } from './APrng32.js';
  * - [Random Number Generation](http://lomont.org/papers/2008/Lomont_PRNG_2008.pdf)] Section: *WELL Algorithm*
  * - [well512.c](https://github.com/Bill-Gray/prngs/blob/master/well512.c)
  */
-export class Well512 extends APrng32 {
-	protected readonly _state: Uint32Array;
+export class Well512 extends APrng32<Uint32Array> {
 	private _ptr = 0;
-	readonly saveable: boolean;
 	readonly bitGen = 32;
 
-	protected constructor(state: Uint32Array, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
+	protected trueSave() {
+		const ret = new Uint8Array(65);
+		//Create a byte projection into state
+		const s8 = new Uint8Array(this._state.buffer);
+		//Copy state by bytes into save
+		ret.set(s8);
+		asLE.i32(ret, 0, 16);
+		//Put the ptr in the last byte
+		ret[64] = this._ptr;
+		return ret;
 	}
 
 	rawNext(): number {
@@ -39,25 +43,6 @@ export class Well512 extends APrng32 {
 		a = this._state[this._ptr];
 		this._state[this._ptr] = a ^ b ^ d ^ (a << 2) ^ (b << 18) ^ (c << 28);
 		return this._state[this._ptr];
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const ret = new Uint8Array(4 * 16 + 1);
-		//Create a byte projection into state
-		const s8 = new Uint8Array(this._state.buffer);
-		//Copy state by bytes into save
-		ret.set(s8);
-		asLE.i32(ret, 0, 16);
-		//Put the ptr in the last byte
-		ret[64] = this._ptr;
-		return ret;
 	}
 
 	/** @hidden */

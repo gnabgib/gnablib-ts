@@ -21,17 +21,13 @@ const mul = U128.fromUint32Quad(0x9fccf645, 0x4385df64, 0x1fc65da4, 0x2360ed05);
  * Related:
  * - [PCG, A Family of Better Random Number Generators](https://www.pcg-random.org/)
  */
-export class Pcg64 extends APrng64 {
-	protected readonly _state: U128Mut;
+export class Pcg64 extends APrng64<U128Mut> {
 	private readonly _inc: U128;
-	readonly saveable: boolean;
 	readonly bitGen = 64;
 
 	protected constructor(state: U128Mut, inc: U128, saveable: boolean) {
-		super();
-		this._state = state;
+		super(state,saveable);
 		this._inc = inc;
-		this.saveable = saveable;
 	}
 
 	rawNext(): U64 {
@@ -44,12 +40,6 @@ export class Pcg64 extends APrng64 {
 		return u64s.at(0).xorEq(u64s.at(1)).rRotEq(rot);
 	}
 
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
 	save(): Uint8Array {
 		if (!this.saveable) return new Uint8Array(0);
 		const ret = new Uint8Array(32);

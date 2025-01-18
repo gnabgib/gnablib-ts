@@ -11,15 +11,13 @@ import { APrng32 } from './APrng32.js';
  *
  * *NOT cryptographically secure*
  */
-export class Sfc16 extends APrng32 {
-	protected readonly _state: Uint16Array;
-	readonly saveable: boolean;
+export class Sfc16 extends APrng32<Uint16Array> {
 	readonly bitGen = 16;
 
-	protected constructor(state: Uint16Array, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
+	protected trueSave() {
+		const ret = new Uint8Array(this._state.slice().buffer);
+		asLE.i16(ret, 0, 4);
+		return ret;
 	}
 
 	rawNext(): number {
@@ -29,20 +27,6 @@ export class Sfc16 extends APrng32 {
 		this._state[1] = this._state[2] + (this._state[2] << 3); //lshift=3
 		this._state[2] = ((this._state[2] << 5) | (this._state[2] >>> 11)) + t; //barrel_shift=5
 		return t & 0xffff;
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const exp = this._state.slice();
-		const ret = new Uint8Array(exp.buffer);
-		asLE.i32(ret, 0, 4);
-		return ret;
 	}
 
 	/** @hidden */

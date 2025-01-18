@@ -13,15 +13,13 @@ import { APrng32 } from './APrng32.js';
  * @param seed Must be non-zero
  * @returns Generator of uint32 [0 - 4294967295]
  */
-export class XorShift32 extends APrng32 {
-	protected readonly _state: Uint32Array;
-	readonly saveable: boolean;
+export class XorShift32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;
 
-	protected constructor(state: Uint32Array, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
+	protected trueSave() {
+		const ret = new Uint8Array(this._state.slice().buffer);
+		asLE.i32(ret, 0, 1);
+		return ret;
 	}
 
 	rawNext(): number {
@@ -29,20 +27,6 @@ export class XorShift32 extends APrng32 {
 		this._state[0] ^= this._state[0] >>> 17;
 		this._state[0] ^= this._state[0] << 5;
 		return this._state[0];
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		const exp = this._state.slice();
-		const ret = new Uint8Array(exp.buffer);
-		asLE.i32(ret, 0, 1);
-		return ret;
 	}
 
 	/** @hidden */

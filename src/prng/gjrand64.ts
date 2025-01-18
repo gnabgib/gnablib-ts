@@ -12,16 +12,8 @@ import { APrng64 } from './APrng64.js';
  *
  * *NOT cryptographically secure*
  */
-export class Gjrand64 extends APrng64 {
-	protected readonly _state: U64MutArray;
-	readonly saveable: boolean;
+export class Gjrand64 extends APrng64<U64MutArray> {
 	readonly bitGen = 64;
-
-	protected constructor(state: U64MutArray, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
-	}
 
 	rawNext(): U64 {
 		this._state.at(1).addEq(this._state.at(2));
@@ -36,17 +28,6 @@ export class Gjrand64 extends APrng64 {
 		this._state.at(2).addEq(this._state.at(0));
 		this._state.at(1).addEq(this._state.at(3));
 		return this._state.at(0).mut();
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		return this._state.toBytesLE();
 	}
 
 	/** @hidden */

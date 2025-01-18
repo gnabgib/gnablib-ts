@@ -4,33 +4,14 @@ import { U64, U64Mut } from '../primitive/number/U64.js';
 import { sLen } from '../safe/safe.js';
 import { APrng64 } from './APrng64.js';
 
-export class XorShift64 extends APrng64 {
-	protected readonly _state: U64Mut;
-	readonly saveable: boolean;
+export class XorShift64 extends APrng64<U64Mut> {
 	readonly bitGen = 64;
-
-	protected constructor(state: U64Mut, saveable: boolean) {
-		super();
-		this._state = state;
-		this.saveable = saveable;
-	}
 
 	rawNext(): U64 {
 		this._state.xorEq(this._state.lShift(13));
 		this._state.xorEq(this._state.rShift(7));
 		this._state.xorEq(this._state.lShift(17));
 		return this._state.clone();
-	}
-
-	/**
-	 * Export a copy of the internal state as a byte array (can be used with restore methods).
-	 * Note the generator must have been built with `saveable=true` (default false)
-	 * for this to work, an empty array is returned when the generator isn't saveable.
-	 * @returns
-	 */
-	save(): Uint8Array {
-		if (!this.saveable) return new Uint8Array(0);
-		return this._state.toBytesLE();
 	}
 
 	/** @hidden */

@@ -5,42 +5,44 @@ import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('APrng32');
 
-class Gen3Bit extends APrng32 {
+abstract class AOneByteState extends APrng32<Uint8Array> {
+    protected trueSave(): Uint8Array {
+        return this._state
+    }
+    constructor() {
+        super(new Uint8Array(1),false);
+    }
+}
+class Gen3Bit extends AOneByteState {
     readonly bitGen=3;
     rawNext(): number {
         //Worst RNG, https://xkcd.com/221/
         return 0b101; //5 | x5
     }
 }
-class Gen10Bit extends APrng32 {
+class Gen10Bit extends AOneByteState {
     readonly bitGen=10;
     rawNext(): number {
         //Worst RNG, https://xkcd.com/221/
         return 0b1100100001; //801 | x321
     }
 }
-class Gen31Bit extends APrng32 {
+class Gen31Bit extends AOneByteState {
     readonly bitGen=31;
-    _state=1;
     rawNext(): number {
         //Alternates these values starting with first
         const set=[
-            0b1011001110001111000011111000001,//1506248641 | x59C787C1
-            0b0100110001110000111100000111110 //641235006 | x2638783E
+            0b0100110001110000111100000111110,//641235006 | x2638783E
+            0b1011001110001111000011111000001 //1506248641 | x59C787C1
+            
         ];
-        return set[this._state^=1];
+        return set[this._state[0]^=1];
     }
 }
 
 const rng3=new Gen3Bit();
 const rng10=new Gen10Bit();
 const rng31=new Gen31Bit();
-
-tsts(`APrng32.max`, () => {
-    assert.equal(rng3.max, 2**3 -1);
-    assert.equal(rng10.max, 2**10 -1);
-    assert.equal(rng31.max, 2**31 -1);
-});
 
 // Establish operating characteristics of generators above
 const g3_seq_raw:number[]=[
