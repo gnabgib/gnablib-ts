@@ -1,10 +1,10 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { splitMix64 } from '../../src/prng/splitMix64';
+import { SplitMix64 } from '../../src/prng/splitMix64';
 import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec';
 
-const tsts = suite('splitMix64');
+const tsts = suite('SplitMix64');
 //https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf
 //https://rosettacode.org/wiki/Pseudo-random_numbers/Splitmix64
 const seq_1234567: string[] = [
@@ -14,20 +14,18 @@ const seq_1234567: string[] = [
     '3FBEF740E9177B3F',
     'E3B8346708CB5ECD'
 ];
-
-const seed=U64.fromInt(1234567);
-const rng = splitMix64(seed);
+const rng_1234567=SplitMix64.seed(U64.fromUint32Pair(1234567,0));
 let i = 0;
 for (const expect of seq_1234567) {
-	const act = rng();
-	tsts(`splitMix64(1234567)[${i}]`, () => {
+	const act = rng_1234567.rawNext();
+	tsts(`SplitMix64(1234567).rawNext[${i}]`, () => {
         //todo: U64 comparison in assert
 		assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
 }
 
-const seq_0:string[] = [
+const seq_def:string[] = [
     'E220A8397B1DCDAF',
     '6E789E6AA1B965F4',
     '06C45D188009454F',
@@ -129,15 +127,36 @@ const seq_0:string[] = [
     'DC4C613D9EBA2304',
     '3505B7796BD1A506',
 ];
-
-const rng2=splitMix64();
+const rng_def=SplitMix64.new();
 i = 0;
-for (const expect of seq_0) {
-	const act = rng2();
-	tsts(`splitMix64(0)[${i}]`, () => {
+for (const expect of seq_def) {
+	const act = rng_def.rawNext();
+	tsts(`SplitMix64().rawNext[${i}]`, () => {
 		assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
 }
+
+tsts(`SplitMix64(,false) save returns empty, restore throws`,()=>{
+    const r=SplitMix64.new();
+    const sav=r.save();
+    assert.equal(sav.length,0);
+    assert.throws(()=>SplitMix64.restore(sav));
+})
+
+tsts(`SplitMix64().save/restore loop`,()=>{
+    const r=SplitMix64.new(true);
+    assert.equal(r.rawNext().toString(),seq_def[0],'r consume[0]');
+    const sav=r.save();
+    assert.equal(sav.length,8,'save length');
+    assert.equal(r.rawNext().toString(),seq_def[1],'r consume[1]');
+    assert.equal(r.rawNext().toString(),seq_def[2],'r consume[2]');
+
+    const r2=SplitMix64.restore(sav);    
+    assert.equal(r2.rawNext().toString(),seq_def[1],'r2 still at [1]');
+    assert.equal(r.rawNext().toString(),seq_def[3],'r consume[3]');
+
+    assert.is(Object.prototype.toString.call(r).indexOf("splitmix64")>0,true,'toString is set');
+});
 
 tsts.run();

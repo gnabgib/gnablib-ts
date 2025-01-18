@@ -1,11 +1,11 @@
 
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xorShift64 } from '../../src/prng/xorShift64';
+import { XorShift64 } from '../../src/prng/xorShift64';
 import { U64 } from '../../src/primitive/number';
 import { hex } from '../../src/codec/Hex';
 
-const tsts = suite('xorShift64');
+const tsts = suite('XorShift64');
 //https://www.jstatsoft.org/article/view/v008i14
 //These test vectors were found in another library, sourced from the CPP reference impl
 const seq_1: string[] = [
@@ -30,12 +30,11 @@ const seq_1: string[] = [
     '0EF1DE18CDA219AF',
     '711F0D367B32D65C',
 ];
-
-const rng_1 = xorShift64(U64.fromInt(1));
+const rng_1=XorShift64.seed(U64.fromUint32Pair(1,0));
 let i = 0;
 for (const expect of seq_1) {
-	const act = rng_1();
-	tsts(`xorShift64(1)[${i}]`, () => {
+	const act = rng_1.rawNext();
+	tsts(`XorShift64(1).rawNext[${i}]`, () => {
         assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
@@ -63,32 +62,53 @@ const seq_11234: string[] = [
     '09074831AC217796',
     '1F5CACE2C82410F9',
 ];
-
-const rng_11234 = xorShift64(U64.fromInt(11234));
+const rng_11234=XorShift64.seed(U64.fromUint32Pair(11234,0));
 i = 0;
 for (const expect of seq_11234) {
-	const act = rng_11234();
-	tsts(`xorShift64(11234)[${i}]`, () => {
+	const act = rng_11234.rawNext();
+	tsts(`XorShift64(11234).rawNext[${i}]`, () => {
         assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
 }
 
 //Unsourced, but shows that without a seed reasonable PRNG are generated
-const seq0:string[] =[
+const seq_def:string[] =[
     '79690975FBDE15B0',
     '2A337357AE2CC59B',
     '2FEF107A27529AD0',
     'E4093DF8432A8BE5',
 ]
-const rng0=xorShift64();
+const rng_def=XorShift64.new();
 i=0;
-for (const expect of seq0) {
-	const act = rng0();
-	tsts(`xorShift64()[${i}]`, () => {
+for (const expect of seq_def) {
+	const act = rng_def.rawNext();
+	tsts(`XorShift64().rawNext[${i}]`, () => {
         assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
 }
+
+tsts(`XorShift64(,false) save returns empty, restore throws`,()=>{
+    const r=XorShift64.new();
+    const sav=r.save();
+    assert.equal(sav.length,0);
+    assert.throws(()=>XorShift64.restore(sav));
+})
+
+tsts(`XorShift64().save/restore loop`,()=>{
+    const r=XorShift64.new(true);
+    assert.equal(r.rawNext().toString(),seq_def[0],'r consume[0]');
+    const sav=r.save();
+    assert.equal(sav.length,8,'save length');
+    assert.equal(r.rawNext().toString(),seq_def[1],'r consume[1]');
+    assert.equal(r.rawNext().toString(),seq_def[2],'r consume[2]');
+
+    const r2=XorShift64.restore(sav);    
+    assert.equal(r2.rawNext().toString(),seq_def[1],'r2 still at [1]');
+    assert.equal(r.rawNext().toString(),seq_def[3],'r consume[3]');
+
+    assert.is(Object.prototype.toString.call(r).indexOf("xorshift64")>0,true,'toString is set');
+});
 
 tsts.run();

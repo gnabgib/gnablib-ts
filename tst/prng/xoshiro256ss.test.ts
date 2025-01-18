@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { xoshiro256ss } from '../../src/prng/xoshiro256';
-import { U256, U64 } from '../../src/primitive/number';
+import { Xoshiro256ss } from '../../src/prng/xoshiro256';
+import { U64 } from '../../src/primitive/number';
 import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('xoshiro256**');
@@ -13,12 +13,15 @@ const seq100: string[] = [
     '5C76D220F8461395',
     '8852F10B70A289F7'
 ];
-
-const rng100 = xoshiro256ss(U256.fromUint32Octo(0xF13CF544,0x23259B94,0xC6B89FE4,0x03BC38D6,0xFBD2E5CD,0x3E540F97,0x68859A70,0x40DBD7E6));
+const rng_100=Xoshiro256ss.seed(
+    U64.fromUint32Pair(0xF13CF544,0x23259B94),
+    U64.fromUint32Pair(0xC6B89FE4,0x03BC38D6),
+    U64.fromUint32Pair(0xFBD2E5CD,0x3E540F97),
+    U64.fromUint32Pair(0x68859A70,0x40DBD7E6));
 let i = 0;
 for (const expect of seq100) {
-	const act = rng100();
-	tsts(`xoshiro256**(splitMix64(100)*4)[${i}]`, () => {
+	const act = rng_100.rawNext();
+	tsts(`Xoshiro256**(splitMix64(100)*4).rawNext[${i}]`, () => {
 		assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
@@ -32,7 +35,7 @@ for (const expect of seq100) {
 
 //Sourced from another repo that implements xoshiro256++
 //https://gitgud.io/anglekh/prng-xoshiro/-/blob/master/test/test.js?ref_type=heads 15831
-const seq0: string[] = [
+const seq_def: string[] = [
     '99EC5F36CB75F2B4',
     'BF6E1F784956452A',
     '1A5F849D4933E6E0',
@@ -54,12 +57,11 @@ const seq0: string[] = [
     '8CBE7776598A798C',
     '0ECBDF7FFCD727E5',
 ];
-
-const rng0 = xoshiro256ss();
+const rng_def=Xoshiro256ss.new();
 i = 0;
-for (const expect of seq0) {
-	const act = rng0();
-	tsts(`xoshiro256**()[${i}]`, () => {
+for (const expect of seq_def) {
+	const act = rng_def.rawNext();
+	tsts(`Xoshiro256**().rawNext[${i}]`, () => {
 		assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
@@ -89,21 +91,40 @@ const seq_1: string[] = [
     'CAA9983A1E76EA32',
     '8B721B33265CC975',
 ];
-
-const rng_1 = xoshiro256ss(U256.fromU64Quad(
-    U64.fromBytesBE(hex.toBytes('96a1743c36ed852f')),
-    U64.fromBytesBE(hex.toBytes('8c0ac25732c50c9f')),
-    U64.fromBytesBE(hex.toBytes('ec65ea85c2947a21')),
-    U64.fromBytesBE(hex.toBytes('6cd5a2d6fe9971f9')),
-));
-
+const rng_1c=Xoshiro256ss.seed(
+    U64.fromUint32Pair(0x36ed852f,0x96a1743c),
+    U64.fromUint32Pair(0x32c50c9f,0x8c0ac257),
+    U64.fromUint32Pair(0xc2947a21,0xec65ea85),
+    U64.fromUint32Pair(0xfe9971f9,0x6cd5a2d6));
 i = 0;
 for (const expect of seq_1) {
-	const act = rng_1();
-	tsts(`xoshiro256**(seed)[${i}]`, () => {
+	const act = rng_1c.rawNext();
+	tsts(`Xoshiro256**(seed).rawNext[${i}]`, () => {
 		assert.equal(hex.fromBytes(act.toBytesBE()), expect);
 	});
 	i++;
 }
+
+tsts(`Xoshiro256**(,false) save returns empty, restore throws`,()=>{
+    const r=Xoshiro256ss.new();
+    const sav=r.save();
+    assert.equal(sav.length,0);
+    assert.throws(()=>Xoshiro256ss.restore(sav));
+})
+
+tsts(`Xoshiro256**().save/restore loop`,()=>{
+    const r=Xoshiro256ss.new(true);
+    assert.equal(r.rawNext().toString(),seq_def[0],'r consume[0]');
+    const sav=r.save();
+    assert.equal(sav.length,32,'save length');
+    assert.equal(r.rawNext().toString(),seq_def[1],'r consume[1]');
+    assert.equal(r.rawNext().toString(),seq_def[2],'r consume[2]');
+
+    const r2=Xoshiro256ss.restore(sav);    
+    assert.equal(r2.rawNext().toString(),seq_def[1],'r2 still at [1]');
+    assert.equal(r.rawNext().toString(),seq_def[3],'r consume[3]');
+
+    assert.is(Object.prototype.toString.call(r).indexOf("xoshiro256**")>0,true,'toString is set');
+});
 
 tsts.run();

@@ -1,87 +1,110 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
-import { U128 } from '../primitive/number/U128.js';
+import { asLE } from '../endian/platform.js';
 import { U64, U64MutArray } from '../primitive/number/U64.js';
-import { IRandU32 } from './interfaces/IRandInt.js';
-import { IRandU64 } from './interfaces/IRandU64.js';
-
-function gjrand<T>(
-	seed: number | U64 | U128 | undefined,
-	ret: (s: U64MutArray) => T
-): () => T {
-	const s = U64MutArray.fromLen(4);
-
-	function crank() {
-		s.at(1).addEq(s.at(2));
-		s.at(0).lRotEq(32);
-		s.at(2).xorEq(s.at(1));
-		s.at(3).addEq(U64.fromInt(0x55aa96a5));
-		s.at(0).addEq(s.at(1));
-		s.at(2).lRotEq(23);
-		s.at(1).xorEq(s.at(0));
-		s.at(0).addEq(s.at(2));
-		s.at(1).lRotEq(19);
-		s.at(2).addEq(s.at(0));
-		s.at(1).addEq(s.at(3));
-	}
-
-	if (seed == undefined) {
-		//Pre computed state from gjrand32(0) + 14*crank
-		s.at(0).set(U64.fromUint32Pair(2361955991, 2308445249));
-		s.at(1).set(U64.fromUint32Pair(4286249029, 4038403806));
-		s.at(2).set(U64.fromUint32Pair(403824257, 4256023257));
-		s.at(3).set(U64.fromUint32Pair(2941533446, 4));
-	} else if (seed instanceof U64) {
-		s.at(0).set(seed);
-		s.at(2).set(U64.fromIntUnsafe(2000001));
-		for (let i = 0; i < 14; i++) crank();
-	} else if (seed instanceof U128) {
-		const u64 = seed.mut64();
-		s.at(0).set(u64.at(1));
-		s.at(1).set(u64.at(0));
-		s.at(2).set(U64.fromIntUnsafe(5000001));
-		for (let i = 0; i < 14; i++) crank();
-	} else {
-		s.at(0).set(U64.fromInt(seed));
-		s.at(2).set(U64.fromIntUnsafe(1000001));
-		for (let i = 0; i < 14; i++) crank();
-	}
-
-	return function () {
-		crank();
-		return ret(s);
-	};
-}
-
-/**
- * GJrand random generator using 256bit state, 32bit return
- * as described in
- * [gjrand random numbers](https://gjrand.sourceforge.net/) 4.3.0 release
- *
- * *Note* You can call this with zero seeds, which is the same as seeding with a single seed of 0
- *
- * *NOT cryptographically secure*
- *
- * @param seed
- * @returns
- */
-export function gjrand32(seed?: number | U64 | U128): IRandU32 {
-	return gjrand(seed, (s) => s.at(0).low);
-}
+import { sLen } from '../safe/safe.js';
+import { APrng64 } from './APrng64.js';
 
 /**
  * GJrand random generator using 256bit state, 64bit return
  * as described in
  * [gjrand random numbers](https://gjrand.sourceforge.net/) 4.3.0 release
  *
- * *Note* You can call this with zero seeds, which is the same as seeding with a single seed of 0
- *
  * *NOT cryptographically secure*
- *
- * @param seed
- * @returns
  */
-export function gjrand64(seed?: U64 | U128): IRandU64 {
-	//Have to clone the element (otherwise it's shared memory)
-	return gjrand(seed, (s) => s.at(0).clone());
+export class Gjrand64 extends APrng64 {
+	protected readonly _state: U64MutArray;
+	readonly saveable: boolean;
+	readonly bitGen = 64;
+
+	protected constructor(state: U64MutArray, saveable: boolean) {
+		super();
+		this._state = state;
+		this.saveable = saveable;
+	}
+
+	rawNext(): U64 {
+		this._state.at(1).addEq(this._state.at(2));
+		this._state.at(0).lRotEq(32);
+		this._state.at(2).xorEq(this._state.at(1));
+		this._state.at(3).addEq(U64.fromInt(0x55aa96a5));
+		this._state.at(0).addEq(this._state.at(1));
+		this._state.at(2).lRotEq(23);
+		this._state.at(1).xorEq(this._state.at(0));
+		this._state.at(0).addEq(this._state.at(2));
+		this._state.at(1).lRotEq(19);
+		this._state.at(2).addEq(this._state.at(0));
+		this._state.at(1).addEq(this._state.at(3));
+		return this._state.at(0).mut();
+	}
+
+	/**
+	 * Export a copy of the internal state as a byte array (can be used with restore methods).
+	 * Note the generator must have been built with `saveable=true` (default false)
+	 * for this to work, an empty array is returned when the generator isn't saveable.
+	 * @returns
+	 */
+	save(): Uint8Array {
+		if (!this.saveable) return new Uint8Array(0);
+		return this._state.toBytesLE();
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'gjrand64';
+	}
+
+	/** Build using a reasonable default seed and increment */
+	static new(saveable = false) {
+		//Pre computed state from gjrand32(0) + 14*crank
+		// prettier-ignore
+		const state = U64MutArray.fromU32s(
+			2361955991, 2308445249,
+			4286249029, 4038403806,
+			403824257, 4256023257,
+			2941533446, 4
+		);
+		return new Gjrand64(state, saveable);
+	}
+
+    /**
+	 * Build by providing 1 or 2 seeds, totalling 64bits or 128bits.
+     * Note: a 32bit seed is also supported, but not recommended.
+	 * Includes robust seeding procedure.
+     * @param seed0 32bit or 64bit seed.  Must be U64 if seed1 is provided
+	 * @param saveable Whether the generator's state can be saved
+	 */
+	static seed(seed0: number | U64, seed1?: U64, saveable = false) {
+		const state = U64MutArray.fromLen(8);
+		if (typeof seed0 == 'number') {
+			//32bit build (note seed1 isn't even tested to avoid 96bit seed, which
+			// also means a developer won't get feedback with the invalid combo
+			state.at(0).set(U64.fromInt(seed0));
+			state.at(2).set(U64.fromUint32Pair(1000001, 0));
+		} else if (seed1) {
+			//128bit build
+			state.at(0).set(seed1);
+			state.at(1).set(seed0);
+			state.at(2).set(U64.fromIntUnsafe(5000001));
+		} else {
+			//64bit build
+			state.at(0).set(seed0);
+			state.at(2).set(U64.fromUint32Pair(2000001, 0));
+		}
+		const ret = new Gjrand64(state, saveable);
+		for (let i = 0; i < 14; i++) ret.rawNext();
+		return ret;
+	}
+
+	/**
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(32).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 8);
+		return new Gjrand64(U64MutArray.fromBytes(s2.buffer), saveable);
+	}
 }

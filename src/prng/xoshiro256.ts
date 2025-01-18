@@ -1,53 +1,45 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
-import { U256 } from '../primitive/number/U256.js';
+import { asLE } from '../endian/platform.js';
 import { U64, U64MutArray } from '../primitive/number/U64.js';
-import { IRandU64 } from './interfaces/IRandU64.js';
+import { sLen } from '../safe/safe.js';
+import { APrng64 } from './APrng64.js';
 
-/**
- * XoShiRo256++/XoShiRo256** are all-purpose 64bit generators (not **cryptographically secure**).  If you're
- * only looking to generate float64, XoShiRo256+, which is slightly faster (~15%) can be used by using
- * only the top 53 bits - the lower bits have low linear complexity.
- */
+abstract class AXoshiro256 extends APrng64 {
+	protected readonly _state: U64MutArray;
+	readonly saveable: boolean;
+	readonly bitGen = 64;
+	protected abstract _gen(): U64;
 
-/**
- *
- * @param ret
- * @param seed
- * @returns
- */
-function xoshiro256(
-	ret: (s: U64MutArray) => U64,
-	seed: U256 | undefined
-): IRandU64 {
-	//SplitMix64(0) = E220A8397B1DCDAF, 6E789E6AA1B965F4, 06C45D188009454F, F88BB8A8724C81EC
-	// Which in U32 little-endian follows
-	const s =
-		seed != undefined
-			? seed.mut64()
-			: U64MutArray.fromBytes(
-				// prettier-ignore
-					Uint32Array.of(
-						0x7b1dcdaf,0xe220a839,
-						0xa1b965f4,0x6e789e6a,
-						0x8009454f,0x06c45d18,
-						0x724c81ec,0xf88bb8a8
-					)
-			  );
+	protected constructor(state: U64MutArray, saveable: boolean) {
+		super();
+		this._state = state;
+		this.saveable = saveable;
+	}
 
-	/** Get the next random number uint64 [0 - 18446744073709551615] */
-	return () => {
-		const r = ret(s);
+	rawNext(): U64 {
+		const r = this._gen();
 
-		const t = s.at(1).lShift(17);
-		s.at(2).xorEq(s.at(0));
-		s.at(3).xorEq(s.at(1));
-		s.at(1).xorEq(s.at(2));
-		s.at(0).xorEq(s.at(3));
-		s.at(2).xorEq(t);
-		s.at(3).lRotEq(45);
+		const t = this._state.at(1).lShift(17);
+		this._state.at(2).xorEq(this._state.at(0));
+		this._state.at(3).xorEq(this._state.at(1));
+		this._state.at(1).xorEq(this._state.at(2));
+		this._state.at(0).xorEq(this._state.at(3));
+		this._state.at(2).xorEq(t);
+		this._state.at(3).lRotEq(45);
 		return r;
-	};
+	}
+
+	/**
+	 * Export a copy of the internal state as a byte array (can be used with restore methods).
+	 * Note the generator must have been built with `saveable=true` (default false)
+	 * for this to work, an empty array is returned when the generator isn't saveable.
+	 * @returns
+	 */
+	save(): Uint8Array {
+		if (!this.saveable) return new Uint8Array(0);
+		return this._state.toBytesLE();
+	}
 }
 
 /**
@@ -59,13 +51,67 @@ function xoshiro256(
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro256plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint64 [0 - 18446744073709551615]
  */
-export function xoshiro256p(seed?: U256): IRandU64 {
-	return xoshiro256((s) => s.at(0).add(s.at(3)), seed);
+export class Xoshiro256p extends AXoshiro256 {
+	protected _gen(): U64 {
+		return this._state.at(0).add(this._state.at(3));
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoshiro256+';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//SplitMix64(0) = E220A8397B1DCDAF, 6E789E6AA1B965F4 | 16294208416658607535, 7960286522194355700
+		// Which in U32 little-endian follows
+		return new Xoshiro256p(
+			U64MutArray.fromBytes(
+				// prettier-ignore
+				Uint32Array.of(
+					0x7b1dcdaf,0xe220a839,
+					0xa1b965f4,0x6e789e6a,
+					0x8009454f,0x06c45d18,
+					0x724c81ec,0xf88bb8a8
+				)
+			),
+			saveable
+		);
+	}
+
+	/**
+	 * Build by providing 4 seeds. They must not be all zero.
+	 * It's recommended these are the product of {@link prng.SplitMix64 | SplitMix64}
+	 * @param saveable Whether the generator's state can be saved
+	 */
+	static seed(
+		seed0: U64,
+		seed1: U64,
+		seed2: U64,
+		seed3: U64,
+		saveable = false
+	) {
+		const state = U64MutArray.fromLen(4);
+		state.at(0).set(seed0);
+		state.at(1).set(seed1);
+		state.at(2).set(seed2);
+		state.at(3).set(seed3);
+		return new Xoshiro256p(state, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(32).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 8);
+		const s64 = U64MutArray.fromBytes(s2.buffer);
+		return new Xoshiro256p(s64, saveable);
+	}
 }
 
 /**
@@ -77,18 +123,73 @@ export function xoshiro256p(seed?: U256): IRandU64 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro256plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint64 [0 - 18446744073709551615]
  */
-export function xoshiro256pp(seed?: U256): IRandU64 {
-	return xoshiro256(function (s) {
-		const r = s.at(0).add(s.at(3)).mut();
-		r.lRotEq(23).addEq(s.at(0));
+export class Xoshiro256pp extends AXoshiro256 {
+	protected _gen(): U64 {
+		const r = this._state.at(0).add(this._state.at(3)).mut();
+		r.lRotEq(23).addEq(this._state.at(0));
 		return r;
-	}, seed);
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoshiro256++';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//SplitMix64(0) = E220A8397B1DCDAF, 6E789E6AA1B965F4 | 16294208416658607535, 7960286522194355700
+		// Which in U32 little-endian follows
+		return new Xoshiro256pp(
+			U64MutArray.fromBytes(
+				// prettier-ignore
+				Uint32Array.of(
+					0x7b1dcdaf,0xe220a839,
+					0xa1b965f4,0x6e789e6a,
+					0x8009454f,0x06c45d18,
+					0x724c81ec,0xf88bb8a8
+				)
+			),
+			saveable
+		);
+	}
+
+	/**
+	 * Build by providing 4 seeds. They must not be all zero.
+	 * It's recommended these are the product of {@link prng.SplitMix64 | SplitMix64}
+	 * @param saveable Whether the generator's state can be saved
+	 */
+	static seed(
+		seed0: U64,
+		seed1: U64,
+		seed2: U64,
+		seed3: U64,
+		saveable = false
+	) {
+		const state = U64MutArray.fromLen(4);
+		state.at(0).set(seed0);
+		state.at(1).set(seed1);
+		state.at(2).set(seed2);
+		state.at(3).set(seed3);
+		return new Xoshiro256pp(state, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(32).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 8);
+		const s64 = U64MutArray.fromBytes(s2.buffer);
+		return new Xoshiro256pp(s64, saveable);
+	}
 }
+
+const u64_5 = U64.fromUint32Pair(5, 0);
+const u64_9 = U64.fromUint32Pair(9, 0);
 
 /**
  * [XoShiRo256**](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
@@ -100,17 +201,73 @@ export function xoshiro256pp(seed?: U256): IRandU64 {
  * - [C source](https://prng.di.unimi.it/xoshiro256starstar.c)
  * - [A Quick Look at Xoshiro256** (2018)](https://www.pcg-random.org/posts/a-quick-look-at-xoshiro256.html)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
- *
- * @param seed Must be non-zero, it's recommended you use
- * {@link prng.splitMix64 splitMix64} on a numeric seed.
- * @returns Generator of uint64 [0 - 18446744073709551615]
  */
-export function xoshiro256ss(seed?: U256): IRandU64 {
-	const u64_5 = U64.fromInt(5);
-	const u64_9 = U64.fromInt(9);
-	return xoshiro256(function (s) {
-		const r = s.at(1).mul(u64_5).mut();
+export class Xoshiro256ss extends AXoshiro256 {
+	protected _gen(): U64 {
+		const r = this._state.at(1).mul(u64_5).mut();
 		r.lRotEq(7).mulEq(u64_9);
 		return r;
-	}, seed);
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'xoshiro256**';
+	}
+
+	/** Build using a reasonable default seed */
+	static new(saveable = false) {
+		//SplitMix64(0) = E220A8397B1DCDAF, 6E789E6AA1B965F4 | 16294208416658607535, 7960286522194355700
+		// Which in U32 little-endian follows
+		return new Xoshiro256ss(
+			U64MutArray.fromBytes(
+				// prettier-ignore
+				Uint32Array.of(
+					0x7b1dcdaf,0xe220a839,
+					0xa1b965f4,0x6e789e6a,
+					0x8009454f,0x06c45d18,
+					0x724c81ec,0xf88bb8a8
+				)
+			),
+			saveable
+		);
+	}
+
+	/**
+	 * Build by providing 4 seeds. They must not be all zero.
+	 * It's recommended these are the product of {@link prng.SplitMix64 | SplitMix64}
+	 * @param saveable Whether the generator's state can be saved
+	 */
+	static seed(
+		seed0: U64,
+		seed1: U64,
+		seed2: U64,
+		seed3: U64,
+		saveable = false
+	) {
+		const state = U64MutArray.fromLen(4);
+		state.at(0).set(seed0);
+		state.at(1).set(seed1);
+		state.at(2).set(seed2);
+		state.at(3).set(seed3);
+		return new Xoshiro256ss(state, saveable);
+	}
+
+	/**
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
+	 */
+	static restore(state: Uint8Array, saveable = false) {
+		sLen('state', state).exactly(32).throwNot();
+		const s2 = state.slice();
+		asLE.i32(s2, 0, 8);
+		const s64 = U64MutArray.fromBytes(s2.buffer);
+		return new Xoshiro256ss(s64, saveable);
+	}
 }
+
+/**
+ * XoShiRo256++/XoShiRo256** are all-purpose 64bit generators (not **cryptographically secure**).  If you're
+ * only looking to generate float64, XoShiRo256+, which is slightly faster (~15%) can be used by using
+ * only the top 53 bits - the lower bits have low linear complexity.
+ */
