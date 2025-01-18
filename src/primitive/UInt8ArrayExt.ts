@@ -8,17 +8,17 @@ export const uint8ArrayExt = {
 	 * Encode arbitrary binary data as a set of bytes, the first byte indicating how
 	 * many bytes follow.
 	 * @param input A series of bytes 0-255 in length
-	 * @param start Where in the input stream to start (default: begining)
+	 * @param start Where in the input stream to start (default: beginning)
 	 * @param len How many bytes to include
-	 * @throws {EnforceTypeError} Expected len as integer, got: typeof($len)=$len
-	 * @throws {OutOfRangeError} len should be 0<=x<=255, got: $len
-	 * @returns Encoded form (will be 1 byte longer than @param input)
+	 * @returns Encoded form (will be 1 byte longer than `input`)
+	 * @throws {Error} Expected len as integer, got: typeof($len)=$len
+	 * @throws {Error} len should be 0<=x<=255, got: $len
 	 */
 	toSizedBytes: function (
 		input: Uint8Array,
 		start = 0,
 		len?: number
-	): Uint8Array {
+	) {
 		if (len == undefined) len = input.length - start;
 		else sNum('len', len).unsigned().atMost(255).throwNot();
 		const ret = new Uint8Array(len + 1);

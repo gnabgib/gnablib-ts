@@ -270,7 +270,7 @@ class XSalsa extends Salsa {
  * [Salsa20](http://cr.yp.to/snuffle/spec.pdf)
  *
  * Salsa is a stream cipher developed in 2005 by [Daniel J. Bernstein](https://cr.yp.to/djb.html).
- * Like {@link crypto/ChaCha20}, the cipher is based on an add-rotate-XOR (ARX) function.  Salsa uses the
+ * Like {@link crypto.ChaCha20 | ChaCha20}, the cipher is based on an add-rotate-XOR (ARX) function.  Salsa uses the
  * CTR block mode
  *
  * First Published: *2007*

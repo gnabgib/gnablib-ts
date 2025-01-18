@@ -28,7 +28,7 @@ class Simon_32bit implements IBlockCrypt {
 	keySchedule(key: Uint8Array): void {}
 
 	/**
-	 * {@inheritDoc IBlockCrypt.encryptBlock}
+	 * {@inheritDoc interfaces.IBlockCrypt#encryptBlock}
 	 *
 	 * @throws {@link ../primitive/NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)

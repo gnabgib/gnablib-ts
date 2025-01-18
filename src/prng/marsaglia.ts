@@ -53,7 +53,7 @@ export class Marsaglia extends APrng32 {
 	 * Build by providing a 2 digit seed
 	 * @param seed Number 1-99
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
+	 * @throws Error If seed<1|| seed>99
 	 */
 	static seed(seed: number, saveable = false) {
 		sNum('seed', seed).natural().atMost(99).throwNot();
@@ -61,9 +61,9 @@ export class Marsaglia extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Marsaglia.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(1).throwNot();

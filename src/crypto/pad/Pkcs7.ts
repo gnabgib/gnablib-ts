@@ -17,13 +17,13 @@ import { LengthError } from '../../error/LengthError.js';
  * the two can be used interchangeably.
  */
 export class Pkcs7 {
-	/** {@inheritDoc crypto.IPad.padSize} */
+	/** {@inheritDoc interfaces.IPad#padSize} */
 	static padSize(inputSize: number, len: number): number {
 		return inputSize <= len ? len : 0;
 	}
 
 	/**
-	 * {@inheritDoc crypto.IPad.pad}
+	 * {@inheritDoc interfaces.IPad#pad}
 	 *
 	 * @throws {@link error.LengthError}
 	 * If `input` is too long
@@ -46,7 +46,7 @@ export class Pkcs7 {
 	}
 
 	/**
-	 * {@inheritDoc crypto.IPad.unpad}
+	 * {@inheritDoc interfaces.IPad#unpad}
 	 *
 	 * @throws {@link error.ContentError}
 	 * If padding length is too large, or one byte doesn't match

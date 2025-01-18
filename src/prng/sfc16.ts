@@ -62,21 +62,9 @@ export class Sfc16 extends APrng32 {
 	}
 
 	/**
-	 * Build by providing a seed
-	 *
-	 * @param seed Must be non-zero, if the top byte is zero it'll be set to 1
+	 * Build by providing 3 or 4 seeds, each treated as uint16
+	 * Includes robust seeding procedure.
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
-	 */
-
-	/**
-	 * Build by providing 3-4 seeds, each treated as uint16
-	 * @param seed0 Only the lower 16bits will be used
-	 * @param seed1 Only the lower 16bits will be used
-	 * @param seed2 Only the lower 16bits will be used
-	 * @param seed3 Only the lower 16bits will be used, if provided
-	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(
 		seed0: number,
@@ -94,9 +82,9 @@ export class Sfc16 extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Sfc16.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(8).throwNot();

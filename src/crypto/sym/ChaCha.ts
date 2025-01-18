@@ -220,7 +220,7 @@ class XChaCha extends ChaCha {
  * [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)
  *
  * ChaCha is a stream cipher developed in 2008 by [Daniel J. Bernstein](https://cr.yp.to/djb.html).
- * Like {@link crypto/Salsa20}, the cipher is based on an add-rotate-XOR (ARX) function and designed to
+ * Like {@link crypto.Salsa20 | Salsa20}, the cipher is based on an add-rotate-XOR (ARX) function and designed to
  * increase the diffusion per round while achieving the same/better performance.  ChaCha uses the
  * CTR block mode
  *

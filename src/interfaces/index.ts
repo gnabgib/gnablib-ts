@@ -31,9 +31,6 @@ export type { ILengther } from '../primitive/interfaces/ILengther.js';
 export type { IBufferer } from '../primitive/interfaces/IBufferer.js';
 export type { IBuildable } from '../primitive/interfaces/IBuildable.js';
 export type { IValueMerge } from '../primitive/interfaces/IValueMerge.js';
-//PRNG
-export type { IRandFloat } from '../prng/interfaces/IRandFloat.js';
-export type { IRandInt } from '../prng/interfaces/IRandInt.js';
 //Runtime
 export type {
 	ConfigValue,

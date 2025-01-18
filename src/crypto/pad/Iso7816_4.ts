@@ -16,13 +16,13 @@ const Iso7816_4_marker = 0x80;
  * [ISO 9797-1](https://en.wikipedia.org/wiki/ISO/IEC_9797-1) padding method 2
  */
 export class Iso7816_4 {
-	/** {@inheritDoc crypto.IPad.padSize} */
+	/** {@inheritDoc interfaces.IPad#padSize} */
 	static padSize(inputSize: number, len: number): number {
 		return inputSize <= len ? len : 0;
 	}
 
 	/**
-	 * {@inheritDoc crypto.IPad.pad}
+	 * {@inheritDoc interfaces.IPad#pad}
 	 *
 	 * @throws {@link error.LengthError}
 	 * If `input` is too long
@@ -45,7 +45,7 @@ export class Iso7816_4 {
 	}
 
 	/**
-	 * {@inheritDoc crypto.IPad.unpad}
+	 * {@inheritDoc interfaces.IPad#unpad}
 	 *
 	 * @throws {@link error.ContentError}
 	 * If padding marker isn't found

@@ -60,7 +60,6 @@ export const quotedPrintable = {
 	/**
 	 * Convert quote printable text into bytes
 	 * @param quotedPrintable
-	 * @param opts
 	 * @returns
 	 */
 	toBytes: function (quotedPrintable: string): Uint8Array {

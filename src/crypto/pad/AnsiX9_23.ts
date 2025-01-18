@@ -15,13 +15,13 @@ import { LengthError } from '../../error/LengthError.js';
  * [ISO 10126-2](http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=18114) (withdrawn 2007 for low-security encryption recommendation) has the same spec
  */
 export class AnsiX9_23 {
-	/** {@inheritDoc crypto.IPad.padSize} */
+	/** {@inheritDoc interfaces.IPad#padSize} */
 	static padSize(inputSize: number, len: number): number {
 		return inputSize <= len ? len : 0;
 	}
 
 	/**
-	 * {@inheritDoc crypto.IPad.pad}
+	 * {@inheritDoc interfaces.IPad#pad}
 	 *
 	 * @throws {@link error.LengthError}
 	 * If `input` is too long
@@ -47,7 +47,7 @@ export class AnsiX9_23 {
 	}
 
 	/**
-	 * {@inheritDoc crypto.IPad.unpad}
+	 * {@inheritDoc interfaces.IPad#unpad}
 	 *
 	 * @throws {@link error.ContentError}
 	 * If padding marker isn't found

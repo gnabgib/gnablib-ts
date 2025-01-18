@@ -45,7 +45,9 @@ npm audit signatures
 ### Algorithms
 
 - Weighted Random Sampling
-- Next power of 2
+- Next power of 2 32bit
+- Bits set 32bit
+- Count leading zeros (CLZ) 32bit
 - [Thomson NFA (1968)](https://dl.acm.org/doi/10.1145/363347.363387) solver
 
 
@@ -252,28 +254,27 @@ Name|Capacities|Optional parameters
 
 #### Good PRNGs
 
-Use one of these if you can, alphabetically sorted.  *gjrand32_32* is only somewhat official and doesn't have a lot of testing.
+Use one of these if you can, alphabetically sorted.  *gjrand32b* is only somewhat official and doesn't have a lot of testing.
 
 Name|Year|Variant|State (bytes)|‡|Range
 -|-:|-|-:|-|-:
-[GJRand](https://gjrand.sourceforge.net/)|2005|~gjrand32_32|16||U32
-|||gjrand32|32|‡|U32
+[GJRand](https://gjrand.sourceforge.net/)|2005|~gjrand32b|16||U32
 |||gjrand64|32|‡|U64
-[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|2014|PCG32|8|‡|U32
-|||PCG64|16|‡|U64
-[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|2010|SFC16|8||U16
-|||SFC32|16||U32
-|||SFC64|32|‡|U64
-[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|2014|SplitMix32|4||U32
-|||SplitMix64|8|‡|U64
-[Tychei](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)|2011|Tychei|16||U32
-[Well equidistributed long-period linear (WELL)](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|2006|Well512|64||U32
+[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|2014|pcg32|8|‡|U32
+|||pcgG64|16|‡|U64
+[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|2010|sfc16|8||U16
+|||sfc32|16||U32
+|||sfc64|32|‡|U64
+[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|2014|splitmix32|4||U32
+|||splitmix64|8|‡|U64
+[Tychei](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)|2011|tychei|16||U32
+[Well equidistributed long-period linear (WELL)](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|2006|well512|64||U32
 [XoRoShiRo](https://prng.di.unimi.it/#intro)|2018|xoroshiro64*|8||U32
 |||xoroshiro64**|8||U32
 |||xoroshiro128+|16|‡|U64
 |||xoroshiro128++|16|‡|U64
 |||xoroshiro128**|16|‡|U64
-[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|XorShift128+|16|‡|U64
+[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|xorShift128+|16|‡|U64
 [XoShiRo](https://prng.di.unimi.it/#intro)|2018|xoshiro128+|16||U32
 |||xoshiro128++|16||U32
 |||xoshiro128**|16||U32
@@ -299,10 +300,10 @@ Best not to use these, there are some dragons in these waters (so if you're choo
 
 Name|Year|Variant|State (bytes)|Range
 -|-:|-|-:|-:
-[ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|1997||32|U8
-[Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|1998|-|2496|U32
-[MulBerry32](https://gist.github.com/tommyettinger/46a874533244883189143505d203312c)|2017|-|4|U32
-[XorShift](https://www.jstatsoft.org/article/view/v008i14)|2003|XorShift128|16|U32
+[ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|1997|arc4|32|U8
+[Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|1998|mt19937|2496|U32
+[MulBerry32](https://gist.github.com/tommyettinger/46a874533244883189143505d203312c)|2017|mulberry32|4|U32
+[XorShift](https://www.jstatsoft.org/article/view/v008i14)|2003|xorShift128|16|U32
 
 #### Bad PRNGs
 
@@ -317,8 +318,8 @@ Name|Variant|State (bytes)|Range
 [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method)|-|4|n digits
 MSVC (LGC)|-|4|U16
 [RANDU (LCG)](https://en.wikipedia.org/wiki/RANDU)|-|4|U31
-[XorShift 2003](https://www.jstatsoft.org/article/view/v008i14)|XorShift32|4|U32
-||XorShift64|8|U64
+[XorShift 2003](https://www.jstatsoft.org/article/view/v008i14)|xorshift32|4|U32
+||xorshift64|8|U64
 
 
 

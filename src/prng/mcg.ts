@@ -78,14 +78,12 @@ export class Mcg extends APrng32 {
 	}
 
 	/**
-	 * Build MCG16807 with a seed, treated as uint32.
+	 * Seed MCG16807.
 	 * Used in Apple CarbonLib, (MINSTD_RAND0) in C++11, IBM SIMPL/I, IBM APL, PRIMOS, IMSL Scientific library
 	 *
 	 * multiplier = 16807 = 7^5 : an odd composite
 	 *
-	 * @param seed Only the lower 32bits will be used
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed16807(seed: number, saveable = false) {
 		//bits=31 (2^32-1)
@@ -93,14 +91,12 @@ export class Mcg extends APrng32 {
 	}
 
 	/**
-	 * Build MCG48271 with a seed, treated as uint32.
+	 * Seed MCG48271.
 	 * Used in (MINSTD_RAND) in C++11
 	 *
 	 * multiplier = 48271 : prime
 	 *
-	 * @param seed Only the lower 32bits will be used
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed48271(seed: number, saveable = false) {
 		//bits=31 (2^32-1)
@@ -108,14 +104,12 @@ export class Mcg extends APrng32 {
 	}
 
 	/**
-	 * Build MCG69621 with a seed, treated as uint32.
+	 * Seed MCG69621.
 	 * Used in (MINSTD3) in C++11
 	 *
 	 * multiplier = 69621 = 3 × 23 × 1009 : an odd composite
 	 *
-	 * @param seed Only the lower 32bits will be used
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed69621(seed: number, saveable = false) {
 		//bits=31 (2^32-1)
@@ -123,14 +117,12 @@ export class Mcg extends APrng32 {
 	}
 
 	/**
-	 * Build [RANDU](https://en.wikipedia.org/wiki/RANDU) with seed.
+	 * Seed [RANDU](https://en.wikipedia.org/wiki/RANDU).
 	 * Widely considered to be one of the most ill-conceived random number generators ever designed
 	 *
 	 * multiplier = 65539
 	 *
-	 * @param seed Only the lower 32bits will be used
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seedRandu(seed: number, saveable = false) {
 		//bits=31 (2^32-1)
@@ -138,15 +130,12 @@ export class Mcg extends APrng32 {
 	}
 
 	/**
-	 * Build [MSVC PRNG](https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use)
-	 * with seed.
+	 * Seed [MSVC PRNG](https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use).
 	 *
 	 * multiplier = 214013
 	 * add = 2531011
 	 *
-	 * @param seed Only the lower 32bits will be used
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seedMsvc(seed: number, saveable = false) {
 		return new Mcg(
@@ -157,9 +146,9 @@ export class Mcg extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Mcg.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(17).throwNot();

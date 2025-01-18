@@ -189,17 +189,6 @@ for (const [a,b,expect] of mulEqTests) {
 	});
 }
 
-tsts(`clone`,()=>{
-	const a=U128Mut.fromInt(1);
-	const b=a.clone();
-	assert.equal(a.eq(U128.fromInt(1)),true);
-    assert.equal(b.eq(U128.fromInt(1)),true);
-	
-	b.set(U128.fromInt(2));
-	assert.equal(a.eq(U128.fromInt(1)),true);
-	assert.equal(b.eq(U128.fromInt(2)),true);
-});
-
 tsts(`set`,()=>{
 	const a=U128Mut.fromInt(1);
 	assert.equal(a.eq(U128.fromInt(1)),true);

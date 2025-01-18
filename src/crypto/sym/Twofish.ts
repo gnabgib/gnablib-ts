@@ -133,7 +133,7 @@ function sBoxGen(b: Uint8Array, key: Uint8Array, offset: number): number {
  * Twofish is a symmetric key block cipher with a block size of 128 bits and key sizes up to 256 bits.
  * It was one of the five finalists of the Advanced Encryption Standard contest, but it was not
  * selected for standardization. Twofish is related to the earlier block cipher
- * {@link crypto/sym/Blowfish.Blowfish | Blowfish}.
+ * {@link crypto.Blowfish | Blowfish}.
  *
  * First Published: *1998*
  * Block size: *16 bytes*
@@ -152,10 +152,14 @@ export class Twofish implements IBlockCrypt {
 	readonly #k = new Uint32Array(40);
 
 	constructor(key: Uint8Array) {
-		const k8=key.length>>3;
-		if (/*multiple of 8*/(key.length&7)!=0 || k8<2 || k8>4) {
+		const k8 = key.length >> 3;
+		if (/*multiple of 8*/ (key.length & 7) != 0 || k8 < 2 || k8 > 4) {
 			//Make sure key is a multiple of 8 and either 2 (16), 3(24) or 4(32)
-			throw new ContentError('should be 16, 24, or 32','key.length',key.length);
+			throw new ContentError(
+				'should be 16, 24, or 32',
+				'key.length',
+				key.length
+			);
 		}
 
 		/**Number of u64 */
@@ -286,9 +290,9 @@ export class Twofish implements IBlockCrypt {
 	}
 
 	/**
-	 * {@inheritDoc IBlockCrypt.decryptBlock}
+	 * {@inheritDoc interfaces.IBlockCrypt#decryptBlock}
 	 *
-	 * @throws {@link error.NotEnoughSpaceError NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError | NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	decryptBlock(block: Uint8Array, offset = 0): void {
@@ -303,9 +307,9 @@ export class Twofish implements IBlockCrypt {
 	}
 
 	/**
-	 * {@inheritDoc IBlockCrypt.encryptBlock}
+	 * {@inheritDoc interfaces.IBlockCrypt#encryptBlock}
 	 *
-	 * @throws {@link error.NotEnoughSpaceError NotEnoughSpaceError}
+	 * @throws {@link error.NotEnoughSpaceError | NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
 	 */
 	encryptBlock(block: Uint8Array, offset = 0): void {

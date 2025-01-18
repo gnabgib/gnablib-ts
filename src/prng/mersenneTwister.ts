@@ -29,7 +29,7 @@ export class Mt19937 extends APrng32 {
 		this.saveable = saveable;
 	}
 
-	protected twist() {
+	private twist() {
 		const a = 0x9908b0df;
 		let i = 0;
 		let y;
@@ -48,7 +48,8 @@ export class Mt19937 extends APrng32 {
 		if (y & 1) this._state[i] ^= a;
 		this._ptr = 0;
 	}
-	protected init() {
+
+	private init() {
 		for (let i = 1; i < this._state.length; i++) {
 			const l = this._state[i - 1] ^ (this._state[i - 1] >>> 30);
 			this._state[i] = Math.imul(0x6c078965, l) + i;
@@ -99,10 +100,8 @@ export class Mt19937 extends APrng32 {
 	}
 
 	/**
-	 * Build by providing a seed, treated as uint32.
-	 * @param seed Only the lower 32bits will be used
+	 * Build by providing a seed.
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed: number, saveable = false) {
 		const ret = new Mt19937(new Uint32Array(624), saveable);
@@ -112,9 +111,9 @@ export class Mt19937 extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Mt19937.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(2498).throwNot();

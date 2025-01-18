@@ -16,11 +16,8 @@ import { APrng32 } from './APrng32.js';
  * The benefit of this version over official `gjrand32` is it doesn't need 64bit (U64) support so should be slightly more performant
  *
  * *NOT cryptographically secure*
- *
- * @param seeds 1, 2, or 4 numbers, which will be treated as U32 to seed the PRNG
- * @returns Generator of uint32 [0 - 4294967295]
  */
-export class Gjrand32_32 extends APrng32 {
+export class Gjrand32b extends APrng32 {
 	protected readonly _state: Uint32Array;
 	readonly saveable: boolean;
 	readonly bitGen = 32;
@@ -62,24 +59,22 @@ export class Gjrand32_32 extends APrng32 {
 
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
-		return 'gjrand32_32';
+		return 'gjrand32b';
 	}
 
 	/** Build using a reasonable default seed */
 	static new(saveable = false) {
 		//gjrand_init(0) - we've precalculated this state (seed with 0 and 14*next());
-		return new Gjrand32_32(
+		return new Gjrand32b(
 			Uint32Array.of(2341650679, 368028163, 2033345459, 539910),
 			saveable
 		);
 	}
 
 	/**
-	 * Build by providing 1-2 seeds, each treated as uint32.
-	 * @param seed0 Only the lower 32bits will be used
-	 * @param seed1 Only the lower 32bits will be used, if provided
+	 * Build by providing 1 or 2 seeds.
+	 * Includes robust seeding procedure.
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed0: number, seed1?: number, saveable = false) {
 		const state = Uint32Array.of(seed0, 0, 0, 0);
@@ -91,21 +86,21 @@ export class Gjrand32_32 extends APrng32 {
 			//gjrand_init
 			state[2] = 1000001;
 		}
-		const ret = new Gjrand32_32(state, saveable);
+		const ret = new Gjrand32b(state, saveable);
 		for (let i = 0; i < 14; i++) ret.rawNext();
 		return ret;
 	}
 
 	/**
-	 * Restore from state extracted via Gjrand32_32.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(16).throwNot();
 		const s2 = state.slice();
 		asLE.i32(s2, 0, 4);
 		const s32 = new Uint32Array(s2.buffer);
-		return new Gjrand32_32(s32, saveable);
+		return new Gjrand32b(s32, saveable);
 	}
 }

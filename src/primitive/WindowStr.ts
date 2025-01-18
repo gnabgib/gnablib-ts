@@ -67,7 +67,7 @@ export class WindowStr {
 	 *
 	 * @throws EnforceTypeError idx not an integer
 	 * @throws OutOfRangeError idx invalid value
-	 * @param idx Integer [0 - {@link length})
+	 * @param idx Integer [0 - {@link WindowStr#length | length})
 	 * @returns character|''
 	 * @pure
 	 */
@@ -82,7 +82,7 @@ export class WindowStr {
 	/**
 	 * Return the UTF-16 code point of the character at the specific index
 	 * @throws OutOfRangeError idx invalid value
-	 * @param idx Integer [0 - {@link length})
+	 * @param idx Integer [0 - {@link WindowStr#length | length})
 	 * @returns Integer [0 - 1114111]
 	 * @pure
 	 */
@@ -119,7 +119,7 @@ export class WindowStr {
 	 * Search for the first occurrence of the given string
 	 * @throws OutOfRangeError start invalid value
 	 * @param searchString
-	 * @param start Integer, starting point to search from, [0 - {@link length}) (default=0/whole window)
+	 * @param start Integer, starting point to search from, [0 - {@link WindowStr#length | length}) (default=0/whole window)
 	 * @returns Index or -1
 	 * @pure
 	 */
@@ -138,9 +138,9 @@ export class WindowStr {
 	/**
 	 * Search for the first occurrence of any of the given strings,
 	 * the earliest of any of the values will be returned (all will be checked)
-	 * @throws {@link OutOfRangeError} start invalid
+	 * @throws [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) start invalid
 	 * @param search strings to search for
-	 * @param start Integer, starting point to search from [0 - {@link length}) (default 0/all)
+	 * @param start Integer, starting point to search from [0 - {@link WindowStr#length | length}) (default 0/all)
 	 * @returns Index or -1
 	 * @pure
 	 */
@@ -169,7 +169,7 @@ export class WindowStr {
 	/**
 	 * Search for the last occurrence of the given string
 	 * @param searchString What to search for
-	 * @param length Integer, [0 - {@link length}) (default=length/whole window)
+	 * @param length Integer, [0 - {@link WindowStr#length | length}) (default=length/whole window)
 	 * @returns Index or -1
 	 * @pure
 	 */
@@ -189,7 +189,7 @@ export class WindowStr {
 	/**
 	 * Search for the last occurrence of any of the given strings
 	 * @param search strings to search for
-	 * @param length Integer, [0 - {@link length}) (default=length/whole window)
+	 * @param length Integer, [0 - {@link WindowStr#length | length}) (default=length/whole window)
 	 * @returns Index or -1
 	 * @pure
 	 */
@@ -215,7 +215,7 @@ export class WindowStr {
 	/**
 	 * A new window, on the same storage, using the first `length` characters of this
 	 * @throws OutOfRangeError length invalid value
-	 * @param length Integer [0 - {@link length})
+	 * @param length Integer [0 - {@link WindowStr#length | length})
 	 * @returns
 	 * @pure
 	 */
@@ -268,7 +268,7 @@ export class WindowStr {
 	/**
 	 * A new window, on the same storage, using the last `length` characters of this
 	 * @throws OutOfRangeError length invalid value
-	 * @param length Integer [0 - {@link length})
+	 * @param length Integer [0 - {@link WindowStr#length | length})
 	 * @returns
 	 * @pure
 	 */
@@ -285,8 +285,8 @@ export class WindowStr {
 	 * Perhaps obvious from the name, but you **cannot** provide negative
 	 * values to make a window larger (even if the storage may be larger)
 	 *
-	 * @param startBy Integer [0 - {@link length})
-	 * @param lengthBy Integer [0 - ({@link length}-`startBy`))
+	 * @param startBy Integer [0 - {@link WindowStr#length | length})
+	 * @param lengthBy Integer [0 - ({@link WindowStr#length | length}-`startBy`))
 	 * @returns This (chainable)
 	 */
 	shrink(startBy?: number, lengthBy?: number): WindowStr {
@@ -307,8 +307,8 @@ export class WindowStr {
 
 	/**
 	 * A new window, on the same storage, starting `start` characters in and using `length` characters
-	 * @param start Integer [0 - {@link length})
-	 * @param length Integer [0 - ({@link length}-`start`)) (default rest of space)
+	 * @param start Integer [0 - {@link WindowStr#length | length})
+	 * @param length Integer [0 - ({@link WindowStr#length | length}-`start`)) (default rest of space)
 	 * @returns
 	 */
 	span(start: number, length?: number): WindowStr {
@@ -325,7 +325,7 @@ export class WindowStr {
 
 	/**
 	 * Breaks into pieces at `separator`, returning new windows on the same storage
-	 * NOTE: Doesn't support zero length separator (unlike string.split)
+	 * Note: Doesn't support zero length separator (unlike string.split)  
 	 * Note: Even if there are no splits, the returned set will include a different object from the source
 	 * @param separator String to divide by, length>0
 	 * @param limit Limit on the number of sub windows to create, left overs will be excluded (default: undefined/no limit)

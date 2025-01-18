@@ -6,12 +6,7 @@ import { LengthError } from '../../error/LengthError.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
-export interface ICountMode extends Iterable<Uint8Array> {
-	/** Length of the counter block (in bytes) */
-	get length(): number;
-}
-
-export class IncrBytes implements ICountMode {
+export class IncrBytes implements Iterable<Uint8Array> {
 	private readonly _iv: Uint8Array;
 
 	/**
@@ -22,6 +17,7 @@ export class IncrBytes implements ICountMode {
 		this._iv = iv;
 	}
 
+	/** Length of the counter block (in bytes) */
 	get length(): number {
 		return this._iv.length;
 	}
@@ -43,7 +39,7 @@ export class IncrBytes implements ICountMode {
 	}
 }
 
-export class Concat32 implements ICountMode {
+export class Concat32 implements Iterable<Uint8Array> {
 	private readonly _iv: Uint8Array;
 	private readonly _count: number;
 
@@ -57,6 +53,7 @@ export class Concat32 implements ICountMode {
 		this._count = count;
 	}
 
+	/** Length of the counter block (in bytes) */
 	get length(): number {
 		return this._iv.length + 4;
 	}
@@ -98,14 +95,14 @@ export class Concat32 implements ICountMode {
  */
 export class Ctr implements IFullCrypt {
 	private readonly _crypt: IBlockCrypt;
-	private readonly _counter: ICountMode;
+	private readonly _counter: IncrBytes | Concat32;
 
 	/**
 	 * Build a new Counter based block algo using the given algo and counter method
 	 * @param crypt Block encryption/decryption algorithm
 	 * @param counter Counter method
 	 */
-	constructor(crypt: IBlockCrypt, counter: ICountMode) {
+	constructor(crypt: IBlockCrypt, counter: IncrBytes | Concat32) {
 		this._crypt = crypt;
 		this._counter = counter;
 		if (counter.length != crypt.blockSize)

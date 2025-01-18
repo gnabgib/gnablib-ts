@@ -71,11 +71,10 @@ export class Pcg32 extends APrng32 {
 	}
 
 	/**
-	 * Build by providing a seed, and optionally an increment amount.
-	 * @param seed
+	 * Build by providing a seed, and optionally an increment amount
+	 * Includes robust seeding procedure.
 	 * @param inc Defaults to 15726070495360670683
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed: U64, inc?: U64, saveable = false) {
 		//Default add provided in demo source: https://github.com/imneme/pcg-c
@@ -92,9 +91,9 @@ export class Pcg32 extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Pcg32.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(16).throwNot();

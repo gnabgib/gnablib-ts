@@ -35,7 +35,7 @@ function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {
 	t = c32[3];
 	c32[3] = c32[4];
 	c32[4] = t;
-    
+
 	return c32;
 }
 
@@ -151,9 +151,7 @@ export class U256 {
 		);
 	}
 
-	/**
-	 * Build from eight U32 integers
-	 */
+	/** Build from eight U32 integers */
 	static fromUint32Octo(
 		zero: number,
 		one: number,
@@ -169,12 +167,7 @@ export class U256 {
 		);
 	}
 
-	/**
-	 * Build from four U64 integers
-	 * @param u64low
-	 * @param u64high
-	 * @returns
-	 */
+	/** Build from four U64 integers */
 	static fromU64Quad(zero: U64, one: U64, two: U64, three: U64): U256 {
 		return new U256(
 			Uint32Array.of(
@@ -190,7 +183,7 @@ export class U256 {
 		);
 	}
 
-    	/**
+	/**
 	 * Created a "view" into an existing Uint32Array
 	 * **NOTE** the memory is shared, changing a value in @param source will mutate the state
 	 * @param source
@@ -200,8 +193,8 @@ export class U256 {
 	static fromArray(source: Uint32Array, pos = 0): U256 {
 		return new U256(source, pos);
 	}
-    
-    /**
+
+	/**
 	 * Create from a copy of `src` assuming the bytes are in big endian order
 	 * @param src
 	 * @param pos

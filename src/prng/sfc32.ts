@@ -66,12 +66,9 @@ export class Sfc32 extends APrng32 {
 	}
 
 	/**
-	 * Build by providing 2-3 seeds, each treated as uint32
-	 * @param seed0 Only the lower 32bits will be used
-	 * @param seed1 Only the lower 32bits will be used
-	 * @param seed2 Only the lower 32bits will be used, if provided
+	 * Build by providing 2 or 3 seeds
+	 * Includes robust seeding procedure.
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed0: number, seed1: number, seed2?: number, saveable = false) {
 		const u32 = new Uint32Array(4);
@@ -94,9 +91,9 @@ export class Sfc32 extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Sfc32.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(16).throwNot();

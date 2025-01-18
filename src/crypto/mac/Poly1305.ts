@@ -259,10 +259,8 @@ export class Poly1305 implements IHash {
 	}
 
 	/**
-	 * Section 2.6 - generate from key + nonce
+	 * Section 2.6 - generate from an encryption provider
 	 * - Intended to be used with Salsa/XSalsa/ChaCha/XChaCha
-	 * @param key
-	 * @param nonce
 	 */
 	static fromCrypt(c: IFullCrypt): Poly1305 {
 		//Make sure the crypt generates at least 32 bits

@@ -7,7 +7,6 @@ import { asBE, asLE } from '../../endian/platform.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT_U512 = 'U512';
-const sizeBytes = 64;
 const sizeU32 = 16;
 
 export class U512 {

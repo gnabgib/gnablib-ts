@@ -104,10 +104,9 @@ export class Arc4 extends APrng32 {
 
 	/**
 	 * Build by providing a key of 1-256 bytes, typically 5-16 bytes long.
-	 * Will throw if key is invalid length
 	 * @param key 1-256 bytes in length
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
+	 * @throws Error key.length <1 || >256 bytes
 	 */
 	static seed(key: Uint8Array, saveable = false) {
 		sLen('key', key).atLeast(1).atMost(256).throwNot();
@@ -117,9 +116,9 @@ export class Arc4 extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Arc4.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(258).throwNot();

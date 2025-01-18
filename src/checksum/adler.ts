@@ -6,7 +6,7 @@ const mod = 65521; //0xfff1
 /**
  * # Adler32
  * 
- * - Specified in [RFC-1950]((https://datatracker.ietf.org/doc/html/rfc1950))
+ * - Specified in [RFC-1950](https://datatracker.ietf.org/doc/html/rfc1950)
  * - Generates a 32 bit checksum
  * 
  * @param bytes Data to checksum

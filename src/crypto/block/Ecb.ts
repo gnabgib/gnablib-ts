@@ -75,7 +75,7 @@ export class Ecb implements IFullCrypt {
 	}
 
 	/** 
-     * {@inheritDoc IFullCrypt.encryptSize}
+	 * {@inheritDoc interfaces.IFullCrypt#encryptSize}
 	 *
 	 * @example
 	 * ```

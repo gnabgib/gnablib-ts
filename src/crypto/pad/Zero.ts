@@ -12,13 +12,13 @@ import { LengthError } from '../../error/LengthError.js';
  * bytes.  Out-of-bound message length may need to be required.
  */
 export class Zero {
-	/** {@inheritDoc crypto.IPad.padSize} */
+	/** {@inheritDoc interfaces.IPad#padSize} */
 	static padSize(inputSize: number, len: number): number {
         return (inputSize<len && inputSize>0)?len:0;
     }
 
 	/** 
-     * {@inheritDoc crypto.IPad.pad} 
+	 * {@inheritDoc interfaces.IPad#pad}
 	 * 
 	 * @throws {@link error.LengthError} 
 	 * If `input` is too long
@@ -40,7 +40,7 @@ export class Zero {
 	}
 
     /** 
-     * {@inheritDoc crypto.IPad.unpad} 
+	 * {@inheritDoc interfaces.IPad#unpad}
 	 * 
 	 * @example
 	 * ```

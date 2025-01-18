@@ -59,20 +59,17 @@ export class SplitMix32 extends APrng32 {
 	}
 
 	/**
-	 * Build by providing a seed
-	 *
-	 * @param seed
+	 * Build by providing a seed.
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed: number, saveable = false) {
 		return new SplitMix32(Uint32Array.of(seed), saveable);
 	}
 
 	/**
-	 * Restore from state extracted via SplitMix32.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(4).throwNot();

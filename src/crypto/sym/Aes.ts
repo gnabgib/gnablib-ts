@@ -522,7 +522,7 @@ export class Aes implements IBlockCrypt {
 	}
 
 	/**
-	 * {@inheritDoc IBlockCrypt.decryptBlock}
+	 * {@inheritDoc interfaces.IBlockCrypt#decryptBlock}
 	 *
 	 * @throws {@link error.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
@@ -536,7 +536,7 @@ export class Aes implements IBlockCrypt {
 	}
 
 	/**
-	 * {@inheritDoc IBlockCrypt.encryptBlock}
+	 * {@inheritDoc interfaces.IBlockCrypt#encryptBlock}
 	 *
 	 * @throws {@link error.NotEnoughSpaceError}
 	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)

@@ -111,7 +111,7 @@
     //"excludeExternals":true,
     // Interfaces don't need docs
     //"excludeNotDocumented":true,
-    //"excludeNotDocumentedKinds": ["Property", "Interface", "TypeAlias"]
+    //"excludeNotDocumentedKinds": ["Property", "Interface", "TypeAlias"],
     "excludePrivate":true,
     "excludeProtected":true,
     "githubPages":false,

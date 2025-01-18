@@ -62,12 +62,11 @@ export class MiddleSquare extends APrng32 {
 	}
 
 	/**
-	 * Build by providing a seed, and optionally the number of digits.  You only need to provide n if the seed
-	 * should be considered larger in magnitude (ie. zero pad)
+	 * Build by providing a seed, and optionally the number of digits.  
+	 * You only need to provide n if the seed should be considered larger in magnitude (ie. zero pad)
 	 * @param seed Starting state, subsequent numbers will have the same number of (base 10) digits, must be>0 and have an even number of digits
 	 * @param n Number of digits, only need be provided if seed should padded, must be >0 and even
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed: number, n?: number, saveable = false) {
 		const state = seed >>> 0;
@@ -82,9 +81,9 @@ export class MiddleSquare extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via MiddleSquare.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(5).throwNot();

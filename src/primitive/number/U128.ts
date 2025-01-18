@@ -341,44 +341,28 @@ export class U128 {
 		return new U128(s.subarray(0, 4));
 	}
 
-	/**
-	 * `this` + `u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** `this` + `u128` */
 	add(u128: U128): U128 {
 		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._addEq(arr, 0, u128);
 		return new U128(arr, 0);
 	}
 
-	/**
-	 * `this` - `u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** `this` - `u128` */
 	sub(u128: U128): U128 {
 		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._subEq(arr, 0, u128);
 		return new U128(arr, 0);
 	}
 
-	/**
-	 * `this` * `u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** `this` * `u128` */
 	mul(u128: U128): U128 {
 		const arr = this.arr.slice(this.pos, this.pos + sizeU32);
 		this._mulEq(arr, 0, u128);
 		return new U128(arr);
 	}
 
-	/**
-	 * Whether `this`==`u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** Whether `this`==`u128` */
 	eq(u128: U128): boolean {
 		//Will fast exit if lows don't match (not constant)
 		return (
@@ -389,11 +373,7 @@ export class U128 {
 		);
 	}
 
-	/**
-	 * Whether `this` is > `u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** Whether `this` is > `u128` */
 	gt(u128: U128): boolean {
 		//If hh doesn't match - it dictates
 		if (this.arr[this.pos + 3] != u128.arr[u128.pos + 3]) {
@@ -411,11 +391,7 @@ export class U128 {
 		return this.arr[this.pos] > u128.arr[u128.pos];
 	}
 
-	/**
-	 * Whether `this` < `u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** Whether `this` < `u128` */
 	lt(u128: U128): boolean {
 		//If hh doesn't match - it dictates
 		if (this.arr[this.pos + 3] != u128.arr[u128.pos + 3]) {
@@ -433,11 +409,7 @@ export class U128 {
 		return this.arr[this.pos] < u128.arr[u128.pos];
 	}
 
-	/**
-	 * Whether `this` >= `u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** Whether `this` >= `u128` */
 	gte(u128: U128): boolean {
 		//If hh doesn't match - it dictates
 		if (this.arr[this.pos + 3] != u128.arr[u128.pos + 3]) {
@@ -455,11 +427,7 @@ export class U128 {
 		return this.arr[this.pos] >= u128.arr[u128.pos];
 	}
 
-	/**
-	 * Whether `this` <= `u128`
-	 * @param u128
-	 * @returns
-	 */
+	/** Whether `this` <= `u128`*/
 	lte(u128: U128): boolean {
 		//If hh doesn't match - it dictates
 		if (this.arr[this.pos + 3] != u128.arr[u128.pos + 3]) {
@@ -627,40 +595,28 @@ export class U128 {
 	// 	return f64.not().and(a64).or(f64.and(b64));
 	// }
 
-	/**
-	 * Create a memory copy
-	 * @returns
-	 */
+	/** Create a memory copy */
 	clone(): U128 {
 		return new U128(this.arr.slice(this.pos, this.pos + sizeU32));
 	}
 
-	/**
-	 * Mutate - create a new @see {@link U128Mut} with a copy of this value
-	 */
+	/** Mutate - create a new {@link U128Mut} with a copy of this value */
 	mut(): U128Mut {
 		return U128Mut.fromArray(this.arr.slice(this.pos, this.pos + sizeU32));
 	}
 
-	/**
-	 * Mutate - create a copy of the Uint32Array within
-	 */
+	/** Mutate - create a copy of the Uint32Array within */
 	mut32(): Uint32Array {
 		return this.arr.slice(this.pos, this.pos + sizeU32);
 	}
 
-	/**
-	 * Mutate - create a new @see {@link U64MutArray} with a copy of this value
-	 */
+	/** Mutate - create a new {@link U64MutArray} with a copy of this value */
 	mut64(): U64MutArray {
 		const cpy = this.arr.slice(this.pos, this.pos + sizeU32);
 		return U64MutArray.fromBytes(cpy.buffer, cpy.byteOffset, sizeBytes);
 	}
 
-	/**
-	 * String version of this value, in big endian
-	 * @returns
-	 */
+	/** String version of this value, in hex, big endian*/
 	toString(): string {
 		return hex.fromBytes(this.toBytesBE());
 	}
@@ -751,50 +707,36 @@ export class U128 {
 		return `${DBG_RPT_U128}(${this.toString()})`;
 	}
 
-	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51
-	 * @returns
-	 */
-	static fromIntUnsafe(uint51: number): U128 {
-		return new U128(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0));
+	/** Build from an integer - note JS can only support up to 52bit ints */
+	static fromIntUnsafe(uint52: number): U128 {
+		return new U128(Uint32Array.of(uint52 << 0, uint52 / maxU32Plus1, 0, 0));
 	}
 
 	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
-	 * @returns
+	 * Build from an integer - note JS can only support up to 52bit ints
+	 * @param uint52 0-Number.MAX_SAFE_INT
+	 * @throws Error uint52 is out of range
 	 */
-	static fromInt(uint51: number): U128 {
-		sNum('uint51', uint51)
+	static fromInt(uint52: number): U128 {
+		sNum('uint51', uint52)
 			.unsigned()
 			.atMost(Number.MAX_SAFE_INTEGER)
 			.throwNot();
-		return new U128(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0));
+		return new U128(Uint32Array.of(uint52 << 0, uint52 / maxU32Plus1, 0, 0));
 	}
 
-	/**
-	 * Build from four integers, each truncated to 32 bits
-	 * @param uint32low
-	 * @param uint32high
-	 * @returns
-	 */
+	/** Build from four integers, each truncated to 32 bits */
 	static fromUint32Quad(
-		uint32lowLow: number,
-		uint32lowHigh: number,
-		uint32highLow: number,
-		uint32highHigh: number
+		u32lowLow: number,
+		u32lowHigh: number,
+		u32highLow: number,
+		u32highHigh: number
 	): U128 {
 		return new U128(
-			Uint32Array.of(uint32lowLow, uint32lowHigh, uint32highLow, uint32highHigh)
+			Uint32Array.of(u32lowLow, u32lowHigh, u32highLow, u32highHigh)
 		);
 	}
-	/**
-	 * Build from two 64bit unsigned ints
-	 * @param u64low
-	 * @param u64high
-	 * @returns
-	 */
+	/** Build from two 64bit unsigned ints */
 	static fromU64Pair(u64low: U64, u64high: U64): U128 {
 		return new U128(
 			Uint32Array.of(u64low.low, u64low.high, u64high.low, u64high.high)
@@ -1000,14 +942,6 @@ export class U128Mut extends U128 {
 	}
 
 	/**
-	 * Create a copy of this U128Mut
-	 * @returns
-	 */
-	clone(): U128Mut {
-		return new U128Mut(this.arr.slice(this.pos, this.pos + sizeU32));
-	}
-
-	/**
 	 * Update value
 	 * @param u128
 	 * @returns
@@ -1044,41 +978,31 @@ export class U128Mut extends U128 {
 	}
 
 	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
+	 * Build from an integer - note JS can only support up to 52bit ints
+	 * @param uint52 0-Number.MAX_SAFE_INT
 	 * @returns
 	 */
-	static fromInt(uint51: number): U128Mut {
-		sNum('uint51', uint51)
+	static fromInt(uint52: number): U128Mut {
+		sNum('uint52', uint52)
 			.unsigned()
 			.atMost(Number.MAX_SAFE_INTEGER)
 			.throwNot();
-		return new U128Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0));
+		return new U128Mut(Uint32Array.of(uint52 << 0, uint52 / maxU32Plus1, 0, 0));
 	}
 
-	/**
-	 * Build from four 32bit unsigned integers (truncated if oversized)
-	 * @param uint32low
-	 * @param uint32high
-	 * @returns
-	 */
+	/** Build from four 32bit unsigned integers (truncated if oversized) */
 	static fromUint32Quad(
-		uint32lowLow: number,
-		uint32lowHigh: number,
-		uint32highLow: number,
-		uint32highHigh: number
+		u32lowLow: number,
+		u32lowHigh: number,
+		u32highLow: number,
+		u32highHigh: number
 	): U128Mut {
 		return new U128Mut(
-			Uint32Array.of(uint32lowLow, uint32lowHigh, uint32highLow, uint32highHigh)
+			Uint32Array.of(u32lowLow, u32lowHigh, u32highLow, u32highHigh)
 		);
 	}
 
-	/**
-	 * Build from two 64bit unsigned ints
-	 * @param u64low
-	 * @param u64high
-	 * @returns
-	 */
+	/** Build from two 64bit unsigned ints*/
 	static fromU64Pair(u64low: U64, u64high: U64): U128Mut {
 		return new U128Mut(
 			Uint32Array.of(u64low.low, u64low.high, u64high.low, u64high.high)

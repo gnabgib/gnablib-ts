@@ -67,7 +67,7 @@ export class Well512 extends APrng32 {
 
 	/** Build using a reasonable default seed */
 	static new(saveable = false) {
-		//This default state comes from teh C source code versions
+		//This default state comes from the C source code versions
 		return new Well512(
 			// prettier-ignore
 			Uint32Array.of(
@@ -81,23 +81,8 @@ export class Well512 extends APrng32 {
 	}
 
 	/**
-	 * Build by providing 2 seeds, each treated as uint32
-	 * @param seed0 Only the lower 32bits will be used
-	 * @param seed1 Only the lower 32bits will be used
-	 * @param seed2 Only the lower 32bits will be used
-	 * @param seed3 Only the lower 32bits will be used
-	 * @param seed4 Only the lower 32bits will be used
-	 * @param seed5 Only the lower 32bits will be used
-	 * @param seed6 Only the lower 32bits will be used
-	 * @param seed7 Only the lower 32bits will be used
-	 * @param seed8 Only the lower 32bits will be used
-	 * @param seed9 Only the lower 32bits will be used
-	 * @param seed10 Only the lower 32bits will be used
-	 * @param seed11 Only the lower 32bits will be used
-	 * @param seed12 Only the lower 32bits will be used
-	 * @param seed13 Only the lower 32bits will be used
-	 * @param seed14 Only the lower 32bits will be used
-	 * @param seed15 Only the lower 32bits will be used
+	 * Build by providing 16 seeds.  They must not be all zero.
+	 * It's recommended these are the product of {@link prng.SplitMix32 | SplitMix32}
 	 * @param saveable Whether the generator's state can be saved
 	 */
 	static seed(
@@ -143,9 +128,9 @@ export class Well512 extends APrng32 {
 	}
 
 	/**
-	 * Restore from state extracted via Well512.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 65 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(65).throwNot();

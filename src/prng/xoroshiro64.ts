@@ -70,12 +70,9 @@ export class Xoroshiro64s extends AXoroshiro64 {
 	}
 
 	/**
-	 * Build by providing 2 seeds, each treated as uint32. They must not be all zero.  It's recommended
-	 * this is the product of {@link prng.SplitMix32 SplitMix32}
-	 * @param seed0 Only the lower 32bits will be used
-	 * @param seed1 Only the lower 32bits will be used
+	 * Build by providing 2 seeds.  They must not be all zero.
+	 * It's recommended these are the product of {@link prng.SplitMix32 | SplitMix32}
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed0: number, seed1: number, saveable = false) {
 		const s = Uint32Array.of(seed0, seed1);
@@ -83,9 +80,9 @@ export class Xoroshiro64s extends AXoroshiro64 {
 	}
 
 	/**
-	 * Restore from state extracted via Xoroshiro64s.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(8).throwNot();
@@ -125,12 +122,9 @@ export class Xoroshiro64ss extends AXoroshiro64 {
 	}
 
 	/**
-	 * Build by providing 2 seeds, each treated as uint32. They must not be all zero.  It's recommended
-	 * this is the product of {@link prng.SplitMix32 SplitMix32}
-	 * @param seed0 Only the lower 32bits will be used
-	 * @param seed1 Only the lower 32bits will be used
+	 * Build by providing 2 seeds.  They must not be all zero.
+	 * It's recommended these are the product of {@link prng.SplitMix32 | SplitMix32}
 	 * @param saveable Whether the generator's state can be saved
-	 * @returns
 	 */
 	static seed(seed0: number, seed1: number, saveable = false) {
 		const s = Uint32Array.of(seed0, seed1);
@@ -138,9 +132,9 @@ export class Xoroshiro64ss extends AXoroshiro64 {
 	}
 
 	/**
-	 * Restore from state extracted via Xoroshiro64ss.save().
-	 * Will throw if state is incorrect length
-	 * @param state Saved state, must be exactly 16 bytes long
+	 * Restore from state extracted via {@link save}.
+	 * @param state Saved state
+	 * @throws Error if `state` length is incorrect
 	 */
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(8).throwNot();
