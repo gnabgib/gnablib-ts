@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { U64Mut, U64MutArray } from '../../primitive/number/U64.js';
@@ -112,7 +112,7 @@ export class Whirlpool implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	private readonly _ingestBytes = U64Mut.fromIntUnsafe(0);
+	private readonly _ingestBytes = U64Mut.fromUint32Pair(0,0);
 	/**
 	 * Position of data written to block
 	 */

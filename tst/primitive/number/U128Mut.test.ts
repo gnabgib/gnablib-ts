@@ -217,20 +217,10 @@ tsts('util.inspect',()=>{
     assert.is(u.startsWith('U128Mut('),true);
 });
 
-tsts(`fromIntUnsafe`,()=>{
-    const a=U128Mut.fromIntUnsafe(0);
-    assert.instance(a,U128Mut)
-	assert.equal(a.eq(U128.zero),true,'0');
-    assert.equal(U128Mut.fromIntUnsafe(0xffffffff).eq(U128.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
-    assert.equal(U128Mut.fromIntUnsafe(9.5e15).eq(U128.fromUint32Quad(0x1D5DC000,0x21C033,0,0)),true,'9.5e15 truncates');
-    assert.equal(U128Mut.fromIntUnsafe(-1).eq(U128.fromIntUnsafe(0xffffffff)),true,'-1 becomes unsigned (0xffffffff)');
-});
-
 tsts(`fromInt`,()=>{
 	assert.equal(U128Mut.fromInt(0).eq(U128.zero),true,'0');
-    assert.equal(U128Mut.fromInt(0xffffffff).eq(U128.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
-    assert.throws(()=>{const c=U128Mut.fromInt(9.5e15);})
-    assert.throws(()=>{const d=U128Mut.fromInt(-1);})
+    assert.throws(()=>{U128Mut.fromInt(9.5e15);})
+    assert.throws(()=>{U128Mut.fromInt(-1);})
 });
 
 tsts(`fromUint32Quad`,()=>{

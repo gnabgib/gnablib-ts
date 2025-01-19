@@ -137,7 +137,7 @@ export class UInt {
 			b16[i++] = b.arr[bPosPtr] >>> 16;
 		}
 
-		//Mul - notice we're using number (uint51) to deal with
+		//Mul - notice we're using number (uint52) to deal with
 		// overflow FFFFxFFFF + FFFFxFFFF > FFFFFFFF
 		const longest = Math.max(a16.length, b16.length);
 		const m = new Array<number>(full ? longest * 2 : a16.length).fill(0);
@@ -359,27 +359,15 @@ export class UInt {
 	}
 
 	/**
-	 * Build from an integer - not JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
+	 * Build from an integer - not JS can only support up to 52bit ints
+	 * @param uint52 0-Number.MAX_SAFE_INT
 	 * @param size Number of U32 elements 1-? (2=U64, 4=U128, 8=U256)
 	 */
-	static fromIntUnsafe(uint51: number, size: number): UInt {
+	static fromInt(uint52: number, size: number): UInt {
+		sNum('uint52', uint52).unsigned().throwNot();
 		const a = new Uint32Array(size);
-		a[0] = uint51;
-		a[1] = uint51 / maxU32Plus1;
-		return new UInt(a, size);
-	}
-
-	/**
-	 * Build from an integer - not JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
-	 * @param size Number of U32 elements 1-? (2=U64, 4=U128, 8=U256)
-	 */
-	static fromInt(uint51: number, size: number): UInt {
-		sNum('uint51', uint51).unsigned().throwNot();
-		const a = new Uint32Array(size);
-		a[0] = uint51;
-		a[1] = uint51 / maxU32Plus1;
+		a[0] = uint52;
+		a[1] = uint52 / maxU32Plus1;
 		return new UInt(a, size);
 	}
 
@@ -545,27 +533,15 @@ export class UIntMut extends UInt {
 	}
 
 	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51
+	 * Build from an integer - note JS can only support up to 52bit ints
+	 * @param uint52 0-Number.MAX_SAFE_INT
 	 * @returns
 	 */
-	static fromIntUnsafe(uint51: number, size: number): UIntMut {
+	static fromInt(uint52: number, size: number): UIntMut {
+		sNum('uint52', uint52).unsigned().throwNot();
 		const a = new Uint32Array(size);
-		a[0] = uint51;
-		a[1] = uint51 / maxU32Plus1;
-		return new UIntMut(a, size);
-	}
-
-	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
-	 * @returns
-	 */
-	static fromInt(uint51: number, size: number): UIntMut {
-		sNum('uint51', uint51).unsigned().throwNot();
-		const a = new Uint32Array(size);
-		a[0] = uint51;
-		a[1] = uint51 / maxU32Plus1;
+		a[0] = uint52;
+		a[1] = uint52 / maxU32Plus1;
 		return new UIntMut(a, size);
 	}
 

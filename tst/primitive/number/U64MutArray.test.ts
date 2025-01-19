@@ -192,7 +192,7 @@ tsts('toU32arr',()=>{
     const arr=a.toU32arr();
     assert.equal(hex.fromU32s(arr),'00000002000000010000000400000003');
     //Prove that changing the original doesn't change the copy
-    a.at(0).set(U64.fromIntUnsafe(0x1111));
+    a.at(0).set(U64.fromUint32Pair(0x1111,0));
     assert.equal(a.at(0).toString(),'0000000000001111');
     assert.equal(hex.fromU32s(arr),'00000002000000010000000400000003');
     //assert.equal(a.length,2);
@@ -208,6 +208,14 @@ tsts('fromU32s',()=>{
 
 tsts('fromU32s odd throws',()=>{
     assert.throws(()=>U64MutArray.fromU32s(1));
+});
+
+tsts('fromU64s',()=>{
+    const a=U64MutArray.fromU64s(U64.fromUint32Pair(2,1),U64.fromUint32Pair(4,3),U64.fromUint32Pair(5,6))
+    assert.equal(a.length,3);
+    assert.equal(a.at(0).toString(),'0000000100000002');
+    assert.equal(a.at(1).toString(),'0000000300000004');
+    assert.equal(a.at(2).toString(),'0000000600000005');
 });
 
 // tsts('general',()=>{

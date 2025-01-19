@@ -43,7 +43,6 @@ export {
 	ScalingFloat64Array,
 	ScalingUint8ClampedArray,
 } from './TypedArrayExt.js';
-export { UInt, UIntMut } from './UInt.js';
 export { uint8ArrayExt } from './UInt8ArrayExt.js';
 //export { Uint64 } from './Uint64_es2020.js';
 export { Uint64, type Uint64ish } from './Uint64.js';

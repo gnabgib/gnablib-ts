@@ -126,6 +126,17 @@ export abstract class APrng64<T extends ItoBytesLEer> {
 	}
 
 	/**
+	 * Generate `n` random unsigned 64bit integers `[0 - 18446744073709551615]`
+	 * @param n 
+	 */
+	*seqU64(n=1): Generator<U64, void, unknown> {
+		let i=0;
+		while(i++<n) {
+			yield this._nextU(64);
+		}
+	}
+
+	/**
 	 * Generate a random signed 32bit integer `[-2147483648 - 2147483647]`
 	 * @returns
 	 */

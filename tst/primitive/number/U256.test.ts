@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { U256, U64 } from '../../../src/primitive/number';
+import { U256 } from '../../../src/primitive/number';
 import util from 'util';
 
 const tsts = suite('U256');
@@ -61,10 +61,6 @@ const fromIntTests:[number,string][]=[
     [1,'0000000000000000000000000000000000000000000000000000000000000001'],
 ]
 for(const[int,expect] of fromIntTests) {
-    tsts(`fromIntUnsafe(${int})`,()=>{
-        const u=U256.fromIntUnsafe(int);
-        assert.is(u.toString(),expect);
-	});
     tsts(`fromInt(${int})`,()=>{
         const u=U256.fromInt(int);
         assert.is(u.toString(),expect);

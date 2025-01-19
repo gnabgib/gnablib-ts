@@ -532,20 +532,10 @@ tsts('util.inspect',()=>{
     assert.is(u.startsWith('U64Mut('),true);
 });
 
-tsts(`fromIntUnsafe`,()=>{
-    const a=U64Mut.fromIntUnsafe(0);
-    assert.instance(a,U64Mut)
-	assert.equal(a.eq(U64Mut.zero),true,'0');
-    assert.equal(U64Mut.fromIntUnsafe(0xffffffff).eq(U64.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
-    assert.equal(U64Mut.fromIntUnsafe(9.5e15).eq(U64.fromUint32Pair(0x1D5DC000,0x21C033)),true,'9.5e15 truncates');
-    assert.equal(U64Mut.fromIntUnsafe(-1).eq(U64.fromIntUnsafe(0xffffffff)),true,'-1 becomes unsigned (0xffffffff)');
-});
-
 tsts(`fromInt`,()=>{
 	assert.equal(U64Mut.fromInt(0).eq(U64.zero),true,'0');
-    assert.equal(U64Mut.fromInt(0xffffffff).eq(U64.fromIntUnsafe(0xffffffff)),true,'0xffffffff');
-    assert.throws(()=>{const c=U64Mut.fromInt(9.5e15);})
-    assert.throws(()=>{const d=U64Mut.fromInt(-1);})
+    assert.throws(()=>{U64Mut.fromInt(9.5e15);})
+    assert.throws(()=>{U64Mut.fromInt(-1);})
 });
 
 const toBytesTests:string[]=[

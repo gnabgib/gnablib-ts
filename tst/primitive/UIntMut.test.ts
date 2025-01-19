@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/codec';
-import { UInt,UIntMut } from '../../src/primitive';
+import { UInt,UIntMut } from '../../src/primitive/UInt';
 
 const tsts = suite('UIntMut');
 
@@ -393,8 +393,8 @@ tsts(`fromUint32Set`,()=>{
 });
 
 const setTest:[UInt,string][]=[
-    [UInt.fromIntUnsafe(13,1),'FFFFFFFFFFFFFFFF0000000D'],
-    [UInt.fromIntUnsafe(13,2),'FFFFFFFF000000000000000D'],
+    [UInt.fromInt(13,1),'FFFFFFFFFFFFFFFF0000000D'],
+    [UInt.fromInt(13,2),'FFFFFFFF000000000000000D'],
 ]
 for (const [b,expect] of setTest) {
     tsts(`set=${expect}`,()=>{
@@ -421,7 +421,7 @@ tsts(`clone`,()=>{
 
 tsts(`cloneSize`,()=>{
 	//Really just for coverage (since you cannot mutate, what's the value of a clone?)
-    const a=UIntMut.fromIntUnsafe(1,4);
+    const a=UIntMut.fromInt(1,4);
     const b=a.cloneSize(2);
 	assert.equal(a.eq(b),true,'Equal in value');
     assert.is(a===b,false,'Not the same object');
@@ -438,7 +438,7 @@ tsts(`zero`,()=>{
 
 tsts(`fromArray`,()=>{
 	const a=UIntMut.fromArray(Uint32Array.of(1,0,0,0),2);
-	assert.equal(a.eq(UInt.fromIntUnsafe(1,2)),true);
+	assert.equal(a.eq(UInt.fromInt(1,2)),true);
 });
 
 tsts.run();

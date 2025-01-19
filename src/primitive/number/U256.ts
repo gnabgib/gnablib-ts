@@ -1,4 +1,4 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
@@ -129,25 +129,14 @@ export class U256 {
 	}
 
 	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51
+	 * Build from an integer - note JS can only support up to 52bit ints
+	 * @param uint52 0-Number.MAX_SAFE_INT
 	 * @returns
 	 */
-	static fromIntUnsafe(uint51: number): U256 {
+	static fromInt(uint52: number): U256 {
+		sNum('uint52', uint52).unsigned().throwNot();
 		return new U256(
-			Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0, 0, 0, 0, 0)
-		);
-	}
-
-	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
-	 * @returns
-	 */
-	static fromInt(uint51: number): U256 {
-		sNum('uint51', uint51).unsigned().throwNot();
-		return new U256(
-			Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0, 0, 0, 0, 0)
+			Uint32Array.of(uint52 << 0, uint52 / maxU32Plus1, 0, 0, 0, 0, 0, 0)
 		);
 	}
 

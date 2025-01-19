@@ -799,10 +799,6 @@ const fromIntTests:[number,string][]=[
     [0x12345678,'00000000000000000000000012345678'],
 ];
 for(const[int,expect] of fromIntTests) {
-    tsts(`fromIntUnsafe(${int})`,()=>{
-        const u=U128.fromIntUnsafe(int);
-        assert.is(u.toString(),expect);
-	});
     tsts(`fromInt(${int})`,()=>{
         const u=U128.fromInt(int);
         assert.is(u.toString(),expect);

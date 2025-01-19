@@ -114,6 +114,17 @@ export abstract class APrng32<T> {
 	public nextU32(): number {
 		return this._nextU(32) >>> 0;
 	}
+	
+	/**
+	 * Generate `n` random unsigned 32bit integers `[0 - 4294967295]`
+	 * @param n 
+	 */
+	*seqU32(n=1): Generator<number, void, unknown> {
+		let i=0;
+		while(i++<n) {
+			yield this._nextU(32) >>> 0;
+		}
+	}
 
 	/**
 	 * Generate a random signed 32bit integer `[-2147483648 - 2147483647]`

@@ -1,4 +1,4 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
@@ -707,18 +707,13 @@ export class U128 {
 		return `${DBG_RPT_U128}(${this.toString()})`;
 	}
 
-	/** Build from an integer - note JS can only support up to 52bit ints */
-	static fromIntUnsafe(uint52: number): U128 {
-		return new U128(Uint32Array.of(uint52 << 0, uint52 / maxU32Plus1, 0, 0));
-	}
-
 	/**
 	 * Build from an integer - note JS can only support up to 52bit ints
 	 * @param uint52 0-Number.MAX_SAFE_INT
 	 * @throws Error uint52 is out of range
 	 */
 	static fromInt(uint52: number): U128 {
-		sNum('uint51', uint52)
+		sNum('uint52', uint52)
 			.unsigned()
 			.atMost(Number.MAX_SAFE_INTEGER)
 			.throwNot();
@@ -966,15 +961,6 @@ export class U128Mut extends U128 {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		return `${DBG_RPT_U128Mut}(${this.toString()})`;
-	}
-
-	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51
-	 * @returns
-	 */
-	static fromIntUnsafe(uint51: number): U128Mut {
-		return new U128Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1, 0, 0));
 	}
 
 	/**

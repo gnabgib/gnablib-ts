@@ -66,7 +66,7 @@ export class Gjrand64 extends APrng64<U64MutArray> {
 			//128bit build
 			state.at(0).set(seed1);
 			state.at(1).set(seed0);
-			state.at(2).set(U64.fromIntUnsafe(5000001));
+			state.at(2).set(U64.fromUint32Pair(5000001,0));
 		} else {
 			//64bit build
 			state.at(0).set(seed0);

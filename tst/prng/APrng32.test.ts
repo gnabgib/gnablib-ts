@@ -360,4 +360,9 @@ for (const [fill,expect] of g31_seq_fill) {
     i++;
 }
 
+tsts(`Gen31Bit.seqU32(3)`,()=>{
+    const u32_3=Uint32Array.of(...rng31.seqU32(3));
+    assert.equal(hex.fromU32s(u32_3),'B38F0F82B38F0F82B38F0F82');
+})
+
 tsts.run();

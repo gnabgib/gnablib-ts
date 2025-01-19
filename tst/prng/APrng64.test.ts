@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { APrng64 } from '../../src/prng/APrng64';
 import { hex } from '../../src/codec/Hex';
-import { U64 } from '../../src/primitive/number';
+import { U64, U64MutArray } from '../../src/primitive/number';
 
 const tsts = suite('APrng64');
 
@@ -32,7 +32,12 @@ const tsts = suite('APrng64');
 //         return set[this._state^=1];
 //     }
 // }
-class Gen16Bit extends APrng64 {
+abstract class ZeroByteState extends APrng64<U64MutArray> {
+    constructor() {
+        super(U64MutArray.fromLen(0),false);
+    }
+}
+class Gen16Bit extends ZeroByteState {
     readonly bitGen=16;
 
     rawNext(): U64 {
@@ -43,7 +48,7 @@ class Gen16Bit extends APrng64 {
     }
 
 }
-class Gen60Bit extends APrng64 {
+class Gen60Bit extends ZeroByteState {
     readonly bitGen=60;
 
     rawNext(): U64 {
@@ -159,5 +164,11 @@ tsts(`Gen60Bit.nextF64`, () => {
     //b11111110110111001011101010011000011101100101010000110 | 8967167258053254  * 2**-53
     assert.equal(rng60.nextF64(), 0.99555555555555552693647314299596);
 });
+
+tsts(`Gen60Bit.seqU64(3)`,()=>{
+    const u64_3=U64MutArray.fromU64s(...rng60.seqU64(3));
+    assert.equal(hex.fromU64a(u64_3),'FEDCBA987654321FFEDCBA987654321FFEDCBA987654321F');
+})
+
 
 tsts.run();

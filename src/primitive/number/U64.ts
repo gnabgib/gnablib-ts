@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
@@ -609,25 +609,16 @@ export class U64 {
 	}
 
 	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51
+	 * Build from an integer - note JS can only support up to 52bit ints
+	 * @param uint52 0-Number.MAX_SAFE_INT
 	 * @returns
 	 */
-	static fromIntUnsafe(uint51: number): U64 {
-		return new U64(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
-	}
-
-	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
-	 * @returns
-	 */
-	static fromInt(uint51: number): U64 {
-		sNum('uint51', uint51)
+	static fromInt(uint52: number): U64 {
+		sNum('uint52', uint52)
 			.unsigned()
 			.atMost(Number.MAX_SAFE_INTEGER)
 			.throwNot();
-		return new U64(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
+		return new U64(Uint32Array.of(uint52 << 0, uint52 / maxU32Plus1));
 	}
 
 	/**
@@ -642,13 +633,13 @@ export class U64 {
 
 	/**
 	 * Created a "view" into an existing Uint32Array
-	 * **NOTE** the memory is shared, changing a value in @param source will mutate the state
-	 * @param source
+	 * **NOTE** the memory is shared, changing a value in @param src will mutate the state
+	 * @param src
 	 * @param pos Position to link (default 0), note this is an array-position not bytes
 	 * @returns
 	 */
-	static fromArray(source: Uint32Array, pos = 0): U64 {
-		return new U64(source, pos);
+	static fromArray(src: Uint32Array, pos = 0): U64 {
+		return new U64(src, pos);
 	}
 
 	/**
@@ -874,26 +865,17 @@ export class U64Mut extends U64 {
 	}
 
 	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51
+	 * Build from an integer - note JS can only support up to 52bit ints
+	 * @param uint52 0-Number.MAX_SAFE_INT
+	 * @throws If uint52 is out of range or not an int
 	 * @returns
 	 */
-	static fromIntUnsafe(uint51: number): U64Mut {
-		return new U64Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
-	}
-
-	/**
-	 * Build from an integer - note JS can only support up to 51bit ints
-	 * @param uint51 0-Number.MAX_SAFE_INT
-	 * @throws If uint51 is out of range or not an int
-	 * @returns
-	 */
-	static fromInt(uint51: number): U64Mut {
-		sNum('uint51', uint51)
+	static fromInt(uint52: number): U64Mut {
+		sNum('uint52', uint52)
 			.unsigned()
 			.atMost(Number.MAX_SAFE_INTEGER)
 			.throwNot();
-		return new U64Mut(Uint32Array.of(uint51 << 0, uint51 / maxU32Plus1));
+		return new U64Mut(Uint32Array.of(uint52 << 0, uint52 / maxU32Plus1));
 	}
 
 	/**
@@ -1144,6 +1126,16 @@ export class U64MutArray {
 		if ((u32s.length & 1) == 1)
 			throw new Error('Must have an even number of u32s');
 		const arr = Uint32Array.of(...u32s);
+		return new U64MutArray(arr, 0);
+	}
+
+	/** Build an array from a series of U64 numbers */
+	static fromU64s(...u64s: U64[]): U64MutArray {
+		const arr = new Uint32Array(u64s.length * 2);
+		for (let i = 0, j = 0; i < u64s.length; i++) {
+			arr[j++] = u64s[i].low;
+			arr[j++] = u64s[i].high;
+		}
 		return new U64MutArray(arr, 0);
 	}
 

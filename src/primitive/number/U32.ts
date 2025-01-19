@@ -236,17 +236,6 @@ export class U32 {
 	}
 
 	/**
-	 * Build a Uint32 from an integer - there's no range check (JS default) so:
-	 * - Oversized numbers will be truncated
-	 * - Negative numbers will be treated as large (2s compliment)
-	 * @param uint32
-	 * @returns
-	 */
-	static fromIntUnsafe(uint32: number): U32 {
-		return new U32(Uint32Array.of(uint32));
-	}
-
-	/**
 	 * Build a Uint32 from an integer
 	 * @param uint32 Integer 0-0xFFFFFFFF (4294967295)
 	 * @throws If uint32 is out of range or not an int
@@ -498,8 +487,8 @@ export class U32 {
 		return Uint8Array.of(src >>> 24, src >> 16, src >> 8, src);
 	}
 }
-const zero = U32.fromIntUnsafe(0);
-const max = U32.fromIntUnsafe(0xffffffff);
+const zero = U32.fromArray(Uint32Array.of(0));
+const max = U32.fromArray(Uint32Array.of(0xffffffff));
 
 export class U32Mut extends U32 {
 	//For some reason we have to redefine the getter here (it doesn't inherit from U32) - can't find an
@@ -640,17 +629,6 @@ export class U32Mut extends U32 {
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
 		return `${DBG_RPT_U32Mut}(${this.toString()})`;
-	}
-
-	/**
-	 * Build a U32Mut from an integer - there's no range check (JS default) so:
-	 * - Oversized numbers will be truncated
-	 * - Negative numbers will be treated as large (2s compliment)
-	 * @param uint32
-	 * @returns
-	 */
-	static fromIntUnsafe(uint32: number): U32Mut {
-		return new U32Mut(Uint32Array.of(uint32));
 	}
 
 	/**

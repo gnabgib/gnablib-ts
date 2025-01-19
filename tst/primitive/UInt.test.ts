@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/codec';
-import { UInt } from '../../src/primitive';
+import { UInt } from '../../src/primitive/UInt';
 
 const tsts = suite('UInt');
 
@@ -522,7 +522,7 @@ tsts(`cloneSize`,()=>{
 
 tsts(`fromArray`,()=>{
 	const a=UInt.fromArray(Uint32Array.of(1,0,0,0),2);
-	assert.equal(a.eq(UInt.fromIntUnsafe(1,2)),true);
+	assert.equal(a.eq(UInt.fromInt(1,2)),true);
 });
 
 tsts(`constants`,()=>{

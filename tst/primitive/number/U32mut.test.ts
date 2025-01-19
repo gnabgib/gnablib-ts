@@ -447,19 +447,6 @@ for (const [start,expect] of fromInt) {
     });
 }
 
-const fromIntUnsafeTests:[number,number][]=[
-    [0,0],
-    [1,1],
-    [0xffffffff,0xffffffff],
-    [-1,0xffffffff],
-    [0x1ffffffff,0xffffffff]
-];
-for (const [start,expect] of fromIntUnsafeTests) {
-    tsts(`fromIntUnsafe(${start})`,()=> {
-        assert.is(U32Mut.fromIntUnsafe(start).value,expect);
-    });
-}
-
 tsts('fromArray',()=> {
     const src=new Uint32Array([13,29]);
     const u0=U32Mut.fromArray(src,0);

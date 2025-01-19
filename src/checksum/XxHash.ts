@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { asBE, asLE } from '../endian/platform.js';
 import { U32 } from '../primitive/number/U32.js';
@@ -293,7 +293,7 @@ export class XxHash64 implements IHash {
 	write(data: Uint8Array): void {
 		//It would be more accurately to update these on each cycle (below) but since we cannot
 		// fail.. or if we do, we cannot recover, it seems ok to do it all at once
-		this._ingestBytes.addEq(U64Mut.fromIntUnsafe(data.length));
+		this._ingestBytes.addEq(U64Mut.fromUint32Pair(data.length, 0));
 
 		let nToWrite = data.length;
 		let dPos = 0;
@@ -327,7 +327,7 @@ export class XxHash64 implements IHash {
 	 * Sum the hash (doesn't mutate internal state, here for compat)
 	 */
 	sumIn(): Uint8Array {
-		const result = U64Mut.fromIntUnsafe(0);
+		const result = U64Mut.fromUint32Pair(0, 0);
 		if (this._ingestBytes.gte(U64.fromInt(blockSize64Bytes))) {
 			result
 				.addEq(this._state.at(0).lRot(1))
@@ -402,7 +402,7 @@ export class XxHash64 implements IHash {
 		i *= 8;
 		if (nToAdd >= 4) {
 			result.set(
-				U64Mut.fromIntUnsafe(U32.iFromBytesLE(this._block, i))
+				U64Mut.fromUint32Pair(U32.iFromBytesLE(this._block, i), 0)
 					.mulEq(p64_1)
 					.xorEq(result)
 					.lRotEq(23)
@@ -413,7 +413,7 @@ export class XxHash64 implements IHash {
 		}
 		for (; i < this._bPos; i++) {
 			result.set(
-				U64Mut.fromIntUnsafe(this._block[i])
+				U64Mut.fromUint32Pair(this._block[i], 0)
 					.mulEq(p64_5)
 					.xorEq(result)
 					.lRotEq(11)
