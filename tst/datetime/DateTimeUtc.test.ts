@@ -43,6 +43,7 @@ const serSet: [dtParts, string, string, string][] = [
 		'"+22767-12-31T23:59:59.999999"',
 	],
 ];
+const bytes=new Uint8Array(Math.ceil(DateTimeUtc.serialBits / 8));
 for (const [o, str, serStr, jsonStr] of serSet) {
 	//Note! Because DateOnly fits in 24bits, DateTime.ser = DateOnly.ser + TimeOnly.ser
 	// we could use sub types inside DateTime, but then the individual components would
@@ -52,13 +53,13 @@ for (const [o, str, serStr, jsonStr] of serSet) {
 		assert.is(d.toString(), str);
 	});
 	tsts(`ser(${str})`, () => {
-		var bw = new BitWriter(Math.ceil(DateTimeUtc.serialBits / 8));
+		const bw=BitWriter.mount(bytes);
 		d.serialize(bw);
-		assert.is(hex.fromBytes(bw.getBytes()), serStr);
+		assert.is(hex.fromBytes(bytes), serStr);
 	});
 	tsts(`deser(${serStr})`, () => {
 		const bytes = hex.toBytes(serStr);
-		const br = new BitReader(bytes);
+		const br = BitReader.mount(bytes);
 		const deser = DateTimeUtc.deserialize(br).validate();
 		assert.is(deser.toString(), str);
 	});
@@ -70,12 +71,12 @@ for (const [o, str, serStr, jsonStr] of serSet) {
 
 tsts(`deser with invalid source value (FFFFFFFFFFFFFFFFFF) throws`, () => {
 	const bytes = Uint8Array.of(0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => DateTimeUtc.deserialize(br).validate());
 });
 tsts(`deser without source data throws`, () => {
 	const bytes = new Uint8Array();
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => DateTimeUtc.deserialize(br).validate());
 });
 

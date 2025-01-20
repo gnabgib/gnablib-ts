@@ -195,10 +195,10 @@ abstract class ADurationCore {
 	}
 
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._storage[this._hPos], hourSerBits);
-		target.writeNumber(this._storage[this._hPos + 1], minSerBits);
-		target.writeNumber(this._storage[this._hPos + 2], secSerBits);
-		target.writeNumber(this.microsecond, microSerBits);
+		target.mustPushNumberBE(this._storage[this._hPos], hourSerBits);
+		target.mustPushNumberBE(this._storage[this._hPos + 1], minSerBits);
+		target.mustPushNumberBE(this._storage[this._hPos + 2], secSerBits);
+		target.mustPushNumberBE(this.microsecond, microSerBits);
 	}
 
 	protected _validate(): void {
@@ -311,10 +311,10 @@ abstract class ADurationCore {
 		storage: Uint8Array,
 		hPos: number
 	): void {
-		const h = source.readNumber(hourSerBits);
-		const i = source.readNumber(minSerBits);
-		const s = source.readNumber(secSerBits);
-		const u = source.readNumber(microSerBits);
+		const h = source.readNumberBE(hourSerBits);
+		const i = source.readNumberBE(minSerBits);
+		const s = source.readNumberBE(secSerBits);
+		const u = source.readNumberBE(microSerBits);
 		ADurationCore._loadHISU(h, i, s, u, storage, hPos);
 	}
 }
@@ -392,7 +392,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 
 	/** Serialize into target  - 38 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this.day, daySerBitsDe);
+		target.mustPushNumberBE(this.day, daySerBitsDe);
 		super.serialize(target);
 	}
 
@@ -641,7 +641,7 @@ export class DurationExact extends ADurationCore implements ISerializer {
 	 */
 	public static deserialize(source: BitReader): DurationExact {
 		const stor = new Uint8Array(DurationExact.storageBytes);
-		const d = source.readNumber(daySerBitsDe);
+		const d = source.readNumberBE(daySerBitsDe);
 		stor[0] = d >> 24;
 		stor[1] = d >> 16;
 		stor[2] = d >> 8;
@@ -761,8 +761,8 @@ export class Duration extends ADurationCore implements ISerializer {
 		//Note this is almost the same as .month except it is in whole fracs (720ths)
 		const monthFracs =
 			((this._storage[3] << 8) | this._storage[4]) + this.year * mfPerYear;
-		target.writeNumber(monthFracs, ymSerialBits);
-		target.writeNumber(this.day, daySerBitsDv);
+		target.mustPushNumberBE(monthFracs, ymSerialBits);
+		target.mustPushNumberBE(this.day, daySerBitsDv);
 		super.serialize(target);
 	}
 
@@ -1085,10 +1085,10 @@ export class Duration extends ADurationCore implements ISerializer {
 	 */
 	public static deserialize(source: BitReader): Duration {
 		const stor = new Uint8Array(Duration.storageBytes);
-		const ym = source.readNumber(32);
+		const ym = source.readNumberBE(32);
 		const y = (ym / mfPerYear) | 0;
 		const mf = ym % mfPerYear;
-		const d = source.readNumber(daySerBitsDv);
+		const d = source.readNumberBE(daySerBitsDv);
 		Duration._loadYMfD(y, mf, d, stor);
 		ADurationCore._deserHISU(source, stor, 8);
 		return new Duration(stor, 8);

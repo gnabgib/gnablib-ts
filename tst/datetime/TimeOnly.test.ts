@@ -14,20 +14,21 @@ const serSet: [number, number, number, number, string, string][] = [
 	[11, 41, 7, 543271, '11:41:07.543271', '84A271E958'], //10000100101000100111 000111 101001 01011   000
 	[23, 59, 59, 999999, '23:59:59.999999', 'F423FEFBB8'], //max=11110100001000111111 111011 111011 10111   000
 ];
+const bytes=new Uint8Array(Math.ceil(TimeOnly.serialBits / 8));
 for (const [hr, mi, se, us, str, ser] of serSet) {
 	tsts(`ser(${hr} ${mi} ${se} ${us})`, () => {
-		var t = TimeOnly.new(hr, mi, se, us);
+		const t = TimeOnly.new(hr, mi, se, us);
 
 		assert.is(t.toString(), str);
 
-		var bw = new BitWriter(Math.ceil(TimeOnly.serialBits / 8));
+        const bw=BitWriter.mount(bytes);
 		t.serialize(bw);
-		assert.is(hex.fromBytes(bw.getBytes()), ser);
+		assert.is(hex.fromBytes(bytes), ser);
 	});
 
 	tsts(`deser(${ser})`, () => {
-		const bytes = hex.toBytes(ser);
-		const br = new BitReader(bytes);
+		const bytesD = hex.toBytes(ser);
+		const br = BitReader.mount(bytesD);
 		const t = TimeOnly.deserialize(br).validate();
 		assert.is(t.hour, hr, 'hour');
 		assert.is(t.minute, mi, 'minute');
@@ -39,12 +40,12 @@ for (const [hr, mi, se, us, str, ser] of serSet) {
 
 tsts(`deser with invalid source value (FFFFFFFFFF) throws`, () => {
 	const bytes = Uint8Array.of(0xff, 0xff, 0xff, 0xff, 0xff);
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => TimeOnly.deserialize(br).validate());
 });
 tsts(`deser without source data throws`, () => {
 	const bytes = new Uint8Array();
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => TimeOnly.deserialize(br).validate());
 });
 

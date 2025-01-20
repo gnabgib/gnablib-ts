@@ -45,19 +45,20 @@ const serSet:[number,string][] = [
     [30,'E8'],
     [31,'F0'],
 ];
+const bytes=new Uint8Array(Math.ceil(Day.serialBits/8));
 for (const [da,ser] of serSet) {
     tsts(`ser(${da})`,()=>{
         const d = Day.new(da);
         assert.equal(d.valueOf(),da);
-    
-        const bw=new BitWriter(Math.ceil(Day.serialBits/8));
+        
+        const bw=BitWriter.mount(bytes);
         d.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const d=Day.deserialize(br).validate();
         assert.is(d.valueOf(),da);
     });
@@ -65,12 +66,12 @@ for (const [da,ser] of serSet) {
 
 tsts(`deser with invalid source value (32) throws`,()=>{
     const bytes=Uint8Array.of(0xF8);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Day.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Day.deserialize(br).validate());
 });
 

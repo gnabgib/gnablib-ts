@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { DateOnly, Month } from '../../src/datetime/dt';
+import { DateOnly } from '../../src/datetime/dt';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
@@ -15,20 +15,20 @@ const serSet: [number, number, number, string, string, string][] = [
 	[2024, 1, 14, '2024-01-14', '682EF8', '20240114'], //01101 0000 010111011111000
 	[22767, 12, 31, '+22767-12-31', 'F5FFFF', '227671231'], //max=11110 1011 111111111111111
 ];
+const bytes=new Uint8Array(Math.ceil(DateOnly.serialBits / 8));
 for (const [yr, mo, da, str, serStr, jsonStr] of serSet) {
 	tsts(`ser(${yr} ${mo} ${da})`, () => {
-		var d = DateOnly.new(yr, mo, da);
-
+		const d = DateOnly.new(yr, mo, da);
 		assert.is(d.toString(), str);
 
-		var bw = new BitWriter(Math.ceil(DateOnly.serialBits / 8));
+		const bw=BitWriter.mount(bytes);
 		d.serialize(bw);
-		assert.is(hex.fromBytes(bw.getBytes()), serStr);
+		assert.is(hex.fromBytes(bytes), serStr);
 	});
 
 	tsts(`deser(${serStr})`, () => {
 		const bytes = hex.toBytes(serStr);
-		const br = new BitReader(bytes);
+		const br = BitReader.mount(bytes);
 		const d = DateOnly.deserialize(br).validate();
 		assert.is(d.year, yr, 'year');
 		assert.is(d.month, mo, 'month');
@@ -37,7 +37,7 @@ for (const [yr, mo, da, str, serStr, jsonStr] of serSet) {
 	});
 
 	tsts(`toJSON(${yr} ${mo} ${da})`, () => {
-		var d = DateOnly.new(yr, mo, da);
+		const d = DateOnly.new(yr, mo, da);
 		const json = JSON.stringify(d);
 		assert.equal(json, jsonStr);
 	});
@@ -45,12 +45,12 @@ for (const [yr, mo, da, str, serStr, jsonStr] of serSet) {
 
 tsts(`deser with invalid source value (FFFFFF) throws`, () => {
 	const bytes = Uint8Array.of(0xff, 0xff, 0xff);
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => DateOnly.deserialize(br).validate());
 });
 tsts(`deser without source data throws`, () => {
 	const bytes = new Uint8Array();
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => DateOnly.deserialize(br).validate());
 });
 

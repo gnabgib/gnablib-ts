@@ -49,7 +49,7 @@ export class _BoolCore implements ISerializer {
 
 	/** Serialize into target  - 1 bit*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(
+		target.mustPushNumberBE(
 			(this._v[0] & masks[this._shift]) === masks[this._shift] ? 1 : 0,
 			_BoolCore.serialBits
 		);
@@ -104,7 +104,7 @@ export class _BoolCore implements ISerializer {
 		storage: Uint8Array,
 		pos: number
 	) {
-		_BoolCore.writeBool(storage, source.readNumber(self.serialBits) === 1, pos);
+		_BoolCore.writeBool(storage, source.readNumberBE(self.serialBits) === 1, pos);
 	}
 }
 

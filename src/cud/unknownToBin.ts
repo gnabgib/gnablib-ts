@@ -41,11 +41,10 @@ export function unknownToBin(value: unknown): Uint8Array {
 		ret = new Uint8Array(1);
 		//ret[0]=0;
 	} else if (value instanceof DateTimeLocal) {
-		const bw = new BitWriter(value.serialSizeBits / 8);
+		ret = new Uint8Array(1 + value.serialSizeBits / 8);
+		const bw = BitWriter.mount(ret);
+		bw.pushNumberBE(value.serialSizeBits / 8, 1);
 		value.serialize(bw);
-		ret = new Uint8Array(1 + bw.byteCount);
-		ret[0] = bw.bitCount;
-		ret.set(bw.getBytes(), 1);
 	} else if (value instanceof Int64) {
 		const i = value.toMinBytes();
 		ret = new Uint8Array(1 + i.length);

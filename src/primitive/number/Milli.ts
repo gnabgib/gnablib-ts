@@ -46,7 +46,7 @@ export class Milli implements ISerializer {
 
 	/** Serialize into target  - 10 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber((this._v[0] << 8) | this._v[1], Milli.serialBits);
+		target.mustPushNumberBE((this._v[0] << 8) | this._v[1], Milli.serialBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -172,7 +172,7 @@ export class Milli implements ISerializer {
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Milli {
 		const stor = self.setupStor(storage);
-		self.writeValue(stor, source.readNumber(self.serialBits));
+		self.writeValue(stor, source.readNumberBE(self.serialBits));
 		return new Milli(stor);
 	}
 }

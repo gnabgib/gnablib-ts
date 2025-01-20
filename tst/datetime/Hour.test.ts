@@ -38,19 +38,20 @@ const serSet:[number,string][] = [
     [22,'B0'],
     [23,'B8'],
 ];
+const bytes=new Uint8Array(Math.ceil(Hour.serialBits/8));
 for (const [mi,ser] of serSet) {
     tsts(`ser(${mi})`,()=>{
         const h = Hour.new(mi);
         assert.equal(h.valueOf(),mi);
     
-        const bw=new BitWriter(Math.ceil(Hour.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         h.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const h=Hour.deserialize(br).validate();
         assert.is(h.valueOf(),mi);
     });
@@ -58,12 +59,12 @@ for (const [mi,ser] of serSet) {
 
 tsts(`deser with invalid source value (24) throws`,()=>{
     const bytes=Uint8Array.of(24<<3);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Hour.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Hour.deserialize(br).validate());
 });
 
@@ -193,7 +194,6 @@ const badParse:WindowStr[]=[
 ];
 for (const w of badParse) {
     tsts(`${w.debug()} parse throws`,()=>{
-        //@ts-ignore - this is the point of the test
         assert.throws(()=>Hour.parse(w));
     })
 }

@@ -46,7 +46,7 @@ export class Micro implements ISerializer {
 
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this.valueOf(), Micro.serialBits);
+		target.mustPushNumberBE(this.valueOf(), Micro.serialBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -175,7 +175,7 @@ export class Micro implements ISerializer {
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Micro {
 		const stor = self.setupStor(storage);
-		self.writeValue(stor, source.readNumber(self.serialBits));
+		self.writeValue(stor, source.readNumberBE(self.serialBits));
 		return new Micro(stor);
 	}
 }

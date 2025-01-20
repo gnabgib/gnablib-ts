@@ -18,14 +18,15 @@ for (const [v,ser] of serSet) {
         const m = Bool.new(v);
         assert.equal(m.valueBool(),v,'valueBool');
     
-        const bw=new BitWriter(Math.ceil(Bool.serialBits/8));
+        const bytes=new Uint8Array(Math.ceil(Bool.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         m.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const m=Bool.deserialize(br);
         assert.is(m.valueBool(),v);
     });
@@ -33,13 +34,13 @@ for (const [v,ser] of serSet) {
 
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Bool.deserialize(br));
 });
 tsts(`deser without storage space throws`,()=>{
     const stor=new Uint8Array(0);
     const bytes=Uint8Array.of(0);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Bool.deserialize(br,stor));
 });
 
@@ -78,14 +79,15 @@ const newSet:[boolean,number,string][]=[
     [false,6,'00'],
     [false,7,'00'],    
 ];
+const bytes=new Uint8Array(Math.ceil(Bool.serialBits/8));
 for(const [v,pos,ser] of newSet) {
     tsts(`new(${v},,${pos})`,()=>{
         const u=Bool.new(v,undefined,pos);
         assert.is(u.valueBool(),v);
 
-        const bw=new BitWriter(Math.ceil(Bool.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         u.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     })
 }
 

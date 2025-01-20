@@ -1,5 +1,6 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
+import { BitWriter } from '../primitive/BitWriter.js';
 import { U64, U64Mut } from '../primitive/number/U64.js';
 
 interface ItoBytesLEer {
@@ -176,59 +177,22 @@ export abstract class APrng64<T extends ItoBytesLEer> {
 	 * @param target A byte array of any size
 	 * @returns target to allow `let a=Prng.fillBytes(new Uint8Array(n));`
 	 */
-	public fillBytes(target: Uint8Array):Uint8Array {
-		//This if stops fillBytes consuming the next number in the sequence if there's
-		// no space in the target
-		if (target.length == 0) return target;
+	public fillBytes(target: Uint8Array): Uint8Array {
 		//Assumption bitGen>32 - ie at least 1 bit is used in U64.high
 		//Assumption diff<32 - ie at least 1 bit is used in U64.low
+		const bw = BitWriter.mount(target);
 		const diff = this.bitGen - this.safeBits;
 		const highBits = this.bitGen - 32;
 		const lowBits = 32 - diff;
-		let nextIsh = this.rawNext();
-		let next = nextIsh.high;
-		let lowNext = true;
-		let bitRem = highBits;
-		/* DEBUG [high low]
-			! = consume number from the stream
-			.s#[HX] - fill with shift #, resulting in value HX
-			.u#[HX] - partially set, shift #, result HX (but might be updated by future u/s)
-		 */
-		// /*DEBUG*/let d = `[${highBits} ${lowBits}]!`;
-		let share = 0;
-		const lastByte = target.length - 1;
-		for (let i = 0; i < target.length; i++) {
-			if (bitRem >= 8) {
-				bitRem -= 8;
-				target[i] = share | (next >>> bitRem);
-				share = 0;
-				// /*DEBUG*/d += `.s${bitRem}[${hex.fromByte(target[i])}]`;
-				//If there's more data remaining skip to the next byte
-				// otherwise we fall-through to collecting more data
-				if (bitRem > 0) continue;
-			} else if (bitRem > 0) {
-				//7-1 bits, shift and add to share
-				target[i] = share | (next << (8 - bitRem));
-				//Update share with target, and setup the next round for the same byte
-				share = target[i--];
-				// /*DEBUG*/d += `.u${bitRem}[${hex.fromByte(share)}]`;
-			}
-			//Data pickup stage
-			if (lowNext) {
-				bitRem += lowBits;
-				next = nextIsh.low >>> diff;
-			} else if (i == lastByte) {
-				// Note: when a partial write happens to the last byte i is decremented so
-				// the above check will still allow more data lookups until the byte is full
-				break;
-			} else {
-				//Only consume next value if we're not on the last byte
-				bitRem += highBits;
-				nextIsh = this.rawNext();
-				next = nextIsh.high;
-				// /*DEBUG*/d += '!';
-			}
-			lowNext = !lowNext;
+		/* DEBUG  target.length[high low]..
+		  [# #] = consume number from the stream, which is #high, @low bits
+        */
+		// /*DEBUG*/let d = `${target.length}`;
+		while (!bw.full) {
+			// /*DEBUG*/d += `[${highBits} ${lowBits}]`;
+			const nextIsh = this.rawNext();
+			bw.pushNumberBE(nextIsh.high, highBits);
+			bw.pushNumberBE(nextIsh.low >>> diff, lowBits);
 		}
 		// /*DEBUG*/console.log(d);
 		return target;

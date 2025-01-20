@@ -23,19 +23,20 @@ const serSet: [number, string][] = [
 	[11, 'A0'],
 	[12, 'B0'],
 ];
+const bytes=new Uint8Array(Math.ceil(Month.serialBits / 8));
 for (const [mo, ser] of serSet) {
 	tsts(`ser(${mo})`, () => {
 		const m = Month.new(mo);
 		assert.equal(m.valueOf(), mo);
 
-		const bw = new BitWriter(Math.ceil(Month.serialBits / 8));
+		const bw=BitWriter.mount(bytes);
 		m.serialize(bw);
-		assert.is(hex.fromBytes(bw.getBytes()), ser);
+		assert.is(hex.fromBytes(bytes), ser);
 	});
 
 	tsts(`deser(${ser})`, () => {
 		const bytes = hex.toBytes(ser);
-		const br = new BitReader(bytes);
+		const br = BitReader.mount(bytes);
 		const m = Month.deserialize(br);
 		assert.is(m.valueOf(), mo);
 	});
@@ -43,13 +44,13 @@ for (const [mo, ser] of serSet) {
 
 tsts(`deser with invalid source value (13) throws`, () => {
 	const bytes = Uint8Array.of(0xc0);
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => Month.deserialize(br).validate());
 });
 
 tsts(`deser without source data throws`, () => {
 	const bytes = new Uint8Array();
-	const br = new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	assert.throws(() => Month.deserialize(br).validate());
 });
 
@@ -79,20 +80,20 @@ tsts(`new`, () => {
 });
 
 tsts(`fromDate`, () => {
-	var dt = new Date(2001, 2, 3, 4, 5, 6);
-	var m = Month.fromDate(dt);
+	const dt = new Date(2001, 2, 3, 4, 5, 6);
+	const m = Month.fromDate(dt);
 	assert.is(m.valueOf(), dt.getMonth() + 1); //JS stores months 0 based
 });
 
 tsts(`fromDateUtc`, () => {
-	var dt = new Date(2001, 2, 3, 4, 5, 6);
-	var m = Month.fromDateUtc(dt);
+	const dt = new Date(2001, 2, 3, 4, 5, 6);
+	const m = Month.fromDateUtc(dt);
 	assert.is(m.valueOf(), dt.getUTCMonth() + 1); //JS stores months 0 based
 });
 
 tsts(`now`, () => {
-	var dt = new Date();
-	var m = Month.now();
+	const dt = new Date();
+	const m = Month.now();
 	//This isn't a great test, but let's use a date object to compare
 	//(tiny chance of this test failing near midnight)
 	assert.is(m.valueOf(), dt.getMonth() + 1); //JS stores months 0 based
@@ -204,7 +205,6 @@ const badParse: WindowStr[] = [
 ];
 for (const w of badParse) {
 	tsts(`badParse(${w.debug()})`, () => {
-		//@ts-ignore - this is the point of the test
 		assert.throws(() => Month.parse(w));
 	});
 }

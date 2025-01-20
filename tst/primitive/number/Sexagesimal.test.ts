@@ -29,14 +29,15 @@ for (const [mi,ser] of serSet) {
         const m = Sexagesimal.new(mi);
         assert.equal(m.valueOf(),mi);
     
-        const bw=new BitWriter(Math.ceil(Sexagesimal.serialBits/8));
+        const bytes=new Uint8Array(Math.ceil(Sexagesimal.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         m.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const m=Sexagesimal.deserialize(br).validate();
         assert.is(m.valueOf(),mi);
     });
@@ -44,18 +45,18 @@ for (const [mi,ser] of serSet) {
 
 tsts(`deser with invalid source value (60) throws`,()=>{
     const bytes=Uint8Array.of(60<<2);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Sexagesimal.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Sexagesimal.deserialize(br).validate());
 });
 tsts(`deser without storage space throws`,()=>{
     const stor=new Uint8Array(0);
     const bytes=Uint8Array.of(0x00);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Sexagesimal.deserialize(br,stor).validate());
 });
 

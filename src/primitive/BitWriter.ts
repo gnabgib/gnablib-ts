@@ -1,78 +1,106 @@
-/*! Copyright 2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
-import { sLen, sNum } from '../safe/safe.js';
+import { sNum } from '../safe/safe.js';
+const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
-const mask = [0xff, 0x7f, 0x3f, 0x1f, 0xf, 0x7, 0x3, 0x1];
-
+/**
+ * A way to write data to a byte array
+ */
 export class BitWriter {
-	private _buff: Uint8Array;
-	private _bitCount = 0; //msb=0
+	private _byte = 0;
+	protected constructor(private _buff: Uint8Array, private _bit = 0) {}
 
-	constructor(bufferLength: number) {
-		this._buff = new Uint8Array(bufferLength);
+	/** Whether the internal buffer is full */
+	get full() {
+		return this._byte >= this._buff.length;
 	}
 
-	/** Position in the current byte */
-	get bitPos(): number {
-		return this._bitCount & 7; //msb=0
+	/** Remaining buffer space in bits */
+	get spaceBits() {
+		return (this._buff.length - this._byte) * 8 - this._bit;
 	}
 
-	/** Number of bits stored */
-	get bitCount(): number {
-		return this._bitCount;
-	}
-
-	/** Number of bytes used for storage */
-	get byteCount(): number {
-		//For any bitPos other than 0, bitCount+7 will go to the next byte (po' man's Math.ceil)
-		return (this._bitCount + 7) >>> 3;
+	/** 
+	 * Set the byte/bit pointers back to 0 - doesn't erase data written so far 
+	 * 
+	 * **Warning** If this writer was mounted with a `startBit` other than zero it'll be lost
+	 */
+	reset() {
+		this._bit = 0;
+		this._byte = 0;
 	}
 
 	/**
-	 * Write up to 32 bits of int/uint
-	 * - Can write u32/i32, u16/i16, u8/i8, even a bit
-	 *
-	 * Why max 32? Because JS bit logic maxes out at 32 bits
-	 * @param value i32/u32, note value will be truncated to 32 bits
-	 * @param bitCount Number of bits to write 1-32
+	 * Write up to 32bits of int/uint into the buffer in big-endian
+	 * @param value Value to write, truncated to 32bits
+	 * @param bits Number of bits to write 1-32 (0 accepted but pointless)
+	 * @returns Whether entire number fit
 	 */
-	writeNumber(value: number, bitCount: number): void {
-		sNum('bitCount', bitCount).natural().atMost(32).throwNot();
+	pushNumberBE(n32: number, bits: number): boolean {
+		let share = this._bit == 0 ? 0 : this._buff[this._byte];
+		// /*DEBUG*/let d = `[${this._buff.length} ~${this._byte}.${this._bit}]b32=/${hex.fromI32(n32)},${bits}/sh=/${hex.fromByte(share)}/`;
 
-		//for a bitPos offset of anything but 0, we need one extra byte
-		// 0 + 2 + 7 /8 = 1 	0 + 8 + 7 /8 = 1
-		// 2 + 6 + 7 /8 = 1	 	0 + 9 + 7 /8 = 2
-		//console.log(`t.bc=${this.#bitCount} bc=${bitCount}`);
-		const byteCountNeeded = (this._bitCount + bitCount + 7) >>> 3;
-		sLen('(internal)buffer', this._buff).atLeast(byteCountNeeded).throwNot();
+		//Make sure there's at least a byte's space
+		if (bits == 0) return true;
+		if (this._byte == this._buff.length) return false;
 
-		let ptr = this._bitCount >>> 3;
-		let byteBitSpace = 8 - this.bitPos;
-		if (bitCount <= byteBitSpace) {
-			//It'll all fit in the current byte
-			const shift = byteBitSpace - bitCount;
-			const shiftValue = value << shift;
-			const shiftMask = mask[this.bitPos];
-			this._buff[ptr] |= shiftMask & shiftValue;
-			//console.log(`bbs=${byteBitSpace} sl=${shift}, sv=${shiftValue} sm=${shiftMask} p=${ptr} ${this.#buff}`);
-			this._bitCount += bitCount;
-			return;
+		//Write aligned bytes
+		let byteSpace = 8 - this._bit;
+		while (bits >= byteSpace) {
+			bits -= byteSpace;
+			this._buff[this._byte] = share | (n32 >>> bits);
+			this._bit = 0;
+			byteSpace = 8;
+			share = 0;
+			// /*DEBUG*/d += `s${bits}[${hex.fromByte(this._buff[this._byte])}]`;
+			if (++this._byte == this._buff.length) {
+				// /*DEBUG*/console.log(d);
+				return bits === 0;
+			}
 		}
-		while (bitCount > 0) {
-			const bitsToWrite = bitCount > byteBitSpace ? byteBitSpace : bitCount;
-			const shift = bitCount - byteBitSpace;
-			const shiftValue = shift > 0 ? value >>> shift : value << -shift;
-			const shiftMask = mask[this.bitPos];
-			this._buff[ptr++] |= shiftMask & shiftValue;
-			//console.log(`bbs=${byteBitSpace} sr=${shift} sv=${shiftValue} sm=${shiftMask} p=${ptr} ${this.#buff}`);
-			this._bitCount += bitsToWrite;
-			bitCount -= bitsToWrite;
-			byteBitSpace = 8;
+		//Write partial byte
+		if (bits > 0) {
+			this._buff[this._byte] = share | (n32 << (8 - bits - this._bit));
+			// /*DEBUG*/d += `u${8-bits}[${hex.fromByte(share)}]T`;
+			this._bit += bits;
 		}
+		// /*DEBUG*/console.log(d);
+		return true;
 	}
 
-	/** Get a copy of the current encoded data */
-	getBytes(): Uint8Array {
-		return this._buff.slice(0, this.byteCount);
+	/**
+	 * Like {@link pushNumberBE} but throws if the number didn't fit
+	 * Write up to 32bits of int/uint into the buffer in big-endian
+	 * @param value Value to write, truncated to 32bits
+	 * @param bits Number of bits to write 1-32 (0 accepted but pointless)
+	 * @throws Error not enough space in the buffer
+	 */
+	mustPushNumberBE(n32: number, bits: number) {
+		if (!this.pushNumberBE(n32, bits)) throw new Error('not enough space');
+	}
+
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BitWriter';
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `BitWriter([${this._buff.length}]@${this._byte}.${this._bit})`;
+	}
+
+	/**
+	 * Mount a buffer for writing.
+	 *
+	 * If you wish to start at a byte beyond the first, or use less than all the bytes, use
+	 * [Uint8Array.subarray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray)
+	 * to mount a shared portion
+	 *
+	 * @param buff Buffer to mount
+	 * @param startBit Bit position to start from [0 - 7] where 0=first bit, and 7=last bit
+	 */
+	static mount(buff: Uint8Array, startBit = 0) {
+		sNum('bit', startBit).unsigned().atMost(7).throwNot();
+		return new BitWriter(buff, startBit);
 	}
 }

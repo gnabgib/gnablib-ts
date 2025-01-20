@@ -648,10 +648,11 @@ export function encode(value: unknown): Uint8Array {
 	// 	return ret;
 	// }
 	if (value instanceof DateTimeLocal) {
-		const bw = new BitWriter(1 + value.serialSizeBits / 8);
-		bw.writeNumber(Type.DateTime, 8);
+		const ret = new Uint8Array(1 + value.serialSizeBits / 8);
+		const bw = BitWriter.mount(ret);
+		bw.pushNumberBE(Type.DateTime, 8);
 		value.serialize(bw);
-		return bw.getBytes();
+		return ret;
 	}
 	if (value instanceof Uint8Array) {
 		return encodeBin(value);
@@ -752,7 +753,7 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 		case Type.DateTime:
 			if (pos + 8 > bin.length) return 'decode missing data';
 			try {
-				const br = new BitReader(bin.subarray(pos));
+				const br=BitReader.mount(bin.subarray(pos));
 				const dFrom = DateTimeLocal.deserialize(br);
 				return new BinResult(1 + 8, dFrom);
 			} catch (e: unknown) {

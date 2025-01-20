@@ -30,15 +30,15 @@ for (const [us,ser] of serSet) {
     tsts(`ser(${us})`,()=>{
         const m = Milli.new(us);
         assert.equal(m.valueOf(),us);
-    
-        const bw=new BitWriter(Math.ceil(Milli.serialBits/8));
+        const bytes=new Uint8Array(Math.ceil(Milli.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         m.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const m=Milli.deserialize(br).validate();
         assert.is(m.valueOf(),us);
     });
@@ -46,18 +46,18 @@ for (const [us,ser] of serSet) {
 
 tsts(`deser with invalid source value (1000) throws`,()=>{
     const bytes=Uint8Array.of(0xFA,0);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Milli.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Milli.deserialize(br).validate());
 });
 tsts(`deser without storage space throws`,()=>{
     const stor=new Uint8Array(0);
     const bytes=Uint8Array.of(0xF9,0xC0);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Milli.deserialize(br,stor).validate());
 });
 
@@ -191,7 +191,7 @@ tsts('cloneTo',()=>{
 
 tsts(`deser`,()=>{
 	const bytes=Uint8Array.of(3,0);//Value in the top 10 bits of 2 bytes
-	const br=new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	const m=Milli.deserialize(br).validate();
 	assert.instance(m,Milli);
 	assert.is(m.valueOf(),3<<2);

@@ -40,13 +40,11 @@ export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 				throw new ContentError('cannot be null', 'DateTime', undefined);
 			return new Uint8Array([0]);
 		}
-		const bw = new BitWriter(Math.ceil(DateTimeLocal.serialBits / 8));
+		const bytes = new Uint8Array(Math.ceil(DateTimeLocal.serialBits / 8) + 1);
+		const bw = BitWriter.mount(bytes);
+		bw.pushNumberBE(Math.ceil(DateTimeLocal.serialBits / 8), 8);
 		value.serialize(bw);
-		const d = bw.getBytes();
-		const ret = new Uint8Array(1 + d.length);
-		ret[0] = d.length;
-		ret.set(d, 1);
-		return ret;
+		return bytes;
 	}
 
 	binUnknown(
@@ -86,7 +84,7 @@ export class DateTimeCol extends ACudColType implements IValid<DateTimeLocal> {
 				'DateTimeCol.binUnknown missing data'
 			);
 
-		const br = new BitReader(bin.subarray(pos));
+		const br = BitReader.mount(bin.subarray(pos));
 		try {
 			const dFrom = DateTimeLocal.deserialize(br);
 			return new FromBinResult(1 + l, dFrom);

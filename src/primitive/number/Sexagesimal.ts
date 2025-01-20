@@ -46,7 +46,7 @@ export class Sexagesimal implements ISerializer {
 
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._v[0], Sexagesimal.serialBits);
+		target.mustPushNumberBE(this._v[0], Sexagesimal.serialBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -152,7 +152,7 @@ export class Sexagesimal implements ISerializer {
 		storage?: Uint8Array
 	): Sexagesimal {
 		const stor = self.setupStor(storage);
-		stor[0] = source.readNumber(this.serialBits);
+		stor[0] = source.readNumberBE(this.serialBits);
 		return new Sexagesimal(stor);
 	}
 }

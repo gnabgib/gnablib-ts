@@ -227,20 +227,21 @@ const serSet: [IDurationParts, string, string][] = [
 	[{ m: 2 }, '2m', '000005A000000000000000'],
 	[{ y: 2 }, '2y', '0000438000000000000000'],
 ];
+const bytes=new Uint8Array(Math.ceil(Duration.serialBits / 8));
 for (const [parts, str, ser] of serSet) {
 	const du = Duration.new(parts);
 	tsts(`(${du}).toString()`, () => {
 		assert.is(du.toString(), str);
 	});
 	tsts(`(${du}).ser()`, () => {
-		var bw = new BitWriter(Math.ceil(Duration.serialBits / 8));
+		const bw=BitWriter.mount(bytes);
 		du.serialize(bw);
-		assert.is(hex.fromBytes(bw.getBytes()), ser);
+		assert.is(hex.fromBytes(bytes), ser);
 	});
 
 	tsts(`deser(${ser})`, () => {
 		const bytes = hex.toBytes(ser);
-		const br = new BitReader(bytes);
+		const br = BitReader.mount(bytes);
 		const du2 = Duration.deserialize(br).validate();
 		assert.is(du2.toString(), str);
 	});

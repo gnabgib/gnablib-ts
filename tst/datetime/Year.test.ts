@@ -19,19 +19,20 @@ const serSet:[number,string][] = [
     [2024,'5DF0'],//b010111011111000
     [22767,'FFFE']
 ];
+const bytes=new Uint8Array(Math.ceil(Year.serialBits/8));
 for (const [yr,ser] of serSet) {
     tsts(`ser(${yr})`,()=>{
         const y = Year.new(yr);
         assert.equal(y.valueOf(),yr);
     
-        const bw=new BitWriter(Math.ceil(Year.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         y.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const y=Year.deserialize(br)
         assert.is(y.valueOf(),yr);
     });
@@ -39,7 +40,7 @@ for (const [yr,ser] of serSet) {
 
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Year.deserialize(br));
 });
 
@@ -202,7 +203,6 @@ const badParseSet:WindowStr[]=[
 ];
 for (const w of badParseSet) {
     tsts(`${w.debug()}.parse throws`,()=>{
-        //@ts-ignore - this is the point of the test
         assert.throws(()=>Year.parse(w));
     })
 }

@@ -86,14 +86,14 @@ function rDate(v: DataView, p: number): [number, number, number] {
 	return [rYear(v, p + 2), rMonth(v, p + 1), rDay(v, p)];
 }
 function serDate(d: DataView, p: number, to: BitWriter): void {
-	to.writeNumber(/*rawDay*/ d.getUint8(p), daySerBits);
-	to.writeNumber(/*rawMonth*/ d.getUint8(p + 1), monthSerBits);
-	to.writeNumber(/*rawYear*/ d.getUint16(p + 2, LE), yearSerBits);
+	to.mustPushNumberBE(/*rawDay*/ d.getUint8(p), daySerBits);
+	to.mustPushNumberBE(/*rawMonth*/ d.getUint8(p + 1), monthSerBits);
+	to.mustPushNumberBE(/*rawYear*/ d.getUint16(p + 2, LE), yearSerBits);
 }
 function deserDate(to: DataView, p: number, src: BitReader): void {
-	/*deserDay*/ to.setUint8(p, src.readNumber(daySerBits));
-	/*deserMonth*/ to.setUint8(p + 1, src.readNumber(monthSerBits));
-	/*deserYear*/ to.setUint16(p + 2, src.readNumber(yearSerBits), LE);
+	/*deserDay*/ to.setUint8(p, src.readNumberBE(daySerBits));
+	/*deserMonth*/ to.setUint8(p + 1, src.readNumberBE(monthSerBits));
+	/*deserYear*/ to.setUint16(p + 2, src.readNumberBE(yearSerBits), LE);
 }
 
 function rHour(d: DataView, p: number): number {
@@ -161,19 +161,19 @@ function wTime(
 	wHour(v, p + 5, h);
 }
 function serTime(d: DataView, p: number, to: BitWriter): void {
-	to.writeNumber(
+	to.mustPushNumberBE(
 		/*rawUs*/ d.getUint16(p, LE) | (d.getUint8(p + 2) << 16),
 		microSerBits
 	);
-	to.writeNumber(/*rawSec*/ d.getUint8(p + 3), secSerBits);
-	to.writeNumber(/*rawMin*/ d.getUint8(p + 4), minSerBits);
-	to.writeNumber(/*rawHour*/ d.getUint8(p + 5), hourSerBits);
+	to.mustPushNumberBE(/*rawSec*/ d.getUint8(p + 3), secSerBits);
+	to.mustPushNumberBE(/*rawMin*/ d.getUint8(p + 4), minSerBits);
+	to.mustPushNumberBE(/*rawHour*/ d.getUint8(p + 5), hourSerBits);
 }
 function deserTime(to: DataView, p: number, src: BitReader): void {
-	/*deserMicro*/ wMicro(to, p, src.readNumber(microSerBits));
-	/*deserSec*/ to.setUint8(p + 3, src.readNumber(secSerBits));
-	/*deserMin*/ to.setUint8(p + 4, src.readNumber(minSerBits));
-	/*deserHour*/ to.setUint8(p + 5, src.readNumber(hourSerBits));
+	/*deserMicro*/ wMicro(to, p, src.readNumberBE(microSerBits));
+	/*deserSec*/ to.setUint8(p + 3, src.readNumberBE(secSerBits));
+	/*deserMin*/ to.setUint8(p + 4, src.readNumberBE(minSerBits));
+	/*deserHour*/ to.setUint8(p + 5, src.readNumberBE(hourSerBits));
 }
 
 //There's definitely some entangled intent here, but we get to reuse code at the
@@ -465,7 +465,7 @@ class Core {
 		//Check for day invariance
 		const [y, m, d] = rDate(to, p);
 		const dim = Month.lastDay(m, y);
-		sNum('day',d).atMost(dim).throwNot();
+		sNum('day', d).atMost(dim).throwNot();
 
 		input.shrink(input.length);
 		return;
@@ -518,7 +518,7 @@ class Core {
 			//Check for day invariance
 			const [y, m, d] = rDate(to, p);
 			const dim = Month.lastDay(m, y);
-			sNum('day',d).atMost(dim).throwNot();
+			sNum('day', d).atMost(dim).throwNot();
 
 			input.shrink(input.length);
 			return;
@@ -883,7 +883,7 @@ export class Year extends Core implements ISerializer {
 
 	/** Serialize into target  - 15 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(
+		target.mustPushNumberBE(
 			/*rawYear*/ this._d.getUint16(this._pos, LE),
 			yearSerBits
 		);
@@ -1030,7 +1030,7 @@ export class Year extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Year {
 		const dv = new DataView(new ArrayBuffer(yearBytes));
-		/*deserYear*/ dv.setUint16(0, src.readNumber(yearSerBits), LE);
+		/*deserYear*/ dv.setUint16(0, src.readNumberBE(yearSerBits), LE);
 		return new Year(dv);
 	}
 }
@@ -1075,7 +1075,7 @@ export class Month extends Core implements ISerializer {
 
 	/** Serialize into target  - 4 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._d.getUint8(this._pos), monthSerBits);
+		target.mustPushNumberBE(this._d.getUint8(this._pos), monthSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1175,7 +1175,7 @@ export class Month extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Month {
 		const dv = new DataView(new ArrayBuffer(monthBytes));
-		/*deserMonth*/ dv.setUint8(0, src.readNumber(monthSerBits));
+		/*deserMonth*/ dv.setUint8(0, src.readNumberBE(monthSerBits));
 		return new Month(dv);
 	}
 
@@ -1237,7 +1237,7 @@ export class Day extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._d.getUint8(this._pos), daySerBits);
+		target.mustPushNumberBE(this._d.getUint8(this._pos), daySerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1337,7 +1337,7 @@ export class Day extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Day {
 		const dv = new DataView(new ArrayBuffer(dayBytes));
-		/*deserDay*/ dv.setUint8(0, src.readNumber(daySerBits));
+		/*deserDay*/ dv.setUint8(0, src.readNumberBE(daySerBits));
 		return new Day(dv);
 	}
 }
@@ -1700,7 +1700,7 @@ export class Hour extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this._d.getUint8(this._pos), hourSerBits);
+		target.mustPushNumberBE(this._d.getUint8(this._pos), hourSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1826,7 +1826,7 @@ export class Hour extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Hour {
 		const dv = new DataView(new ArrayBuffer(hourBytes));
-		wHour(dv, 0, src.readNumber(hourSerBits));
+		wHour(dv, 0, src.readNumberBE(hourSerBits));
 		return new Hour(dv);
 	}
 }
@@ -1869,7 +1869,7 @@ export class Minute extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(rMin(this._d, this._pos), minSerBits);
+		target.mustPushNumberBE(rMin(this._d, this._pos), minSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -1995,7 +1995,7 @@ export class Minute extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Minute {
 		const dv = new DataView(new ArrayBuffer(minBytes));
-		wMin(dv, 0, src.readNumber(minSerBits));
+		wMin(dv, 0, src.readNumberBE(minSerBits));
 		return new Minute(dv);
 	}
 }
@@ -2038,7 +2038,7 @@ export class Second extends Core implements ISerializer {
 
 	/** Serialize into target  - 5 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(rSec(this._d, this._pos), secSerBits);
+		target.mustPushNumberBE(rSec(this._d, this._pos), secSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2153,7 +2153,7 @@ export class Second extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Second {
 		const dv = new DataView(new ArrayBuffer(secBytes));
-		wSec(dv, 0, src.readNumber(secSerBits));
+		wSec(dv, 0, src.readNumberBE(secSerBits));
 		return new Second(dv);
 	}
 }
@@ -2197,7 +2197,7 @@ export class Millisecond extends Core implements ISerializer {
 
 	/** Serialize into target  - 10 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(rMilli(this._d, this._pos), milliSerBits);
+		target.mustPushNumberBE(rMilli(this._d, this._pos), milliSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2324,7 +2324,7 @@ export class Millisecond extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Millisecond {
 		const dv = new DataView(new ArrayBuffer(milliBytes));
-		wMilli(dv, 0, src.readNumber(milliSerBits));
+		wMilli(dv, 0, src.readNumberBE(milliSerBits));
 		return new Millisecond(dv);
 	}
 }
@@ -2368,7 +2368,7 @@ export class Microsecond extends Core implements ISerializer {
 
 	/** Serialize into target  - 20 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(rMicro(this._d, this._pos), microSerBits);
+		target.mustPushNumberBE(rMicro(this._d, this._pos), microSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -2497,7 +2497,7 @@ export class Microsecond extends Core implements ISerializer {
 	 */
 	public static deserialize(src: BitReader): Microsecond {
 		const dv = new DataView(new ArrayBuffer(microBytes));
-		wMicro(dv, 0, src.readNumber(microSerBits));
+		wMicro(dv, 0, src.readNumberBE(microSerBits));
 		return new Microsecond(dv);
 	}
 }
@@ -2883,10 +2883,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 
 	/** Serialize into target  - 28 bits*/
 	public serialize(to: BitWriter): void {
-		to.writeNumber(rMilli(this._d, this._pos), milliSerBits);
-		to.writeNumber(rSec(this._d, this._pos + 2), secSerBits);
-		to.writeNumber(rMin(this._d, this._pos + 3), minSerBits);
-		to.writeNumber(rHour(this._d, this._pos + 4), hourSerBits);
+		to.mustPushNumberBE(rMilli(this._d, this._pos), milliSerBits);
+		to.mustPushNumberBE(rSec(this._d, this._pos + 2), secSerBits);
+		to.mustPushNumberBE(rMin(this._d, this._pos + 3), minSerBits);
+		to.mustPushNumberBE(rHour(this._d, this._pos + 4), hourSerBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -3120,9 +3120,9 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	}
 
 	/**
-	 * Deserialize next 38 bits into time
+	 * Deserialize next 27 bits into time
 	 * Throws if:
-	 * - There's not 38 bits remaining in $source.buffer
+	 * - There's not 27 bits remaining in $source.buffer
 	 * - There's no available $storage
 	 * It's recommended you call .validate() after
 	 * @param src Source to read bits from
@@ -3130,10 +3130,10 @@ export class TimeOnlyMs extends Core implements ISerializer {
 	public static deserialize(src: BitReader): TimeOnlyMs {
 		//Keep the memory contiguous
 		const dv = new DataView(new ArrayBuffer(timeMsBytes));
-		wMilli(dv, 0, src.readNumber(milliSerBits));
-		/*deserSec*/ dv.setUint8(2, src.readNumber(secSerBits));
-		/*deserMin*/ dv.setUint8(3, src.readNumber(minSerBits));
-		/*deserHour*/ dv.setUint8(4, src.readNumber(hourSerBits));
+		wMilli(dv, 0, src.readNumberBE(milliSerBits));
+		/*deserSec*/ dv.setUint8(2, src.readNumberBE(secSerBits));
+		/*deserMin*/ dv.setUint8(3, src.readNumberBE(minSerBits));
+		/*deserHour*/ dv.setUint8(4, src.readNumberBE(hourSerBits));
 		return new TimeOnlyMs(dv);
 	}
 }

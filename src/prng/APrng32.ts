@@ -1,5 +1,7 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
+import { BitWriter } from '../primitive/BitWriter.js';
+
 /**
  * Features to convert a generator of 1-32 random bits into bool/u16/i16/u32/i32/f32/f64 or to fill a Uint8Array
  *
@@ -173,51 +175,17 @@ export abstract class APrng32<T> {
 	 * @returns target to allow `let a=Prng.fillBytes(new Uint8Array(n));`
 	 */
 	public fillBytes(target: Uint8Array): Uint8Array {
-		//This if stops fillBytes consuming the next number in the sequence if there's
-		// no space in the target
-		if (target.length == 0) return target;
-		//Assumption bitGen>32 - ie at least 1 bit is used in U64.high
-		//Assumption diff<32 - ie at least 1 bit is used in U64.low
+		const bw = BitWriter.mount(target);
 		const diff = this.bitGen - this.safeBits;
-		let next = this.rawNext() >>> diff;
-		let bitRem = this.safeBits;
-		/* DEBUG [bits]
-			! = consume number from the stream
-			.s#[HX] - fill with shift #, resulting in value HX
-			.u#[HX] - partially set, shift #, result HX (but might be updated by future u/s)
-		 */
-		// /*DEBUG*/ let d = `[${this.safeBits}]!`;
-		let share = 0;
-		const lastByte = target.length - 1;
-		for (let i = 0; i < target.length; i++) {
-			if (bitRem >= 8) {
-				bitRem -= 8;
-				target[i] = share | (next >>> bitRem);
-				share = 0;
-				// /*DEBUG*/ d += `.s${bitRem}[${hex.fromByte(target[i])}]`;
-				//If there's more data remaining skip to the next byte
-				// otherwise we fall-through to collecting more data
-				if (bitRem > 0) continue;
-			} else if (bitRem > 0) {
-				//7-1 bits, shift and add to share
-				target[i] = share | (next << (8 - bitRem));
-				//Update share with target, and setup the next round for the same byte
-				share = target[i--];
-				// /*DEBUG*/ d += `.u${bitRem}[${hex.fromByte(share)}]`;
-			}
-			//Data pickup stage
-			if (i == lastByte) {
-				// Note: when a partial write happens to the last byte i is decremented so
-				// the above check will still allow more data lookups until the byte is full
-				break;
-			} else {
-				//Only consume next value if we're not on the last byte
-				bitRem += this.safeBits;
-				next = this.rawNext() >>> diff;
-				// /*DEBUG*/ d += '!';
-			}
+		/* DEBUG  target.length[safeBits]..
+		  [#] = consume number from the stream, which is #bits
+        */
+		// /*DEBUG*/let d = `${target.length}`;
+		while (!bw.full) {
+			// /*DEBUG*/d += `[${this.safeBits}]`;
+			bw.pushNumberBE(this.rawNext() >>> diff, this.safeBits);
 		}
-		// /*DEBUG*/ console.log(d);
+		// /*DEBUG*/console.log(d);
 		return target;
 	}
 }

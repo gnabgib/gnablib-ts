@@ -24,19 +24,20 @@ const serSet:[number,string][] = [
     [58,'E8'],
     [59,'EC']
 ];
+const bytes=new Uint8Array(Math.ceil(Minute.serialBits/8));
 for (const [mi,ser] of serSet) {
     tsts(`ser(${mi})`,()=>{
         const m = Minute.new(mi);
         assert.equal(m.valueOf(),mi);
     
-        const bw=new BitWriter(Math.ceil(Minute.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         m.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const m=Minute.deserialize(br).validate();
         assert.is(m.valueOf(),mi);
     });
@@ -44,12 +45,12 @@ for (const [mi,ser] of serSet) {
 
 tsts(`deser with invalid source value (60) throws`,()=>{
     const bytes=Uint8Array.of(60<<2);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Minute.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Minute.deserialize(br).validate());
 });
 
@@ -105,6 +106,7 @@ tsts(`fromUnixTimeMs`,()=>{
 
 tsts(`fromUnixTimeUs`,()=>{
 	const m=Minute.fromUnixTimeUs(1705734810543000);
+    assert.is(m.valueOf(),13);
 })
 
 tsts(`now`, () => {

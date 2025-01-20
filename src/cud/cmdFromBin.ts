@@ -14,7 +14,7 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)
 	let s: DateTimeLocal;
 	let ptr = pos;
-	const br = new BitReader(bin);
+	const br = BitReader.mount(bin);
 	try {
 		s = DateTimeLocal.deserialize(br);
 	} catch {

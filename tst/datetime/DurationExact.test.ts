@@ -202,6 +202,7 @@ const serSet: [IDurationExactParts, string, string, string][] = [
 	[{ d: 3, s: 13 }, '3d13s', '0000006000D00000', '72:00:13'], //3<<27 | 13<<20
 	[{ d: 3, h: 5, i: 7, s: 13 }, '3d5h7i13s', '000000651CD00000', '77:07:13'], //3<<27 | 5<<32 | 7<<26 | 13<<20
 ];
+const bytes=new Uint8Array(Math.ceil(DurationExact.serialBits / 8));
 for (const [parts, str, ser, timeLike] of serSet) {
 	const du = DurationExact.new(parts);
 	tsts(`(${du}).toString()`, () => {
@@ -209,14 +210,14 @@ for (const [parts, str, ser, timeLike] of serSet) {
 	});
 
 	tsts(`(${du}).ser()`, () => {
-		var bw = new BitWriter(Math.ceil(DurationExact.serialBits / 8));
+		const bw=BitWriter.mount(bytes);
 		du.serialize(bw);
-		assert.is(hex.fromBytes(bw.getBytes()), ser);
+		assert.is(hex.fromBytes(bytes), ser);
 	});
 
 	tsts(`deser(${ser})`, () => {
 		const bytes = hex.toBytes(ser);
-		const br = new BitReader(bytes);
+		const br = BitReader.mount(bytes);
 		const du2 = DurationExact.deserialize(br).validate();
 		assert.is(du2.toString(), str);
 	});
@@ -237,7 +238,7 @@ const badDeserSet:string[]=[
 ];
 for(const ser of badDeserSet) {
     const bytes=hex.toBytes(ser);
-    const br=new BitReader(bytes);
+	const br = BitReader.mount(bytes);
     assert.throws(()=>DurationExact.deserialize(br).validate());
 }
 

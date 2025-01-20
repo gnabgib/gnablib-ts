@@ -51,7 +51,8 @@ export abstract class ACmd {
 		// <extra>
 		// min 14 bytes
 		// NOTE: You can jump to byte 11 (first, potentially only U) to find the next row (remain are scaled)
-		const bw = new BitWriter(Math.ceil(DateTimeLocal.serialBits / 8));
+		const bytes = new Uint8Array(Math.ceil(DateTimeLocal.serialBits / 8));
+		const bw = BitWriter.mount(bytes);
 		this.started.serialize(bw);
 		//const s = this.started.serialize().toBytesBE();
 		const p = this.plane.toBin();
@@ -61,7 +62,7 @@ export abstract class ACmd {
 		const e = intExt.uintToScaleBytes(extraSpace);
 
 		const ret = new Uint8Array(
-			bw.byteCount +
+			bytes.length +
 				p.length +
 				c.length +
 				u.length +
@@ -70,8 +71,8 @@ export abstract class ACmd {
 				extraSpace
 		);
 		let ptr = 0;
-		ret.set(bw.getBytes(), ptr);
-		ptr += bw.byteCount;
+		ret.set(bytes, ptr);
+		ptr += bytes.length;
 		ret.set(p, ptr++);
 		ret.set(c, ptr++);
 		ret.set(u, ptr);

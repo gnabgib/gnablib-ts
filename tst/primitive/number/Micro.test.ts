@@ -28,19 +28,21 @@ const serSet:[number,string][] = [
     [99999,'1869F0'],
     [999999,'F423F0']//max
 ];
+const bytes=new Uint8Array(Math.ceil(Micro.serialBits/8));
+const bw=BitWriter.mount(bytes);
 for (const [us,ser] of serSet) {
     tsts(`ser(${us})`,()=>{
         const m = Micro.new(us);
         assert.equal(m.valueOf(),us);
     
-        const bw=new BitWriter(Math.ceil(Micro.serialBits/8));
+        bw.reset();
         m.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const m=Micro.deserialize(br).validate();
         assert.is(m.valueOf(),us);
     });
@@ -48,18 +50,18 @@ for (const [us,ser] of serSet) {
 
 tsts(`deser with invalid source value (1000000) throws`,()=>{
     const bytes=Uint8Array.of(0xF4,0x24,0);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Micro.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Micro.deserialize(br).validate());
 });
 tsts(`deser without storage space throws`,()=>{
     const stor=new Uint8Array(0);
     const bytes=Uint8Array.of(0,0x3E,0x70);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Micro.deserialize(br,stor).validate());
 });
 

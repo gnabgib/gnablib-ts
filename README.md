@@ -232,6 +232,7 @@ Name|Capacities|Optional parameters
 
 ### Primitive
 
+- BitReader / BitWriter
 - Fixed TypedArray
 - Int64
 - Lazy
@@ -258,29 +259,29 @@ Use one of these if you can, alphabetically sorted.  *gjrand32b* is only somewha
 
 Name|Year|Variant|State B| |Out b|Safe b
 -|-:|-|-:|-|-:|-:|
-[GJRand](https://gjrand.sourceforge.net/)|2005|~gjrand32b|16||<td colspan=2>32
-|||gjrand64|32|‡|<td colspan=2>64
-[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|2014|pcg32|8|‡|<td colspan=2>32
-|||pcg64|16|‡|<td colspan=2>64
-[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|2010|sfc16|8||<td colspan=2>16
-|||sfc32|16||<td colspan=2>32
-|||sfc64|32|‡|<td colspan=2>64
-[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|2014|splitmix32|4||<td colspan=2>32
-|||splitmix64|8|‡|<td colspan=2>64
-[Tychei](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)|2011|tychei|16||<td colspan=2>32
-[Well equidistributed long-period linear (WELL)](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|2006|well512|64||<td colspan=2>32
-[XoRoShiRo](https://prng.di.unimi.it/#intro)|2018|xoroshiro64*|8||<td colspan=2>32
-|||xoroshiro64**|8||<td colspan=2>32
+[GJRand](https://gjrand.sourceforge.net/)|2005|~gjrand32b|16||32|〃
+|||gjrand64|32|‡|64|〃
+[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|2014|pcg32|8|‡|32|〃
+|||pcg64|16|‡|64|〃
+[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|2010|sfc16|8||16|〃
+|||sfc32|16||32|〃
+|||sfc64|32|‡|64|〃
+[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|2014|splitmix32|4||32|〃
+|||splitmix64|8|‡|64|〃
+[Tychei](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)|2011|tychei|16||32|〃
+[Well equidistributed long-period linear (WELL)](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|2006|well512|64||32|〃
+[XoRoShiRo](https://prng.di.unimi.it/#intro)|2018|xoroshiro64*|8||32|〃
+|||xoroshiro64**|8||32|〃
 |||xoroshiro128+|16|‡|64|53
-|||xoroshiro128++|16|‡|<td colspan=2>64
-|||xoroshiro128**|16|‡|<td colspan=2>64
-[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|xorShift128+|16|‡|<td colspan=2>64
+|||xoroshiro128++|16|‡|64|〃
+|||xoroshiro128**|16|‡|64|〃
+[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|xorShift128+|16|‡|64|〃
 [XoShiRo](https://prng.di.unimi.it/#intro)|2018|xoshiro128+|16||32|24
-|||xoshiro128++|16||<td colspan=2>32
-|||xoshiro128**|16||<td colspan=2>32
+|||xoshiro128++|16||32|〃
+|||xoshiro128**|16||32|〃
 |||xoshiro256+|32|‡|64|53
-|||xoshiro256++|32|‡|<td colspan=2>64
-|||xoshiro256**|32|‡|<td colspan=2>64
+|||xoshiro256++|32|‡|64|〃
+|||xoshiro256**|32|‡|64|〃
 
 ‡: Use U64 library to exceed JS 32bit integer constraint (may be slower)
 
@@ -303,7 +304,7 @@ Name|Year|Variant|State B|Out b
 [ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|1997|arc4|32|8
 [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|1998|mt19937|2496|32
 [MulBerry32](https://gist.github.com/tommyettinger/46a874533244883189143505d203312c)|2017|mulberry32|4|32
-[XorShift](https://www.jstatsoft.org/article/view/v008i14)|2003|xorShift128|16|32
+[XorShift](https://www.jstatsoft.org/article/view/v008i14)|2003|xorshift128|16|32
 
 #### Bad PRNGs
 

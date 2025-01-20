@@ -33,14 +33,15 @@ for (const [ns,ser] of serSet) {
         const m = Nano.new(ns);
         assert.equal(m.valueOf(),ns);
     
-        const bw=new BitWriter(Math.ceil(Nano.serialBits/8));
+        const bytes=new Uint8Array(Math.ceil(Nano.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         m.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const m=Nano.deserialize(br).validate();
         assert.is(m.valueOf(),ns);
     });
@@ -48,18 +49,18 @@ for (const [ns,ser] of serSet) {
 
 tsts(`deser with invalid source value (xEE6B2800) throws`,()=>{
     const bytes=Uint8Array.of(0xEE,0x6B,0x28,0x00);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Nano.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Nano.deserialize(br).validate());
 });
 tsts(`deser without storage space throws`,()=>{
     const stor=new Uint8Array(0);
     const bytes=Uint8Array.of(0,0,0,0);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Nano.deserialize(br,stor).validate());
 });
 

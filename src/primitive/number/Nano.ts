@@ -60,7 +60,7 @@ export class Nano implements ISerializer {
 
 	/** Serialize into target  - 30 bits*/
 	public serialize(target: BitWriter): void {
-		target.writeNumber(this.valueOf(), self.serialBits);
+		target.mustPushNumberBE(this.valueOf(), self.serialBits);
 	}
 
 	/** Number of bits required to serialize */
@@ -174,7 +174,7 @@ export class Nano implements ISerializer {
 	 */
 	public static deserialize(source: BitReader, storage?: Uint8Array): Nano {
 		const stor = self.setupStor(storage);
-		self.writeValue(stor, source.readNumber(self.serialBits));
+		self.writeValue(stor, source.readNumberBE(self.serialBits));
 		return new Nano(stor);
 	}
 }

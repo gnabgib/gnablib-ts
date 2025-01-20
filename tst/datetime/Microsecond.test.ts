@@ -28,19 +28,20 @@ const serSet:[number,string][] = [
     [99999,'1869F0'],
     [999999,'F423F0']//max
 ];
+const bytes=new Uint8Array(Math.ceil(Microsecond.serialBits/8));
 for (const [us,ser] of serSet) {
     tsts(`ser(${us})`,()=>{
         const m = Microsecond.new(us);
         assert.equal(m.valueOf(),us);
     
-        const bw=new BitWriter(Math.ceil(Microsecond.serialBits/8));
+        const bw=BitWriter.mount(bytes);
         m.serialize(bw);
-        assert.is(hex.fromBytes(bw.getBytes()),ser);
+        assert.is(hex.fromBytes(bytes),ser);
     });
 
     tsts(`deser(${ser})`,()=>{
         const bytes=hex.toBytes(ser);
-        const br=new BitReader(bytes);
+        const br = BitReader.mount(bytes);
         const m=Microsecond.deserialize(br).validate();
         assert.is(m.valueOf(),us);
     });
@@ -48,12 +49,12 @@ for (const [us,ser] of serSet) {
 
 tsts(`deser with invalid source value (1000000) throws`,()=>{
     const bytes=Uint8Array.of(0xF4,0x24,0);
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Microsecond.deserialize(br).validate());
 });
 tsts(`deser without source data throws`,()=>{
     const bytes=new Uint8Array();
-    const br=new BitReader(bytes);
+    const br = BitReader.mount(bytes);
     assert.throws(()=>Microsecond.deserialize(br).validate());
 });
 
@@ -241,7 +242,7 @@ tsts('serialSizeBits',()=>{
 
 tsts(`deser`,()=>{
 	const bytes=Uint8Array.of(0,0,3<<4);//Value in the top 20 bits of 3 bytes
-	const br=new BitReader(bytes);
+	const br = BitReader.mount(bytes);
 	const m=Microsecond.deserialize(br).validate();
 	assert.instance(m,Microsecond);
 	assert.is(m.valueOf(),3);
