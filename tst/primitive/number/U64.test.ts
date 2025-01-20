@@ -849,7 +849,6 @@ tsts(`fromInt`,()=>{
     assert.throws(()=>{const d=U64.fromInt(-1);})
 });
 
-
 // tsts('general',()=>{
 //     const o=U64.fromInt(1);
 //     console.log(o);

@@ -11,6 +11,7 @@ import { APrng32 } from './APrng32.js';
  */
 export class Marsaglia extends APrng32<Uint8Array> {
 	readonly bitGen = 4;
+	readonly safeBits = 3;
 
 	protected trueSave() {
 		return this._state.slice();

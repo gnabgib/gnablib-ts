@@ -17,6 +17,7 @@ const cMul = U64.fromUint32Pair(0x133111eb, 0x94d049bb);
  */
 export class SplitMix64 extends APrng64<U64Mut> {
 	readonly bitGen = 64;
+	readonly safeBits = 64;
 
 	rawNext(): U64 {
 		const z = this._state.addEq(golden_gamma).mut();

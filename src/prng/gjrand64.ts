@@ -14,6 +14,7 @@ import { APrng64 } from './APrng64.js';
  */
 export class Gjrand64 extends APrng64<U64MutArray> {
 	readonly bitGen = 64;
+	readonly safeBits = 64;
 
 	rawNext(): U64 {
 		this._state.at(1).addEq(this._state.at(2));
@@ -48,11 +49,11 @@ export class Gjrand64 extends APrng64<U64MutArray> {
 		return new Gjrand64(state, saveable);
 	}
 
-    /**
+	/**
 	 * Build by providing 1 or 2 seeds, totalling 64bits or 128bits.
-     * Note: a 32bit seed is also supported, but not recommended.
+	 * Note: a 32bit seed is also supported, but not recommended.
 	 * Includes robust seeding procedure.
-     * @param seed0 32bit or 64bit seed.  Must be U64 if seed1 is provided
+	 * @param seed0 32bit or 64bit seed.  Must be U64 if seed1 is provided
 	 * @param saveable Whether the generator's state can be saved
 	 */
 	static seed(seed0: number | U64, seed1?: U64, saveable = false) {
@@ -66,7 +67,7 @@ export class Gjrand64 extends APrng64<U64MutArray> {
 			//128bit build
 			state.at(0).set(seed1);
 			state.at(1).set(seed0);
-			state.at(2).set(U64.fromUint32Pair(5000001,0));
+			state.at(2).set(U64.fromUint32Pair(5000001, 0));
 		} else {
 			//64bit build
 			state.at(0).set(seed0);

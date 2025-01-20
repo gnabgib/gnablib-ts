@@ -13,6 +13,7 @@ import { APrng32 } from './APrng32.js';
  */
 export class Sfc16 extends APrng32<Uint16Array> {
 	readonly bitGen = 16;
+	readonly safeBits = 16;
 
 	protected trueSave() {
 		const ret = new Uint8Array(this._state.slice().buffer);

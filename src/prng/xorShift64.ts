@@ -6,6 +6,7 @@ import { APrng64 } from './APrng64.js';
 
 export class XorShift64 extends APrng64<U64Mut> {
 	readonly bitGen = 64;
+	readonly safeBits = 64;
 
 	rawNext(): U64 {
 		this._state.xorEq(this._state.lShift(13));

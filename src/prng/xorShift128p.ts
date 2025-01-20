@@ -7,6 +7,7 @@ import { APrng64 } from './APrng64.js';
 
 abstract class AXorShift128p_ extends APrng64<U64MutArray> {
 	readonly bitGen = 64;
+	readonly safeBits = 64;
 	protected abstract get _a(): number;
 	protected abstract get _b(): number;
 	protected abstract get _c(): number;

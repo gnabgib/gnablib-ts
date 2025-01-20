@@ -6,7 +6,7 @@ import { hex } from '../../src/codec';
 const tsts = suite('BitWriter');
 
 tsts('3x2,5x3,7x4,0x2,Fx2 in 2 bytes',()=>{
-    var bw=new BitWriter(2);
+    const bw=new BitWriter(2);
     bw.writeNumber(3,2);
     bw.writeNumber(5,3);
     bw.writeNumber(7,4);

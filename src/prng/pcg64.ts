@@ -24,6 +24,7 @@ const mul = U128.fromUint32Quad(0x9fccf645, 0x4385df64, 0x1fc65da4, 0x2360ed05);
 export class Pcg64 extends APrng64<U128Mut> {
 	private readonly _inc: U128;
 	readonly bitGen = 64;
+	readonly safeBits = 64;
 
 	protected constructor(state: U128Mut, inc: U128, saveable: boolean) {
 		super(state,saveable);

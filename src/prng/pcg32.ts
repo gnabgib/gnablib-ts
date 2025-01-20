@@ -20,6 +20,7 @@ const mul = U64.fromUint32Pair(0x4c957f2d, 0x5851f42d); //6364136223846793005
 export class Pcg32 extends APrng32<U64Mut> {
 	private readonly _inc: U64;
 	readonly bitGen = 32;
+	readonly safeBits = 32;
 
 	protected constructor(state: U64Mut, inc: U64, saveable: boolean) {
 		super(state, saveable);

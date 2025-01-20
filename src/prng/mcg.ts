@@ -18,6 +18,7 @@ const MOD = 3;
 export class Mcg extends APrng32<Uint32Array> {
 	protected readonly _shift: number;
 	readonly bitGen: number;
+	readonly safeBits=this.bitGen;
 
 	protected constructor(state: Uint32Array, shift: number, saveable: boolean) {
 		super(state,saveable);

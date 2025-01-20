@@ -27,6 +27,9 @@ abstract class AXoroshiro128 extends APrng64<U64MutArray> {
 /**
  * XoRoShiRo128+ using xor-rotate-shift-rotate, with 128bit state, 64bit return as described in
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
+ * 
+ * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**}, 
+ * if you're generating F64, otherwise use one of them.
  *
  * **Note** these are the updated a/b/c parameters from 2018 (preferred)
  *
@@ -37,6 +40,7 @@ abstract class AXoroshiro128 extends APrng64<U64MutArray> {
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  */
 export class Xoroshiro128p extends AXoroshiro128 {
+	readonly safeBits = 53;
 	protected readonly _a: number = 24;
 	protected readonly _b: number = 16;
 	protected readonly _c: number = 37;
@@ -91,8 +95,11 @@ export class Xoroshiro128p extends AXoroshiro128 {
 /**
  * XoRoShiRo128+ using xor-rotate-shift-rotate, with 128bit state, 64bit return as described in
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
+ * 
+ * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**}, 
+ * if you're generating F64, otherwise use one of them.
  *
- * **Note** these are the original a/b/c parameters from 2016, prefer {@link Xoroshiro128p Xoroshiro128+}
+ * **Note** these are the original a/b/c parameters from 2016, prefer {@link Xoroshiro128p | Xoroshiro128+}
  *
  * *NOT cryptographically secure*
  *
@@ -159,6 +166,7 @@ export class Xoroshiro128p_2016 extends Xoroshiro128p {
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  */
 export class Xoroshiro128pp extends AXoroshiro128 {
+	readonly safeBits = 64;
 	protected readonly _a: number = 49;
 	protected readonly _b: number = 21;
 	protected readonly _c: number = 28;
@@ -229,6 +237,7 @@ const u64_9 = U64.fromUint32Pair(9, 0);
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  */
 export class Xoroshiro128ss extends AXoroshiro128 {
+	readonly safeBits = 64;
 	protected readonly _a: number = 24;
 	protected readonly _b: number = 16;
 	protected readonly _c: number = 37;

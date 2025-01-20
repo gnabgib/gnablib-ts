@@ -6,6 +6,7 @@ import { APrng32 } from './APrng32.js';
 
 abstract class AXoroshiro64 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;
+	readonly safeBits = 32;
 	protected abstract _gen(): number;
 
 	protected trueSave() {

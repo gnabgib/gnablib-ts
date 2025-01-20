@@ -15,6 +15,7 @@ abstract class AOneByteState extends APrng32<Uint8Array> {
 }
 class Gen3Bit extends AOneByteState {
     readonly bitGen=3;
+    readonly safeBits=this.bitGen;
     rawNext(): number {
         //Worst RNG, https://xkcd.com/221/
         return 0b101; //5 | x5
@@ -22,6 +23,7 @@ class Gen3Bit extends AOneByteState {
 }
 class Gen10Bit extends AOneByteState {
     readonly bitGen=10;
+    readonly safeBits=this.bitGen;
     rawNext(): number {
         //Worst RNG, https://xkcd.com/221/
         return 0b1100100001; //801 | x321
@@ -29,6 +31,7 @@ class Gen10Bit extends AOneByteState {
 }
 class Gen31Bit extends AOneByteState {
     readonly bitGen=31;
+    readonly safeBits=30;
     rawNext(): number {
         //Alternates these values starting with first
         const set=[
@@ -334,20 +337,23 @@ for (const expect of g31_seq_f64) {
 }
 
 const g31_seq_fill:[Uint8Array,string][]=[
-    //10110011 10001111 00001111 10000010  10011000 11100001 11100000 11111010  11001110 00111100 00111110
-    // Note this generates quite a long sequence before repeat, but the point is made
+    //10110011 10001111 00001111 100000|01  00110001 11000011 11000001 1111|1011 
+    //00111000 11110000 11111000 0
+    //B3 8F 0F 81  31 C3 C1 FB 
+    //38 F0 F8
     [new Uint8Array(0),''],
     [new Uint8Array(1),'B3'],
     [new Uint8Array(2),'B38F'],
     [new Uint8Array(3),'B38F0F'],
-    [new Uint8Array(4),'B38F0F82'],
-    [new Uint8Array(5),'B38F0F8298'],
-    [new Uint8Array(6),'B38F0F8298E1'],
-    [new Uint8Array(7),'B38F0F8298E1E0'],
-    [new Uint8Array(8),'B38F0F8298E1E0FA'],
-    [new Uint8Array(9),'B38F0F8298E1E0FACE'],
-    [new Uint8Array(10),'B38F0F8298E1E0FACE3C'],
-    [new Uint8Array(11),'B38F0F8298E1E0FACE3C3E'],
+    [new Uint8Array(4),'B38F0F81'],
+    [new Uint8Array(5),'B38F0F8131'],
+    [Uint8Array.of(0xff,0xff,0xff,0xff,0xff),'B38F0F8131'],//prove that content replaced
+    [new Uint8Array(6),'B38F0F8131C3'],
+    [new Uint8Array(7),'B38F0F8131C3C1'],
+    [new Uint8Array(8),'B38F0F8131C3C1FB'],
+    [new Uint8Array(9),'B38F0F8131C3C1FB38'],
+    [new Uint8Array(10),'B38F0F8131C3C1FB38F0'],
+    [new Uint8Array(11),'B38F0F8131C3C1FB38F0F8'],
 ];
 i=0;
 for (const [fill,expect] of g31_seq_fill) {

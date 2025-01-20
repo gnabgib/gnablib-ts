@@ -20,6 +20,7 @@ export class MiddleSquare extends APrng32<Uint32Array> {
 	private readonly _div: number;
 	private readonly _mod: number;
 	readonly bitGen: number;
+	readonly safeBits = this.bitGen;
 
 	protected constructor(state: Uint32Array, saveable: boolean) {
 		super(state, saveable);

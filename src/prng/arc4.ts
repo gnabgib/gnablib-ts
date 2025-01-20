@@ -23,6 +23,7 @@ export class Arc4 extends APrng32<Uint8Array> {
 	private _i = 0;
 	private _j = 0;
 	readonly bitGen = 8;
+	readonly safeBits = 8;
 
 	protected trueSave() {
 		const ret = new Uint8Array(258);

@@ -254,35 +254,35 @@ Name|Capacities|Optional parameters
 
 #### Good PRNGs
 
-Use one of these if you can, alphabetically sorted.  *gjrand32b* is only somewhat official and doesn't have a lot of testing.
+Use one of these if you can, alphabetically sorted.  *gjrand32b* is only somewhat official and doesn't have a lot of testing. B=Bytes, b=bits
 
-Name|Year|Variant|State (bytes)|‡|Range
--|-:|-|-:|-|-:
-[GJRand](https://gjrand.sourceforge.net/)|2005|~gjrand32b|16||U32
-|||gjrand64|32|‡|U64
-[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|2014|pcg32|8|‡|U32
-|||pcgG64|16|‡|U64
-[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|2010|sfc16|8||U16
-|||sfc32|16||U32
-|||sfc64|32|‡|U64
-[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|2014|splitmix32|4||U32
-|||splitmix64|8|‡|U64
-[Tychei](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)|2011|tychei|16||U32
-[Well equidistributed long-period linear (WELL)](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|2006|well512|64||U32
-[XoRoShiRo](https://prng.di.unimi.it/#intro)|2018|xoroshiro64*|8||U32
-|||xoroshiro64**|8||U32
-|||xoroshiro128+|16|‡|U64
-|||xoroshiro128++|16|‡|U64
-|||xoroshiro128**|16|‡|U64
-[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|xorShift128+|16|‡|U64
-[XoShiRo](https://prng.di.unimi.it/#intro)|2018|xoshiro128+|16||U32
-|||xoshiro128++|16||U32
-|||xoshiro128**|16||U32
-|||xoshiro256+|32|‡|U64
-|||xoshiro256++|32|‡|U64
-|||xoshiro256**|32|‡|U64
+Name|Year|Variant|State B| |Out b|Safe b
+-|-:|-|-:|-|-:|-:|
+[GJRand](https://gjrand.sourceforge.net/)|2005|~gjrand32b|16||<td colspan=2>32
+|||gjrand64|32|‡|<td colspan=2>64
+[Permuted Congruential Generator (PCG)](https://www.pcg-random.org/)|2014|pcg32|8|‡|<td colspan=2>32
+|||pcg64|16|‡|<td colspan=2>64
+[Small Fast Counting (SFC)](https://pracrand.sourceforge.net/RNG_engines.txt)|2010|sfc16|8||<td colspan=2>16
+|||sfc32|16||<td colspan=2>32
+|||sfc64|32|‡|<td colspan=2>64
+[SplitMix](https://gee.cs.oswego.edu/dl/papers/oopsla14.pdf)|2014|splitmix32|4||<td colspan=2>32
+|||splitmix64|8|‡|<td colspan=2>64
+[Tychei](https://www.researchgate.net/publication/233997772_Fast_and_Small_Nonlinear_Pseudorandom_Number_Generators_for_Computer_Simulation)|2011|tychei|16||<td colspan=2>32
+[Well equidistributed long-period linear (WELL)](https://en.wikipedia.org/wiki/Well_equidistributed_long-period_linear)|2006|well512|64||<td colspan=2>32
+[XoRoShiRo](https://prng.di.unimi.it/#intro)|2018|xoroshiro64*|8||<td colspan=2>32
+|||xoroshiro64**|8||<td colspan=2>32
+|||xoroshiro128+|16|‡|64|53
+|||xoroshiro128++|16|‡|<td colspan=2>64
+|||xoroshiro128**|16|‡|<td colspan=2>64
+[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|xorShift128+|16|‡|<td colspan=2>64
+[XoShiRo](https://prng.di.unimi.it/#intro)|2018|xoshiro128+|16||32|24
+|||xoshiro128++|16||<td colspan=2>32
+|||xoshiro128**|16||<td colspan=2>32
+|||xoshiro256+|32|‡|64|53
+|||xoshiro256++|32|‡|<td colspan=2>64
+|||xoshiro256**|32|‡|<td colspan=2>64
 
-‡: Uses U64 library to exceed JS 32bit integer constraint (may be slower)
+‡: Use U64 library to exceed JS 32bit integer constraint (may be slower)
 
 U16
 : [0 - 32767 | 0xFFFF]  
@@ -296,14 +296,14 @@ U64
 
 #### Poor PRNGs
 
-Best not to use these, there are some dragons in these waters (so if you're choosing, be aware of the limitations).  However, you might have a compatibility constraint (or love the name Mersenne Twister).
+Best not to use these, there are some dragons in these waters (so if you're choosing, be aware of the limitations).  However, you might have a compatibility constraint (or love the name "Mersenne Twister").
 
-Name|Year|Variant|State (bytes)|Range
+Name|Year|Variant|State B|Out b
 -|-:|-|-:|-:
-[ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|1997|arc4|32|U8
-[Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|1998|mt19937|2496|U32
-[MulBerry32](https://gist.github.com/tommyettinger/46a874533244883189143505d203312c)|2017|mulberry32|4|U32
-[XorShift](https://www.jstatsoft.org/article/view/v008i14)|2003|xorShift128|16|U32
+[ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|1997|arc4|32|8
+[Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|1998|mt19937|2496|32
+[MulBerry32](https://gist.github.com/tommyettinger/46a874533244883189143505d203312c)|2017|mulberry32|4|32
+[XorShift](https://www.jstatsoft.org/article/view/v008i14)|2003|xorShift128|16|32
 
 #### Bad PRNGs
 
@@ -311,15 +311,15 @@ If you're curious about the lineage, or need for compatibility with an old decis
 If you're already using one of these, consider migrating.
 
 
-Name|Variant|State (bytes)|Range
+Name|Variant|State B|Out b
 -|-|-:|-:
-[Lehmer/LCG/MCG 1988](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|all|4|U31
-[Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)|-|1|[0 - 9]
+[Lehmer/LCG/MCG 1988](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|all|4|31
+[Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)|-|1|4
 [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method)|-|4|n digits
-MSVC (LGC)|-|4|U16
-[RANDU (LCG)](https://en.wikipedia.org/wiki/RANDU)|-|4|U31
-[XorShift 2003](https://www.jstatsoft.org/article/view/v008i14)|xorshift32|4|U32
-||xorshift64|8|U64
+MSVC (LGC)|-|4|16
+[RANDU (LCG)](https://en.wikipedia.org/wiki/RANDU)|-|4|31
+[XorShift 2003](https://www.jstatsoft.org/article/view/v008i14)|xorshift32|4|32
+||xorshift64|8|64
 
 
 

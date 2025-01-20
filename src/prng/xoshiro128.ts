@@ -4,13 +4,6 @@ import { asLE } from '../endian/platform.js';
 import { sLen } from '../safe/safe.js';
 import { APrng32 } from './APrng32.js';
 
-/**
- * XoShiRo128++/XoShiRo128** are all-purpose 32bit generators (not **cryptographically secure**).  If you're
- * only looking to generate float32, XoShiRo128+, which is slightly faster (~15%) can be used by using
- * only the top 24 bits - the lower bits have low linear complexity.
- */
-
-/** */
 abstract class AXoshiro128 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;
 	protected abstract _gen(): number;
@@ -39,6 +32,9 @@ abstract class AXoshiro128 extends APrng32<Uint32Array> {
  * XoShiRo128+ using xor-shift-rotate, with 128bit state, 32bit return as described in
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  *
+ * This is slightly (+15%) faster than {@link Xoshiro128pp | XoShiRo128++}/{@link Xoshiro128ss | XoShiRo128**},
+ * if you're generating F32, otherwise use one of them.
+ *
  * *NOT cryptographically secure*
  *
  * Related:
@@ -46,6 +42,7 @@ abstract class AXoshiro128 extends APrng32<Uint32Array> {
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  */
 export class Xoshiro128p extends AXoshiro128 {
+	readonly safeBits = 24;
 	protected _gen(): number {
 		return this._state[0] + this._state[3];
 	}
@@ -102,6 +99,7 @@ export class Xoshiro128p extends AXoshiro128 {
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  */
 export class Xoshiro128pp extends AXoshiro128 {
+	readonly safeBits = 32;
 	protected _gen(): number {
 		let r = this._state[0] + this._state[3];
 		r = (r << 7) | (r >>> 25); //ROL 7
@@ -160,6 +158,7 @@ export class Xoshiro128pp extends AXoshiro128 {
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  */
 export class Xoshiro128ss extends AXoshiro128 {
+	readonly safeBits = 32;
 	protected _gen(): number {
 		let r = this._state[1] * 5;
 		r = (r << 7) | (r >>> 25); //ROL 7

@@ -14,6 +14,7 @@ import { APrng64 } from './APrng64.js';
  */
 export class Sfc64 extends APrng64<U64MutArray> {
 	readonly bitGen = 64;
+	readonly safeBits = 64;
 
 	rawNext(): U64 {
 		const t = this._state

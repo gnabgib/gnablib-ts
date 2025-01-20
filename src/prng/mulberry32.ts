@@ -14,6 +14,7 @@ import { APrng32 } from './APrng32.js';
  */
 export class Mulberry32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;
+	readonly safeBits = 32;
 
 	protected trueSave() {
 		const exp = this._state.slice();

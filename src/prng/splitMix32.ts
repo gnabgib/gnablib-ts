@@ -14,6 +14,7 @@ const fib_hash_const = 0x9e3779b9; //2654435769
  */
 export class SplitMix32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;
+	readonly safeBits = 32;
 
 	protected trueSave() {
 		const ret = new Uint8Array(this._state.slice().buffer);

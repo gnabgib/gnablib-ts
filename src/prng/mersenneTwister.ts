@@ -20,6 +20,7 @@ import { APrng32 } from './APrng32.js';
 export class Mt19937 extends APrng32<Uint32Array> {
 	private _ptr = 0;
 	readonly bitGen = 32;
+	readonly safeBits = 32;
 
 	protected trueSave() {
 		const e8 = new Uint8Array(this._state.slice().buffer);
