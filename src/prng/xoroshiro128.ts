@@ -29,7 +29,7 @@ abstract class AXoroshiro128 extends APrng64<U64MutArray> {
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  * 
  * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**}, 
- * if you're generating F64, otherwise use one of them.
+ * if you're generating {@link nextF64 |F64}, otherwise use one of them.
  *
  * **Note** these are the updated a/b/c parameters from 2018 (preferred)
  *
@@ -97,7 +97,7 @@ export class Xoroshiro128p extends AXoroshiro128 {
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  * 
  * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**}, 
- * if you're generating F64, otherwise use one of them.
+ * if you're generating {@link nextF64 |F64}, otherwise use one of them.
  *
  * **Note** these are the original a/b/c parameters from 2016, prefer {@link Xoroshiro128p | Xoroshiro128+}
  *
@@ -164,6 +164,7 @@ export class Xoroshiro128p_2016 extends Xoroshiro128p {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoroshiro128plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link Xoroshiro128ss | Xoroshiro128**}
  */
 export class Xoroshiro128pp extends AXoroshiro128 {
 	readonly safeBits = 64;
@@ -235,6 +236,7 @@ const u64_9 = U64.fromUint32Pair(9, 0);
  * Related:
  * - [C source](https://prng.di.unimi.it/xoroshiro128starstar.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link Xoroshiro128pp | Xoroshiro128++}
  */
 export class Xoroshiro128ss extends AXoroshiro128 {
 	readonly safeBits = 64;

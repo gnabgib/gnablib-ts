@@ -20,6 +20,7 @@ const mul = U128.fromUint32Quad(0x9fccf645, 0x4385df64, 0x1fc65da4, 0x2360ed05);
  *
  * Related:
  * - [PCG, A Family of Better Random Number Generators](https://www.pcg-random.org/)
+ * - {@link prng.Pcg32 | Pcg32}
  */
 export class Pcg64 extends APrng64<U128Mut> {
 	private readonly _inc: U128;

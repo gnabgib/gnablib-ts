@@ -5,52 +5,59 @@
  * A pseudorandom number generator (PRNG), is an algorithm for generating a sequence of numbers
  * that approximate a sequence of random numbers. The PRNG-generated sequence is not truly
  * random, because it can be controlled by the initial value (`seed`).
+ * 
+ * ## 8Bit generators [0 - 255]
  *
- * - {@link prng.Arc4 Arc4} generate numbers in the range [0 - 256]
- * - {@link prng.Gjrand32b Gjrand32b} generate numbers in the range [0 - 4294967295],
- * {@link prng.Gjrand64 Gjrand64} generate numbers in the range [0 - 18446744073709551615]
- * - {@link prng.Marsaglia Marsaglia} generate numbers using the _Marsaglia_ PRNG
- * in the range [0 - 9]
- * - {@link prng.Mcg Mcg}  Generate numbers using the _Lehmer_ PRNG
- * in the range [0 - 2147483647] (+Randu), MSVC in the range [0 - 32767]
- * - {@link prng.MiddleSquare MiddleSquare} generate numbers using the _Middle Square_ PRNG
- * in the range [0 - (10**`n` -1)] where `n` is the number of digits of the `seed`
- * - {@link prng.Mt19937 Mt19937} generate numbers using the _Mersenne Twister_ PRNG
- * in the range [0 - 4294967295]
- * - {@link prng.Mulberry32 Mulberry32} generate numbers in the range [0 - 4294967295],
- * - {@link prng.Pcg32 Pcg32} generate numbers in the range [0 - 4294967295]
- * - {@link prng.Pcg64 Pcg64} generate numbers in the range [0 - 18446744073709551615]
- * - {@link prng.Sfc16 Sfc16} generate in the range [0 - 32767],
- * {@link prng.Sfc32 Sfc32} generate in the range [0 - 4294967295]
- * {@link prng.Sfc64 Sfc64} generate in the range [0 - 18446744073709551615]
- * - {@link prng.SplitMix32 SplitMix32} generate in the range [0 - 4294967295],
- * {@link prng.SplitMix64 SplitMix64} generate in the range [0 - 18446744073709551615]
- * - {@link prng.Well512 Well512} generate numbers in the range [0 - 4294967295]
- * - {@link prng.XorShift32 XorShift32} generate numbers using the _XorShift_ PRNG
- * in the range [0 - 4294967295],
- * {@link prng.XorShift64 XorShift64} generate numbers in the range [0 - 18446744073709551615],
- * {@link prng.XorShift128 XorShift128} generate numbers in the range [0 - 4294967295]
- * - {@link prng.XorShift128p XorShift128+} generate numbers using the _XorShift+_ PRNG
- * in the range [0 - 18446744073709551615],
- * {@link prng.XorShift128pV8 XorShift128+V8} generate numbers using the same parameters as
- * [V8](https://v8.dev/), which differ from Vigna's default
- * - {@link prng.Xoshiro128p Xoshiro128+},
- * {@link prng.Xoshiro128pp Xoshiro128++},
- * {@link prng.Xoshiro128ss Xoshiro128**}
- * generate numbers using the _XoShiRo128_ PRNG in the range [0 - 4294967295]
- * - {@link prng.Xoshiro256p Xoshiro256+},
- * {@link prng.Xoshiro256pp Xoshiro256++},
- * {@link prng.Xoshiro256ss Xoshiro256**}
- * generate numbers using the _XoShiRo256_ PRNG in the range [0 - 18446744073709551615]
- * - {@link prng.Xoroshiro64s Xoroshiro64*},
- * {@link prng.Xoroshiro64ss Xoroshiro64**}
- * generate numbers using the _XoRoShiRo64_ PRNG in the range [0 - 4294967295]
- * - {@link prng.Xoroshiro128p Xoroshiro128+},
- * {@link prng.Xoroshiro128pp Xoroshiro128++},
- * {@link prng.Xoroshiro128ss Xoroshiro128**}
- * generate numbers using the _XoRoShiRo128_ PRNG in the range [0 - 18446744073709551615]
- *
- * 		arc4(u8a) key1-256B, throws OOR
+ * - {@link prng.Arc4 |Arc4}
+ * 
+ * ## 16bit generators [0 - 32767]
+ * 
+ * - {@link prng.Sfc16 |SFC16}
+ * - {@link prng.Mcg.seedMsvc |MSVC}
+ * 
+ * ## 32bit generators [0 - 4294967295]
+ * 
+ * - {@link prng.Gjrand32b |GJrand32b}
+ * - {@link prng.Mt19937 |MT19937}
+ * - {@link prng.Mulberry32 |Mulberry32}
+ * - {@link prng.Pcg32 |PCG32}
+ * - {@link prng.Sfc32 |SFC32}
+ * - {@link prng.SplitMix32 |SplitMix32}
+ * - {@link prng.Tychei |Tychei}
+ * - {@link prng.Well512 |WELL512}
+ * - {@link prng.XorShift32 |XorShift32}
+ * - {@link prng.XorShift128 |XorShift128}
+ * - {@link prng.Xoshiro128p |Xoshiro128+} - {@link prng.Xoshiro128p#nextF32 | F32} preferred
+ * - {@link prng.Xoshiro128pp |Xoshiro128++}
+ * - {@link prng.Xoshiro128ss |Xoshiro128**}
+ * - {@link prng.Xoroshiro64s |Xoroshiro64*}
+ * - {@link prng.Xoroshiro64ss |Xoroshiro64**}
+ * 
+ * ## 64bit generators [0 - 18446744073709551615]
+ * 
+ * - {@link prng.Gjrand64 |GJrand64}
+ * - {@link prng.Pcg64 |PCG64}
+ * - {@link prng.Sfc64 |SFC64}
+ * - {@link prng.SplitMix64 |SplitMix64}
+ * - {@link prng.XorShift64 |XorShift64}
+ * - {@link prng.XorShift128p |XorShift128+}
+ * - {@link prng.Xoshiro256p |Xoshiro256+} - {@link prng.Xoshiro256p#nextF64 |F64} preferred
+ * - {@link prng.Xoshiro256pp |Xoshiro256++}
+ * - {@link prng.Xoshiro256ss |Xoshiro256**}
+ * - {@link prng.Xoroshiro128p |Xoroshiro128+} - {@link prng.Xoroshiro128p#nextF64 |F64} preferred
+ * - {@link prng.Xoroshiro128pp |Xoroshiro128++}
+ * - {@link prng.Xoroshiro128ss |Xoroshiro128**}
+ * 
+ * ## Others
+ * 
+ * - {@link prng.Marsaglia |Marsaglia} generate in the range [0 - 9]
+ * - {@link prng.Mcg |MCG}  generate in the range [0 - 2147483647]
+ * - {@link prng.MiddleSquare |MiddleSquare} generate in the range [0 - (10**`n` -1)]
+ * where `n` is the number of digits of the `seed`
+ * - {@link prng.Mcg.seedRandu |RANDU}  generate in the range [0 - 2147483647]
+ * @module 
+ */
+ /* 		arc4(u8a) key1-256B, throws OOR
  * 		Gjrand32b(number,number?)
  * 		-gjrand64(number|U64|U128)
  * 		marsaglia(number)
@@ -84,8 +91,6 @@
  * 		-Xoshiro256p(u64,u64,u64,u64)
  * 		-Xoshiro256pp(u64,u64,u64,u64)
  * 		-Xoshiro256ss(u64,u64,u64,u64)
- *
- * @module
  */
 //32bit & less:
 export { Arc4 } from './arc4.js';
@@ -99,6 +104,7 @@ export { Pcg32 } from './pcg32.js';
 export { Sfc16 } from './sfc16.js';
 export { Sfc32 } from './sfc32.js';
 export { SplitMix32 } from './splitMix32.js';
+export { Tychei } from './tychei.js';
 export { Well512 } from './well512.js';
 export { XorShift32 } from './xorShift32.js';
 export { XorShift128 } from './xorShift128.js';

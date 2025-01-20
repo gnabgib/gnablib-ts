@@ -117,14 +117,14 @@ Format in VSCode: CTRL+SHIFT+P: Format
 
 DEPS:
 - Show outdated packages
-npm outdated
+`npm outdated`
 - Update /w package.json/lock (only minor/patch)
-npm update --save
+`npm update --save`
 - Update /w package.json/lock for major
-npm install <package>@<major#>
+`npm install <package>@<major#>`
 eg: npm install c8@8
 - Find a package owner
-npm owner ls <pkgname>
+`npm owner ls <pkgname>`
 
 TypeDoc plug coverage:
 `npm install --save false typedoc-plugin-coverage`

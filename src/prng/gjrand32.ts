@@ -16,6 +16,9 @@ import { APrng32 } from './APrng32.js';
  * The benefit of this version over official `gjrand32` is it doesn't need 64bit (U64) support so should be slightly more performant
  *
  * *NOT cryptographically secure*
+ * 
+ * Related:
+ * - {@link prng.Gjrand64 | Gjrand64}
  */
 export class Gjrand32b extends APrng32<Uint32Array> {
 	readonly bitGen = 32;

@@ -10,6 +10,10 @@ import { APrng32 } from './APrng32.js';
  * [PractRand](https://pracrand.sourceforge.net/)
  *
  * *NOT cryptographically secure*
+ * 
+ * Related:
+ * - {@link prng.Sfc16 | Sfc16}
+ * - {@link prng.Sfc64 | Sfc64}
  */
 export class Sfc32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;

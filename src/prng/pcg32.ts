@@ -16,6 +16,7 @@ const mul = U64.fromUint32Pair(0x4c957f2d, 0x5851f42d); //6364136223846793005
  *
  * Related:
  * - [PCG, A Family of Better Random Number Generators](https://www.pcg-random.org/)
+ * - {@link prng.Pcg64 | PCG64}
  */
 export class Pcg32 extends APrng32<U64Mut> {
 	private readonly _inc: U64;

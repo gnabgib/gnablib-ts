@@ -11,6 +11,10 @@ import { APrng64 } from './APrng64.js';
  * [PractRand](https://pracrand.sourceforge.net/)
  *
  * *NOT cryptographically secure*
+ *
+ * Related:
+ * - {@link prng.Sfc16 | Sfc16}
+ * - {@link prng.Sfc32 | Sfc32}
  */
 export class Sfc64 extends APrng64<U64MutArray> {
 	readonly bitGen = 64;

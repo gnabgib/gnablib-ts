@@ -4,6 +4,16 @@ import { U64, U64Mut } from '../primitive/number/U64.js';
 import { sLen } from '../safe/safe.js';
 import { APrng64 } from './APrng64.js';
 
+/**
+ * XorShift with 64bit state, 64bit return as described in
+ * [XorShift RNGs](https://www.jstatsoft.org/article/view/v008i14) section 3
+ *
+ * *NOT cryptographically secure*
+ * 
+ * Related:
+ * - {@link prng.XorShift32 | XorShift32}
+ * - {@link prng.XorShift128 | XorShift128}
+ */
 export class XorShift64 extends APrng64<U64Mut> {
 	readonly bitGen = 64;
 	readonly safeBits = 64;

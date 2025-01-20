@@ -109,6 +109,7 @@ export class Xoshiro256p extends AXoshiro256 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro256plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link Xoshiro256ss | XoShiRo256**}
  */
 export class Xoshiro256pp extends AXoshiro256 {
 	readonly safeBits = 64;
@@ -188,6 +189,7 @@ const u64_9 = U64.fromUint32Pair(9, 0);
  * - [C source](https://prng.di.unimi.it/xoshiro256starstar.c)
  * - [A Quick Look at Xoshiro256** (2018)](https://www.pcg-random.org/posts/a-quick-look-at-xoshiro256.html)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link Xoshiro256pp | XoShiRo256++}
  */
 export class Xoshiro256ss extends AXoshiro256 {
 	readonly safeBits = 64;

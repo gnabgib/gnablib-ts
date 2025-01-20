@@ -12,9 +12,6 @@ const N = 1;
  * random number generator that generates numbers of the same number of digits as $seed
  *
  * *NOT cryptographically secure*
- *
- * You only need to provide n if the seed should be considered larger in magnitude
- * eg. seed(1) is invalid, while seed(1,2) is valid (zero padded 1)
  */
 export class MiddleSquare extends APrng32<Uint32Array> {
 	private readonly _div: number;

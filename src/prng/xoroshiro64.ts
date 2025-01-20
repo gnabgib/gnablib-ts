@@ -36,6 +36,7 @@ abstract class AXoroshiro64 extends APrng32<Uint32Array> {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoroshiro64star.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link prng.Xoroshiro64ss | Xoroshiro64**}
  */
 export class Xoroshiro64s extends AXoroshiro64 {
 	protected _gen(): number {
@@ -87,6 +88,7 @@ export class Xoroshiro64s extends AXoroshiro64 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoroshiro64starstar.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link prng.Xoroshiro64s | Xoroshiro64*}
  */
 export class Xoroshiro64ss extends AXoroshiro64 {
 	protected _gen(): number {

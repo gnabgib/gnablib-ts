@@ -33,7 +33,7 @@ abstract class AXoshiro128 extends APrng32<Uint32Array> {
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  *
  * This is slightly (+15%) faster than {@link Xoshiro128pp | XoShiRo128++}/{@link Xoshiro128ss | XoShiRo128**},
- * if you're generating F32, otherwise use one of them.
+ * if you're generating {@link nextF32 | F32}, otherwise use one of them.
  *
  * *NOT cryptographically secure*
  *
@@ -97,6 +97,7 @@ export class Xoshiro128p extends AXoshiro128 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro128plusplus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link Xoshiro128ss | Xoshiro128**}
  */
 export class Xoshiro128pp extends AXoshiro128 {
 	readonly safeBits = 32;
@@ -156,6 +157,7 @@ export class Xoshiro128pp extends AXoshiro128 {
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro128starstar.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
+ * - {@link Xoshiro128pp | Xoshiro128++}
  */
 export class Xoshiro128ss extends AXoshiro128 {
 	readonly safeBits = 32;

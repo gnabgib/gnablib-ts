@@ -38,6 +38,7 @@ abstract class AXorShift128p_ extends APrng64<U64MutArray> {
  *
  * Related:
  * - [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
+ * - {@link XorShift128pV8 | XorShift128+V8}
  */
 export class XorShift128p extends AXorShift128p_ {
 	protected readonly _a: number = 23;
@@ -98,6 +99,7 @@ export class XorShift128p extends AXorShift128p_ {
  *
  * Related:
  * - [The Xorshift128+ random number generator fails BigCrush](https://lemire.me/blog/2017/09/08/the-xorshift128-random-number-generator-fails-bigcrush/)
+ * - {@link XorShift128p | XorShift128+}
  */
 export class XorShift128pV8 extends AXorShift128p_ {
 	protected readonly _a: number = 23;

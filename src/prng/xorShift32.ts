@@ -9,9 +9,10 @@ import { APrng32 } from './APrng32.js';
  * [XorShift RNGs](https://www.jstatsoft.org/article/view/v008i14) section 3
  *
  * *NOT cryptographically secure*
- *
- * @param seed Must be non-zero
- * @returns Generator of uint32 [0 - 4294967295]
+ * 
+ * Related:
+ * - {@link prng.XorShift64 | XorShift64}
+ * - {@link prng.XorShift128 | XorShift128}
  */
 export class XorShift32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;

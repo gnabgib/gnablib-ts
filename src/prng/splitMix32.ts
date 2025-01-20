@@ -11,6 +11,9 @@ const fib_hash_const = 0x9e3779b9; //2654435769
  * [Fast splittable pseudorandom number generators](https://doi.org/10.1145/2660193.2660195)
  *
  * *NOT cryptographically secure*
+ * 
+ * Related:
+ * - {@link prng.SplitMix64 | SplitMix64}
  */
 export class SplitMix32 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;

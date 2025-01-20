@@ -14,6 +14,9 @@ const cMul = U64.fromUint32Pair(0x133111eb, 0x94d049bb);
  * [Fast splittable pseudorandom number generators](https://doi.org/10.1145/2660193.2660195)
  *
  * *NOT cryptographically secure*
+ * 
+ * Related:
+ * - {@link prng.SplitMix32 | SplitMix32}
  */
 export class SplitMix64 extends APrng64<U64Mut> {
 	readonly bitGen = 64;

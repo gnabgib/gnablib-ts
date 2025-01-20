@@ -11,7 +11,9 @@ const MOD = 3;
 
 /**
  * [Lehmer](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)
- * random generator, also known as a MCG generator
+ * random generator, also known as a MCG generator.  Includes
+ * [RANDU](https://en.wikipedia.org/wiki/RANDU), 
+ * [MSVC](https://en.wikipedia.org/wiki/Linear_congruential_generator#Parameters_in_common_use)
  *
  * *NOT cryptographically secure*
  */

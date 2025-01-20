@@ -9,6 +9,10 @@ import { APrng32 } from './APrng32.js';
  * [XorShift RNGs](https://www.jstatsoft.org/article/view/v008i14) section 4
  *
  * *NOT cryptographically secure*
+ *
+ * Related:
+ * - {@link prng.XorShift32 | XorShift32}
+ * - {@link prng.XorShift64 | XorShift64}
  */
 export class XorShift128 extends APrng32<Uint32Array> {
 	readonly bitGen = 32;

@@ -174,7 +174,7 @@ export abstract class APrng64<T extends ItoBytesLEer> {
 	 * the first byte, next bits into the following byte etc.
 	 *
 	 * @param target A byte array of any size
-	 * @returns target To allow `let a=Prng.fillBytes(new Uint8Array(n));`
+	 * @returns target to allow `let a=Prng.fillBytes(new Uint8Array(n));`
 	 */
 	public fillBytes(target: Uint8Array):Uint8Array {
 		//This if stops fillBytes consuming the next number in the sequence if there's

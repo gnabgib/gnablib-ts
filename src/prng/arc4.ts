@@ -10,7 +10,7 @@ Improvement](https://people.computing.clemson.edu/~jmarty/courses/commonCourseCo
  * 
  * *NOT cryptographically secure*
  * 
- * Multiple vulnerabilities have been discovered in RC4.
+ * Multiple vulnerabilities have been discovered in RC4. (as a CSPRNG or Encryption algorithm)
  *
  * Related:
  * 

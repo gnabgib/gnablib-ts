@@ -1,7 +1,5 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../codec/Hex.js';
-
 /**
  * Features to convert a generator of 1-32 random bits into bool/u16/i16/u32/i32/f32/f64 or to fill a Uint8Array
  *
@@ -172,7 +170,7 @@ export abstract class APrng32<T> {
 	 * the first byte, next bits into the following byte etc.
 	 *
 	 * @param target A byte array of any size
-	 * @returns target To allow `let a=Prng.fillBytes(new Uint8Array(n));`
+	 * @returns target to allow `let a=Prng.fillBytes(new Uint8Array(n));`
 	 */
 	public fillBytes(target: Uint8Array): Uint8Array {
 		//This if stops fillBytes consuming the next number in the sequence if there's

@@ -11,6 +11,9 @@ import { APrng64 } from './APrng64.js';
  * [gjrand random numbers](https://gjrand.sourceforge.net/) 4.3.0 release
  *
  * *NOT cryptographically secure*
+ * 
+ * Related:
+ * - {@link prng.Gjrand32b | Gjrand32b}
  */
 export class Gjrand64 extends APrng64<U64MutArray> {
 	readonly bitGen = 64;
