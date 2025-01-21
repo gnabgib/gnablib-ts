@@ -1,14 +1,14 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { IReadTyped } from './interfaces/IReadTyped.js';
-import { UInt } from './number/index.js';
 import type { IReadArray } from './interfaces/IReadArray.js';
 import type { IReadWriteArray } from './interfaces/IReadWriteArray.js';
 import { IWriteTyped } from './interfaces/IWriteTyped.js';
 import { IBufferer } from './interfaces/IBufferer.js';
 import { IBuildable } from './interfaces/IBuildable.js';
 import { NotEnoughSpaceError } from '../error/NotEnoughSpaceError.js';
-import { nextPow2 } from './BitExt.js';
+import { nextPow2 } from './xtBit.js';
+import { parseDec } from './number/xtUint.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 // Because the interfaces, functions and SharedType<T> are not exported
@@ -544,7 +544,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 				return target.at(prop);
 			},
 			set(target, prop, value): boolean {
-				const u = UInt.parseDec((prop as string) ?? '');
+				const u = parseDec((prop as string) ?? '');
 				if (u != undefined) {
 					target.setEl(u, value);
 					return true;
@@ -704,7 +704,7 @@ export class ScalingTyped<T extends IWriteTyped<T>>
 					target[prop as any] = value;
 					return true;
 				}
-				const u = UInt.parseDec((prop as string) ?? '');
+				const u = parseDec((prop as string) ?? '');
 				if (u != undefined) {
 					target.setEl(u, value);
 					return true;

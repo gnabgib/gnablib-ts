@@ -12,13 +12,14 @@ import { BitReader } from '../primitive/BitReader.js';
 import { ISerializer } from '../primitive/interfaces/ISerializer.js';
 import { ContentError } from '../error/ContentError.js';
 import { LTError } from '../error/LTError.js';
-import { Float, Int } from '../primitive/number/index.js';
 import { WindowStr } from '../primitive/WindowStr.js';
 import {
 	IDurationExactParts,
 	IDurationParts,
 } from './interfaces/IDurationParts.js';
 import { sFloat, sNum } from '../safe/safe.js';
+import { parseDec as floatParseDec } from '../primitive/number/xtFloat.js';
+import { parseDec as intParseDec } from '../primitive/number/xtInt.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -277,25 +278,25 @@ abstract class ADurationCore {
 		while (true) {
 			const delimD = input.indexOfAny(['d', 'D']);
 			if (delimD > 0) {
-				parts.d = Float.parseDec(input.substring(0, delimD));
+				parts.d = floatParseDec(input.substring(0, delimD));
 				if (Number.isNaN(parts.d)) break;
 				input.shrink(delimD + 1);
 			}
 			const delimH = input.indexOfAny(['h', 'H']);
 			if (delimH > 0) {
-				parts.h = Float.parseDec(input.substring(0, delimH));
+				parts.h = floatParseDec(input.substring(0, delimH));
 				if (Number.isNaN(parts.h)) break;
 				input.shrink(delimH + 1);
 			}
 			const delimI = input.indexOfAny(['i', 'I']);
 			if (delimI > 0) {
-				parts.i = Float.parseDec(input.substring(0, delimI));
+				parts.i = floatParseDec(input.substring(0, delimI));
 				if (Number.isNaN(parts.i)) break;
 				input.shrink(delimI + 1);
 			}
 			const delimS = input.indexOfAny(['s', 'S']);
 			if (delimS > 0) {
-				parts.s = Float.parseDec(input.substring(0, delimS));
+				parts.s = floatParseDec(input.substring(0, delimS));
 				if (Number.isNaN(parts.s)) break;
 				input.shrink(delimS + 1);
 			}
@@ -593,16 +594,16 @@ export class DurationExact extends ADurationCore implements ISerializer {
 			s = 0;
 		switch (splits.length) {
 			case 1:
-				s = Float.parseDec(splits[0]);
+				s = floatParseDec(splits[0]);
 				break;
 			case 2:
-				i = Int.parseDec(splits[0]);
-				s = Float.parseDec(splits[1]);
+				i = intParseDec(splits[0]);
+				s = floatParseDec(splits[1]);
 				break;
 			case 3:
-				h = Int.parseDec(splits[0]);
-				i = Int.parseDec(splits[1]);
-				s = Float.parseDec(splits[2]);
+				h = intParseDec(splits[0]);
+				i = intParseDec(splits[1]);
+				s = floatParseDec(splits[2]);
 				break;
 			default:
 				throw new ContentError(
@@ -1053,13 +1054,13 @@ export class Duration extends ADurationCore implements ISerializer {
 		while (true) {
 			const delimY = input.indexOfAny(['y', 'Y']);
 			if (delimY > 0) {
-				y = Float.parseDec(input.substring(0, delimY));
+				y = floatParseDec(input.substring(0, delimY));
 				if (Number.isNaN(y)) break;
 				input.shrink(delimY + 1);
 			}
 			const delimM = input.indexOfAny(['m', 'M']);
 			if (delimM > 0) {
-				m = Float.parseDec(input.substring(0, delimM));
+				m = floatParseDec(input.substring(0, delimM));
 				if (Number.isNaN(m)) break;
 				input.shrink(delimM + 1);
 			}

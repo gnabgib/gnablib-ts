@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { UInt } from '../../../src/primitive/number';
+import { parseDec, parseHex, sign16, sign32, sign8 } from '../../../src/primitive/number/xtUInt';
 
-const tsts = suite('UInt');
+const tsts = suite('XtUInt');
 
 const parseDecSet: [string, number, number][] = [
 	//Input, JS.parseInt, expect
@@ -43,7 +43,7 @@ const parseDecSet: [string, number, number][] = [
 for (const [input, jsExpect, expect] of parseDecSet) {
 	tsts(`parseDec(${input})`, () => {
 		assert.equal(Number.parseInt(input), jsExpect, 'parseInt');
-		assert.equal(UInt.parseDec(input), expect, 'parseDec');
+		assert.equal(parseDec(input), expect, 'parseDec');
 	});
 }
 
@@ -71,7 +71,7 @@ const parseHexSet: [string, number, number][] = [
 for (const [input, jsExpect, expect] of parseHexSet) {
 	tsts(`parseHex(${input})`, () => {
 		assert.equal(Number.parseInt(input, 16), jsExpect, 'parseInt');
-		assert.equal(UInt.parseHex(input), expect, 'parseHex');
+		assert.equal(parseHex(input), expect, 'parseHex');
 	});
 }
 
@@ -91,7 +91,7 @@ const sign8Set: [number, number][] = [
 ];
 for (const [input, expect] of sign8Set) {
 	tsts('sign8 ' + input, () => {
-		assert.is(UInt.sign8(input), expect);
+		assert.is(sign8(input), expect);
 	});
 }
 
@@ -110,7 +110,7 @@ const sign16Set: [number, number][] = [
 ];
 for (const [input, expect] of sign16Set) {
 	tsts('sign16 ' + input, () => {
-		assert.is(UInt.sign16(input), expect);
+		assert.is(sign16(input), expect);
 	});
 }
 
@@ -129,7 +129,7 @@ const sign32Set: [number, number][] = [
 ];
 for (const [input, expect] of sign32Set) {
 	tsts('sign32 ' + input, () => {
-		assert.is(UInt.sign32(input), expect);
+		assert.is(sign32(input), expect);
 	});
 }
 

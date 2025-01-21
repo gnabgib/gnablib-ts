@@ -1,8 +1,8 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { U32 } from '../number/U32.js';
-import { UInt } from '../number/index.js';
 import { sLen, sNum } from '../../safe/safe.js';
+import { parseDec } from '../number/xtUint.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'IpV4';
@@ -79,10 +79,10 @@ export class IpV4 {
 		const parts = value.split('.');
 		sLen('parts', parts).exactly(4).throwNot();
 
-		const p0 = UInt.parseDec(parts[0]);
-		const p1 = UInt.parseDec(parts[1]);
-		const p2 = UInt.parseDec(parts[2]);
-		const p3 = UInt.parseDec(parts[3]);
+		const p0 = parseDec(parts[0]);
+		const p1 = parseDec(parts[1]);
+		const p2 = parseDec(parts[2]);
+		const p3 = parseDec(parts[3]);
 		return IpV4.fromParts(p0, p1, p2, p3);
 	}
 

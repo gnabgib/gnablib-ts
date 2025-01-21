@@ -2,7 +2,7 @@
 
 import { Aes } from '../sym/Aes.js';
 import type { IHash } from '../interfaces/IHash.js';
-import { uint8ArrayExt } from '../../primitive/UInt8ArrayExt.js';
+import { uint8ArrayExt } from '../../primitive/xtUint8Array.js';
 
 const blockSize = 16;
 

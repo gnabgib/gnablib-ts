@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { ctEq, ctSelect, filter, padStart, reverse, splitChars, splitLen } from '../../src/primitive/StringExt';
+import { ctEq, ctSelect, filter, padStart, reverse, splitChars, splitLen } from '../../src/primitive/XtString';
 
 const tsts = suite('stringExt');
 

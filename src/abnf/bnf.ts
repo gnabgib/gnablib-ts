@@ -3,13 +3,13 @@
 import { MatchFail, MatchSuccess } from '../primitive/MatchResult.js';
 import { IMatchResult } from '../primitive/interfaces/IMatchResult.js';
 import { IMatchDetail } from '../primitive/interfaces/IMatchDetail.js';
-import { padStart } from '../primitive/StringExt.js';
+import { padStart } from '../primitive/xtString.js';
 import { utf } from '../primitive/Utf.js';
 import type { WindowStr } from '../primitive/WindowStr.js';
 import { IBnf } from './interfaces/IBnf.js';
 import { IBnfRepeat } from './interfaces/IBnfRepeat.js';
 import { sLen, sNum } from '../safe/safe.js';
-import { nextPow2 } from '../primitive/BitExt.js';
+import { nextPow2 } from '../primitive/xtBit.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 

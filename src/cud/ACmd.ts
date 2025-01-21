@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { BitWriter } from '../primitive/BitWriter.js';
-import { intExt } from '../primitive/IntExt.js';
+import { intExt } from '../primitive/xtInt.js';
 import { DateTimeLocal } from '../datetime/dt.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';

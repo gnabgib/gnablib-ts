@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { FromBinResult } from '../primitive/FromBinResult.js';
-import { intExt } from '../primitive/IntExt.js';
+import { intExt } from '../primitive/xtInt.js';
 import { DateTimeLocal } from '../datetime/dt.js';
 import { ACmd } from './ACmd.js';
 import { ColValue } from './ColValue.js';

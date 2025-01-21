@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { padStart } from '../primitive/StringExt.js';
+import { padStart } from '../primitive/xtString.js';
 import { config } from '../runtime/Config.js';
 import { sNum } from '../safe/safe.js';
 

@@ -1,16 +1,15 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-export * as bitExt from './BitExt.js'
+export * as xtBit from './xtBit.js'
+export { intExt as xtInt } from './xtInt.js';
+export * as xtString from './xtString.js';
+export { uint8ArrayExt as xtUint8Array } from './xtUInt8Array.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
-//export { Int64 } from './Int64_es2020.js';
 export { Int64 } from './Int64.js';
-export { intExt } from './IntExt.js';
 export { Lazy } from './Lazy.js';
 export { MatchSuccess, MatchFail } from './MatchResult.js';
-//export * from './ReadonlyTypedArray_es2020.js';
 export * from './ReadonlyTypedArray.js';
 export { StringBuilder } from './StringBuilder.js';
-export * as stringExt from './StringExt.js';
 export {
 	ReadonlyTyped,
 	FixedTyped,
@@ -43,7 +42,6 @@ export {
 	ScalingFloat64Array,
 	ScalingUint8ClampedArray,
 } from './TypedArrayExt.js';
-export { uint8ArrayExt } from './UInt8ArrayExt.js';
 export { Uint64 } from './Uint64.js';
 export { Urn } from './Uri.js';
 export { utf } from './Utf.js';

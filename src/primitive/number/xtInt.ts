@@ -43,3 +43,19 @@ export function parseHex(input: string): number {
 	}
 	return Number.NaN;
 }
+
+/**
+ * Parse a list of numbers with comma separation, that is only composed of 
+ * a sign indicator, digits, commas and whitespace
+ * @param numCsv 
+ */
+export function parseCsv(numCsv:string):number[] {
+	const nums=numCsv.split(',');
+	const ret:number[]=[];
+	for(const num of nums) {
+		ret.push(Number.parseInt(num,10));
+		//todo: Not sure the following alt is needed
+		//ret.push(parseDec(num));
+	}
+	return ret;
+}

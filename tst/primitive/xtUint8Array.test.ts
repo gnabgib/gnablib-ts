@@ -1,10 +1,12 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { uint8ArrayExt } from '../../src/primitive';
+//import { uint8ArrayExt } from '../../src/primitive';
 import { hex } from '../../src/codec';
 import { Assert } from '../../src/test';
+import { uint8ArrayExt } from '../../src/primitive/XtUInt8Array';
 
-const tsts = suite('UInt8Array');
+
+const tsts = suite('xtUuint8Array');
 
 const toSizedBytesTest: [Uint8Array, number, number | undefined, Uint8Array][] =
 	[

@@ -1,10 +1,10 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { lsbMask } from '../BitExt.js';
+import { lsbMask } from '../xtBit.js';
 import { IpV4 } from './Ip.js';
 import { ContentError } from '../../error/ContentError.js';
-import { UInt } from '../number/index.js';
 import { sLen, sNum } from '../../safe/safe.js';
+import { parseDec } from '../number/xtUint.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'Cidr';
@@ -111,7 +111,7 @@ export class Cidr {
 		const parts = value.split('/');
 		sLen('parts', parts).exactly(2).throwNot();
 		const ipv4 = IpV4.fromString(parts[0]);
-		const mask = UInt.parseDec(parts[1]);
+		const mask = parseDec(parts[1]);
 		if (mask == undefined)
 			throw new ContentError('Expecting integer 0-32', 'Mask', parts[1]);
 

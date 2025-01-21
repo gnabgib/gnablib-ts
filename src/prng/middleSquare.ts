@@ -2,7 +2,7 @@
 
 import { asLE } from '../endian/platform.js';
 import { ContentError } from '../error/ContentError.js';
-import { countLeadZeros } from '../primitive/BitExt.js';
+import { countLeadZeros } from '../primitive/xtBit.js';
 import { sLen } from '../safe/safe.js';
 import { APrng32 } from './APrng32.js';
 

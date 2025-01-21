@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { intExt } from '../primitive/IntExt.js';
+import { intExt } from '../primitive/xtInt.js';
 import { utf8 } from '../codec/Utf8.js';
 import { fpb64 } from '../codec/ieee754-fpb.js';
 import { Uint64 } from '../primitive/Uint64.js';

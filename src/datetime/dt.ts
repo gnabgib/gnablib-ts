@@ -5,7 +5,7 @@ import { BitWriter } from '../primitive/BitWriter.js';
 import { WindowStr } from '../primitive/WindowStr.js';
 import { ContentError } from '../error/ContentError.js';
 import { ISerializer } from '../primitive/interfaces/ISerializer.js';
-import { parseDec } from '../primitive/number/Int.js';
+import { parseDec } from '../primitive/number/xtInt.js';
 import { Duration, DurationExact } from './Duration.js';
 import { sNum } from '../safe/safe.js';
 

@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Float } from '../../../src/primitive/number';
+import { parseDec } from '../../../src/primitive/number/xtFloat';
 
-const tsts = suite('Float');
+const tsts = suite('XtFloat');
 
 const parseDecSet: [string, number, number][] = [
 	//Input, JS.parseInt, expect
@@ -47,7 +47,7 @@ const parseDecSet: [string, number, number][] = [
 for (const [input, jsExpect, expect] of parseDecSet) {
 	tsts(`parseDec(${input})`, () => {
 		assert.equal(Number.parseFloat(input), jsExpect, 'parseFloat');
-		assert.equal(Float.parseDec(input), expect, 'parseDec');
+		assert.equal(parseDec(input), expect, 'parseDec');
 	});
 }
 

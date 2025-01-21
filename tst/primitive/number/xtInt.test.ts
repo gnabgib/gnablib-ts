@@ -1,8 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Int } from '../../../src/primitive/number';
+import { parseDec, parseHex } from '../../../src/primitive/number/xtInt';
 
-const tsts = suite('Int');
+const tsts = suite('XtInt');
 
 const parseDecSet: [string, number, number][] = [
 	//Input, JS.parseInt, expect
@@ -44,7 +44,7 @@ const parseDecSet: [string, number, number][] = [
 for (const [input, jsExpect, expect] of parseDecSet) {
 	tsts(`parseDec(${input})`, () => {
 		assert.equal(Number.parseInt(input), jsExpect, 'parseInt');
-		assert.equal(Int.parseDec(input), expect, 'parseDec');
+		assert.equal(parseDec(input), expect, 'parseDec');
 	});
 }
 
@@ -72,7 +72,7 @@ const parseHexSet: [string, number, number][] = [
 for (const [input, jsExpect, expect] of parseHexSet) {
 	tsts(`parseHex(${input})`, () => {
 		assert.equal(Number.parseInt(input, 16), jsExpect, 'parseInt');
-		assert.equal(Int.parseHex(input), expect, 'parseHex');
+		assert.equal(parseHex(input), expect, 'parseHex');
 	});
 }
 
