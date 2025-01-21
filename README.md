@@ -45,9 +45,6 @@ npm audit signatures
 ### Algorithms
 
 - Weighted Random Sampling
-- Next power of 2 32bit
-- Bits set 32bit
-- Count leading zeros (CLZ) 32bit
 - [Thomson NFA (1968)](https://dl.acm.org/doi/10.1145/363347.363387) solver
 
 
@@ -240,15 +237,15 @@ Name|Capacities|Optional parameters
 - Scaling TypedArray
 - StringBuilder
 - UInt16, UInt32, UInt64, UInt128, UInt256, UInt512
-- U32MutArra, U64MutArray
+- U32MutArray, U64MutArray
 - UInt, UIntMut
 - WindowStr
 
 #### Extensions:
 
-- Bit
+- Bit (countBitsSet, lsbMask, reverse, countLeadZeros, nextPow2)
 - Int
-- String
+- String (splitChars, splitLen, reverse, padStart, filter, ctEq, ctSelect)
 - Uint8Array
 
 ### PseudoRandom number generators (PRNG)

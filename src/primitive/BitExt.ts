@@ -1,13 +1,5 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-export const bitsPerByte = 8;
-export const size16Bytes = 2;
-export const i16SizeBits = size16Bytes * bitsPerByte;
-export const size32Bytes = 4;
-export const i32SizeBits = size32Bytes * bitsPerByte;
-export const size64Bytes = 8;
-export const i64SizeBits = size64Bytes * bitsPerByte;
-
 /**
  * Count how many bits are set in a 32bit number (signed or unsigned)
  * @param n32 Number to count bits set to 1, limited to 32bits in length

@@ -1,7 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Uint64 } from '../primitive/Uint64.js';
-import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
 import { Int64 } from '../primitive/Int64.js';
 import { sNum } from '../safe/safe.js';
 
@@ -23,7 +22,7 @@ export function u64IntoArrFromBytes(
 	sourceBytes: Uint8Array,
 	sourcePos = 0
 ): void {
-	const byteCount = targetSize * size64Bytes;
+	const byteCount = targetSize * 8;
 	sNum('sourcePos', sourcePos)
 		.unsigned()
 		.atMost(sourceBytes.length - byteCount)
@@ -34,9 +33,9 @@ export function u64IntoArrFromBytes(
 		.throwNot();
 
 	const n = sourcePos + byteCount;
-	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
+	for (let rPos = sourcePos; rPos < n; rPos += 8) {
 		target[targetPos++] = new Uint64(
-			u32FromBytesUnsafe(sourceBytes, rPos + size32Bytes),
+			u32FromBytesUnsafe(sourceBytes, rPos + 4),
 			u32FromBytesUnsafe(sourceBytes, rPos)
 		);
 	}
@@ -61,8 +60,8 @@ export function u64ArrIntoBytesSafe(
 		if (sourceU64s.length <= i) return;
 		targetBytes.set(sourceU64s[i].toBytes(), targetPos);
 		i++;
-		targetPos += size64Bytes;
-		targetByteCount -= size64Bytes;
+		targetPos += 8;
+		targetByteCount -= 8;
 	}
 	if (targetByteCount > 0) {
 		targetBytes.set(
@@ -153,7 +152,7 @@ export function u32IntoBytes(
 ): void {
 	sNum('targetPos', targetPos)
 		.unsigned()
-		.atMost(targetBytes.length - size32Bytes)
+		.atMost(targetBytes.length - 4)
 		.throwNot();
 	targetBytes[targetPos] = u32 >> 24;
 	targetBytes[targetPos + 1] = u32 >> 16;

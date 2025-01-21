@@ -2,7 +2,6 @@
 
 import { Uint64 } from '../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../codec/ieee754-fpb.js';
-import { size64Bytes, size32Bytes } from '../primitive/BitExt.js';
 import { sNum } from '../safe/safe.js';
 
 /**
@@ -16,12 +15,12 @@ import { sNum } from '../safe/safe.js';
 export function u64FromBytes(sourceBytes: Uint8Array, sourcePos = 0): Uint64 {
 	sNum('sourcePos', sourcePos)
 		.unsigned()
-		.atMost(sourceBytes.length - size64Bytes)
+		.atMost(sourceBytes.length - 8)
 		.throwNot();
 	//We can use unsafe because we've already tested length
 	return new Uint64(
 		u32FromBytesUnsafe(sourceBytes, sourcePos),
-		u32FromBytesUnsafe(sourceBytes, sourcePos + size32Bytes)
+		u32FromBytesUnsafe(sourceBytes, sourcePos + 4)
 	);
 }
 
@@ -43,7 +42,7 @@ export function u64IntoArrFromBytes(
 	sourceBytes: Uint8Array,
 	sourcePos = 0
 ): void {
-	const byteCount = targetSize * size64Bytes;
+	const byteCount = targetSize * 8;
 	const n = sourcePos + byteCount;
 	sNum('sourcePos', sourcePos)
 		.unsigned()
@@ -54,10 +53,10 @@ export function u64IntoArrFromBytes(
 		.atMost(target.length - targetSize)
 		.throwNot();
 
-	for (let rPos = sourcePos; rPos < n; rPos += size64Bytes) {
+	for (let rPos = sourcePos; rPos < n; rPos += 8) {
 		target[targetPos++] = new Uint64(
 			u32FromBytesUnsafe(sourceBytes, rPos),
-			u32FromBytesUnsafe(sourceBytes, rPos + size32Bytes)
+			u32FromBytesUnsafe(sourceBytes, rPos + 4)
 		);
 	}
 }
@@ -89,14 +88,14 @@ export function u64ArrIntoBytes(
 	targetBytes: Uint8Array,
 	targetPos = 0
 ): void {
-	const byteCount = sourceU64s.length * size64Bytes;
+	const byteCount = sourceU64s.length * 8;
 	sNum('targetPos', targetPos)
 		.unsigned()
 		.atMost(targetBytes.length - byteCount)
 		.throwNot();
 	for (let i = 0; i < sourceU64s.length; i++) {
 		const u64 = sourceU64s[i];
-		const rPos = targetPos + i * size64Bytes;
+		const rPos = targetPos + i * 8;
 		targetBytes.set(u64.toBytes().reverse(), rPos);
 	}
 }
@@ -120,8 +119,8 @@ export function u64ArrIntoBytesSafe(
 		if (sourceU64s.length <= i) return;
 		targetBytes.set(sourceU64s[i].toBytes().reverse(), targetPos);
 		i++;
-		targetPos += size64Bytes;
-		targetByteCount -= size64Bytes;
+		targetPos += 8;
+		targetByteCount -= 8;
 	}
 	if (targetByteCount > 0) {
 		targetBytes.set(
@@ -175,12 +174,12 @@ export function u32ArrIntoBytesSafe(
 ): void {
 	let targetByteCount = targetBytes.length - targetPos;
 	let i = 0;
-	while (targetByteCount > size32Bytes) {
+	while (targetByteCount > 4) {
 		if (sourceU32s.length <= i) return;
 		targetBytes.set(u32ToBytes(sourceU32s[i]), targetPos);
 		i++;
-		targetPos += size32Bytes;
-		targetByteCount -= size32Bytes;
+		targetPos += 4;
+		targetByteCount -= 4;
 	}
 	if (targetByteCount > 0) {
 		targetBytes.set(
