@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { stringExt } from '../primitive/StringExt.js';
+import { padStart } from '../primitive/StringExt.js';
 import { config } from '../runtime/Config.js';
 import { sNum } from '../safe/safe.js';
 
@@ -542,24 +542,20 @@ export function demo(): string {
 
 		//Note the weird `+']'; is because TTY will automatically undo any settings within, and
 		// we don't want the close bracket to show the style
-		ret +=
-			tty` [${Underline.single}${stringExt.padStart('underline', w)}` + ']';
-		ret +=
-			tty` [${Underline.double}${stringExt.padStart('doubleUnder', w)}` + ']';
-		ret +=
-			tty` [${StrikeThrough.on}${stringExt.padStart('strikeThrough', w)}` + ']';
-		ret += tty` [${Overline.on}${stringExt.padStart('overline', w)}` + ']\n';
+		ret += tty` [${Underline.single}${padStart('underline', w)}` + ']';
+		ret += tty` [${Underline.double}${padStart('doubleUnder', w)}` + ']';
+		ret += tty` [${StrikeThrough.on}${padStart('strikeThrough', w)}` + ']';
+		ret += tty` [${Overline.on}${padStart('overline', w)}` + ']\n';
 
-		ret += tty` [${Weight.bold}${stringExt.padStart('bold', w)}` + ']';
-		ret += tty` [${Weight.faint}${stringExt.padStart('faint', w)}` + ']';
-		ret += tty` [${LetterStyle.italic}${stringExt.padStart('italic', w)}` + ']';
-		ret +=
-			tty` [${LetterStyle.gothic}${stringExt.padStart('gothic', w)}` + ']\n';
+		ret += tty` [${Weight.bold}${padStart('bold', w)}` + ']';
+		ret += tty` [${Weight.faint}${padStart('faint', w)}` + ']';
+		ret += tty` [${LetterStyle.italic}${padStart('italic', w)}` + ']';
+		ret += tty` [${LetterStyle.gothic}${padStart('gothic', w)}` + ']\n';
 
-		ret += tty` [${Blink.slow}${stringExt.padStart('blinkSlow', w)}` + ']';
-		ret += tty` [${Blink.fast}${stringExt.padStart('blinkFast', w)}` + ']';
-		ret += tty` [${Invert.on}${stringExt.padStart('invert', w)}` + ']';
-		ret += tty` [${Hide.on}${stringExt.padStart('hide', w - 1)}` + ']*\n';
+		ret += tty` [${Blink.slow}${padStart('blinkSlow', w)}` + ']';
+		ret += tty` [${Blink.fast}${padStart('blinkFast', w)}` + ']';
+		ret += tty` [${Invert.on}${padStart('invert', w)}` + ']';
+		ret += tty` [${Hide.on}${padStart('hide', w - 1)}` + ']*\n';
 		return ret;
 	}
 
@@ -583,12 +579,12 @@ export function demo(): string {
 			//TypeScript doesn't consider keyof an object to be a string to force us to consider
 			// super-sets (where other keys may be present) implicit explicit any
 			fg +=
-				tty` [${Color[named[i] as keyof typeof Color]}${stringExt.padStart(
+				tty` [${Color[named[i] as keyof typeof Color]}${padStart(
 					named[i],
 					w
 				)}` + ']';
 			bg +=
-				tty` [${BgColor[named[i] as keyof typeof BgColor]}${stringExt.padStart(
+				tty` [${BgColor[named[i] as keyof typeof BgColor]}${padStart(
 					named[i],
 					w
 				)}` + ']';

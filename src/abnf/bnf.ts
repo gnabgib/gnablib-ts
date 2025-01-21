@@ -4,7 +4,7 @@ import { nextPow2 } from '../algo/nextPow2.js';
 import { MatchFail, MatchSuccess } from '../primitive/MatchResult.js';
 import { IMatchResult } from '../primitive/interfaces/IMatchResult.js';
 import { IMatchDetail } from '../primitive/interfaces/IMatchDetail.js';
-import { stringExt } from '../primitive/StringExt.js';
+import { padStart } from '../primitive/StringExt.js';
 import { utf } from '../primitive/Utf.js';
 import type { WindowStr } from '../primitive/WindowStr.js';
 import { IBnf } from './interfaces/IBnf.js';
@@ -96,7 +96,7 @@ export class BnfChar implements IBnf {
 		const h = this.ord.toString(16).toUpperCase();
 		//nextPow2 return 0 and 1 (2^0=1) so filter those out manually
 		const outputLen = h.length <= 2 ? 2 : nextPow2(h.length);
-		return stringExt.padStart(h, outputLen, '0');
+		return padStart(h, outputLen, '0');
 	}
 
 	get chr(): string {

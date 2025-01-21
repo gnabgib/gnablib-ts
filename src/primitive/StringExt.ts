@@ -1,130 +1,130 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { escape } from '../regexp/index.js';
-import { sNum } from '../safe/safe.js';
 
 //codePointAt >> charCodeAt
 // - charCodeAt is constrained to UTF16 0-65535 values, while codePointAt allows any UTF32/UTF8 character
-// - note there are still surrogates so codePointAt may only provide some of the character (eg composed emoji)
+// - Most of the time codePointAt is a more accurate "character" because UTF16 has more surrogate pairs, however
+//  codePointAt may still only provide part, when for example it's a composed emoji (a sequence of emoji rendered as one)
 
-export const stringExt = {
-	wrap: function (source: string, width: number, join?: string): string {
-		sNum('width', width).atLeast(1).throwNot();
-		const ret = [];
-		const size = Math.ceil(source.length / width);
-		for (let i = 0; i < size; i++) {
-			const piece = source.slice(i * width, (i + 1) * width);
-			ret.push(piece);
+/** Separate a string into individual code points (emoji etc are represented by individual elements) */
+export function splitChars(src: string): string[] {
+	return Array.from(src);
+}
+
+/**
+ * Separate a string into a series of pieces of given size, in code points.  That is 1 emoji=1 letter
+ * Split a string into pieces of given size, no consideration for source-content is given
+ * like splitting at whitespace.  This is more useful for text protocols or text encoding
+ * of data which must not exceed a certain length.
+ *
+ * @param size Width to split at, all but the last piece will be this size
+ */
+export function splitLen(src: string, size: number): string[] {
+	const ret: string[] = [];
+	let cur = '';
+	let i = 0;
+	for (const codePoint of src) {
+		cur += codePoint;
+		i++;
+		if (i == size) {
+			ret.push(cur);
+			cur = '';
+			i = 0;
 		}
-		return ret.join(join ?? '\n');
-	},
+	}
+	if (i > 0) ret.push(cur);
+	return ret;
+}
 
-	/**
-	 * Remove characters specified by ignore from the source string
-	 * @param source
-	 * @param ignore
-	 * @param replace
-	 * @returns
-	 */
-	filter: function (
-		source: string,
-		ignore: string | RegExp,
-		replace?: string
-	): string {
-		if (typeof ignore === 'string')
-			ignore = new RegExp('[' + escape(ignore) + ']+', 'g');
-		replace = replace ?? '';
-		return source.replace(ignore, replace);
-	},
+/** Reverse characters in a string, UCS2 & emoji aware */
+export function reverse(src: string) {
+	return splitChars(src).reverse().join('');
+}
 
-	/**
-	 * Separate a string into individual code points (emoji etc are represented by individual elements)
-	 * @param source
-	 */
-	splitChars: function (source: string): string[] {
-		const ret = [];
-		//Let for of do the heavy lifting for codePoint traversal
-		for (const codePoint of source) {
-			ret.push(codePoint);
-		}
-		return ret;
-	},
+/**
+ * Pad the start of `src` with copies of `fill` until it's at least `len` characters long
+ * 
+ * If `src.length>len`, or `fill.length==0` nothing happens.  
+ * Otherwise append one or more copies of `fill` until the length is at least `len`
+ * and then trim starting characters back until the result is `len` in length.
+ */
+export function padStart(src: string, len: number, fill = ' '): string {
+	const dist = len - src.length;
+	//If source is already long enough, or fill isn't going to help.. bail
+	if (dist <= 0 || fill.length === 0) {
+		return src;
+	}
 
-	/**
-	 * Reverse the characters of a string (UCS2 aware)
-	 * @param source
-	 * @returns Reversed string
-	 */
-	reverse: function (source: string): string {
-		return stringExt.splitChars(source).reverse().join('');
-	},
+	//Note int round-up
+	// - If fill is 2 and dist is 1: 2+1-1/2=1
+	// - If fill is 2 and dist is 2: 2+2-1/2=1 (when int truncated)
+	// - If fill is 2 and dist is 3: 2+3-1/2=2
+	const fillCount = (fill.length + dist - 1) / fill.length;
+	let ret = fill.repeat(fillCount).concat(src);
+	const over = ret.length - len;
+	if (over > 0) ret = ret.substring(over);
+	return ret;
+}
 
-	/**
-	 * Pad the start of `source` with 0-n copies of `fill` such that source length is
-	 * at least `len` characters
-	 * @param source
-	 * @param len
-	 * @param fill
-	 * @returns Padded string
-	 */
-	padStart: function (source: string, len: number, fill = ' '): string {
-		const dist = len - source.length;
-		//If source is already long enough, or fill isn't going to help.. bail
-		if (dist <= 0 || fill.length === 0) {
-			return source;
-		}
+/**
+ * Remove characters specified by ignore from the source string
+ * @param src
+ * @param ignore Characters to remove
+ * @param replace What to replace the characters with
+ */
+export function filter(
+	src: string,
+	ignore: string | RegExp,
+	replace?: string
+): string {
+	if (typeof ignore === 'string')
+		ignore = new RegExp('[' + escape(ignore) + ']+', 'g');
+	replace = replace ?? '';
+	return src.replace(ignore, replace);
+}
 
-		//Note int round-up
-		// - If fill is 2 and dist is 1: 2+1-1/2=1
-		// - If fill is 2 and dist is 2: 2+2-1/2=1 (when int truncated)
-		// - If fill is 2 and dist is 3: 2+3-1/2=2
-		const fillCount = (fill.length + dist - 1) / fill.length;
-		let ret = fill.repeat(fillCount).concat(source);
-		const over = len - ret.length;
-		if (over > 0) ret = ret.substring(over);
-		return ret;
-	},
+/**
+ * Compare string contents of two strings, in constant time
+ * *Note:* Will fast-exit if the lengths don't match.
+ *
+ * Does not:
+ * - Consider UTF8 alternate encodings into account (eg. combining characters vs pure)
+ * - Consider similar looking characters equal (eg. uppercase:K vs kelvin sign:K)
+ * - Ignore invisible characters
+ */
+export function ctEq(a: string, b: string) {
+	if (a.length != b.length) return false;
+	let zero = 0;
+	//Even though we prefer codePointAt, charCodeAt is fine for equality checking
+	// (because we're looking for exact-match)
+	for (let i = 0; i < a.length; i++) zero |= a.charCodeAt(i) ^ b.charCodeAt(i);
+	return zero === 0;
+}
 
-	/**
-	 * Compare string contents in constant time
-	 * **NOTE** will immediately exit/false if lengths don't match
-	 * @param a
-	 * @param b
-	 */
-	ctEq: function (a: string, b: string): boolean {
-		if (a.length != b.length) return false;
-		let zero = 0;
-		for (let i = 0; i < a.length; i++)
-			zero |= a.charCodeAt(i) ^ b.charCodeAt(i);
-		return zero === 0;
-	},
+/**
+ * Select `a` if `first` or `b` otherwise, in constant time.
+ * **NOTE** This is quite expensive (exploding both strings into codepoints, choosing each,
+ *  and imploding codepoints back to a new string)
+ * @param first Choose a (true) or b (false)
+ * @returns A clone of a or b
+ * @throws If strings are different lengths
+ */
+export function ctSelect(a: string, b: string, first: boolean): string {
+	// @ts-expect-error: We're casting bool->number on purpose
+	const fNum = (first | 0) - 1; //-1 or 0
+	const aArr = splitChars(a);
+	const bArr = splitChars(b);
+	if (aArr.length != bArr.length)
+		throw new Error('Inputs are of different length');
 
-	/**
-	 * Constant time select `a` if `first==true` or `b` if `first==false`
-	 * **NOTE** This is quite expensive (exploding both strings into codepoints, choosing each,
-	 *  and imploding codepoints back to a new string)
-	 * @param a
-	 * @param b
-	 * @param first
-	 * @throws If strings are different things
-	 * @returns A clone of a or b
-	 */
-	ctSelect: function (a: string, b: string, first: boolean): string {
-		// @ts-expect-error: We're casting bool->number on purpose
-		const fNum = (first | 0) - 1; //-1 or 0
-		const aArr = stringExt.splitChars(a);
-		const bArr = stringExt.splitChars(b);
-		if (aArr.length != bArr.length)
-			throw new Error('Inputs are of different length');
-
-		//String are immutable,
-		const arr: number[] = [];
-		for (let i = 0; i < aArr.length; i++) {
-			//This will never be null, so stop ESLint complaining
-			arr.push(
-				(~fNum & aArr[i].codePointAt(0)!) | (fNum & bArr[i].codePointAt(0)!)
-			);
-		}
-		return String.fromCodePoint(...arr);
-	},
-};
+	//String are immutable,
+	const arr: number[] = [];
+	for (let i = 0; i < aArr.length; i++) {
+		//This will never be null, so stop ESLint complaining
+		arr.push(
+			(~fNum & aArr[i].codePointAt(0)!) | (fNum & bArr[i].codePointAt(0)!)
+		);
+	}
+	return String.fromCodePoint(...arr);
+}

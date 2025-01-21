@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 export { bitExt, Carrier } from './BitExt.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
@@ -10,7 +10,7 @@ export { MatchSuccess, MatchFail } from './MatchResult.js';
 //export * from './ReadonlyTypedArray_es2020.js';
 export * from './ReadonlyTypedArray.js';
 export { StringBuilder } from './StringBuilder.js';
-export { stringExt } from './StringExt.js';
+export * as stringExt from './StringExt.js';
 export {
 	ReadonlyTyped,
 	FixedTyped,

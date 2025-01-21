@@ -5,6 +5,9 @@ const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 const mask = [0, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f];
 
+/**
+ * Mount a byte array, and read a series of 1-32 bit numbers from it
+ */
 export class BitReader {
 	private _byte = 0;
 	protected constructor(private _buff: Uint8Array, private _bit = 0) {}

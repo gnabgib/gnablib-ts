@@ -32,7 +32,7 @@ export class BitWriter {
 
 	/**
 	 * Write up to 32bits of int/uint into the buffer in big-endian
-	 * @param value Value to write, truncated to 32bits
+	 * @param n32 Value to write, truncated to 32bits
 	 * @param bits Number of bits to write 1-32 (0 accepted but pointless)
 	 * @returns Whether entire number fit
 	 */
@@ -71,7 +71,7 @@ export class BitWriter {
 	/**
 	 * Like {@link pushNumberBE} but throws if the number didn't fit
 	 * Write up to 32bits of int/uint into the buffer in big-endian
-	 * @param value Value to write, truncated to 32bits
+	 * @param n32 Value to write, truncated to 32bits
 	 * @param bits Number of bits to write 1-32 (0 accepted but pointless)
 	 * @throws Error not enough space in the buffer
 	 */
