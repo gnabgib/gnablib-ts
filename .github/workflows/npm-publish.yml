@@ -12,17 +12,22 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org/
-      - run: npm ci --omit=optional
-      - run: npm test
-      - run: npm run build
+      - name: Install deps
+        run: npm ci --omit=optional
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Generate Package
       # There are security implications of including current dir in path, but
       # we trust ourselves, and we need this for windows/linux cross compat
       # (to call "compress" without a dir prefix)
-      - run: echo "." >> $GITHUB_PATH
-      - run: npm run compress
-      - run: npm run packgen
-      - run: npm publish ./_o --provenance
+        run: echo "." >> $GITHUB_PATH
+        run: npm run compress
+        run: npm run packgen
+      - name: Publish
+        run: npm publish ./_o --provenance
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
