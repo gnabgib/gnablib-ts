@@ -26,14 +26,7 @@ export type { IUucodeFile } from './interfaces/IUucodeFile.js';
 export type { IYEncEncodeOpts } from './interfaces/IYEncEncodeOpts.js';
 export type { IYEncDecodeOpts } from './interfaces/IYEncDecodeOpts.js';
 
-export {
-	ArrayBufferWindow,
-	ArrayBufferWindow_es2021,
-	ArrayBufferWindowReader,
-	ArrayBufferWindowWriter
-} from './ArrayBufferWindow.js';
 export { ascii85 } from './Ascii85.js';
-//export type { EncodeOpts } from './Ascii85.js'
 export { base32, zBase32, base32hex, crockford32 } from './Base32.js';
 export { base64, base64url, b64 } from './Base64.js';
 export * as sBase64 from './sBase64.js';

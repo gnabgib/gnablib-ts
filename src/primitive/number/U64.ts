@@ -15,7 +15,7 @@ const sizeBytes = 8;
 const sizeU32 = 2;
 
 //ES2016 - which we support, does not have BigInt
-//ES2020 - supports BigInt (kinda the main benefit)
+//ES2020 - supports BigInt (kinda the main benefit) (was called 2021 in ArrayBufferWindow)
 
 export type U64ish = U64 | number;
 
