@@ -1,7 +1,7 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import * as littleEndian from '../../endian/little.js';
-import { Uint64, Uint64ish } from '../../primitive/Uint64.js';
+import { Uint64 } from '../../primitive/Uint64.js';
 import type { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { U64 } from '../../primitive/number/U64.js';
@@ -612,7 +612,7 @@ export class Blake2s extends Blake2_32bit {
 		fanOut: number,
 		maxDepth: number,
 		leafMaxLen: number,
-		nodeOffset: Uint64ish,
+		nodeOffset: Uint64,
 		nodeDepth: number,
 		innerHashLen: number,
 		key?: Uint8Array,
@@ -630,7 +630,7 @@ export class Blake2s extends Blake2_32bit {
 		p[2] = fanOut;
 		p[3] = maxDepth;
 		p.set(U32.toBytesLE(leafMaxLen), 4);
-		littleEndian.u64IntoBytesUnsafe(Uint64.coerce(nodeOffset), p, 8);
+		littleEndian.u64IntoBytesUnsafe(nodeOffset, p, 8);
 		p[14] = nodeDepth;
 		p[15] = innerHashLen;
 		//Either no salt, or salt must be 16 bytes
@@ -662,7 +662,7 @@ export class Blake2s extends Blake2_32bit {
 			1,
 			1,
 			0,
-			0,
+			Uint64.zero,
 			0,
 			0,
 			key,
@@ -678,7 +678,7 @@ export class Blake2b extends Blake2_64bit {
 		fanOut: number,
 		maxDepth: number,
 		leafMaxLen: number,
-		nodeOffset: Uint64ish,
+		nodeOffset: Uint64,
 		nodeDepth: number,
 		innerHashLen: number,
 		key?: Uint8Array,
@@ -696,7 +696,7 @@ export class Blake2b extends Blake2_64bit {
 		p[2] = fanOut;
 		p[3] = maxDepth;
 		p.set(U32.toBytesLE(leafMaxLen), 4);
-		littleEndian.u64IntoBytesUnsafe(Uint64.coerce(nodeOffset), p, 8);
+		littleEndian.u64IntoBytesUnsafe(nodeOffset, p, 8);
 		p[16] = nodeDepth;
 		p[17] = innerHashLen;
 		//Either no salt, or salt must be 16 bytes
@@ -732,7 +732,7 @@ export class Blake2b extends Blake2_64bit {
 			1,
 			1,
 			0,
-			0,
+			Uint64.zero,
 			0,
 			0,
 			key,
@@ -754,7 +754,7 @@ export class Blake2s_224 extends Blake2s {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(28, 1, 1, 0, 0, 0, 0, key, salt, personalization);
+		super(28, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -770,7 +770,7 @@ export class Blake2s_256 extends Blake2s {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(32, 1, 1, 0, 0, 0, 0, key, salt, personalization);
+		super(32, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -786,7 +786,7 @@ export class Blake2b_256 extends Blake2b {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(32, 1, 1, 0, 0, 0, 0, key, salt, personalization);
+		super(32, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -802,7 +802,7 @@ export class Blake2b_384 extends Blake2b {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(48, 1, 1, 0, 0, 0, 0, key, salt, personalization);
+		super(48, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -818,6 +818,6 @@ export class Blake2b_512 extends Blake2b {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(64, 1, 1, 0, 0, 0, 0, key, salt, personalization);
+		super(64, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
 	}
 }

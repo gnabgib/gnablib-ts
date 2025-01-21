@@ -14,6 +14,9 @@ const maxU32Plus1 = 0x100000000;
 const sizeBytes = 8;
 const sizeU32 = 2;
 
+//ES2016 - which we support, does not have BigInt
+//ES2020 - supports BigInt (kinda the main benefit)
+
 export type U64ish = U64 | number;
 
 function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {

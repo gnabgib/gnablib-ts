@@ -44,8 +44,7 @@ export {
 	ScalingUint8ClampedArray,
 } from './TypedArrayExt.js';
 export { uint8ArrayExt } from './UInt8ArrayExt.js';
-//export { Uint64 } from './Uint64_es2020.js';
-export { Uint64, type Uint64ish } from './Uint64.js';
+export { Uint64 } from './Uint64.js';
 export { Urn } from './Uri.js';
 export { utf } from './Utf.js';
 export { WindowStr, type WindowOrString } from './WindowStr.js';

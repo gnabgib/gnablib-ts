@@ -9,7 +9,6 @@ const maxU32Plus1 = 0x100000000;
 const mask5Bits = 0x1f;
 const mask16Bits = 0xffff;
 
-export type Uint64ish = Uint64 | number;
 /**
  * A 64 bit int/uint
  */
@@ -408,19 +407,6 @@ export class Uint64 {
 		//Number.MAX_SAFE_INT - it's arguable whether this is 2^53 (FP) or 2^53-1 (JS)
 		//9007199254740991
 		return new Uint64(maxU32, 0x1fffff);
-	}
-
-	/**
-	 * Coerce a Uint64 or number into a Uint64 if it isn't already
-	 * @param value
-	 * @returns
-	 */
-	static coerce(value: Uint64ish): Uint64 {
-		if (value instanceof Uint64) {
-			return value;
-		} else {
-			return Uint64.fromNumber(value);
-		}
 	}
 
 	//minSafe cannot be represented in unsigned int
