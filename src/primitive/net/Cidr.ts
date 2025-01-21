@@ -1,6 +1,6 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { bitExt } from '../BitExt.js';
+import { lsbMask } from '../BitExt.js';
 import { IpV4 } from './Ip.js';
 import { ContentError } from '../../error/ContentError.js';
 import { UInt } from '../number/index.js';
@@ -21,7 +21,7 @@ export class Cidr {
 	constructor(ipv4: IpV4, mask: number) {
 		sNum('mask', mask).unsigned().atMost(32).throwNot();
 		const ipv4Int = ipv4.valueOf();
-		this.bitMask = bitExt.lsbs(32 - mask);
+		this.bitMask = lsbMask(32-mask);
 		const startInt = (ipv4Int & ~this.bitMask) >>> 0;
 		this.dist = ipv4Int - startInt;
 		this.startIp = IpV4.fromInt(startInt);

@@ -1,6 +1,5 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
-import { nextPow2 } from '../algo/nextPow2.js';
 import { MatchFail, MatchSuccess } from '../primitive/MatchResult.js';
 import { IMatchResult } from '../primitive/interfaces/IMatchResult.js';
 import { IMatchDetail } from '../primitive/interfaces/IMatchDetail.js';
@@ -10,6 +9,7 @@ import type { WindowStr } from '../primitive/WindowStr.js';
 import { IBnf } from './interfaces/IBnf.js';
 import { IBnfRepeat } from './interfaces/IBnfRepeat.js';
 import { sLen, sNum } from '../safe/safe.js';
+import { nextPow2 } from '../primitive/BitExt.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 

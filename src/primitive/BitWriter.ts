@@ -4,7 +4,7 @@ import { sNum } from '../safe/safe.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 /**
- * A way to write data to a byte array
+ * Mount a byte array, and write a series of 1-32 bit numbers into it
  */
 export class BitWriter {
 	private _byte = 0;
@@ -20,9 +20,9 @@ export class BitWriter {
 		return (this._buff.length - this._byte) * 8 - this._bit;
 	}
 
-	/** 
-	 * Set the byte/bit pointers back to 0 - doesn't erase data written so far 
-	 * 
+	/**
+	 * Set the byte/bit pointers back to 0 - doesn't erase data written so far
+	 *
 	 * **Warning** If this writer was mounted with a `startBit` other than zero it'll be lost
 	 */
 	reset() {

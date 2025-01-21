@@ -1,5 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
-
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 export const bitsPerByte = 8;
 export const size16Bytes = 2;
@@ -9,134 +8,104 @@ export const i32SizeBits = size32Bytes * bitsPerByte;
 export const size64Bytes = 8;
 export const i64SizeBits = size64Bytes * bitsPerByte;
 
-export const bitExt = {
-	/**
-	 * Compose a least significant mask off @see bitCount width
-	 * @param bitCount With of mask
-	 * @returns Mask
-	 */
-	lsbs: function (bitCount: number): number {
-		// (1<<bitCount)-1 works for 0-31 bit masks
-		//   - JS 32bit limit means 1<<32(=1)-1(=0) isn't the correct mask
-		// ((1<<bitCount-1)-1)*2|1 works for 1-32 bit masks
-		//   - since the caller asking for a pointless 0 mask, it's behind
-		//      an if statement.. hopefully the branch predictor favours the other
-		return bitCount > 0 ? ((((1 << (bitCount - 1)) - 1) * 2) | 1) >>> 0 : 0;
-	},
-
-	/**
-	 * Invert the significance of the bits in a byte eg 0x01->0x80, 0x02->0x40
-	 * @param byte
-	 * @returns
-	 */
-	reverse: function (byte: number): number {
-		byte &= 0xff;
-		// 01234567 -> 76543210
-		byte = ((byte & 0xf0) >> 4) | ((byte & 0x0f) << 4); //Swap nibble
-		byte = ((byte & 0xcc) >> 2) | ((byte & 0x33) << 2); //Swap pairs
-		byte = ((byte & 0xaa) >> 1) | ((byte & 0x55) << 1); //Swap bits
-		return byte;
-	},
-
-	/**
-	 * Counter the number of binary 1s in a number (1==a multiple of 2)
-	 * count1Bits(2)=1
-	 * count1Bits(3)=2
-	 * count1Bits(0xf)=4
-	 * @param value
-	 */
-	count1Bits: function (value: number): number {
-		value -= (value >>> 1) & 0x55555555;
-		value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
-		value = (value + (value >>> 4)) & 0x0f0f0f0f;
-		value += value >>> 8;
-		value += value >>> 16;
-		return value & 0x3f;
-		// Naive form:
-		// let count=0;
-		// while(value) {
-		//     value&=(value-1);
-		//     count++;
-		// }
-		// return count;
-	},
-};
+/**
+ * Count how many bits are set in a 32bit number (signed or unsigned)
+ * @param n32 Number to count bits set to 1, limited to 32bits in length
+ * @returns
+ */
+export function countBitsSet(n32: number): number {
+	//Parallel count.. costs 9 ops, but is o(1)
+	n32 -= (n32 >>> 1) & 0x55555555;
+	n32 = (n32 & 0x33333333) + ((n32 >>> 2) & 0x33333333);
+	n32 = (n32 + (n32 >>> 4)) & 0x0f0f0f0f;
+	n32 += n32 >>> 8;
+	n32 += n32 >>> 16;
+	return n32 & 0x3f;
+	// //Brian Kernighan's method
+	// //http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
+	// //As many iterations as bits.. so it can be quite costly 2n (where n is bits)
+	// let c = 0;
+	// for (; n32; c++) n32 &= n32 - 1;
+	// return c;
+}
 
 /**
- * Accumulate data (will overflow if inSize>16, or outSize>16)
- * JS only makes 32 bits available for bit logic
+ * Compose a least significant mask of `bits` width
+ * @param bits number of bits to mask [0 - 32]
  */
-export class Carrier {
-	private _size = 0;
-	private _value = 0;
-	readonly inSize: number;
-	readonly outSize: number;
-	private _inMask: number;
-	private _outMask: number;
+export function lsbMask(bits: number): number {
+	return bits == 0 ? 0 : 0xffffffff >>> (32 - bits);
+}
 
-	/**
-	 * Build a new carrier
-	 * @param inSize Size of bits to accept (will be masked to stop overflow)
-	 * @param outSize Size of bits to output
-	 */
-	constructor(inSize: number, outSize: number) {
-		this.inSize = inSize;
-		this.outSize = outSize;
-		this._inMask = bitExt.lsbs(inSize);
-		this._outMask = bitExt.lsbs(outSize);
+/**
+ * Invert the significance of the bits in a number, which can be sized per bitsPow2
+ *
+ * 1 = 2^1 =  2 bits
+ * 2 = 2^2 =  4 bits
+ * 3 = 2^3 =  8 bits
+ * 4 = 2^4 = 16 bits
+ * 5 = 2^5 = 32 bits
+ *
+ * Note the results are unpredictable if n uses more bits than 2^bitsPow2
+ *
+ * @param n Number to reverse
+ * @param bitsPow2 How many bits to reverse, treated as a power of two [1 - 5]
+ * @returns Reversed number
+ */
+export function reverse(n: number, bitsPow2: number): number {
+	switch (bitsPow2) {
+		case 5: //2^5=32
+			n = ((n & 0xffff0000) >>> 16) | ((n & 0x0000ffff) << 16); //Swap word
+		// eslint-disable-next-line no-fallthrough
+		case 4: //2^4=16
+			n = ((n & 0xff00ff00) >>> 8) | ((n & 0x00ff00ff) << 8); //Swap byte
+		// eslint-disable-next-line no-fallthrough
+		case 3: //2^3=8
+			n = ((n & 0xf0f0f0f0) >>> 4) | ((n & 0x0f0f0f0f) << 4); //Swap nibble
+		// eslint-disable-next-line no-fallthrough
+		case 2: //2^2=4
+			n = ((n & 0xcccccccc) >>> 2) | ((n & 0x33333333) << 2); //Swap pairs
+		// eslint-disable-next-line no-fallthrough
+		case 1: //2^1=2
+			n = ((n & 0xaaaaaaaa) >>> 1) | ((n & 0x55555555) << 1); //Swap bits
+			break;
+		default:
+			throw Error('bitsPow2 must be [1 - 5]');
 	}
+	return n;
+}
 
-	/**
-	 * How many bits are stored within
-	 */
-	get size(): number {
-		return this._size;
-	}
+/**
+ * Count the number of leading zeros in a 32bit number (signed or unsigned)
+ */
+export function countLeadZeros(n32: number): number {
+	//de bruijn method
+	if (n32 == 0) return 32;
+	// prettier-ignore
+	const debruijn_clz32 = [
+		0, 31, 9, 30, 3, 8, 13, 29, 2, 5, 7, 21, 12, 24, 28, 19,
+        1, 10, 4, 14, 6, 22, 25, 20, 11, 15, 23, 26, 16, 27, 17, 18,
+	];
+	n32 |= n32 >> 1;
+	n32 |= n32 >> 2;
+	n32 |= n32 >> 4;
+	n32 |= n32 >> 8;
+	n32 |= n32 >> 16;
+	n32++;
+	return debruijn_clz32[(n32 * 0x076be629) >>> 27];
+}
 
-	/**
-	 * Whether there is nothing stored within (size==0)
-	 */
-	get empty(): boolean {
-		return this._size <= 0;
-	}
-
-	/**
-	 * Whether there are enough stored bits that dequeue is possible
-	 */
-	get canDequeue(): boolean {
-		return this._size >= this.outSize;
-	}
-
-	/**
-	 * Add the given @see data to the queue
-	 * @param data Data to add (will be masked to stop overflow)
-	 */
-	enqueue(data: number): void {
-		this._size += this.inSize;
-		this._value = (this._value << this.inSize) | (data & this._inMask);
-	}
-
-	/**
-	 * Remove one output value from the queue, always check @see canDequeue
-	 * first, if there isn't enough data this will return non-existent data
-	 * @returns A number of @see outSize bits
-	 */
-	dequeue(): number {
-		const ret = this.peek();
-		this._size -= this.outSize;
-		return ret;
-	}
-
-	/**
-	 * Return an output value if there's enough data, otherwise the remaining
-	 * bits in MSB
-	 * @returns
-	 */
-	peek(): number {
-		if (this._size >= this.outSize) {
-			return (this._value >>> (this._size - this.outSize)) & this._outMask;
-		} else {
-			return (this._value << (this.outSize - this._size)) & this._outMask;
-		}
-	}
+/**
+ * Find the next power of 2 that's at least `n32` in magnitude
+ */
+export function nextPow2(n32: number): number {
+	//http://graphics.stanford.edu/%7Eseander/bithacks.html#RoundUpPowerOf2
+	if (n32 === 0) return 0;
+	n32--;
+	n32 |= n32 >> 1;
+	n32 |= n32 >> 2;
+	n32 |= n32 >> 4;
+	n32 |= n32 >> 8;
+	n32 |= n32 >> 16;
+	return n32 + 1;
 }

@@ -1,8 +1,8 @@
 /*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
-import { leadingZeros } from '../algo/leadingZeros.js';
 import { asLE } from '../endian/platform.js';
 import { ContentError } from '../error/ContentError.js';
+import { countLeadZeros } from '../primitive/BitExt.js';
 import { sLen } from '../safe/safe.js';
 import { APrng32 } from './APrng32.js';
 
@@ -23,7 +23,7 @@ export class MiddleSquare extends APrng32<Uint32Array> {
 		super(state, saveable);
 		this._div = 10 ** (state[N] / 2);
 		this._mod = 10 ** state[N];
-		this.bitGen = 32 - leadingZeros(this._mod - 1);
+		this.bitGen = 32 - countLeadZeros(this._mod - 1);
 	}
 
 	protected trueSave() {
