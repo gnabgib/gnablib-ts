@@ -20,12 +20,13 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
-      - name: Generate Package
       # There are security implications of including current dir in path, but
       # we trust ourselves, and we need this for windows/linux cross compat
       # (to call "compress" without a dir prefix)
-        run: echo "." >> $GITHUB_PATH
+      - run: echo "." >> $GITHUB_PATH
+      - name: Compress
         run: npm run compress
+      - name: Generate package
         run: npm run packgen
       - name: Publish
         run: npm publish ./_o --provenance
