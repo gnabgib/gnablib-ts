@@ -1,6 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { parseDec, parseHex, sign16, sign32, sign8 } from '../../../src/primitive/number/xtUInt';
+import { fromGlScaleBytes, parseDec, parseHex, sign16, sign32, sign8, toGlScaleBytes } from '../../../src/primitive/number/xtUint';
+import { hex } from '../../../src/codec/Hex';
+import { ParseProblem } from '../../../src/error';
 
 const tsts = suite('XtUInt');
 
@@ -130,6 +132,114 @@ const sign32Set: [number, number][] = [
 for (const [input, expect] of sign32Set) {
 	tsts('sign32 ' + input, () => {
 		assert.is(sign32(input), expect);
+	});
+}
+
+const gscale_tests:[number,string][]=[
+	[0, '00'],
+	[1, '01'],
+	[127, '7F'],//2**7 -1
+	//BE for 128-1023
+	[128, '8080'],//2**7
+	[129, '8081'],
+	[1023, '83FF'],//2**10 -1 = 0b10000011 11111111
+	// Now it's LE
+	[1024, 'C00004'],//2**10 = 0b11000001 00000100 00000000
+	[16383, 'C0FF3F'],
+	[16384, 'C00040'],
+	[20000, 'C0204E'],
+	[65534, 'C0FEFF'],//2**16 -2
+	[65535, 'C0FFFF'],//2**16 -1
+	[65536, 'C1000001'],//2**16
+	[16777215, 'C1FFFFFF'],//2**24 -1
+	[16777216, 'C200000001'],//2**24
+	[4294967295, 'C2FFFFFFFF'],//2**32 -1 = MAX (for U32)
+];
+for(const [u32,expect] of gscale_tests) {
+	tsts(`toGscaleBytes(${u32})`, () => {
+		assert.is(hex.fromBytes(toGlScaleBytes(u32)),expect);
+	});
+	tsts(`fromGscaleBytes(${expect})`,()=>{
+		const ret=fromGlScaleBytes(hex.toBytes(expect));
+		if (ret instanceof ParseProblem) assert.equal(false,true,ret.toString());
+		const [num,bCount]=ret;
+		assert.is(num,u32);
+	});
+}
+
+//These are one way since they're multiple encodings of the same number (get a better encoder)
+const fromGscaleBytes_denorm_tests:[string,number][]=[
+	//<128 can be encoded 3 ways +2 more C ways
+	['00',0],
+	['8000',0],
+	['C00000',0],
+	['C1000000',0],
+	['C200000000',0],
+	['7F',127],
+	['807F',127],
+	['C07F00',127],
+	['C17F0000',127],
+	['C27F000000',127],
+	//<1024 can be encoded 2 ways +2 more C ways
+	['8080',128],
+	['C08000',128],
+	['C1800000',128],
+	['C280000000',128],
+	['83FF',1023],
+	['C0FF03',1023],
+	['C1FF0300',1023],
+	['C2FF030000',1023],
+	//rest < number of bytes, can be encoded with the wrong length
+	['C0FFFF',65535],
+	['C1FFFF00',65535],
+	['C2FFFF0000',65535],
+	['C1FFFFFF',16777215],
+	['C2FFFFFF00',16777215],
+];
+for(const [hx,expect] of fromGscaleBytes_denorm_tests) {
+	tsts(`fromGscaleBytes(${hx})=${expect}`,()=>{
+		const ret=fromGlScaleBytes(hex.toBytes(hx));
+		if (ret instanceof ParseProblem) assert.equal(false,true,ret.toString());
+		const [num]=ret;
+		assert.is(num,expect);
+	});
+}
+
+const fromGscaleBytes_oversize_tests:string[]=[
+	'',
+	//Indicator suggests the length should be longer
+	'80',
+	'C0',
+	'C000',
+	'C1',
+	'C100',
+	'C10000',
+	'C2',
+	'C200',
+	'C20000',
+	'C2000000',
+	//Indicator is out of range
+	'C3',
+	'C4',
+	'C5',
+	'C6',
+	'C7',
+	'C8',
+	'C9',
+	'CA',
+	'CB',
+	'CC',
+	'CD',
+	'CE',
+	'CF',
+	'D0',
+	'E0',
+	'F0',
+]
+for(const hx of fromGscaleBytes_oversize_tests) {
+	tsts(`fromGscaleBytes(${hx}) generates a problem`,()=>{
+		const ret=fromGlScaleBytes(hex.toBytes(hx));
+		assert.instance(ret,ParseProblem);
 	});
 }
 

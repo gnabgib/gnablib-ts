@@ -1,13 +1,14 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { FromBinResult } from '../primitive/FromBinResult.js';
-import { intExt } from '../primitive/xtInt.js';
 import { DateTimeLocal } from '../datetime/dt.js';
 import { ACmd } from './ACmd.js';
 import { ColValue } from './ColValue.js';
 import type { TableName } from './TableName.js';
 import { CommandData } from './types/Command.js';
 import { Plane } from './types/Plane.js';
+import { fromGlScaleBytes, toGlScaleBytes } from '../primitive/number/xtUint.js';
+import { ParseProblem } from '../error/index.js';
 
 /**
  * @alpha
@@ -35,7 +36,7 @@ export abstract class ACmdData extends ACmd {
 
 	toBin(extraSpace = 0): Uint8Array {
 		//Always include the rowId (in extra)
-		const i = intExt.uintToScaleBytes(this.recId);
+		const i = toGlScaleBytes(this.recId);
 		const finalExtraSpace = i.length + extraSpace;
 		const ret = super.toBin(finalExtraSpace);
 		ret.set(i, ret.length - finalExtraSpace);
@@ -155,15 +156,17 @@ export class CmdDataInsert extends ADataCols {
 	): FromBinResult<CmdDataInsert> {
 		let ptr = pos;
 		let spaceRem = e;
-		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
-		if (!iFrom.success)
+		const iFrom = fromGlScaleBytes(bin.subarray(ptr));
+		if (iFrom instanceof ParseProblem) {
 			return new FromBinResult<CmdDataInsert>(
 				0,
 				undefined,
 				`CmdDataInsert.fromBinSub missing recId: ${iFrom.reason}`
 			);
-		ptr += iFrom.byteLen;
-		spaceRem -= iFrom.byteLen;
+		}
+		const [value,byteLen]=iFrom;
+		ptr += byteLen;
+		spaceRem -= byteLen;
 
 		const cols: ColValue[] = [];
 		while (spaceRem > 0) {
@@ -183,7 +186,7 @@ export class CmdDataInsert extends ADataCols {
 		return new FromBinResult(
 			len + e,
 			//We know value (because success)
-			new CmdDataInsert(u, s, t, iFrom.value!, ...cols)
+			new CmdDataInsert(u, s, t, value!, ...cols)
 		);
 	}
 }

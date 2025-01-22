@@ -1,9 +1,8 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 export * as xtBit from './xtBit.js'
-export { intExt as xtInt } from './xtInt.js';
 export * as xtString from './xtString.js';
-export { uint8ArrayExt as xtUint8Array } from './xtUInt8Array.js';
+export { uint8ArrayExt as xtUint8Array } from './xtUint8Array.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
 export { Int64 } from './Int64.js';
 export { Lazy } from './Lazy.js';

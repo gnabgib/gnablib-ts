@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { parseDec, parseHex } from '../../../src/primitive/number/xtInt';
+import { parseCsv, parseDec, parseHex } from '../../../src/primitive/number/xtInt';
 
 const tsts = suite('XtInt');
 
@@ -73,6 +73,17 @@ for (const [input, jsExpect, expect] of parseHexSet) {
 	tsts(`parseHex(${input})`, () => {
 		assert.equal(Number.parseInt(input, 16), jsExpect, 'parseInt');
 		assert.equal(parseHex(input), expect, 'parseHex');
+	});
+}
+
+const parseCsv_tests:[string,number[]][]=[
+	['0',[0]],
+	['0,0',[0,0]],
+	['1 , 2 ,3',[1,2,3]],
+];
+for (const [input,expect] of parseCsv_tests) {
+	tsts(`parseHex(${input})`, () => {
+		assert.equal(parseCsv(input),expect);
 	});
 }
 

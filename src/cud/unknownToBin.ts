@@ -1,6 +1,5 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import { intExt } from '../primitive/xtInt.js';
 import { utf8 } from '../codec/Utf8.js';
 import { fpb64 } from '../codec/ieee754-fpb.js';
 import { Uint64 } from '../primitive/Uint64.js';
@@ -9,6 +8,7 @@ import { FromBinResult } from '../primitive/FromBinResult.js';
 import { asBE } from '../endian/platform.js';
 import { DateTimeLocal } from '../datetime/dt.js';
 import { BitWriter } from '../primitive/BitWriter.js';
+import { toGlScaleBytes } from '../primitive/number/xtUint.js';
 
 /**
  * @alpha
@@ -17,7 +17,7 @@ export function unknownToBin(value: unknown): Uint8Array {
 	let ret: Uint8Array;
 	if (typeof value === 'string') {
 		const enc = utf8.toBytes(value);
-		const len = intExt.uintToScaleBytes(enc.length);
+		const len=toGlScaleBytes(enc.length);
 		ret = new Uint8Array(len.length + enc.length);
 		ret.set(len);
 		ret.set(enc, len.length);

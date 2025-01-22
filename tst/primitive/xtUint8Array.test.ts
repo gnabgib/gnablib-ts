@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 //import { uint8ArrayExt } from '../../src/primitive';
 import { hex } from '../../src/codec';
 import { Assert } from '../../src/test';
-import { uint8ArrayExt } from '../../src/primitive/XtUInt8Array';
+import { uint8ArrayExt } from '../../src/primitive/xtUint8Array';
 
 
 const tsts = suite('xtUuint8Array');

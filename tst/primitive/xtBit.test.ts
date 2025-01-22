@@ -6,7 +6,7 @@ import {
 	lsbMask,
 	reverse,
 	nextPow2
-} from '../../src/primitive/XtBit';
+} from '../../src/primitive/xtBit';
 
 const tsts = suite('bitExt');
 

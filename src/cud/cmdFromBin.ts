@@ -1,7 +1,6 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { FromBinResult } from '../primitive/FromBinResult.js';
-import { intExt } from '../primitive/xtInt.js';
 import { TableName } from './TableName.js';
 import { Plane } from './types/Plane.js';
 import { ACmdData } from './CommandData.js';
@@ -9,6 +8,8 @@ import type { ACmd } from './ACmd.js';
 import { ACmdCtrl } from './CommandCtrl.js';
 import { DateTimeLocal } from '../datetime/dt.js';
 import { BitReader } from '../primitive/BitReader.js';
+import { fromGlScaleBytes } from '../primitive/number/xtUint.js';
+import { ParseProblem } from '../error/index.js';
 
 export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	//S, P, C, U, T, E are always parsed, although C is P dependent (so leave)
@@ -39,14 +40,15 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 	const cByte = bin[ptr];
 	ptr += 1;
 
-	const uFrom = intExt.uintFromScaleBytes(bin, ptr);
-	if (!uFrom.success)
+	const uFrom = fromGlScaleBytes(bin.subarray(ptr));
+	if (uFrom instanceof ParseProblem)
 		return new FromBinResult<ACmd>(
 			0,
 			undefined,
 			'cmdFromBin missing userId: ' + uFrom.reason
 		);
-	ptr += uFrom.byteLen;
+	const [uValue,uByteLen]=uFrom;
+	ptr += uByteLen;
 
 	const tFrom = TableName.fromBin(bin, ptr);
 	if (!tFrom.success)
@@ -57,23 +59,24 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 		);
 	ptr += tFrom.byteLen;
 
-	const eFrom = intExt.uintFromScaleBytes(bin, ptr);
-	if (!eFrom.success)
+	const eFrom = fromGlScaleBytes(bin.subarray(ptr));
+	if (eFrom instanceof ParseProblem)
 		return new FromBinResult<ACmd>(
 			0,
 			undefined,
 			'cmdFromBin missing extra: ' + eFrom.reason
 		);
-	ptr += eFrom.byteLen;
+	const [eValue,eByteLen]=eFrom;
+	ptr += eByteLen;
 
 	//We know values (because success)
 	if (pFrom.value!.isCtrl) {
 		return ACmdCtrl.fromBinSub(
 			s,
 			cByte,
-			uFrom.value!,
+			uValue,
 			tFrom.value!,
-			eFrom.value!,
+			eValue,
 			bin,
 			ptr - pos,
 			ptr
@@ -82,9 +85,9 @@ export function cmdFromBin(bin: Uint8Array, pos = 0): FromBinResult<ACmd> {
 		return ACmdData.fromBinSub(
 			s,
 			cByte,
-			uFrom.value!,
+			uValue,
 			tFrom.value!,
-			eFrom.value!,
+			eValue,
 			bin,
 			ptr - pos,
 			ptr

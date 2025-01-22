@@ -1,11 +1,11 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { BitWriter } from '../primitive/BitWriter.js';
-import { intExt } from '../primitive/xtInt.js';
 import { DateTimeLocal } from '../datetime/dt.js';
 import type { TableName } from './TableName.js';
 import type { Command } from './types/Command.js';
 import type { Plane } from './types/Plane.js';
+import { toGlScaleBytes } from '../primitive/number/xtUint.js';
 
 /**
  * @alpha
@@ -57,9 +57,9 @@ export abstract class ACmd {
 		//const s = this.started.serialize().toBytesBE();
 		const p = this.plane.toBin();
 		const c = this.cmd.toBin();
-		const u = intExt.uintToScaleBytes(this.userId);
+		const u = toGlScaleBytes(this.userId);
 		const t = this.table.toBin();
-		const e = intExt.uintToScaleBytes(extraSpace);
+		const e = toGlScaleBytes(extraSpace);
 
 		const ret = new Uint8Array(
 			bytes.length +
