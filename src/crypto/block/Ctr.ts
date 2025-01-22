@@ -1,7 +1,7 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { U32 } from '../../primitive/number/U32.js';
-import { uint8ArrayExt } from '../../primitive/xtUint8Array.js';
+import { incrBE } from '../../primitive/xtUint8Array.js';
 import { LengthError } from '../../error/LengthError.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
@@ -29,7 +29,7 @@ export class IncrBytes implements Iterable<Uint8Array> {
 			next(): IteratorResult<Uint8Array> {
 				//Return (we want it in new memory)
 				const ret = run.slice();
-				uint8ArrayExt.incrBE(run);
+				incrBE(run);
 				return {
 					done: false,
 					value: ret,

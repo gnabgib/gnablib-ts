@@ -1,8 +1,8 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { Aes } from '../sym/Aes.js';
 import type { IHash } from '../interfaces/IHash.js';
-import { uint8ArrayExt } from '../../primitive/xtUint8Array.js';
+import { lShiftEq, xorEq } from '../../primitive/xtUint8Array.js';
 
 const blockSize = 16;
 
@@ -15,12 +15,12 @@ function generateSubKey(a: Aes, k1: Uint8Array, k2: Uint8Array): void {
 	a.encryptBlock(l);
 
 	let msbIs1 = (l[0] & msb) === msb;
-	uint8ArrayExt.lShiftEq(l, 1);
+	lShiftEq(l, 1);
 	if (msbIs1) l[l.length - 1] ^= rb;
 	k1.set(l);
 
 	msbIs1 = (l[0] & msb) === msb;
-	uint8ArrayExt.lShiftEq(l, 1);
+	lShiftEq(l, 1);
 	if (msbIs1) l[l.length - 1] ^= rb;
 	k2.set(l);
 }
@@ -97,11 +97,11 @@ export class Cmac implements IHash {
 	sumIn(): Uint8Array {
 		if (this._bPos === 16) {
 			//When the size is exactly a block xor k1, crypt and we're done
-			uint8ArrayExt.xorEq(this.#block, this._k1);
+			xorEq(this.#block, this._k1);
 		} else {
 			//Otherwise add the end marker, xor k2, crypt and.. we're done
 			this.#block[this._bPos++] ^= 0x80;
-			uint8ArrayExt.xorEq(this.#block, this._k2);
+			xorEq(this.#block, this._k2);
 		}
 		this._aes.encryptBlock(this.#block);
 		this._bPos = 0;

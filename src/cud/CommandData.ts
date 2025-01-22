@@ -7,7 +7,10 @@ import { ColValue } from './ColValue.js';
 import type { TableName } from './TableName.js';
 import { CommandData } from './types/Command.js';
 import { Plane } from './types/Plane.js';
-import { fromGlScaleBytes, toGlScaleBytes } from '../primitive/number/xtUint.js';
+import {
+	fromGlScaleBytes,
+	toGlScaleBytes,
+} from '../primitive/number/xtUint.js';
 import { ParseProblem } from '../error/index.js';
 
 /**
@@ -164,7 +167,7 @@ export class CmdDataInsert extends ADataCols {
 				`CmdDataInsert.fromBinSub missing recId: ${iFrom.reason}`
 			);
 		}
-		const [value,byteLen]=iFrom;
+		const [value, byteLen] = iFrom;
 		ptr += byteLen;
 		spaceRem -= byteLen;
 
@@ -226,15 +229,16 @@ export class CmdDataPut extends ADataCols {
 	): FromBinResult<CmdDataPut> {
 		let ptr = pos;
 		let spaceRem = e;
-		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
-		if (!iFrom.success)
+		const iFrom = fromGlScaleBytes(bin.subarray(ptr));
+		if (iFrom instanceof ParseProblem)
 			return new FromBinResult<CmdDataPut>(
 				0,
 				undefined,
 				`CmdDataPut.fromBinSub missing recId: ${iFrom.reason}`
 			);
-		ptr += iFrom.byteLen;
-		spaceRem -= iFrom.byteLen;
+		const [value, byteLen] = iFrom;
+		ptr += byteLen;
+		spaceRem -= byteLen;
 
 		const cols: ColValue[] = [];
 		while (spaceRem > 0) {
@@ -253,7 +257,7 @@ export class CmdDataPut extends ADataCols {
 		return new FromBinResult(
 			len + e,
 			//We know value (because success)
-			new CmdDataPut(u, s, t, iFrom.value!, ...cols)
+			new CmdDataPut(u, s, t, value, ...cols)
 		);
 	}
 }
@@ -293,15 +297,16 @@ export class CmdDataPatch extends ADataCols {
 	): FromBinResult<CmdDataPatch> {
 		let ptr = pos;
 		let spaceRem = e;
-		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
-		if (!iFrom.success)
+		const iFrom = fromGlScaleBytes(bin.subarray(ptr));
+		if (iFrom instanceof ParseProblem)
 			return new FromBinResult<CmdDataPatch>(
 				0,
 				undefined,
 				`CmdDataPatch.fromBinSub missing recId: ${iFrom.reason}`
 			);
-		ptr += iFrom.byteLen;
-		spaceRem -= iFrom.byteLen;
+		const [value, byteLen] = iFrom;
+		ptr += byteLen;
+		spaceRem -= byteLen;
 
 		const cols: ColValue[] = [];
 		while (spaceRem > 0) {
@@ -320,7 +325,7 @@ export class CmdDataPatch extends ADataCols {
 		return new FromBinResult(
 			len + e,
 			//We know value (because success)
-			new CmdDataPatch(u, s, t, iFrom.value!, ...cols)
+			new CmdDataPatch(u, s, t, value!, ...cols)
 		);
 	}
 }
@@ -353,15 +358,16 @@ export class CmdDataDelete extends ACmdData {
 		pos: number
 	): FromBinResult<CmdDataDelete> {
 		let ptr = pos;
-		const iFrom = intExt.uintFromScaleBytes(bin, ptr);
-		if (!iFrom.success)
+		const iFrom = fromGlScaleBytes(bin.subarray(ptr));
+		if (iFrom instanceof ParseProblem)
 			return new FromBinResult<CmdDataDelete>(
 				0,
 				undefined,
 				`CmdDataDelete.fromBinSub missing recId: ${iFrom.reason}`
 			);
-		ptr += iFrom.byteLen;
+		const [value, byteLen] = iFrom;
+		ptr += byteLen;
 		//Check ptr==e?
-		return new FromBinResult(len + e, new CmdDataDelete(u, s, t, iFrom.value!));
+		return new FromBinResult(len + e, new CmdDataDelete(u, s, t, value));
 	}
 }

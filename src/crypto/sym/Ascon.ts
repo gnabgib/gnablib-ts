@@ -1,10 +1,10 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { uint8ArrayExt } from '../../primitive/xtUint8Array.js';
 import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
 import { sLen } from '../../safe/safe.js';
+import { xorEq } from '../../primitive/xtUint8Array.js';
 
 // prettier-ignore
 /** Round constants (expand into 64bit) 2.6.1 */
@@ -199,7 +199,7 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		//Run pa
 		this.p(aRound);
 		//Xor in the key
-		uint8ArrayExt.xorEq(this.state.subarray(40 - key.length), key);
+		xorEq(this.state.subarray(40 - key.length), key);
 	}
 
 	/**

@@ -2,7 +2,7 @@
 
 export * as xtBit from './xtBit.js'
 export * as xtString from './xtString.js';
-export { uint8ArrayExt as xtUint8Array } from './xtUint8Array.js';
+export * as xtUint8Array from './xtUint8Array.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
 export { Int64 } from './Int64.js';
 export { Lazy } from './Lazy.js';

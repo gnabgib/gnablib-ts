@@ -244,9 +244,11 @@ Name|Capacities|Optional parameters
 #### Extensions:
 
 - Bit (countBitsSet, lsbMask, reverse, countLeadZeros, nextPow2)
-- Int
+- Float (parseDec)
+- Int (parseDec, parseHex, parseCsv)
 - String (splitChars, splitLen, reverse, padStart, filter, ctEq, ctSelect)
-- Uint8Array
+- Uint (parseDec, parseHex, sign8, sign16, sign32, glScaleSize, toGlScaleBytes, fromGlScaleBytes)
+- Uint8Array (toGlBytes, ctEq, ctSelect, incrBE, lShiftEq, xorEq)
 
 ### PseudoRandom number generators (PRNG)
 

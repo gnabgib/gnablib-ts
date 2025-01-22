@@ -73,10 +73,21 @@ export function sign32(input: number): number {
 }
 
 /**
+ * Determine the number of bytes required to represent an integer in GlScale
+ * @param input Unsigned integer 0 - 0xFFFFFFFF (truncated if oversized)
+ * @returns Bytes required to serialize
+ */
+export function glScaleSize(input:number):number {
+	if (input<128) return 1;
+	if (input<1024) return 2;
+	return Math.ceil(Math.log2(input+1)/8)+1;
+}
+
+/**
  * Encode an unsigned integer as a minimal set of bytes without a fixed size.
  * When input <128 data is stored in a single byte,
  * when input <1024 data is stored in two bytes,
- * for higher values data is stored in `1 + ceil(log2(input)/8)`
+ * for higher values data is stored in `1 + ceil(log2(input+1)/8)`
  *
  * @param input Unsigned integer 0 - 0xFFFFFFFF (truncated if oversized)
  * @returns Uint8Array of length 1-5 bytes

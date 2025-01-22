@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { fromGlScaleBytes, parseDec, parseHex, sign16, sign32, sign8, toGlScaleBytes } from '../../../src/primitive/number/xtUint';
+import { fromGlScaleBytes, glScaleSize, parseDec, parseHex, sign16, sign32, sign8, toGlScaleBytes } from '../../../src/primitive/number/xtUint';
 import { hex } from '../../../src/codec/Hex';
 import { ParseProblem } from '../../../src/error';
 
@@ -135,6 +135,25 @@ for (const [input, expect] of sign32Set) {
 	});
 }
 
+const glScaleSize_tests:[number,number][]=[
+	[0,1],
+	[127,1],
+	[128,2],
+	[1023,2],
+	[1024,3],
+	[65535,3],
+	[65536,4],
+	[65537,4],
+	[16777215,4],
+	[16777216,5],
+	[4294967295,5],
+];
+for(const [u32,reqSize] of glScaleSize_tests) {
+	tsts(`glScaleSize(${u32})`, () => {
+		assert.is(glScaleSize(u32),reqSize);
+	});
+}
+
 const gscale_tests:[number,string][]=[
 	[0, '00'],
 	[1, '01'],
@@ -151,6 +170,7 @@ const gscale_tests:[number,string][]=[
 	[65534, 'C0FEFF'],//2**16 -2
 	[65535, 'C0FFFF'],//2**16 -1
 	[65536, 'C1000001'],//2**16
+	[65537, 'C1010001'],//2**16+1
 	[16777215, 'C1FFFFFF'],//2**24 -1
 	[16777216, 'C200000001'],//2**24
 	[4294967295, 'C2FFFFFFFF'],//2**32 -1 = MAX (for U32)
@@ -162,7 +182,7 @@ for(const [u32,expect] of gscale_tests) {
 	tsts(`fromGscaleBytes(${expect})`,()=>{
 		const ret=fromGlScaleBytes(hex.toBytes(expect));
 		if (ret instanceof ParseProblem) assert.equal(false,true,ret.toString());
-		const [num,bCount]=ret;
+		const [num]=ret;
 		assert.is(num,u32);
 	});
 }
@@ -242,5 +262,6 @@ for(const hx of fromGscaleBytes_oversize_tests) {
 		assert.instance(ret,ParseProblem);
 	});
 }
+
 
 tsts.run();

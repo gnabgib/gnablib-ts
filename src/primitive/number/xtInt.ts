@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 /**
  * Parse string content as a base10 form of an integer.  Much stricter than

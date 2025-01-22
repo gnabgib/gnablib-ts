@@ -1,25 +1,22 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-//import { uint8ArrayExt } from '../../src/primitive';
 import { hex } from '../../src/codec';
 import { Assert } from '../../src/test';
-import { uint8ArrayExt } from '../../src/primitive/xtUint8Array';
+import { ctEq, ctSelect, incrBE, lShiftEq, toGlBytes, xorEq } from '../../src/primitive/xtUint8Array';
 
 
-const tsts = suite('xtUuint8Array');
+const tsts = suite('xtUint8Array');
 
-const toSizedBytesTest: [Uint8Array, number, number | undefined, Uint8Array][] =
-	[
-		[new Uint8Array(0), 0, undefined, Uint8Array.of(0)],
-		[Uint8Array.of(1, 2), 0, 0, Uint8Array.of(0)],
-		[Uint8Array.of(1, 2), 0, 1, Uint8Array.of(1, 1)],
-		[Uint8Array.of(1, 2), 1, 1, Uint8Array.of(1, 2)],
-		[Uint8Array.of(1, 2), 0, undefined, Uint8Array.of(2, 1, 2)],
-	];
-let i = 0;
-for (const [input, start, end, expect] of toSizedBytesTest) {
-	tsts(`toSizedBytes[${i++}]`, () => {
-		assert.equal(uint8ArrayExt.toSizedBytes(input, start, end), expect);
+const toGlBytes_tests:[string,string][]=[
+	['','00'],
+	['00','0100'],
+	['01','0101'],
+	['0102','020102'],
+];
+for(const [input,expect] of toGlBytes_tests) {
+	tsts(`toGlBytes(${input})`,()=>{
+		const b=hex.toBytes(input);
+		assert.equal(hex.fromBytes(toGlBytes(b)),expect);
 	});
 }
 
@@ -28,7 +25,7 @@ for (const aHex of eqTest) {
 	const a = hex.toBytes(aHex);
 	const b = hex.toBytes(aHex);
 	tsts(`${aHex} ==.ct ${aHex}`, () => {
-		assert.equal(uint8ArrayExt.ctEq(a, b), true);
+		assert.equal(ctEq(a, b), true);
 	});
 }
 const neqTest: [string, string][] = [
@@ -41,7 +38,7 @@ for (const [aHex, bHex] of neqTest) {
 	const a = hex.toBytes(aHex);
 	const b = hex.toBytes(bHex);
 	tsts(`!${aHex} ==.ct ${bHex}`, () => {
-		assert.equal(uint8ArrayExt.ctEq(a, b), false);
+		assert.equal(ctEq(a, b), false);
 	});
 }
 
@@ -56,46 +53,22 @@ for (const [aHex, bHex] of selTest) {
 	const a = hex.toBytes(aHex);
 	const b = hex.toBytes(bHex);
 	tsts(`select(${aHex},${bHex},true)`, () => {
-		assert.equal(uint8ArrayExt.ctSelect(a, b, true), a);
+		assert.equal(ctSelect(a, b, true), a);
 	});
 	tsts(`select(${aHex},${bHex},false)`, () => {
-		assert.equal(uint8ArrayExt.ctSelect(a, b, false), b);
+		assert.equal(ctSelect(a, b, false), b);
 	});
 }
 
 tsts(`ctSelect(a,b) with diff lengths throws`, () => {
 	const a = new Uint8Array(0);
 	const b = Uint8Array.of(1, 2);
-	assert.throws(() => uint8ArrayExt.ctSelect(a, b, true));
-	assert.throws(() => uint8ArrayExt.ctSelect(b, a, true));
+	assert.throws(() => ctSelect(a, b, true));
+	assert.throws(() => ctSelect(b, a, true));
 });
 
-tsts(`pushInt`, () => {
-	const a = new Uint8Array(2);
-	let bitPos = 0;
-	bitPos = uint8ArrayExt.pushInt(1, 1, a, bitPos);
-	assert.equal(bitPos, 1);
-	assert.equal(a[0], 0b10000000, 'push 1');
-	bitPos = uint8ArrayExt.pushInt(1, 2, a, bitPos);
-	assert.equal(bitPos, 3);
-	assert.equal(a[0], 0b10100000, 'push 2');
-	bitPos = uint8ArrayExt.pushInt(1, 3, a, bitPos);
-	assert.equal(bitPos, 6);
-	assert.equal(a[0], 0b10100100, 'push 3');
-	bitPos = uint8ArrayExt.pushInt(1, 4, a, bitPos);
-	assert.equal(bitPos, 10);
-	assert.equal(a[0], 0b10100100, 'push 4a');
-	assert.equal(a[1], 0b01000000, 'push 4b');
 
-    //nop
-    bitPos = uint8ArrayExt.pushInt(1, 0, a, bitPos);
-    assert.equal(bitPos, 10);
-
-	//Trying to push too much data will throw
-	assert.throws(() => uint8ArrayExt.pushInt(1, 16, a, bitPos));
-});
-
-const incrTests:[string,string][]=[
+const incrBE_tests:[string,string][]=[
 	['01','02'],
 	['FE','FF'],
 	['FF','00'],//Wrap around
@@ -105,16 +78,16 @@ const incrTests:[string,string][]=[
 	['FFFF','0000'],//Wrap around
 	['FFFFFFFFFF','0000000000']
 ];
-for(const [start,end] of incrTests) {
-	tsts(`incr(${start})`,()=>{
+for(const [start,end] of incrBE_tests) {
+	tsts(`incrBE(${start})`,()=>{
 		const found=hex.toBytes(start);
-		uint8ArrayExt.incrBE(found);
+		incrBE(found);
 		Assert.bytesMatchHex(found,end);	
 	});
 	//assert.is(hex.fromBytes(found),end);
 }
 
-const lShiftTests:[string,number,string][]=[
+const lShiftEq_tests:[string,number,string][]=[
 	['01',1,'02'],
 	['01',2,'04'],
 	['01',3,'08'],
@@ -138,23 +111,23 @@ const lShiftTests:[string,number,string][]=[
 	['A5A5A5',24,'000000'],
 	['A5A5A5',420,'000000'],
 ];
-for(const [start,by,end] of lShiftTests) {
+for(const [start,by,end] of lShiftEq_tests) {
 	tsts(`incr(${start})`,()=>{
 		const found=hex.toBytes(start);
-		uint8ArrayExt.lShiftEq(found,by);
+		lShiftEq(found,by);
 		Assert.bytesMatchHex(found,end);	
 	});
 }
 
-const xorTests:[string,string,string][]=[
+const xorEq_tests:[string,string,string][]=[
 	['01','','01'],
 	['','01',''],
 	['02','01','03'],
 ];
-for(const [b,x,expect] of xorTests) {
+for(const [b,x,expect] of xorEq_tests) {
 	tsts(`xorEq(${b},${x})`,()=>{
 		const found=hex.toBytes(b);
-		uint8ArrayExt.xorEq(found,hex.toBytes(x));
+		xorEq(found,hex.toBytes(x));
 		Assert.bytesMatchHex(found,expect);	
 	});
 
