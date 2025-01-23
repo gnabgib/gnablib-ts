@@ -277,7 +277,7 @@ for (const [start, by, expect] of rShift_tests) {
 }
 
 // prettier-ignore
-const lRotTest: [string, number, string][] = [
+const lRot_tests: [string, number, string][] = [
 	['0000000000000000', 0, '0000000000000000'],
 	['0000000000000000', 1, '0000000000000000'],
 	['0000000000000000', 13, '0000000000000000'],
@@ -333,7 +333,7 @@ const lRotTest: [string, number, string][] = [
 	['0123456789ABCDEF', 65, '02468ACF13579BDE'], //Same as 1
 	['0123456789ABCDEF', -1, '8091A2B3C4D5E6F7'], //Same as 63
 ];
-for (const [start, by, expect] of lRotTest) {
+for (const [start, by, expect] of lRot_tests) {
 	tsts(`${start} ROL ${by}`, () => {
 		const aBytes = hex.toBytes(start);
 		const a = I64.fromBytesBE(aBytes);
@@ -344,7 +344,7 @@ for (const [start, by, expect] of lRotTest) {
 }
 
 // prettier-ignore
-const rRotTest: [string, number, string][] = [
+const rRot_tests: [string, number, string][] = [
 	['0000000000000000', 0, '0000000000000000'],
 	['0000000000000000', 1, '0000000000000000'],
 	['0000000000000000', 13, '0000000000000000'],
@@ -398,7 +398,7 @@ const rRotTest: [string, number, string][] = [
 	['0123456789ABCDEF', 65, '8091A2B3C4D5E6F7'], //Same as 1
 	['0123456789ABCDEF', -1, '02468ACF13579BDE'], //Same as 63
 ];
-for (const [start, by, expect] of rRotTest) {
+for (const [start, by, expect] of rRot_tests) {
 	tsts(`${start} ROR ${by}`, () => {
 		const aBytes = hex.toBytes(start);
 		const a = I64.fromBytesBE(aBytes);

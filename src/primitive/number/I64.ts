@@ -1,10 +1,7 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
-import { sInt, sLen } from '../../safe/safe.js';
-import {
-	IInt,
-	IIntMut,
-} from '../interfaces/IUint.js';
+import { sLen } from '../../safe/safe.js';
+import { IInt, IIntMut } from '../interfaces/IUint.js';
 import { AInt } from './_AInt.js';
 
 const size8 = 8;
@@ -21,10 +18,6 @@ export class I64 extends AInt implements IInt<I64> {
 	 * @throws Error if i52 is out of range or floating point
 	 */
 	static fromInt(i52: number) {
-		sInt('i52', i52)
-			.atLeast(Number.MIN_SAFE_INTEGER)
-			.atMost(Number.MAX_SAFE_INTEGER)
-			.throwNot();
 		return new I64(AInt._fromInt(size32, i52), 0);
 	}
 
@@ -95,7 +88,7 @@ export class I64 extends AInt implements IInt<I64> {
 	}
 	rRot(by: number) {
 		const ret = this.clone();
-		ret._lRotEq(64 - by);
+		ret._lRotEq(size8 * 8 - by);
 		return ret;
 	}
 	//#endregion
@@ -172,13 +165,13 @@ export class I64 extends AInt implements IInt<I64> {
 	}
 	//#endregion
 
-	/** I64(0x0000000000000000) */
+	/** I64(0) */
 	static get zero(): I64 {
 		return zero;
 	}
 }
 
-const zero = I64.mount(new Uint32Array(2),0);
+const zero = I64.mount(new Uint32Array(size32), 0);
 
 export class I64Mut extends I64 implements IIntMut<I64Mut, I64> {
 	protected constructor(arr: Uint32Array, pos: number) {
@@ -202,10 +195,6 @@ export class I64Mut extends I64 implements IIntMut<I64Mut, I64> {
 	 * @throws Error if i52 is out of range or floating point
 	 */
 	static fromInt(i52: number) {
-		sInt('i52', i52)
-			.atLeast(Number.MIN_SAFE_INTEGER)
-			.atMost(Number.MAX_SAFE_INTEGER)
-			.throwNot();
 		return new I64Mut(AInt._fromInt(size32, i52), 0);
 	}
 
@@ -261,7 +250,7 @@ export class I64Mut extends I64 implements IIntMut<I64Mut, I64> {
 		return this;
 	}
 	rRotEq(by: number) {
-		this._lRotEq(64 - by);
+		this._lRotEq(size8 * 8 - by);
 		return this;
 	}
 	//#endregion

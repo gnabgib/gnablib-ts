@@ -145,7 +145,6 @@ export interface IIntMut<T, Tro>
 		IBasicMut<T, Tro>,
 		IShiftEqOps<T>,
 		ILogicEqOps<T>,
-		IArithEqOps<T>,
 		IArithEqSignOps<T> {}
 /** Uint mutable numbers should implement this @hidden */
 export interface IUintMut<T, Tro>

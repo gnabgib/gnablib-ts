@@ -1,7 +1,7 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 import { hex } from '../../codec/Hex.js';
 import { asBE } from '../../endian/platform.js';
-import { sLen, sNum } from '../../safe/safe.js';
+import { sInt, sLen, sNum } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -38,6 +38,10 @@ export abstract class AInt {
 
 	//#region Builds
 	protected static _fromInt(size32: number, i52: number): Uint32Array {
+		sInt('i52', i52)
+			.atLeast(Number.MIN_SAFE_INTEGER)
+			.atMost(Number.MAX_SAFE_INTEGER)
+			.throwNot();
 		const arr = new Uint32Array(size32);
 		arr[0] = i52;
 		//We need to use Math.floor such that negative numbers become more negative
@@ -192,26 +196,31 @@ export abstract class AInt {
 		// as 0 in JS and leads to elements ORing and merging (a right mess) - we need
 		// to zero the shift in that case.
 		const zeroRshift = 1 - (invBy32 >>> 5);
-		// /*DEBUG*/ let d = `[${this.size32}] lRot ${by}=[${by32} ${byPos}]: `;
+		// /*DEBUG*/ let d = `[${this.size32}] lRot ${by}=[${by32} ${byPos}]\n`;
 
 		//First move U32s
-		// /*DEBUG*/d+=`shift U32 by ${byPos},`;
+		// /*DEBUG*/ d += ` shift U32 by ${byPos}`;
 		this._arr.subarray(this._pos, this._pos + this.size32).reverse();
 		this._arr.subarray(this._pos, this._pos + byPos).reverse();
 		this._arr.subarray(this._pos + byPos, this._pos + this.size32).reverse();
+		// /*DEBUG*/d += ` =${this}\n`;
 
 		//Now do any bit shifting
-		const back = this._arr[this._pos];
-		let i = 0;
-		for (; i < this.size32 - 1; i++) {
-			// /*DEBUG*/d+=`[${this._pos+i}]=[${this._pos+i}]<<${by32}|(${zeroRshift}*[${this._pos+i+1}]>>>${invBy32}),`;
+		let back = this._arr[this._pos];
+		// /*DEBUG*/ d += ` [${this._pos}]=[${this._pos}]<<${by32}|(${zeroRshift}*[${this._pos + this.size32 - 1}]>>>${invBy32})\n`;
+		this._arr[this._pos] =
+			(this._arr[this._pos] << by32) |
+			((zeroRshift * this._arr[this._pos + this.size32 - 1]) >>> invBy32);
+		let i = 1;
+		for (; i < this.size32; i++) {
+			// /*DEBUG*/ d += ` [${this._pos + i}]=[${this._pos + i}]<<${by32}|(${zeroRshift}*[${this._pos + i - 1}]>>>${invBy32})\n`;
+            const b=this._arr[this._pos + i];
 			this._arr[this._pos + i] =
 				(this._arr[this._pos + i] << by32) |
-				((zeroRshift * this._arr[this._pos + i + 1]) >>> invBy32);
+				((zeroRshift * back) >>> invBy32);
+            back=b;
 		}
-		this._arr[this._pos + i] =
-			(this._arr[this._pos + i] << by32) | ((zeroRshift * back) >>> invBy32);
-		// /*DEBUG*/console.log(d);
+		// /*DEBUG*/ console.log(d);
 	}
 	//#endregion
 
