@@ -2,20 +2,15 @@
 
 import { sInt, sLen } from '../../safe/safe.js';
 import {
-	IArithSignOps,
-	ILogicOps,
-	INum,
-	IShiftOps,
+	IInt,
+	IIntMut,
 } from '../interfaces/IUint.js';
 import { AInt } from './_AInt.js';
 
 const size8 = 8;
 const size32 = 2;
 
-export class I64
-	extends AInt
-	implements INum<I64>, IShiftOps<I64>, ILogicOps<I64>, IArithSignOps<I64>
-{
+export class I64 extends AInt implements IInt<I64> {
 	protected constructor(arr: Uint32Array, pos: number, name = 'I64') {
 		super(arr, pos, size32, name);
 	}
@@ -46,7 +41,7 @@ export class I64
 	}
 
 	/**
-	 * Create from a *copy* of bytes assuming they are in big endian order
+	 * Create from a **copy** of bytes assuming they are in big endian order
 	 * (eg. as humans write)
 	 * @param pos Position to start from in `src`
 	 * @throws Error if `src` isn't long enough
@@ -56,8 +51,8 @@ export class I64
 	}
 
 	/**
-	 * Mount an existing array, note this *shares* memory with the array,
-	 * changing a value in `src` will mutate this state.  u32 values are
+	 * Mount an existing array, note this **shares** memory with the array,
+	 * changing a value in `arr` will mutate this state.  u32 values are
 	 * in little-endian order (least significant value first)
 	 *
 	 * @param pos Position to link from
@@ -79,10 +74,6 @@ export class I64
 	mut(): I64Mut {
 		const arr = this._arr.slice(this._pos, this._pos + size32);
 		return I64Mut.mount(arr, 0);
-	}
-
-	clone32() {
-		return this._arr.slice(this._pos, this._pos + size32);
 	}
 
 	//#region ShiftOps
@@ -181,28 +172,24 @@ export class I64
 	}
 	//#endregion
 
+	/** I64(0x0000000000000000) */
 	static get zero(): I64 {
 		return zero;
 	}
 }
 
-const zero = I64.fromI32s(0, 0);
+const zero = I64.mount(new Uint32Array(2),0);
 
-export class I64Mut extends I64 {
+export class I64Mut extends I64 implements IIntMut<I64Mut, I64> {
 	protected constructor(arr: Uint32Array, pos: number) {
 		super(arr, pos, 'I64Mut');
 	}
 
-	/**
-	 * Update value
-	 * @returns Self (chainable)
-	 */
 	set(v: I64): I64Mut {
 		super._setValue(v);
 		return this;
 	}
 
-	/** Zero this value */
 	zero(): I64Mut {
 		super._setZero();
 		return this;
@@ -260,7 +247,7 @@ export class I64Mut extends I64 {
 	}
 	//#endregion
 
-	//#region  ShiftEqOps
+	//#region ShiftEqOps
 	lShiftEq(by: number) {
 		this._lShiftEq(by);
 		return this;

@@ -9,6 +9,7 @@ export abstract class AInt {
 	protected constructor(
 		protected _arr: Uint32Array,
 		protected _pos: number,
+		/** Number of 32bit elements required */
 		readonly size32: number,
 		protected readonly _name: string
 	) {}
@@ -27,7 +28,13 @@ export abstract class AInt {
 		this._arr.fill(0, this._pos, this._pos + this.size32);
 	}
 
+	/** Create a **copy** of this element */
 	abstract clone(): AInt;
+
+	/** Create a **copy** of the `Uint32Array` within, little endian order */
+	clone32() {
+		return this._arr.slice(this._pos, this._pos + this.size32);
+	}
 
 	//#region Builds
 	protected static _fromInt(size32: number, i52: number): Uint32Array {
@@ -336,10 +343,7 @@ export abstract class AInt {
 	}
 	//#endregion
 
-	/**
-	 * **COPY** Value as a stream of bytes (big-endian order)
-	 * @returns Uint8Array[8]
-	 */
+	/** Create a **copy** of internal value as a big-endian stream of bytes */
 	toBytesBE(): Uint8Array {
 		const ret = new Uint8Array(
 			this._arr.slice(this._pos, this._pos + this.size32).buffer
@@ -362,10 +366,7 @@ export abstract class AInt {
 		return (this._arr[this._pos + shift] >>> low) & 0xff;
 	}
 
-	/**
-	 * String version of this value, in big endian
-	 * @returns
-	 */
+	/** String version of this value, as hex, in big endian */
 	toString(): string {
 		return hex.fromBytes(this.toBytesBE());
 	}
