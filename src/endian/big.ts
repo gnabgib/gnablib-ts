@@ -1,7 +1,6 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
 import { Uint64 } from '../primitive/Uint64.js';
-import { Int64 } from '../primitive/Int64.js';
 import { sNum } from '../safe/safe.js';
 
 /**
@@ -122,20 +121,6 @@ export function uintToMinBytes(uint: number | Uint64): Uint8Array {
 	// 	u32 >>>= 8;
 	// } while (u32 !== 0);
 	// return ret.slice(0, outPtr).reverse();
-}
-/**
- * Output a 0-64 bit signed number as a 1-8 byte array
- * @param int
- * @returns UInt8Array[1-8]
- */
-export function intToMinBytes(int: number | Int64): Uint8Array {
-	let i64: Int64;
-	if (typeof int === 'number') {
-		i64 = Int64.fromNumber(int);
-	} else {
-		i64 = int as Int64;
-	}
-	return i64.toMinBytes();
 }
 
 /**

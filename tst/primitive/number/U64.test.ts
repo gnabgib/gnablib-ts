@@ -820,15 +820,7 @@ tsts(`fromBuffer`,()=>{
 
 tsts(`constants`,()=>{
 	assert.equal(U64.max.toBytesBE(),Uint8Array.of(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff));
-	assert.equal(U64.min.toBytesBE(),Uint8Array.of(0,0,0,0,0,0,0,0));
 	assert.equal(U64.zero.toBytesBE(),Uint8Array.of(0,0,0,0,0,0,0,0));
-})
-
-tsts(`coerce`,()=>{
-	const a=U64.coerce(1);
-	assert.equal(a.eq(U64.fromInt(1)),true);
-	const b=U64.coerce(a);
-	assert.equal(b.eq(U64.fromInt(1)),true);
 });
 
 tsts('[Symbol.toStringTag]', () => {

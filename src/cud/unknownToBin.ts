@@ -3,12 +3,12 @@
 import { utf8 } from '../codec/Utf8.js';
 import { fpb64 } from '../codec/ieee754-fpb.js';
 import { Uint64 } from '../primitive/Uint64.js';
-import { Int64 } from '../primitive/Int64.js';
 import { FromBinResult } from '../primitive/FromBinResult.js';
 import { asBE } from '../endian/platform.js';
 import { DateTimeLocal } from '../datetime/dt.js';
 import { BitWriter } from '../primitive/BitWriter.js';
 import { toGlScaleBytes } from '../primitive/number/xtUint.js';
+import { I64 } from '../primitive/number/I64.js';
 
 /**
  * @alpha
@@ -45,8 +45,8 @@ export function unknownToBin(value: unknown): Uint8Array {
 		const bw = BitWriter.mount(ret);
 		bw.pushNumberBE(value.serialSizeBits / 8, 1);
 		value.serialize(bw);
-	} else if (value instanceof Int64) {
-		const i = value.toMinBytes();
+	} else if (value instanceof I64) {
+		const i = value.toBytesBE();//todo: minBytes
 		ret = new Uint8Array(1 + i.length);
 		ret[0] = i.length;
 		ret.set(i, 1);

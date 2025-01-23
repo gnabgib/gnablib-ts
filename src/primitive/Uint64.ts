@@ -391,10 +391,6 @@ export class Uint64 {
 		return new Uint64(maxU32, maxU32);
 	}
 
-	static get min(): Uint64 {
-		return zero;
-	}
-
 	static get zero(): Uint64 {
 		return zero;
 	}

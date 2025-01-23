@@ -1,6 +1,5 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import { Int64 } from '../../primitive/Int64.js';
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
@@ -9,50 +8,52 @@ import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { RangeProblem } from '../../error/probs/RangeProblem.js';
 import { IProblem } from '../../error/probs/interfaces/IProblem.js';
 import { sLen } from '../../safe/safe.js';
+import { U64 } from '../../primitive/number/U64.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
-const min64 = new Int64(0, 0);
+const min64 = U64.zero;
+const max64 = U64.fromUint32Pair(0xffffffff, 0xffffffff);
 
-abstract class AId extends ACudColType implements IValid<number | Int64> {
+abstract class AId extends ACudColType implements IValid<number | U64> {
 	protected abstract get _maxByteLen(): number;
-	protected abstract get _max64(): Int64;
+	protected abstract get _max64(): U64;
 
 	constructor() {
 		super(false);
 	}
 
-	valid(input: number | Int64 | undefined): IProblem | undefined {
-		let i64: Int64;
-		if (input instanceof Int64) {
-			i64 = input;
+	valid(input: number | U64 | undefined): IProblem | undefined {
+		let u64: U64;
+		if (input instanceof U64) {
+			u64 = input;
 			//if (input.lt(min64) || input.gt(max64)) return new OutOfRangeError('Id', input, min64, max64);
 		} else if (Number.isInteger(input)) {
 			//Good
-			i64 = Int64.fromNumber(input as number);
+			u64 = U64.fromInt(input as number);
 		} else {
-			return TypeProblem.UnexpVal('input',input,'integer or Int64');
+			return TypeProblem.UnexpVal('input', input, 'integer or Int64');
 		}
-		if (i64.lt(min64) || i64.gt(this._max64))
-			return RangeProblem.IncInc('Id',input,min64,this._max64);
+		if (u64.lt(min64) || u64.gt(this._max64))
+			return RangeProblem.IncInc('Id', input, min64, this._max64);
 	}
 
 	cudByteSize(): number {
 		return this._maxByteLen;
 	}
 
-	unknownBin(value: number | Int64): Uint8Array {
-		let i64: Int64;
-		if (value instanceof Int64) {
+	unknownBin(value: number | U64): Uint8Array {
+		let i64: U64;
+		if (value instanceof U64) {
 			//Good
 			i64 = value;
 		} else if (typeof value === 'number' && Number.isInteger(value)) {
 			//Good
-			i64 = Int64.fromNumber(value);
+			i64 = U64.fromInt(value);
 		} else {
-			throw new TypeError('Integer or Int64 required');
+			throw new TypeError('Integer or U64 required');
 		}
-		const n = i64.toMinBytes();
-		sLen('i64-bytes',n).atMost(this._maxByteLen).throwNot();
+		const n = i64.toBytesBE();
+		sLen('i64-bytes', n).atMost(this._maxByteLen).throwNot();
 
 		const ret = new Uint8Array(1 + n.length);
 		ret[0] = n.length;
@@ -60,9 +61,9 @@ abstract class AId extends ACudColType implements IValid<number | Int64> {
 		return ret;
 	}
 
-	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Int64> {
+	binUnknown(bin: Uint8Array, pos: number): FromBinResult<U64> {
 		if (pos + 1 > bin.length)
-			return new FromBinResult<Int64>(
+			return new FromBinResult<U64>(
 				0,
 				undefined,
 				'Id.binUnknown unable to find length'
@@ -70,14 +71,14 @@ abstract class AId extends ACudColType implements IValid<number | Int64> {
 
 		const l = bin[pos++];
 		if (l === 0) {
-			return new FromBinResult<Int64>(
+			return new FromBinResult<U64>(
 				0,
 				undefined,
 				'Id.binUnknown cannot be null'
 			);
 		}
 		if (l > this._maxByteLen)
-			return new FromBinResult<Int64>(
+			return new FromBinResult<U64>(
 				0,
 				undefined,
 				`Id.binUnknown invalid length (0<${this._maxByteLen} got ${l})`
@@ -85,20 +86,16 @@ abstract class AId extends ACudColType implements IValid<number | Int64> {
 
 		const end = pos + l;
 		if (end > bin.length)
-			return new FromBinResult<Int64>(
-				0,
-				undefined,
-				'Id.binUnknown missing data'
-			);
+			return new FromBinResult<U64>(0, undefined, 'Id.binUnknown missing data');
 
-		return new FromBinResult(l + 1, Int64.fromMinBytes(bin, pos, l));
+		return new FromBinResult(l + 1, U64.fromBytesBE(bin, pos));
 	}
 }
 
 export class Id2 extends AId {
 	readonly _colType = ColType.Id2;
 	readonly _maxByteLen = 2;
-	readonly _max64 = new Int64(0x7fff, 0);
+	readonly _max64 = U64.fromUint32Pair(0x7fff, 0);
 
 	readonly mysqlType = 'SMALLINT AUTO_INCREMENT PRIMARY KEY';
 	readonly sqliteType = 'INT2 PRIMARY KEY NOT NULL'; //Integer affinity
@@ -110,7 +107,7 @@ export class Id2 extends AId {
 export class Id4 extends AId {
 	readonly _colType = ColType.Id4;
 	readonly _maxByteLen = 4;
-	readonly _max64 = new Int64(0x7fffffff, 0);
+	readonly _max64 = U64.fromUint32Pair(0x7fffffff, 0);
 
 	readonly mysqlType = 'INT AUTO_INCREMENT PRIMARY KEY';
 	readonly sqliteType = 'INT PRIMARY KEY NOT NULL'; //Integer affinity
@@ -121,7 +118,7 @@ export class Id4 extends AId {
 export class Id8 extends AId {
 	readonly _colType = ColType.Id8;
 	readonly _maxByteLen = 8;
-	readonly _max64 = Int64.max;
+	readonly _max64 = max64;
 
 	readonly mysqlType = 'BIGINT AUTO_INCREMENT PRIMARY KEY';
 	readonly sqliteType = 'BIGINT PRIMARY KEY NOT NULL'; //Integer affinity

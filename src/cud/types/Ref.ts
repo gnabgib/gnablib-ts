@@ -1,9 +1,8 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { ColType } from './ColType.js';
 import { ACudColType } from './ACudColType.js';
 import type { IValid } from '../interfaces/IValid.js';
-import { Int64 } from '../../primitive/Int64.js';
 import { TableName } from '../TableName.js';
 import { ColName } from '../ColName.js';
 import { FromBinResult } from '../../primitive/FromBinResult.js';
@@ -12,16 +11,16 @@ import { TypeProblem } from '../../error/probs/TypeProblem.js';
 import { RangeProblem } from '../../error/probs/RangeProblem.js';
 import { ContentError } from '../../error/ContentError.js';
 import { sLen } from '../../safe/safe.js';
+import { I64 } from '../../primitive/number/I64.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
-const min64 = new Int64(0, 0);
 
-export abstract class ARef
-	extends ACudColType
-	implements IValid<number | Int64>
-{
+const min64 = I64.fromI32s(0, 0x80000000);
+const max64 = I64.fromI32s(0xffffffff, 0xffffffff);
+
+export abstract class ARef extends ACudColType implements IValid<number | I64> {
 	protected abstract get _maxByteLen(): number;
-	protected abstract get _max64(): Int64;
+	protected abstract get _max64(): I64;
 	protected abstract get _cudPrefix(): string;
 
 	readonly table: TableName;
@@ -43,17 +42,17 @@ export abstract class ARef
 		return this._maxByteLen;
 	}
 
-	valid(input?: number | Int64): IProblem | undefined {
-		let i64: Int64;
+	valid(input?: number | I64): IProblem | undefined {
+		let i64: I64;
 		if (input == undefined) {
 			if (!this.nullable) return TypeProblem.Null('Ref');
 			return;
-		} else if (input instanceof Int64) {
+		} else if (input instanceof I64) {
 			i64 = input;
 			//if (input.lt(min64) || input.gt(max64)) return new OutOfRangeError('Id', input, min64, max64);
 		} else if (Number.isInteger(input)) {
 			//Good
-			i64 = Int64.fromNumber(input);
+			i64 = I64.fromInt(input);
 		} else {
 			return TypeProblem.UnexpVal('Ref', input, 'integer or Int64');
 		}
@@ -74,22 +73,22 @@ export abstract class ARef
 		return ret;
 	}
 
-	unknownBin(value?: number | Int64): Uint8Array {
-		let i64: Int64;
+	unknownBin(value?: number | I64): Uint8Array {
+		let i64: I64;
 		if (value == undefined) {
 			if (!this.nullable)
 				throw new ContentError('cannot be null', 'Ref', undefined);
 			return new Uint8Array([0]);
-		} else if (value instanceof Int64) {
+		} else if (value instanceof I64) {
 			//Good
 			i64 = value;
 		} else if (typeof value === 'number' && Number.isInteger(value)) {
 			//Good
-			i64 = Int64.fromNumber(value);
+			i64 = I64.fromInt(value);
 		} else {
 			throw new TypeError('Integer or Int64 required');
 		}
-		const n = i64.toMinBytes();
+		const n = i64.toBytesBE(); // i64.toMinBytes();
 		sLen('i64-bytes', n).atMost(this._maxByteLen).throwNot();
 
 		const ret = new Uint8Array(1 + n.length);
@@ -98,7 +97,7 @@ export abstract class ARef
 		return ret;
 	}
 
-	binUnknown(bin: Uint8Array, pos: number): FromBinResult<Int64 | undefined> {
+	binUnknown(bin: Uint8Array, pos: number): FromBinResult<I64 | undefined> {
 		if (pos + 1 > bin.length)
 			return new FromBinResult(
 				0,
@@ -123,7 +122,10 @@ export abstract class ARef
 		if (end > bin.length)
 			return new FromBinResult(0, undefined, 'Ref.binUnknown missing data');
 
-		return new FromBinResult(l + 1, Int64.fromMinBytes(bin, pos, l));
+		return new FromBinResult(
+			l + 1,
+			I64.fromBytesBE(bin.subarray(pos, pos + 1))
+		); //  Int64.fromMinBytes(bin, pos, l));
 	}
 
 	static fromBinSub(
@@ -191,7 +193,7 @@ export abstract class ARef
 export class Ref2 extends ARef {
 	readonly _colType = ColType.Ref2;
 	readonly _maxByteLen = 2;
-	readonly _max64 = new Int64(0x7fff, 0);
+	readonly _max64 = I64.fromI32s(0x7fff, 0);
 	readonly _cudPrefix = 'ref2';
 
 	readonly mysqlType = 'SMALLINT';
@@ -202,7 +204,7 @@ export class Ref2 extends ARef {
 export class Ref4 extends ARef {
 	readonly _colType = ColType.Ref4;
 	readonly _maxByteLen = 4;
-	readonly _max64 = new Int64(0x7fffffff, 0);
+	readonly _max64 = I64.fromI32s(0x7fffffff, 0);
 	readonly _cudPrefix = 'ref4';
 
 	readonly mysqlType = 'INT';
@@ -213,7 +215,7 @@ export class Ref4 extends ARef {
 export class Ref8 extends ARef {
 	readonly _colType = ColType.Ref8;
 	readonly _maxByteLen = 8;
-	readonly _max64 = Int64.max;
+	readonly _max64 = max64;
 	readonly _cudPrefix = 'ref8';
 
 	readonly mysqlType = 'BIGINT';

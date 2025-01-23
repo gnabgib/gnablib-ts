@@ -126,9 +126,9 @@ tsts('asB', () => {
 	const src = '0102';
 	const inv = '0201';
 	const s = hex.toBytes(src);
-	asE(!isLE).i16(s,0,2);
+	asE(!isLE).i16(s, 0, 2);
 	assert.is(hex.fromBytes(s), src);
-	asE(isLE).i16(s,0,2);
+	asE(isLE).i16(s, 0, 2);
 	assert.is(hex.fromBytes(s), inv);
 });
 
@@ -170,10 +170,10 @@ const intMinBytesSet: [number, string, string][] = [
 	[4294967297, '0100000001', '0100000001'], //Max U64+2
 	[10000000000, '02540BE400', '00E40B5402'],
 	[100000000000, '174876E800', '00E8764817'],
-	[1000000000000, '00E8D4A51000', '0010A5D4E800'],//needs 0 pad
+	[1000000000000, '00E8D4A51000', '0010A5D4E800'], //needs 0 pad
 	[4503599627370495, '0FFFFFFFFFFFFF', 'FFFFFFFFFFFF0F'],
 	[8725724278030336, '1F000000000000', '0000000000001F'],
-	[9007199254740991, '1FFFFFFFFFFFFF', 'FFFFFFFFFFFF1F'],//max safe int
+	[9007199254740991, '1FFFFFFFFFFFFF', 'FFFFFFFFFFFF1F'], //max safe int
 ];
 for (const [num, be, le] of intMinBytesSet) {
 	tsts(`asLE.intMinBytes(${num})`, () => {
@@ -185,7 +185,7 @@ for (const [num, be, le] of intMinBytesSet) {
 		assert.is(hex.fromBytes(b), be);
 	});
 }
-const uintMinBytesSet:[number,string,string][] = [
+const uintMinBytesSet: [number, string, string][] = [
 	[0, '00', '00'],
 	[1, '01', '01'],
 	[10, '0A', '0A'],
@@ -210,9 +210,9 @@ const uintMinBytesSet:[number,string,string][] = [
 	[1000000000000, 'E8D4A51000', '0010A5D4E8'],
 	[4503599627370495, '0FFFFFFFFFFFFF', 'FFFFFFFFFFFF0F'],
 	[8725724278030336, '1F000000000000', '0000000000001F'],
-	[9007199254740991, '1FFFFFFFFFFFFF', 'FFFFFFFFFFFF1F'],//max safe int
+	[9007199254740991, '1FFFFFFFFFFFFF', 'FFFFFFFFFFFF1F'], //max safe int
 ];
-for(const [num,be,le] of uintMinBytesSet) {
+for (const [num, be, le] of uintMinBytesSet) {
 	tsts(`asLE.uintMinBytes(${num})`, () => {
 		const b = asLE.uintMinBytes(num);
 		assert.is(hex.fromBytes(b), le);

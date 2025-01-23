@@ -689,32 +689,10 @@ export class U64 {
 	}
 
 	/**
-	 * A U64 with value 0 (the minimum Uint64)
-	 */
-	static get min(): U64 {
-		return zero;
-	}
-
-	/**
 	 * A U64 with value 0
 	 */
 	static get zero(): U64 {
 		return zero;
-	}
-
-	/**
-	 * Given a number create a new Uint64
-	 * Given a U64return it
-	 * @param uint64
-	 * @returns
-	 */
-	static coerce(uint64: U64ish): U64 {
-		if (uint64 instanceof U64) {
-			return uint64;
-		} else {
-			sNum('uint64', uint64).unsigned().throwNot();
-			return new U64(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
-		}
 	}
 }
 const zero = U64.fromUint32Pair(0, 0);

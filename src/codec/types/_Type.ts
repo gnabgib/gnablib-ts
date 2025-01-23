@@ -35,7 +35,6 @@
     Types are numbered for BYTE length (not bit), because this is an encoding format and most
     things are at least byte if not 4*, 8* aligned
  */
-import { Int64 } from '../../primitive/Int64.js';
 import { Uint64 } from '../../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../ieee754-fpb.js';
 import { utf8 } from '../Utf8.js';
@@ -49,6 +48,7 @@ import { DateTimeLocal } from '../../datetime/dt.js';
 import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
 import { sNum } from '../../safe/safe.js';
+import { I64 } from '../../primitive/number/I64.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -127,9 +127,9 @@ function encodeUint(value: Uint64): Uint8Array {
 	}
 }
 
-function encodeInt(value: Int64): Uint8Array {
-	if (value.equals(new Int64(0, 0))) return new Uint8Array([Type.Zero]);
-	const min = value.toMinBytes();
+function encodeInt(value: I64): Uint8Array {
+	if (value.eq(I64.zero)) return new Uint8Array([Type.Zero]);
+	const min = value.toBytesBE();
 	const ret = new Uint8Array(9);
 	switch (min.length) {
 		case 1:
@@ -619,10 +619,8 @@ export function encode(value: unknown): Uint8Array {
 		case 'undefined':
 			return new Uint8Array([Type.Null]);
 		case 'number':
-			if (Number.isInteger(value)) return encodeInt(Int64.fromNumber(value));
+			if (Number.isInteger(value)) return encodeInt(I64.fromInt(value));
 			return encodeFp(value);
-		case 'bigint':
-			return encodeInt(Int64.fromBigInt(value));
 		case 'boolean':
 			return new Uint8Array([value ? Type.True : Type.False]);
 		case 'string':
@@ -637,7 +635,7 @@ export function encode(value: unknown): Uint8Array {
 	if (value instanceof Uint64) {
 		return encodeUint(value);
 	}
-	if (value instanceof Int64) {
+	if (value instanceof I64) {
 		return encodeInt(value);
 	}
 	// if (value instanceof OldDateTime) {
@@ -726,26 +724,26 @@ export function decode(bin: Uint8Array, pos: number): BinResult | string {
 			return 'Not implemented';
 		case Type.Int_Var:
 			try {
-				Int64.fromMinBytes(bin, pos);
+				I64.fromBytesBE(bin,pos);
 			} catch (e) {
 				//Todo: this isn't enough
 				console.log('Oh dear');
 			}
 
 			if (pos + 1 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 1, Int64.fromMinBytes(bin, pos, 1));
+			return new BinResult(1 + 1,  I64.fromBytesBE(bin, pos));
 		case Type.Int_1:
 			if (pos + 1 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 1, Int64.fromMinBytes(bin, pos, 1));
+			return new BinResult(1 + 1, I64.fromBytesBE(bin,pos));//Int64.fromMinBytes(bin, pos, 1));
 		case Type.Int_2:
 			if (pos + 2 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 2, Int64.fromMinBytes(bin, pos, 2));
+			return new BinResult(1 + 2, I64.fromBytesBE(bin,pos));//Int64.fromMinBytes(bin, pos, 2));
 		case Type.Int_4:
 			if (pos + 4 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 4, Int64.fromMinBytes(bin, pos, 4));
+			return new BinResult(1 + 4, I64.fromBytesBE(bin,pos));//Int64.fromMinBytes(bin, pos, 4));
 		case Type.Int_8:
 			if (pos + 8 > bin.length) return 'decode missing data';
-			return new BinResult(1 + 8, Int64.fromMinBytes(bin, pos, 8));
+			return new BinResult(1 + 8, I64.fromBytesBE(bin,pos));//Int64.fromMinBytes(bin, pos, 8));
 		case Type.True:
 			return new BinResult(1, true);
 		case Type.False:

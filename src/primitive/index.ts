@@ -4,7 +4,6 @@ export * as xtBit from './xtBit.js'
 export * as xtString from './xtString.js';
 export * as xtUint8Array from './xtUint8Array.js';
 export { BinResult, FromBinResult } from './FromBinResult.js';
-export { Int64 } from './Int64.js';
 export { Lazy } from './Lazy.js';
 export { MatchSuccess, MatchFail } from './MatchResult.js';
 export * from './ReadonlyTypedArray.js';

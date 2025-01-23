@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { sNum } from '../safe/safe.js';
 
@@ -66,6 +66,9 @@ const invert = {
 			pos += 16;
 		} while (--count > 0);
 	},
+	bytes(b: Uint8Array, size: number, pos = 0) {
+		b.subarray(pos, pos + size).reverse();
+	},
 	set32(
 		target: Uint8Array,
 		i32Pos: number,
@@ -107,6 +110,7 @@ const leave = {
 	i64(_b: Uint8Array, _pos = 0, _count = 1): void {},
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	i128(_b: Uint8Array, _pos = 0, _count = 1): void {},
+	bytes() {},
 	set32(
 		b: Uint8Array,
 		i32Pos: number,
@@ -282,6 +286,7 @@ export let asLE: {
 	 * @param count How many to correct
 	 */
 	i128(b: Uint8Array, pos?: number, count?: number): void;
+	bytes(b: Uint8Array, size: number, pos?: number): void;
 	/**
 	 * Write 4 bytes into the array as a u32/i32 in little endian order
 	 *
@@ -386,6 +391,7 @@ export let asBE: {
 	 * @param count How many to correct
 	 */
 	i128(b: Uint8Array, pos?: number, count?: number): void;
+	bytes(b: Uint8Array, size: number, pos?: number): void;
 	/**
 	 * Write 4 bytes into the array as a u32/i32 in big endian order
 	 *
