@@ -261,7 +261,7 @@ const add_tests=[
     // A+0=A: Anything plus zero is anything (like or)
     [hNum,h0,hNum],
     [hMax,h1,h0],
-    [hMax,hNum,'0102030405060708090A0B0C0D0E0F1112131415161718191A1B1C1D1E1F2122232425262728292A2B2C2D2E2F3132333435363738393A3B3C3D3E3F41424343'],
+    [hMax,hNum,'0102030405060708090A0B0C0D0E0F1112131415161718191A1B1C1D1E1F2122232425262728292A2B2C2D2E2F3132333435363738393A3B3C3D3E3F41424343'],//Ends up being the same as -1 because of wrap
 ];
 for (const [aHex, bHex, expect] of add_tests) {
     tsts(`${aHex} + ${bHex}`, () => {

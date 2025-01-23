@@ -7,6 +7,9 @@ import { AInt } from './_AInt.js';
 const size8 = 8;
 const size32 = 2;
 
+// max=  9223372036854775807
+// min= -9223372036854775808
+
 export class I64 extends AInt implements IInt<I64> {
 	protected constructor(arr: Uint32Array, pos: number, name = 'I64') {
 		super(arr, pos, size32, name);

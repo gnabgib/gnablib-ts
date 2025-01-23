@@ -100,6 +100,7 @@ interface IBasic<T> {
 	clone32(): Uint32Array;
 	/** Create a **copy** of internal value as a big-endian stream of bytes */
 	toBytesBE(): Uint8Array;
+	//?toBytesLE():Uint8Array;
 	toString(): string;
 	/** Get the least significant byte */
 	getByte(idx: number): number;
@@ -108,6 +109,7 @@ interface IBasic<T> {
 	// 	static fromInt(n:number):T;
 	// 	static fromI32s(...ns:number[]):T;
 	// 	static fromBytesBE(b:Uint8Array,pos=0):T;
+	//	?static fromBytesLE(b:Uint8Array,pos=0):T;
 	// 	static mount(b:Uint32Array,pos:number):T;//repl: fromArray|fromBuffer
 
 	//(opt) mut():INumMut<T>

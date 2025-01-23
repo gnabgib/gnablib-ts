@@ -1,7 +1,7 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 import { hex } from '../../codec/Hex.js';
-import { asBE } from '../../endian/platform.js';
-import { sInt, sLen, sNum } from '../../safe/safe.js';
+import { asBE, asLE } from '../../endian/platform.js';
+import { sInt, sLen } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
@@ -71,6 +71,17 @@ export abstract class AInt {
 		sLen('src', src).atLeast(end).throwNot();
 		const cpy = src.slice(pos, end);
 		asBE.bytes(cpy, size8);
+		return new Uint32Array(cpy.buffer);
+	}
+	protected static _fromBytesLE(
+		size8: number,
+		src: Uint8Array,
+		pos: number
+	): Uint32Array {
+		const end = pos + size8;
+		sLen('src', src).atLeast(end).throwNot();
+		const cpy = src.slice(pos, end);
+		asLE.bytes(cpy, size8);
 		return new Uint32Array(cpy.buffer);
 	}
 	//#endregion
@@ -214,11 +225,10 @@ export abstract class AInt {
 		let i = 1;
 		for (; i < this.size32; i++) {
 			// /*DEBUG*/ d += ` [${this._pos + i}]=[${this._pos + i}]<<${by32}|(${zeroRshift}*[${this._pos + i - 1}]>>>${invBy32})\n`;
-            const b=this._arr[this._pos + i];
+			const b = this._arr[this._pos + i];
 			this._arr[this._pos + i] =
-				(this._arr[this._pos + i] << by32) |
-				((zeroRshift * back) >>> invBy32);
-            back=b;
+				(this._arr[this._pos + i] << by32) | ((zeroRshift * back) >>> invBy32);
+			back = b;
 		}
 		// /*DEBUG*/ console.log(d);
 	}
@@ -357,7 +367,19 @@ export abstract class AInt {
 		const ret = new Uint8Array(
 			this._arr.slice(this._pos, this._pos + this.size32).buffer
 		);
+		//We store in u32 LE (first is least), so we should make each byte quad LE and
+		// then global-reverse.
+		asLE.i32(ret, 0, this.size32);
 		asBE.bytes(ret, 4 * this.size32);
+		return ret;
+	}
+
+	/** Create a **copy** of internal value as a little-endian stream of bytes */
+	toBytesLE(): Uint8Array {
+		const ret = new Uint8Array(
+			this._arr.slice(this._pos, this._pos + this.size32).buffer
+		);
+		asLE.i32(ret, 0, this.size32);
 		return ret;
 	}
 
@@ -366,7 +388,7 @@ export abstract class AInt {
 	 * @throws Error if byteIdx is out of range
 	 */
 	getByte(byteIdx = 0): number {
-		sNum('idx', byteIdx)
+		sInt('byteIdx', byteIdx)
 			.unsigned()
 			.atMost(this.size32 * 4 - 1)
 			.throwNot();
