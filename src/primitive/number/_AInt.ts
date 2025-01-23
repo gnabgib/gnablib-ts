@@ -5,7 +5,7 @@ import { sLen, sNum } from '../../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
-export abstract class AInt /*implements ILogicOps<I64>*/ {
+export abstract class AInt {
 	protected constructor(
 		protected _arr: Uint32Array,
 		protected _pos: number,
@@ -22,7 +22,7 @@ export abstract class AInt /*implements ILogicOps<I64>*/ {
 			this._arr[this._pos + i] = n._arr[n._pos + i++];
 		} while (i < this.size32);
 	}
-    
+
 	protected _setZero() {
 		this._arr.fill(0, this._pos, this._pos + this.size32);
 	}
@@ -185,7 +185,7 @@ export abstract class AInt /*implements ILogicOps<I64>*/ {
 		// as 0 in JS and leads to elements ORing and merging (a right mess) - we need
 		// to zero the shift in that case.
 		const zeroRshift = 1 - (invBy32 >>> 5);
-		/*DEBUG*/ let d = `[${this.size32}] lRot ${by}=[${by32} ${byPos}]: `;
+		// /*DEBUG*/ let d = `[${this.size32}] lRot ${by}=[${by32} ${byPos}]: `;
 
 		//First move U32s
 		// /*DEBUG*/d+=`shift U32 by ${byPos},`;
@@ -231,9 +231,17 @@ export abstract class AInt /*implements ILogicOps<I64>*/ {
 	}
 	protected _subEq(o: AInt) {
 		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
-		const o2 = o.clone();
-		o2._negEq();
-		this._addEq(o2);
+		let i = 0;
+		let borrow = 0;
+		// /*DEBUG*/let d = `-:`;
+		do {
+			// /*DEBUG*/d+=`[${this._pos+i}]-o-${borrow}`;
+			const sub = this._arr[this._pos + i] - o._arr[o._pos + i] - borrow;
+			borrow = sub < 0 ? 1 : 0;
+			// /*DEBUG*/d+=`=${sub}, ${borrow}`;
+			this._arr[this._pos + i] = sub;
+		} while (++i < this.size32);
+		// /*DEBUG*/console.log(d);
 	}
 	protected _mul(o: AInt): Uint32Array {
 		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
@@ -340,18 +348,19 @@ export abstract class AInt /*implements ILogicOps<I64>*/ {
 		return ret;
 	}
 
-    /**
-     * Get the least significant byte
-     * @throws Error if byteIdx is out of range 
-     */
+	/**
+	 * Get the least significant byte
+	 * @throws Error if byteIdx is out of range
+	 */
 	getByte(byteIdx = 0): number {
-		sNum('idx', byteIdx).unsigned().atMost(this.size32 * 4 - 1).throwNot();
-		const low = 8*(byteIdx & 3);//Limit to 0-3, then convert to bytes (0,8,16,24)
+		sNum('idx', byteIdx)
+			.unsigned()
+			.atMost(this.size32 * 4 - 1)
+			.throwNot();
+		const low = 8 * (byteIdx & 3); //Limit to 0-3, then convert to bytes (0,8,16,24)
 		const shift = byteIdx >>> 2;
 		return (this._arr[this._pos + shift] >>> low) & 0xff;
 	}
-
-	//getByte(idx:number):number;
 
 	/**
 	 * String version of this value, in big endian

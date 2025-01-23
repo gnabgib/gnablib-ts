@@ -231,15 +231,18 @@ Name|Capacities|Optional parameters
 
 - BitReader / BitWriter
 - Fixed TypedArray
-- Int64
 - Lazy
 - Readonly TypedArray
 - Scaling TypedArray
 - StringBuilder
-- UInt16, UInt32, UInt64, UInt128, UInt256, UInt512
-- U32MutArray, U64MutArray
 - UInt, UIntMut
 - WindowStr
+- *16 bit*: uint (U16)
+- *32 bit*: uint (U32), mutable uint (U32Mut), mutable uint array (U32MutArray)
+- *64 bit*: int (I64), uint (U64), mutable int (I64Mut), mutable uint (U64Mut), mutable uint array (U64MutArray)
+- *128 bit*: uint (U128), mutable uint (U128Mut)
+- *256 bit*: uint (U256)
+- *512 bit*: uint (U512)
 
 #### Extensions:
 

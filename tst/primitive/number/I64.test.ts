@@ -2,7 +2,6 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { I64 } from '../../../src/primitive/number/I64';
-import { I64Mut } from '../../../src/primitive/number/I64Mut';
 import util from 'util';
 
 const tsts = suite('I64');
@@ -593,19 +592,22 @@ for (const [aHex, bHex, expect] of add_tests) {
 }
 
 // prettier-ignore
-const sub_tests:[number,number,string][]=[
-    [1,1,'0000000000000000'],
-    [2,1,'0000000000000001'],
-    [0,2,'FFFFFFFFFFFFFFFE'],
-    [0xffffffff,1,'00000000FFFFFFFE'],
-    [1,0,'0000000000000001'],
+const sub_tests:[string,string,string][]=[
+    ['0000000000000001','0000000000000001','0000000000000000'],
+    ['0000000000000002','0000000000000001','0000000000000001'],
+    ['0000000000000000','0000000000000001','FFFFFFFFFFFFFFFF'],
+    ['0000000000000000','0000000000000002','FFFFFFFFFFFFFFFE'],
+    ['00000000FFFFFFFF','0000000000000001','00000000FFFFFFFE'],
+    ['00000000FFFFFFFF','FFFFFFFF00000000','00000001FFFFFFFF'],
+    ['FFFFFFFF00000000','00000000FFFFFFFF','FFFFFFFE00000001'],
+    ['0000000000000001','0000000000000000','0000000000000001'],
+    ['0000000000010000','0000000000000020','000000000000FFE0'],
+    ['0000000100000010','0000000000000020','00000000FFFFFFF0'],
 ];
-for (const [aNum, bNum, expect] of sub_tests) {
-	tsts(`${aNum} - ${bNum}`, () => {
-		const a = I64.fromInt(aNum);
-		const b = I64.fromInt(bNum);
-		const aHex = a.toString();
-		const bHex = b.toString();
+for (const [aHex, bHex, expect] of sub_tests) {
+	tsts(`${aHex} - ${bHex}`, () => {
+		const a = I64.fromBytesBE(hex.toBytes(aHex));
+		const b = I64.fromBytesBE(hex.toBytes(bHex));
 		const res = a.sub(b);
 		assert.is(hex.fromBytes(res.toBytesBE()), expect);
 		assert.is(hex.fromBytes(a.toBytesBE()), aHex, 'No mutation-a');

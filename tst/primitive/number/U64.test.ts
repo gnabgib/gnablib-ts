@@ -837,8 +837,8 @@ tsts('util.inspect',()=>{
 
 tsts(`fromInt`,()=>{
 	assert.equal(U64.fromInt(0).eq(U64.zero),true,'0');
-    assert.throws(()=>{const c=U64.fromInt(9.5e15);})
-    assert.throws(()=>{const d=U64.fromInt(-1);})
+    assert.throws(()=>{U64.fromInt(9.5e15);})
+    assert.throws(()=>{U64.fromInt(-1);})
 });
 
 // tsts('general',()=>{
