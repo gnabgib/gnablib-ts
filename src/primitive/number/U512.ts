@@ -1,164 +1,154 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../../codec/Hex.js';
-import { asBE, asLE } from '../../endian/platform.js';
+import { sLen } from '../../safe/safe.js';
+import { IUint } from '../interfaces/IUint.js';
+import { AInt } from './_AInt.js';
 
-//Todo: docs
+const size8 = 64;
+const size32 = 16;
+//max: 13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006084095
 
-const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-const DBG_RPT_U512 = 'U512';
-const sizeU32 = 16;
+export class U512 extends AInt implements IUint<U512> {
+	protected constructor(arr: Uint32Array, pos: number, name = 'U512') {
+		super(arr, pos, size32, name);
+	}
 
-export class U512 {
-	protected arr: Uint32Array;
-	protected pos: number;
+	//#region Builds
+	/**
+	 * Build from an integer - note JS can only support up to 52bit ints
+	 * @param i52 Integer `[Number.MIN_SAFE_INTEGER - Number.MAX_SAFE_INT]`
+	 * @throws Error if i52 is out of range or floating point
+	 */
+	static fromInt(i52: number) {
+		return new U512(AInt._fromInt(size32, i52), 0);
+	}
 
 	/**
-	 * Uint32 is platform ordered, but the first number is low, and the last high
-	 * [pos]=lowest32 ..  [pos+7]=highest32
+	 * Build from a series of Int32 numbers,
+	 * each will be truncated to 32 bits.
+	 * Assumes little endian order.
+	 * Assumes unspecified values are 0/-1 (depending on MSB of final number)
+	 * @throws Error if too many numbers are provided.
+	 */
+	static fromI32s(...ns: number[]) {
+		const arr = AInt._fromSet(size32, ns);
+		return new U512(arr, 0);
+	}
+
+	/**
+	 * Create from a **copy** of bytes assuming they are in big endian order
+	 * (eg. as humans write)
+	 * @param pos Position to start from in `src`
+	 * @throws Error if `src` isn't long enough
+	 */
+	static fromBytesBE(src: Uint8Array, pos = 0) {
+		return new U512(this._fromBytesBE(size8, src, pos), 0);
+	}
+
+	/**
+	 * Mount an existing array, note this **shares** memory with the array,
+	 * changing a value in `arr` will mutate this state.  u32 values are
+	 * in little-endian order (least significant value first)
 	 *
-	 * On LE systems this means it's true LE (bytes: 0..31, 32..63, 64..95, 96..127..), on BE systems
-	 * this means it's a form of middle (31..0, 63..32, 64..95, 127..96..)
-	 * @param arr
-	 * @param pos
+	 * @param pos Position to link from
+	 * @throws Error if `arr` isn't long enough
 	 */
-	protected constructor(arr: Uint32Array, pos = 0) {
-		this.arr = arr;
-		this.pos = pos;
+	static mount(arr: Uint32Array, pos = 0) {
+		sLen('arr', arr)
+			.atLeast(pos + size32)
+			.throwNot();
+		return new U512(arr, pos);
+	}
+	//#endregion
+
+	clone() {
+		return new U512(this._arr.slice(this._pos, this._pos + size32), 0);
 	}
 
-	/**
-	 * Mutate - copy the out into a new Uint32Array
-	 */
-	mut32(): Uint32Array {
-		return this.arr.slice(this.pos, this.pos + sizeU32);
+	//#region ShiftOps
+	lShift(by: number) {
+		const ret = this.clone();
+		ret._lShiftEq(by);
+		return ret;
 	}
-
-	/**
-	 * String version of this value, in big endian
-	 * @returns
-	 */
-	toString(): string {
-		return hex.fromBytes(this.toBytesBE());
+	rShift(by: number) {
+		const ret = this.clone();
+		ret._rShiftEq(by);
+		return ret;
 	}
-
-	/**
-	 * Value as a stream of bytes (big-endian order) COPY
-	 * @returns Uint8Array[8]
-	 */
-	toBytesBE(): Uint8Array {
-		//Invert l/h & project into bytes
-		const r8 = new Uint8Array(
-			this.arr.slice(this.pos, this.pos + sizeU32).reverse().buffer
-		);
-		asBE.i32(r8, 0, sizeU32);
-		return r8;
+	lRot(by: number) {
+		const ret = this.clone();
+		ret._lRotEq(by);
+		return ret;
 	}
-
-	/**
-	 * Value as a stream of bytes (little-endian order) COPY
-	 * @returns Uint8Array[8]
-	 */
-	toBytesLE(): Uint8Array {
-		const r8 = new Uint8Array(
-			this.arr.slice(this.pos, this.pos + sizeU32).buffer
-		);
-		asLE.i32(r8, 0, sizeU32);
-		return r8;
+	rRot(by: number) {
+		const ret = this.clone();
+		ret._lRotEq(size8 * 8 - by);
+		return ret;
 	}
+	//#endregion
 
-	/** @hidden */
-	get [Symbol.toStringTag](): string {
-		return DBG_RPT_U512;
+	//#region LogicOps
+	xor(o: U512) {
+		const ret = this.clone();
+		ret._xorEq(o);
+		return ret;
 	}
-
-	/** @hidden */
-	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `${DBG_RPT_U512}(${this.toString()})`;
+	or(o: U512) {
+		const ret = this.clone();
+		ret._orEq(o);
+		return ret;
 	}
-
-	/**
-	 * Build from sixteen U32 integers
-	 */
-	static fromUint32Hex(
-		low: number,
-		v1: number,
-		v2: number,
-		v3: number,
-		v4: number,
-		v5: number,
-		v6: number,
-		v7: number,
-		v8: number,
-		v9: number,
-		v10: number,
-		v11: number,
-		v12: number,
-		v13: number,
-		v14: number,
-		high: number
-	): U512 {
-		return new U512(
-			Uint32Array.of(
-				low,
-				v1,
-				v2,
-				v3,
-				v4,
-				v5,
-				v6,
-				v7,
-				v8,
-				v9,
-				v10,
-				v11,
-				v12,
-				v13,
-				v14,
-				high
-			)
-		);
+	and(o: U512) {
+		const ret = this.clone();
+		ret._andEq(o);
+		return ret;
 	}
-
-	/**
-	 * A U512 with value
-	 * 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-	 * 13407807929942597099574024998205846127479365820592393377723561443721764030073546976801874298166903427690031858186486050853753882811946569946433649006084095
-	 */
-	static get max(): U512 {
-		return max;
+	not() {
+		const ret = this.clone();
+		ret._notEq();
+		return ret;
 	}
+	//#endregion
 
-	/**
-	 * A U512 with value 0 (the minimum Uint256)
-	 */
-	static get min(): U512 {
-		return zero;
+	//#region ArithmeticOps
+	add(o: U512) {
+		const ret = this.clone();
+		ret._addEq(o);
+		return ret;
 	}
+	sub(o: U512) {
+		const ret = this.clone();
+		ret._subEq(o);
+		return ret;
+	}
+	mul(o: U512) {
+		const arr = this._mul(o);
+		return new U512(arr, 0);
+	}
+	//#endregion
 
-	/**
-	 * A U512 with value 0
-	 */
+	//#region Comparable
+	eq(o: U512) {
+		return super.eq(o);
+	}
+	gt(o: U512) {
+		return super.gt(o);
+	}
+	gte(o: U512) {
+		return super.gte(o);
+	}
+	lt(o: U512) {
+		return super.lt(o);
+	}
+	lte(o: U512) {
+		return super.lte(o);
+	}
+	//#endregion
+
+	/** U512(0) */
 	static get zero(): U512 {
 		return zero;
 	}
 }
-const zero = U512.fromUint32Hex(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-const max = U512.fromUint32Hex(
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffffffff
-);
+const zero = U512.mount(new Uint32Array(size32), 0);
