@@ -1,10 +1,9 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import { bigEndian } from '../../endian/index.js';
 import type { IHash } from '../interfaces/IHash.js';
-import { Uint64 } from '../../primitive/Uint64.js';
 import { U32 } from '../../primitive/number/U32.js';
 import { asBE } from '../../endian/platform.js';
+import { U64, U64MutArray } from '../../primitive/number/U64.js';
 
 //[US Secure Hash Algorithms](https://datatracker.ietf.org/doc/html/rfc6234) (2011)
 //[US Secure Hash Algorithms (SHA and HMAC-SHA)](https://datatracker.ietf.org/doc/html/rfc4634) (2006) - obsolete by above
@@ -25,10 +24,8 @@ const iv512 = [
 	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2..19):
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
 	//Note for 32bit use use 0+i*2 (every other value starting with the first)
-	0x6a09e667,	0xf3bcc908, 0xbb67ae85, 0x84caa73b, 
-	0x3c6ef372, 0xfe94f82b, 0xa54ff53a,	0x5f1d36f1, 
-	0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 
-	0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179,
+	0x6a09e667,	0xf3bcc908, 0xbb67ae85, 0x84caa73b,  0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1,
+	0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f,  0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179,
 ];
 
 // prettier-ignore
@@ -36,28 +33,22 @@ const iv384 = [
 	//(first 64 bits of the fraction parts of the square roots of the 9th through 16th primes)
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
 	//Note for 32bit use use 1+i*2 (every other value starting with the second - quirk of sha224 to use the low bits
-	0xcbbb9d5d, 0xc1059ed8, 0x629a292a, 0x367cd507, 
-	0x9159015a, 0x3070dd17, 0x152fecd8, 0xf70e5939, 
-	0x67332667, 0xffc00b31, 0x8eb44a87, 0x68581511, 
-	0xdb0c2e0d, 0x64f98fa7, 0x47b5481d, 0xbefa4fa4,
+	0xcbbb9d5d, 0xc1059ed8, 0x629a292a, 0x367cd507,  0x9159015a, 0x3070dd17, 0x152fecd8, 0xf70e5939,
+	0x67332667, 0xffc00b31, 0x8eb44a87, 0x68581511,  0xdb0c2e0d, 0x64f98fa7, 0x47b5481d, 0xbefa4fa4,
 ];
 
 // prettier-ignore
 const init512_224 = [
 	//These are pre-generated call generateIV(224);
-	0x8c3d37c8, 0x19544da2, 0x73e19966, 0x89dcd4d6, 
-	0x1dfab7ae, 0x32ff9c82, 0x679dd514, 0x582f9fcf, 
-	0x0f6d2b69, 0x7bd44da8, 0x77e36f73, 0x04c48942,
-	0x3f9d85a8, 0x6a1d36c8, 0x1112e6ad, 0x91d692a1,
+	0x8c3d37c8, 0x19544da2, 0x73e19966, 0x89dcd4d6,  0x1dfab7ae, 0x32ff9c82, 0x679dd514, 0x582f9fcf,
+	0x0f6d2b69, 0x7bd44da8, 0x77e36f73, 0x04c48942,  0x3f9d85a8, 0x6a1d36c8, 0x1112e6ad, 0x91d692a1,
 ];
 
 // prettier-ignore
 const init512_256 = [
 	//These are pre-generated call generateIV(256);
-	0x22312194, 0xfc2bf72c, 0x9f555fa3, 0xc84c64c2, 
-	0x2393b86b, 0x6f53b151, 0x96387719, 0x5940eabd, 
-	0x96283ee2, 0xa88effe3, 0xbe5e1e25, 0x53863992,
-	0x2b0199fc, 0x2c85b8aa, 0x0eb72ddc, 0x81c52ca2,
+	0x22312194, 0xfc2bf72c, 0x9f555fa3, 0xc84c64c2,  0x2393b86b, 0x6f53b151, 0x96387719, 0x5940eabd,
+	0x96283ee2, 0xa88effe3, 0xbe5e1e25, 0x53863992,  0x2b0199fc, 0x2c85b8aa, 0x0eb72ddc, 0x81c52ca2,
 ];
 
 // prettier-ignore
@@ -87,7 +78,7 @@ const k = [
 ];
 
 type iv32 = (state: Uint32Array) => void;
-type iv64 = (state: Array<Uint64>) => void;
+type iv64 = (state: U64MutArray) => void;
 
 class Sha2_32bit implements IHash {
 	/**
@@ -300,11 +291,12 @@ class Sha2_64bit implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	readonly #state = new Array<Uint64>(stateSize);
+	readonly #state = U64MutArray.fromLen(stateSize);
 	/**
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSize64);
+	readonly #block32 = new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash
 	 */
@@ -322,37 +314,41 @@ class Sha2_64bit implements IHash {
 	}
 
 	private hash() {
-		const w = new Array<Uint64>(wSize64);
+		const w8 = new Uint8Array(wSize64 * 8);
+		const w = U64MutArray.fromBytes(w8.buffer);
+		w8.set(this.#block.subarray(0, 16 * 8));
+		asBE.i64(w8, 0, 16);
 		//Copy
-		bigEndian.u64IntoArrFromBytes(w, 0, 16, this.#block);
+		//bigEndian.u64IntoArrFromBytes(w, 0, 16, this.#block);
 
 		//Expand
 		let j = 16;
 		for (; j < wSize64; j++) {
-			const w15 = w[j - 15];
-			const w2 = w[j - 2];
-			const s0 = w15.rRot(1).xor(w15.rRot(8)).xor(w15.rShift(7));
-			const s1 = w2.rRot(19).xor(w2.rRot(61)).xor(w2.rShift(6));
-			w[j] = w[j - 16]
-				.add(s0)
-				.add(w[j - 7])
-				.add(s1);
+			const w_15 = w.at(j - 15);
+			const w_2 = w.at(j - 2);
+			const s0 = w_15.mut().rRotEq(1).xorEq(w_15.rRot(8)).xorEq(w_15.rShift(7));
+			const s1 = w_2.mut().rRotEq(19).xorEq(w_2.rRot(61)).xorEq(w_2.rShift(6));
+			w.at(j)
+				.set(w.at(j - 16))
+				.addEq(s0)
+				.addEq(w.at(j - 7))
+				.addEq(s1);
 		}
 
-		let a = this.#state[0],
-			b = this.#state[1],
-			c = this.#state[2],
-			d = this.#state[3],
-			e = this.#state[4],
-			f = this.#state[5],
-			g = this.#state[6],
-			h = this.#state[7];
+		let a = this.#state.at(0),
+			b = this.#state.at(1),
+			c = this.#state.at(2),
+			d = this.#state.at(3),
+			e = this.#state.at(4),
+			f = this.#state.at(5),
+			g = this.#state.at(6),
+			h = this.#state.at(7);
 
 		for (j = 0; j < wSize64; j++) {
-			const kU64 = new Uint64(k[j * 2 + 1], k[j * 2]);
-			const s1 = e.rRot(14).xor(e.rRot(18)).xor(e.rRot(41));
+			const kU64 = U64.fromUint32Pair(k[j * 2 + 1], k[j * 2]);
+			const s1 = e.mut().rRotEq(14).xorEq(e.rRot(18)).xorEq(e.rRot(41));
 			const ch = g.xor(e.and(f.xor(g))); //Same as MD4-r1
-			const temp1 = h.add(s1).add(ch).add(kU64).add(w[j]);
+			const temp1 = h.mut().addEq(s1).addEq(ch).addEq(kU64).addEq(w.at(j));
 
 			const s0 = a.rRot(28).xor(a.rRot(34)).xor(a.rRot(39));
 			const maj = a.xor(b).and(c).xor(a.and(b)); //Similar to MD4-r2 (| -> ^)
@@ -363,21 +359,21 @@ class Sha2_64bit implements IHash {
 			(h = g),
 				(g = f),
 				(f = e),
-				(e = d.add(temp1)),
+				(e = d.mut().addEq(temp1)),
 				(d = c),
 				(c = b),
 				(b = a),
-				(a = temp1.add(temp2));
+				(a = temp1.addEq(temp2));
 		}
 
-		this.#state[0] = this.#state[0].add(a);
-		this.#state[1] = this.#state[1].add(b);
-		this.#state[2] = this.#state[2].add(c);
-		this.#state[3] = this.#state[3].add(d);
-		this.#state[4] = this.#state[4].add(e);
-		this.#state[5] = this.#state[5].add(f);
-		this.#state[6] = this.#state[6].add(g);
-		this.#state[7] = this.#state[7].add(h);
+		this.#state.at(0).addEq(a);
+		this.#state.at(1).addEq(b);
+		this.#state.at(2).addEq(c);
+		this.#state.at(3).addEq(d);
+		this.#state.at(4).addEq(e);
+		this.#state.at(5).addEq(f);
+		this.#state.at(6).addEq(g);
+		this.#state.at(7).addEq(h);
 
 		//Reset block pointer
 		this._bPos = 0;
@@ -446,16 +442,11 @@ class Sha2_64bit implements IHash {
 
 		//We tracked bytes, <<3 (*8) to count bits
 		//We can't bit-shift down length because of the 32 bit limitation of bit logic, so we divide by 2^29
-		bigEndian.u32IntoBytes(
-			this._ingestBytes / 0x20000000,
-			this.#block,
-			sizeSpace + 8
-		);
-		bigEndian.u32IntoBytes(this._ingestBytes << 3, this.#block, sizeSpace + 12);
+		this.#block32[(sizeSpace + 8) / 4] = this._ingestBytes / 0x20000000;
+		this.#block32[(sizeSpace + 12) / 4] = this._ingestBytes << 3;
+		asBE.i32(this.#block, sizeSpace + 8, 2);
 		this.hash();
-		const ret = new Uint8Array(this.size);
-		bigEndian.u64ArrIntoBytesSafe(this.#state, ret);
-		return ret;
+		return this.#state.toBytesBE().subarray(0, this.size);
 	}
 
 	/**
@@ -482,7 +473,7 @@ class Sha2_64bit implements IHash {
 	 */
 	clone(): IHash {
 		const ret = new Sha2_64bit(this.size, this.#iv);
-		for (let i = 0; i < stateSize; i++) ret.#state[i] = this.#state[i];
+		for (let i = 0; i < stateSize; i++) ret.#state.at(i).set(this.#state.at(i));
 		ret.#block.set(this.#block);
 		ret._ingestBytes = this._ingestBytes;
 		ret._bPos = this._bPos;
@@ -576,16 +567,16 @@ export class Sha384 extends Sha2_64bit {
 		super(48, Sha384.iv);
 	}
 
-	private static iv(state: Array<Uint64>): void {
+	private static iv(state: U64MutArray): void {
 		//Setup state
-		state[0] = new Uint64(iv384[1], iv384[0]);
-		state[1] = new Uint64(iv384[3], iv384[2]);
-		state[2] = new Uint64(iv384[5], iv384[4]);
-		state[3] = new Uint64(iv384[7], iv384[6]);
-		state[4] = new Uint64(iv384[9], iv384[8]);
-		state[5] = new Uint64(iv384[11], iv384[10]);
-		state[6] = new Uint64(iv384[13], iv384[12]);
-		state[7] = new Uint64(iv384[15], iv384[14]);
+		state.at(0).set(U64.fromUint32Pair(iv384[1], iv384[0]));
+		state.at(1).set(U64.fromUint32Pair(iv384[3], iv384[2]));
+		state.at(2).set(U64.fromUint32Pair(iv384[5], iv384[4]));
+		state.at(3).set(U64.fromUint32Pair(iv384[7], iv384[6]));
+		state.at(4).set(U64.fromUint32Pair(iv384[9], iv384[8]));
+		state.at(5).set(U64.fromUint32Pair(iv384[11], iv384[10]));
+		state.at(6).set(U64.fromUint32Pair(iv384[13], iv384[12]));
+		state.at(7).set(U64.fromUint32Pair(iv384[15], iv384[14]));
 	}
 }
 
@@ -597,16 +588,16 @@ export class Sha512 extends Sha2_64bit {
 		super(64, Sha512.iv);
 	}
 
-	private static iv(state: Array<Uint64>): void {
+	private static iv(state: U64MutArray): void {
 		//Setup state
-		state[0] = new Uint64(iv512[1], iv512[0]);
-		state[1] = new Uint64(iv512[3], iv512[2]);
-		state[2] = new Uint64(iv512[5], iv512[4]);
-		state[3] = new Uint64(iv512[7], iv512[6]);
-		state[4] = new Uint64(iv512[9], iv512[8]);
-		state[5] = new Uint64(iv512[11], iv512[10]);
-		state[6] = new Uint64(iv512[13], iv512[12]);
-		state[7] = new Uint64(iv512[15], iv512[14]);
+		state.at(0).set(U64.fromUint32Pair(iv512[1], iv512[0]));
+		state.at(1).set(U64.fromUint32Pair(iv512[3], iv512[2]));
+		state.at(2).set(U64.fromUint32Pair(iv512[5], iv512[4]));
+		state.at(3).set(U64.fromUint32Pair(iv512[7], iv512[6]));
+		state.at(4).set(U64.fromUint32Pair(iv512[9], iv512[8]));
+		state.at(5).set(U64.fromUint32Pair(iv512[11], iv512[10]));
+		state.at(6).set(U64.fromUint32Pair(iv512[13], iv512[12]));
+		state.at(7).set(U64.fromUint32Pair(iv512[15], iv512[14]));
 	}
 }
 
@@ -618,16 +609,16 @@ export class Sha512_224 extends Sha2_64bit {
 		super(28, Sha512_224.iv);
 	}
 
-	private static iv(state: Array<Uint64>): void {
+	private static iv(state: U64MutArray): void {
 		//Setup state
-		state[0] = new Uint64(init512_224[1], init512_224[0]);
-		state[1] = new Uint64(init512_224[3], init512_224[2]);
-		state[2] = new Uint64(init512_224[5], init512_224[4]);
-		state[3] = new Uint64(init512_224[7], init512_224[6]);
-		state[4] = new Uint64(init512_224[9], init512_224[8]);
-		state[5] = new Uint64(init512_224[11], init512_224[10]);
-		state[6] = new Uint64(init512_224[13], init512_224[12]);
-		state[7] = new Uint64(init512_224[15], init512_224[14]);
+		state.at(0).set(U64.fromUint32Pair(init512_224[1], init512_224[0]));
+		state.at(1).set(U64.fromUint32Pair(init512_224[3], init512_224[2]));
+		state.at(2).set(U64.fromUint32Pair(init512_224[5], init512_224[4]));
+		state.at(3).set(U64.fromUint32Pair(init512_224[7], init512_224[6]));
+		state.at(4).set(U64.fromUint32Pair(init512_224[9], init512_224[8]));
+		state.at(5).set(U64.fromUint32Pair(init512_224[11], init512_224[10]));
+		state.at(6).set(U64.fromUint32Pair(init512_224[13], init512_224[12]));
+		state.at(7).set(U64.fromUint32Pair(init512_224[15], init512_224[14]));
 	}
 }
 
@@ -639,15 +630,15 @@ export class Sha512_256 extends Sha2_64bit {
 		super(32, Sha512_256.iv);
 	}
 
-	private static iv(state: Array<Uint64>): void {
+	private static iv(state: U64MutArray): void {
 		//Setup state
-		state[0] = new Uint64(init512_256[1], init512_256[0]);
-		state[1] = new Uint64(init512_256[3], init512_256[2]);
-		state[2] = new Uint64(init512_256[5], init512_256[4]);
-		state[3] = new Uint64(init512_256[7], init512_256[6]);
-		state[4] = new Uint64(init512_256[9], init512_256[8]);
-		state[5] = new Uint64(init512_256[11], init512_256[10]);
-		state[6] = new Uint64(init512_256[13], init512_256[12]);
-		state[7] = new Uint64(init512_256[15], init512_256[14]);
+		state.at(0).set(U64.fromUint32Pair(init512_256[1], init512_256[0]));
+		state.at(1).set(U64.fromUint32Pair(init512_256[3], init512_256[2]));
+		state.at(2).set(U64.fromUint32Pair(init512_256[5], init512_256[4]));
+		state.at(3).set(U64.fromUint32Pair(init512_256[7], init512_256[6]));
+		state.at(4).set(U64.fromUint32Pair(init512_256[9], init512_256[8]));
+		state.at(5).set(U64.fromUint32Pair(init512_256[11], init512_256[10]));
+		state.at(6).set(U64.fromUint32Pair(init512_256[13], init512_256[12]));
+		state.at(7).set(U64.fromUint32Pair(init512_256[15], init512_256[14]));
 	}
 }

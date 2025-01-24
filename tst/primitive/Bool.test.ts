@@ -1,189 +1,215 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import {Bool} from '../../src/primitive/Bool';
+import { Bool } from '../../src/primitive/Bool';
 import { BitWriter } from '../../src/primitive/BitWriter';
 import { hex } from '../../src/codec';
 import { BitReader } from '../../src/primitive/BitReader';
 import util from 'util';
 import { WindowStr } from '../../src/primitive/WindowStr';
+import { ParseProblem } from '../../src/error';
 
 const tsts = suite('Bool');
 
-const serSet:[boolean,string][] = [
-    [false,'00'],
-    [true,'80']
-];
-for (const [v,ser] of serSet) {
-    tsts(`ser(${v})`,()=>{
-        const m = Bool.new(v);
-        assert.equal(m.valueBool(),v,'valueBool');
-    
-        const bytes=new Uint8Array(Math.ceil(Bool.serialBits/8));
-        const bw=BitWriter.mount(bytes);
-        m.serialize(bw);
-        assert.is(hex.fromBytes(bytes),ser);
-    });
+const t = Bool.from(true);
+const f = Bool.from(false);
 
-    tsts(`deser(${ser})`,()=>{
-        const bytes=hex.toBytes(ser);
-        const br = BitReader.mount(bytes);
-        const m=Bool.deserialize(br);
-        assert.is(m.valueBool(),v);
-    });
+const from_tests: [boolean | number, boolean][] = [
+	[0, false],
+	[1, true],
+	[-1, true],
+	[false, false],
+	[true, true],
+
+	//Since we can't avoid FP numbers.. let's check they follow reasonable rules
+	[1.1, true],
+	[0.001, true],
+	[Number.NaN, false],
+	[Number.POSITIVE_INFINITY, true],
+	[Number.NEGATIVE_INFINITY, true],
+];
+for (const [v, expect] of from_tests) {
+	tsts(`from(${v})`, () => {
+		const o = Bool.from(v);
+		assert.is(o.valueOf(), expect);
+	});
 }
 
-tsts(`deser without source data throws`,()=>{
-    const bytes=new Uint8Array();
-    const br = BitReader.mount(bytes);
-    assert.throws(()=>Bool.deserialize(br));
-});
-tsts(`deser without storage space throws`,()=>{
-    const stor=new Uint8Array(0);
-    const bytes=Uint8Array.of(0);
-    const br = BitReader.mount(bytes);
-    assert.throws(()=>Bool.deserialize(br,stor));
+tsts(`mount`, () => {
+	const b = new Uint8Array(2);
+	assert.is(hex.fromBytes(b), '0000');
+	const o = Bool.mount(b, 1);
+	assert.is(o.valueOf(), false);
+	b[1] = 0b1;
+	assert.is(o.valueOf(), true, 'updating underlying byte changes value');
+	b[1] = 0b10;
+	assert.is(
+		o.valueOf(),
+		false,
+		'only the lowest bit of the byte effects value'
+	);
+	b[0] = 0b1;
+	assert.is(o.valueOf(), false, 'other bytes are ignored');
 });
 
-const toStrSet:[boolean,string,string][]=[
-    [false,'false','false'],
-    [true,'true','true']
+const serial_tests: [boolean, number][] = [
+	[true, 0x80],
+	[false, 0],
 ];
-for (const [v,expectStr,expectJson] of toStrSet) {
-    const u = Bool.new(v);
-    tsts(`toString(${v})`,()=>{        
-        assert.equal(u.toString(),expectStr);
-    });
-    tsts(`toJSON(${u})`,()=>{        
-        const json=JSON.stringify(u);
-        assert.equal(json,expectJson);
-    });
+for (const [v, ser] of serial_tests) {
+	tsts(`serial(${v})`, () => {
+		const b = new Uint8Array(1);
+		const bw = BitWriter.mount(b);
+		const o = Bool.from(v);
+		assert.is(b[0], 0);
+		o.serial(bw);
+		assert.is(b[0], ser);
+	});
+	tsts(`deserial(${ser})`, () => {
+		const b = Uint8Array.of(ser);
+		const br = BitReader.mount(b);
+		const o = Bool.deserial(br);
+		assert.is(o.valueOf(), v);
+	});
 }
 
-const newSet:[boolean,number,string][]=[
-    //Pos doesn't effect ser
-    [true,0,'80'],
-    [true,1,'80'],
-    [true,2,'80'],
-    [true,3,'80'],
-    [true,4,'80'],
-    [true,5,'80'],
-    [true,6,'80'],
-    [true,7,'80'],
-
-    [false,0,'00'],
-    [false,1,'00'],
-    [false,2,'00'],
-    [false,3,'00'],
-    [false,4,'00'],
-    [false,5,'00'],
-    [false,6,'00'],
-    [false,7,'00'],    
-];
-const bytes=new Uint8Array(Math.ceil(Bool.serialBits/8));
-for(const [v,pos,ser] of newSet) {
-    tsts(`new(${v},,${pos})`,()=>{
-        const u=Bool.new(v,undefined,pos);
-        assert.is(u.valueBool(),v);
-
-        const bw=BitWriter.mount(bytes);
-        u.serialize(bw);
-        assert.is(hex.fromBytes(bytes),ser);
-    })
-}
-
-tsts(`new`,()=>{
-    const u=Bool.new(true);
-    assert.is(u.valueOf(),1);
-});
-tsts(`new-provide storage`,()=>{
-    const stor=new Uint8Array(Bool.storageBytes);
-    const u=Bool.new(false,stor);
-    assert.is(u.valueOf(),0);
+tsts(`clone`, () => {
+	const t2 = t.clone();
+	assert.is.not(t, t2, 'not the same object');
+	assert.equal(t, t2, 'same content');
 });
 
-const parseSet:[WindowStr,number,number][]=[
-    [WindowStr.new('true'),1,0],
-    [WindowStr.new('1'),1,0],
-    [WindowStr.new(' 1'),1,0],
-    [WindowStr.new('1\t'),1,0],
-
-    [WindowStr.new('false'),0,0],
-    [WindowStr.new('0'),0,0],
-    [WindowStr.new('false\t'),0,0],
-    [WindowStr.new(' false'),0,0],
-    [WindowStr.new(' false '),0,0],
-    [WindowStr.new(' FALSE '),0,0],
-];
-for (const [w,expect,rem] of parseSet) {
-    tsts(`parse(${w.debug()})`,()=>{
-        const u=Bool.parse(w);
-        assert.equal(u.valueOf(),expect);
-        assert.equal(w.length,rem);
-    });
-}
-
-tsts(`parse(yes/no)`,()=>{
-    assert.throws(()=>Bool.parse(WindowStr.new('yes'),{allowYes:false}))
-    assert.throws(()=>Bool.parse(WindowStr.new('no'),{allowYes:false}))
-    assert.equal(1,Bool.parse(WindowStr.new('yes'),{allowYes:true}).valueOf());
-    assert.equal(0,Bool.parse(WindowStr.new('no'),{allowYes:true}).valueOf());
+tsts(`toString`, () => {
+	assert.is(t.toString(), 'true');
+	assert.is(f.toString(), 'false');
 });
 
-tsts(`parse(on/off)`,()=>{
-    //Bool.parse(WindowStr.new('offf'),undefined,{allowOn:true,allowYes:true});//testing error message
-    assert.throws(()=>Bool.parse(WindowStr.new('on'),{allowOn:false}))
-    assert.throws(()=>Bool.parse(WindowStr.new('off'),{allowOn:false}))
-    assert.equal(1,Bool.parse(WindowStr.new('on'),{allowOn:true}).valueOf());
-    assert.equal(0,Bool.parse(WindowStr.new('off'),{allowOn:true}).valueOf());
+tsts(`valueOf`, () => {
+	assert.is(t.valueOf(), true);
+	assert.is(f.valueOf(), false);
 });
 
-const badParse:WindowStr[]=[
-    WindowStr.new('2'),
-    WindowStr.new('1.0'),//Bad string even though 1.0 resolves to 1 which is truthy
-    WindowStr.new(''),//Empty string not understood
-    WindowStr.new(' '),//Or whitespace string
-    WindowStr.new('\t\t'),//"
-];
-for (const w of badParse) {
-    tsts(`${w.debug()} parse throws`,()=>{
-        assert.throws(()=>Bool.parse(w));
-    })
-}
+tsts(`coercions`, () => {
+	assert.is(`${t}`, 'true', 'string coerce');
+	assert.is(`${f}`, 'false', 'string coerce');
+
+	assert.is(+t, 1, 'number coerce');
+	assert.is(+f, 0, 'number coerce');
+
+	assert.is('' + t, 'true', 'default coerce');
+	assert.is('' + f, 'false', 'default coerce');
+});
 
 tsts('[Symbol.toStringTag]', () => {
-    const o=Bool.new(true);
-	const str = Object.prototype.toString.call(o);
+	const str = Object.prototype.toString.call(t);
 	assert.is(str.indexOf('Bool') > 0, true);
 });
 
-tsts('util.inspect',()=>{
-    const o=Bool.new(false);
-    const u=util.inspect(o);
-    assert.is(u.startsWith('Bool('),true);
+tsts('util.inspect', () => {
+	const u = util.inspect(t);
+	assert.is(u.startsWith('Bool('), true);
 });
 
-tsts('serialSizeBits',()=>{
-    const o=Bool.new(false);
-    const bits=o.serialSizeBits;
-    assert.is(bits>0 && bits<2,true);
-});
+const parse_tests: [string, boolean?][] = [
+	[''],
+	['tea'],
 
-tsts('cloneTo',()=>{
-	const stor1=new Uint8Array(Bool.storageBytes);
-	const stor2=new Uint8Array(Bool.storageBytes);
+	['true', true],
+	['1', true],
+	['on'],
+	['yes'],
+	['     true\n', true],
 
-	const o=Bool.new(true,stor1);
-	assert.instance(o,Bool);
-	assert.is(o.valueOf(),1);
+	['false', false],
+    ['FAlSE', false],
+	['0', false],
+	['off'],
+	['no'],
+];
+for (const [str, expect] of parse_tests) {
+	const ws = WindowStr.new(str);
+	tsts(`parse(${str})`, () => {
+		const r = Bool.parse(ws);
+		if (expect === undefined) {
+			assert.instance(r, ParseProblem);
+		} else {
+			assert.equal(r, expect);
+		}
+	});
+}
+const parse_plusYes_tests: [string, boolean?][] = [
+	[''],
+	['tea'],
 
-	const o2=o.cloneTo(stor2);
-	assert.instance(o2,Bool);
-	assert.is(o2.valueOf(),1);
-	
-	//This is a terrible idea, but it proves diff memory
-	stor2[0]=0;
-    assert.not.equal(o.valueOf(),o2.valueOf());
-})
+	['true', true],
+	['1', true],
+	['on'],
+	['yes', true],
 
+	['false', false],
+	['0', false],
+	['off'],
+	['no', false],
+];
+for (const [str, expect] of parse_plusYes_tests) {
+	const ws = WindowStr.new(str);
+	tsts(`parse(${str},{+yes})`, () => {
+		const r = Bool.parse(ws, { allowYes: true });
+		if (expect === undefined) {
+			assert.instance(r, ParseProblem);
+		} else {
+			assert.equal(r, expect);
+		}
+	});
+}
+const parse_plusOn_tests: [string, boolean?][] = [
+	[''],
+	['tea'],
+
+	['true', true],
+	['1', true],
+	['on', true],
+	['yes'],
+
+	['false', false],
+	['0', false],
+	['off', false],
+	['no'],
+];
+for (const [str, expect] of parse_plusOn_tests) {
+	const ws = WindowStr.new(str);
+	tsts(`parse(${str},{+on})`, () => {
+		const r = Bool.parse(ws, { allowOn: true });
+		if (expect === undefined) {
+			assert.instance(r, ParseProblem);
+		} else {
+			assert.equal(r, expect);
+		}
+	});
+}
+const parse_minusNumeric_tests: [string, boolean?][] = [
+	[''],
+	['tea'],
+
+	['true', true],
+	['1'],
+	['on'],
+	['yes'],
+
+	['false', false],
+	['0'],
+	['off'],
+	['no'],
+];
+for (const [str, expect] of parse_minusNumeric_tests) {
+	const ws = WindowStr.new(str);
+	tsts(`parse(${str},{-number})`, () => {
+		const r = Bool.parse(ws, { preventNumeric: true });
+		if (expect === undefined) {
+			assert.instance(r, ParseProblem);
+		} else {
+			assert.equal(r, expect);
+		}
+	});
+}
 
 tsts.run();

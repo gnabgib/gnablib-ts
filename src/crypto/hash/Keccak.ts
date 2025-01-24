@@ -1,26 +1,24 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
-import * as littleEndian from '../../endian/little.js';
-import { Uint64 } from '../../primitive/Uint64.js';
 import { utf8 } from '../../codec/Utf8.js';
 import { sNum } from '../../safe/safe.js';
+import { U64, U64Mut, U64MutArray } from '../../primitive/number/U64.js';
+import { asLE } from '../../endian/platform.js';
 
 //[Wikipedia: SHA-3](https://en.wikipedia.org/wiki/SHA-3)
 //[Keccak](https://keccak.team/keccak.html)
 //[FIPS PUB 202: SHA3-Standard](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf) (2015)
 //[SP 800-185: SHA-3 Derived Functinos](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) (2016)
 //[KangarooTwelve and TurboSHAKE (v10)](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/) (June 2023)
-
+// prettier-ignore
 const roundConst = [
-	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a,
-	0x80000000, 0x80008000, 0x00000000, 0x0000808b, 0x00000000, 0x80000001,
-	0x80000000, 0x80008081, 0x80000000, 0x00008009, 0x00000000, 0x0000008a,
-	0x00000000, 0x00000088, 0x00000000, 0x80008009, 0x00000000, 0x8000000a,
-	0x00000000, 0x8000808b, 0x80000000, 0x0000008b, 0x80000000, 0x00008089,
-	0x80000000, 0x00008003, 0x80000000, 0x00008002, 0x80000000, 0x00000080,
-	0x00000000, 0x0000800a, 0x80000000, 0x8000000a, 0x80000000, 0x80008081,
-	0x80000000, 0x00008080, 0x00000000, 0x80000001, 0x80000000, 0x80008008,
+	0x00000000, 0x00000001, 0x00000000, 0x00008082, 0x80000000, 0x0000808a, 0x80000000, 0x80008000,
+	0x00000000, 0x0000808b, 0x00000000, 0x80000001, 0x80000000, 0x80008081, 0x80000000, 0x00008009,
+	0x00000000, 0x0000008a, 0x00000000, 0x00000088, 0x00000000, 0x80008009, 0x00000000, 0x8000000a,
+	0x00000000, 0x8000808b, 0x80000000, 0x0000008b, 0x80000000, 0x00008089, 0x80000000, 0x00008003,
+	0x80000000, 0x00008002, 0x80000000, 0x00000080, 0x00000000, 0x0000800a, 0x80000000, 0x8000000a,
+	0x80000000, 0x80008081, 0x80000000, 0x00008080, 0x00000000, 0x80000001, 0x80000000, 0x80008008,
 ];
 // /** rhoShift Generator */
 // function rhoGen() {
@@ -30,9 +28,11 @@ const roundConst = [
 // 	for (let i = 0; i < 24; i++) ret.push(((i * i + 3 * i + 2) / 2) % 64);
 // 	console.log(`const rhoShift=[${ret.join(', ')}];`);
 // }
+// prettier-ignore
 const rhoShift = [
-	1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39,
-	61, 20, 44,
+	1, 3, 6, 10, 15, 21, 28, 36, 
+	45, 55, 2, 14, 27, 41, 56, 8, 
+	25, 43, 62, 18, 39, 61, 20, 44,
 ];
 // /** piShift Generator */
 // function piGen() {
@@ -55,9 +55,11 @@ const rhoShift = [
 // 	}
 // 	console.log(`const piShift=[${ret.join(', ')}];`);
 // }
+// prettier-ignore
 const piShift = [
-	10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22,
-	9, 6, 1,
+	10, 7, 11, 17, 18, 3, 5, 16,
+	8, 21, 24, 4, 15, 23, 19, 13,
+	12, 2, 20, 14, 22, 9, 6, 1,
 ];
 
 const k12RoundStart = 12;
@@ -138,61 +140,67 @@ class KeccakCore implements IHash {
 	 */
 	private hash(): void {
 		//Copy state-bytes into u64
-		const st = new Array<Uint64>(maxBlockSizeU64);
-		littleEndian.u64IntoArrFromBytes(st, 0, maxBlockSizeU64, this.block);
+		const b8 = this.block.slice();
+		asLE.i64(b8, 0, maxBlockSizeU64);
+		const st = U64MutArray.fromBytes(b8.buffer);
 		//console.log(`hash : ${hex.fromBytes(this.#block)}`);
 		//console.log(`hash : ${hex.fromU64s(st,' ')}`);
 
-		const bc = new Array<Uint64>(5);
-		let t: Uint64;
+		const bc = U64MutArray.fromLen(5);
+		const t = U64Mut.fromUint32Pair(0, 0);
+		// prettier-ignore
 		for (let r = this.#roundStart; r < 24; r++) {
 			// Theta
 			//unroll: for (let i = 0; i < 5; i++) bc[i]=st[i].xor(st[i+5]).xor(st[i+10]).xor(st[i+15]).xor(st[i+20]);
-			bc[0] = st[0].xor(st[5]).xor(st[10]).xor(st[15]).xor(st[20]);
-			bc[1] = st[1].xor(st[6]).xor(st[11]).xor(st[16]).xor(st[21]);
-			bc[2] = st[2].xor(st[7]).xor(st[12]).xor(st[17]).xor(st[22]);
-			bc[3] = st[3].xor(st[8]).xor(st[13]).xor(st[18]).xor(st[23]);
-			bc[4] = st[4].xor(st[9]).xor(st[14]).xor(st[19]).xor(st[24]);
+			bc.at(0).set(st.at(0)).xorEq(st.at(5)).xorEq(st.at(10)).xorEq(st.at(15)).xorEq(st.at(20));
+			bc.at(1).set(st.at(1)).xorEq(st.at(6)).xorEq(st.at(11)).xorEq(st.at(16)).xorEq(st.at(21));
+			bc.at(2).set(st.at(2)).xorEq(st.at(7)).xorEq(st.at(12)).xorEq(st.at(17)).xorEq(st.at(22));
+			bc.at(3).set(st.at(3)).xorEq(st.at(8)).xorEq(st.at(13)).xorEq(st.at(18)).xorEq(st.at(23));
+			bc.at(4).set(st.at(4)).xorEq(st.at(9)).xorEq(st.at(14)).xorEq(st.at(19)).xorEq(st.at(24));
+
 			for (let i = 0; i < 5; i++) {
-				t = bc[(i + 4) % 5].xor(bc[(i + 1) % 5].lRot(1));
-				st[i] = st[i].xor(t);
-				st[i + 5] = st[i + 5].xor(t);
-				st[i + 10] = st[i + 10].xor(t);
-				st[i + 15] = st[i + 15].xor(t);
-				st[i + 20] = st[i + 20].xor(t);
+				t.set(bc.at((i + 4) % 5)).xorEq(bc.at((i + 1) % 5).lRot(1));
+				st.at(i).xorEq(t);
+				st.at(i + 5).xorEq(t);
+				st.at(i + 10).xorEq(t);
+				st.at(i + 15).xorEq(t);
+				st.at(i + 20).xorEq(t);
 			}
 
 			// Rho & Pi
-			t = st[1];
+			t.set(st.at(1));
 			for (let i = 0; i < 24; i++) {
 				const j = piShift[i];
-				bc[0] = st[j];
-				st[j] = t.lRot(rhoShift[i]);
-				t = bc[0];
+				bc.at(0).set(st.at(j));
+				st.at(j).set(t.lRotEq(rhoShift[i]));
+				t.set(bc.at(0));
 			}
 
 			//  Chi
 			for (let j = 0; j < 25; j += 5) {
 				//unroll: for (let i = 0; i < 5; i++) bc[i] = st[j + i];
-				bc[0] = st[j];
-				bc[1] = st[j + 1];
-				bc[2] = st[j + 2];
-				bc[3] = st[j + 3];
-				bc[4] = st[j + 4];
+				bc.at(0).set(st.at(j));
+				bc.at(1).set(st.at(j + 1));
+				bc.at(2).set(st.at(j + 2));
+				bc.at(3).set(st.at(j + 3));
+				bc.at(4).set(st.at(j + 4));
 				//unroll: for (let i = 0; i < 5; i++) st[j+i]=st[j+i].xor(bc[(i + 2) % 5].and(bc[(i + 1) % 5].not()));
-				st[j] = st[j].xor(bc[2].and(bc[1].not()));
-				st[j + 1] = st[j + 1].xor(bc[3].and(bc[2].not()));
-				st[j + 2] = st[j + 2].xor(bc[4].and(bc[3].not()));
-				st[j + 3] = st[j + 3].xor(bc[0].and(bc[4].not()));
-				st[j + 4] = st[j + 4].xor(bc[1].and(bc[0].not()));
+				st.at(j).xorEq(bc.at(2).and(bc.at(1).not()));
+				st.at(j + 1).xorEq(bc.at(3).and(bc.at(2).not()));
+				st.at(j + 2).xorEq(bc.at(4).and(bc.at(3).not()));
+				st.at(j + 3).xorEq(bc.at(0).and(bc.at(4).not()));
+				st.at(j + 4).xorEq(bc.at(1).and(bc.at(0).not()));
 			}
 
 			//  Iota
-			st[0] = st[0].xor(new Uint64(roundConst[2 * r + 1], roundConst[2 * r]));
+			st.at(0).xorEq(
+				U64.fromUint32Pair(roundConst[2 * r + 1], roundConst[2 * r])
+			);
 			//console.log(`r[${r}] : ${hex.fromU64s(st,' ')}`);
 		}
 		//Copy the data back to state
-		littleEndian.u64ArrIntoBytes(st, this.block);
+		asLE.i64(b8, 0, maxBlockSizeU64);
+		this.block.set(b8);
 		//Reset block pointer
 		this.bPos = 0;
 		//console.log(`post hash : ${hex.fromBytes(this.#block)}`);

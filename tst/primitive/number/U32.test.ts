@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { asLE } from '../../../src/endian';
-import { U32, U32Mut } from '../../../src/primitive/number';
+import { U32 } from '../../../src/primitive/number';
 import util from 'util';
 
 const tsts = suite('U32');
@@ -168,10 +168,10 @@ const lRot = [
 	[0xffffffff, 29, 0xffffffff],
 	[0xffffffff, 32, 0xffffffff],
 
-	[0x12345678, 1, 0x2468ACF0],
-	[0x12345678, 31, 0x91A2B3C],
+	[0x12345678, 1, 0x2468acf0],
+	[0x12345678, 31, 0x91a2b3c],
 	[0x12345678, 32, 0x12345678],
-	[0x12345678, 33, 0x2468ACF0],
+	[0x12345678, 33, 0x2468acf0],
 ];
 for (const [start, by, result] of lRot) {
 	tsts(start + ' rol ' + by, () => {
@@ -294,10 +294,10 @@ const rRot = [
 	[0xffffffff, 29, 0xffffffff],
 	[0xffffffff, 32, 0xffffffff],
 
-	[0x12345678, 1, 0x91A2B3C],
-	[0x12345678, 31, 0x2468ACF0],
+	[0x12345678, 1, 0x91a2b3c],
+	[0x12345678, 31, 0x2468acf0],
 	[0x12345678, 32, 0x12345678],
-	[0x12345678, 33, 0x91A2B3C],
+	[0x12345678, 33, 0x91a2b3c],
 ];
 for (const [start, by, result] of rRot) {
 	tsts(start + ' ror ' + by, () => {
@@ -436,10 +436,10 @@ tsts('fromArray', () => {
 	assert.is(u1.value, 29); //no change
 });
 
-tsts('fromBuffer',()=>{
-	const a=Uint32Array.of(0x12345678);
-	const u=U32.fromBuffer(a.buffer);
-	assert.equal(u.toString(),'12345678')
+tsts('fromBuffer', () => {
+	const a = Uint32Array.of(0x12345678);
+	const u = U32.fromBuffer(a.buffer);
+	assert.equal(u.toString(), '12345678');
 });
 
 tsts('zero/min/max', () => {
@@ -447,34 +447,6 @@ tsts('zero/min/max', () => {
 	assert.is(U32.min.value, 0, 'min');
 	assert.is(U32.max.value, 0xffffffff, 'max');
 });
-
-const coerces: [number | Uint32Array | U32 | U32Mut, number | undefined][] = [
-	//Numbers
-	[-1, undefined], //Negative, would fit in an i32
-	[0x1ffffffff, undefined], //Too large
-	[1, 1], //Goldilocks
-	[0x32, 0x32], //Goldilocks
-	//Uint32Array
-	[Uint32Array.of(0x32), 0x32],
-	[Uint32Array.of(3, 2, 1), 3],
-	//Uint32
-	[U32.fromInt(0x32), 0x32],
-	[U32.fromArray(Uint32Array.of(3, 2, 1), 1), 2],
-	//Uint32Mut - note these are treated the same as Uint32 because of inheritance
-	[U32Mut.fromInt(0x43), 0x43],
-	[U32Mut.fromArray(Uint32Array.of(5, 7, 22), 2), 22],
-];
-for (const [start, expect] of coerces) {
-	tsts(`coerce(${start})`, () => {
-		if (expect === undefined) {
-			assert.throws(() => U32.coerce(start));
-		} else {
-			const u = U32.coerce(start);
-			assert.instance(u, U32);
-			assert.is(u.value, expect);
-		}
-	});
-}
 
 const rot32 = [
 	//Start, left, end
@@ -766,94 +738,103 @@ for (const [a, b, match] of sameSignTests) {
 	});
 }
 
-const averageTests:[number,number,number][]=[
-	[1,3,2],
-	[10,30,20],
+const averageTests: [number, number, number][] = [
+	[1, 3, 2],
+	[10, 30, 20],
 ];
-for (const [a,b,avg] of averageTests) {
+for (const [a, b, avg] of averageTests) {
 	tsts(`average(${a},${b})`, () => {
 		assert.is(U32.average(a, b), avg);
 	});
 }
 
-const fromBytesLeTests:[Uint8Array,number,number][]=[
-	[Uint8Array.of(0x12,0x34,0x56,0x78),0,0x78563412],
-	[Uint8Array.of(0x78,0x56,0x34,0x12),0,0x12345678],
-	[Uint8Array.of(0x78,0x56,0x34,0x12),1,0x123456],
-	[Uint8Array.of(0x78,0x56),0,0x5678],
+const fromBytesLeTests: [Uint8Array, number, number][] = [
+	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 0, 0x78563412],
+	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 0, 0x12345678],
+	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 1, 0x123456],
+	[Uint8Array.of(0x78, 0x56), 0, 0x5678],
 ];
-for(const [u8,pos,expect] of fromBytesLeTests) {
+for (const [u8, pos, expect] of fromBytesLeTests) {
 	tsts(`${u8}[${pos}]`, () => {
-		assert.equal(U32.iFromBytesLE(u8,pos),expect);
+		assert.equal(U32.iFromBytesLE(u8, pos), expect);
 	});
 }
 
-const fromBytesBeTests:[Uint8Array,number,number][]=[
-	[Uint8Array.of(0x12,0x34,0x56,0x78),0,0x12345678],
-	[Uint8Array.of(0x78,0x56,0x34,0x12),0,0x78563412],
-	[Uint8Array.of(0x12,0x34,0x56,0x78),1,0x345678],
-	[Uint8Array.of(0x12,0x34,0x56,0x78),2,0x5678],
-	[Uint8Array.of(0x12,0x34,0x56,0x78),3,0x78],
-	[Uint8Array.of(0x78,0x56,0x34,0x12),1,0x563412],
-	[Uint8Array.of(0x56,0x78),0,0x5678],
+const fromBytesBeTests: [Uint8Array, number, number][] = [
+	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 0, 0x12345678],
+	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 0, 0x78563412],
+	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 1, 0x345678],
+	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 2, 0x5678],
+	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 3, 0x78],
+	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 1, 0x563412],
+	[Uint8Array.of(0x56, 0x78), 0, 0x5678],
 ];
-for(const [u8,pos,expect] of fromBytesBeTests) {
+for (const [u8, pos, expect] of fromBytesBeTests) {
 	tsts(`${u8}[${pos}]`, () => {
-		assert.equal(U32.iFromBytesBE(u8,pos),expect);
+		assert.equal(U32.iFromBytesBE(u8, pos), expect);
 	});
 }
 
-const toBytesLETests:[number,string][]=[
-	[0x12345678,'78563412'],
-	[0x78563412,'12345678'],
+const toBytesLETests: [number, string][] = [
+	[0x12345678, '78563412'],
+	[0x78563412, '12345678'],
 ];
-for(const [num,expect] of toBytesLETests) {
+for (const [num, expect] of toBytesLETests) {
 	tsts(`toBytesLE(${num})`, () => {
-		assert.equal(hex.fromBytes(U32.toBytesLE(num)),expect);
+		assert.equal(hex.fromBytes(U32.toBytesLE(num)), expect);
 	});
 }
 
-const toBytesBETests:[number,string][]=[
-	[0x12345678,'12345678'],
-	[0x78563412,'78563412'],
+const toBytesBETests: [number, string][] = [
+	[0x12345678, '12345678'],
+	[0x78563412, '78563412'],
 ];
-for(const [num,expect] of toBytesBETests) {
+for (const [num, expect] of toBytesBETests) {
 	tsts(`toBytesBE(${num})`, () => {
-		assert.equal(hex.fromBytes(U32.toBytesBE(num)),expect);
+		assert.equal(hex.fromBytes(U32.toBytesBE(num)), expect);
 	});
 }
 
-const lsbTests:[number,number,number][]=[
-	[0x12345678,0,0x78],
-	[0x12345678,1,0x56],
-	[0x12345678,2,0x34],
-	[0x12345678,3,0x12],
+const lsbTests: [number, number, number][] = [
+	[0x12345678, 0, 0x78],
+	[0x12345678, 1, 0x56],
+	[0x12345678, 2, 0x34],
+	[0x12345678, 3, 0x12],
 ];
-for(const [u32,which,expect] of lsbTests) {
+for (const [u32, which, expect] of lsbTests) {
 	tsts(`lsb(${u32}[which])`, () => {
-		const u=U32.fromInt(u32);
+		const u = U32.fromInt(u32);
 		assert.equal(u.lsb(which), expect);
 	});
 }
 
+tsts(`mut`, () => {
+	const h13 = '0000000D';
+	const a = U32.fromInt(13);
+	assert.is(hex.fromBytes(a.toBytesBE()), h13);
+	const b = a.mut();
+	b.addEq(U32.fromInt(1));
+	assert.is(hex.fromBytes(a.toBytesBE()), h13, 'a has not changed');
+	assert.is(hex.fromBytes(b.toBytesBE()), '0000000E', 'b is updated');
+});
+
 tsts('[Symbol.toStringTag]', () => {
-    const o=U32.fromInt(13);
+	const o = U32.fromInt(13);
 	const str = Object.prototype.toString.call(o);
 	assert.is(str.indexOf('U32') > 0, true);
 });
 
-tsts('util.inspect',()=>{
-    const o=U32.fromInt(13);
-    const u=util.inspect(o);
-    assert.is(u.startsWith('U32('),true);
+tsts('util.inspect', () => {
+	const o = U32.fromInt(13);
+	const u = util.inspect(o);
+	assert.is(u.startsWith('U32('), true);
 });
 
-tsts('clone',()=>{
-	const a=U32.fromInt(1);
-	const b=a.clone();
-	assert.equal(a.toString(),b.toString());
-
-})
+tsts('clone', () => {
+	const a = U32.fromInt(1);
+	const b = a.clone();
+	assert.equal(a.toString(), b.toString());
+});
 
 // tsts('general',()=>{
 //     const o=U32.fromInt(13);

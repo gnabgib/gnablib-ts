@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { U32, U32Mut, U32ish } from '../../../src/primitive/number';
+import { U32, U32Mut } from '../../../src/primitive/number';
 import { asBE, asLE } from '../../../src/endian';
 import util from 'util';
 
@@ -494,52 +494,6 @@ tsts('fromBuffer-9',()=> {
     u0.value=0x70060504;
     assert.is(src[7],0x70);
 });
-
-const coerces:{
-    v:U32ish,
-    expect?:number
-}[]=[
-    //Numbers
-    {
-        v:-1 //Negative
-    },
-    {
-        v:0x1ffffffff //Too big
-    },
-    {
-        v:0x32,
-        expect:0x32,
-    },
-    //Uint32Array
-    {
-        v:Uint32Array.of(0x32),
-        expect:0x32,
-    },
-    {
-        v:Uint32Array.of(3,2,1),
-        expect:3,
-    },
-    //Uint32Mut
-    {
-        v:U32Mut.fromInt(0x32),
-        expect:0x32,
-    },
-    {
-        v:U32Mut.fromArray(Uint32Array.of(3,2,1),1),
-        expect:2,
-    }
-];
-for(const test of coerces) {
-    tsts(`coerce(${test.v})`,()=>{
-        
-        if (test.expect===undefined) {
-            assert.throws(()=>U32Mut.coerce(test.v));
-        } else {
-            const u=U32Mut.coerce(test.v);
-            assert.is(u.value,test.expect);
-        }
-    });
-}
 
 tsts('[Symbol.toStringTag]', () => {
     const o=U32Mut.fromInt(13);

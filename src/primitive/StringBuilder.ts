@@ -63,10 +63,6 @@ export class StringBuilder {
         return ret;
     }
 
-    [Symbol.toPrimitive](): string {
-        return this._parts.join('');   
-	}
-
     /**
      * Collapse back into a string
      * @returns 

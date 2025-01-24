@@ -1,9 +1,9 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { lsbMask } from '../xtBit.js';
 import { IpV4 } from './Ip.js';
 import { ContentError } from '../../error/ContentError.js';
-import { sLen, sNum } from '../../safe/safe.js';
+import { sInt, sLen } from '../../safe/safe.js';
 import { parseDec } from '../number/xtUint.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -19,7 +19,7 @@ export class Cidr {
 	readonly mask: number;
 
 	constructor(ipv4: IpV4, mask: number) {
-		sNum('mask', mask).unsigned().atMost(32).throwNot();
+		sInt('mask', mask).unsigned().atMost(32).throwNot();
 		const ipv4Int = ipv4.valueOf();
 		this.bitMask = lsbMask(32-mask);
 		const startInt = (ipv4Int & ~this.bitMask) >>> 0;
@@ -112,7 +112,7 @@ export class Cidr {
 		sLen('parts', parts).exactly(2).throwNot();
 		const ipv4 = IpV4.fromString(parts[0]);
 		const mask = parseDec(parts[1]);
-		if (mask == undefined)
+		if (isNaN(mask))
 			throw new ContentError('Expecting integer 0-32', 'Mask', parts[1]);
 
 		return new this(ipv4, mask);

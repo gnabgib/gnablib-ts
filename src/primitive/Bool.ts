@@ -1,211 +1,176 @@
+/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
+
+import { ParseProblem } from '../error/index.js';
+import { sLen } from '../safe/safe.js';
 import { BitReader } from './BitReader.js';
 import { BitWriter } from './BitWriter.js';
 import { WindowStr } from './WindowStr.js';
-import { ContentError } from '../error/ContentError.js';
-import { ISerializer } from './interfaces/ISerializer.js';
-import { sLen } from '../safe/safe.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-const DBG_RPT = 'Bool';
+const s = ['false', 'true'];
 
-export interface IParseSettings {
-	preventUndefined?: boolean;
-	allowYes?: boolean;
-	allowOn?: boolean;
-	pos?: number;
-}
+export class Bool {
+	/** Number of bytes required in memory*/
+	readonly size8 = 1;
+	/** Number of bits required serialized */
+	readonly serialBits = 1;
 
-const masks = [1, 2, 4, 8, 16, 32, 64, 128];
+	protected constructor(protected _arr: Uint8Array, protected _pos: number) {}
 
-//Note this actually only uses the last bit of storage, so it can be combined with
-// something using the first 7 bits
-/** @hidden */
-export class _BoolCore implements ISerializer {
-	/**Number of bytes required to store this data */
-	static readonly storageBytes = 1;
-	/**Number of bits required to serialize this data */
-	static readonly serialBits = 1;
-	private readonly _v: Uint8Array;
-	private readonly _shift: number;
-
-	protected constructor(storage: Uint8Array, shift: number) {
-		this._v = storage;
-		this._shift = shift;
+	//#region Builds
+	/** Build from a boolean or numeric value (where 0|NaN=false, and anything else=true) */
+	static from(v: number | boolean) {
+		return new Bool(Uint8Array.of(v ? 1 : 0), 0);
 	}
 
-	/** Value as a boolean */
-	toJSON(): boolean {
-		return (this._v[0] & masks[this._shift]) === masks[this._shift];
+	/**
+	 * Mount an existing array, note this **shares** memory with the array,
+	 * changing a value in `arr` will mutate this state.
+	 *
+	 * @param pos Position to link from
+	 * @throws Error if `arr` isn't long enough
+	 */
+	static mount(arr: Uint8Array, pos = 0) {
+		sLen('arr', arr)
+			.atLeast(pos + 1)
+			.throwNot();
+		return new Bool(arr, pos);
 	}
 
-	/** Value as an int 1=true, 0=false */
-	public valueOf(): number {
-		return (this._v[0] & masks[this._shift]) >> this._shift;
+	/**
+	 * Read next bit from stream and create a value from it
+	 * @throws Error if there's not enough content
+	 */
+	static deserial(br: BitReader): Bool {
+		return new Bool(Uint8Array.of(br.readNumberBE(1)), 0);
 	}
-	/** Value as a boolean */
-	public valueBool(): boolean {
-		return (this._v[0] & masks[this._shift]) === masks[this._shift];
+	//#endregion
+
+	/** Create a **copy** of this element */
+	clone() {
+		return new Bool(this._arr.slice(this._pos, this._pos + 1), 0);
 	}
 
-	/** Serialize into target  - 1 bit*/
-	public serialize(target: BitWriter): void {
-		target.mustPushNumberBE(
-			(this._v[0] & masks[this._shift]) === masks[this._shift] ? 1 : 0,
-			_BoolCore.serialBits
-		);
+	toString(): string {
+		return s[this._arr[this._pos] & 1];
 	}
 
-	/** Number of bits required to serialize */
-	get serialSizeBits(): number {
-		return _BoolCore.serialBits;
+	valueOf(): boolean {
+		return !!(this._arr[this._pos] & 1);
 	}
 
-	//No need to validate
+	/**
+	 * Serialize value
+	 * @throws Error if not enough space
+	 */
+	serial(bw: BitWriter) {
+		bw.mustPushNumberBE(this._arr[this._pos], 1);
+	}
 
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
-		return DBG_RPT;
+		return 'Bool';
 	}
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `${DBG_RPT}(${this.toString()})`;
+		return `Bool(${this.toString()})`;
 	}
 
-	/** Copy this value into storage */
-	protected fill(storage: Uint8Array, pos: number): void {
-		const shift = this._shift - pos;
-		storage[0] = (this._v[0] & masks[shift]) >> shift;
-	}
-
-	protected static writeBool(
-		target: Uint8Array,
-		v: boolean,
-		pos: number
-	): void {
-		if (v) {
-			//Set the bit
-			target[0] |= masks[pos];
-		} else {
-			//Unset the last bit
-			target[0] &= ~masks[pos]; //0xfe;
+	/**
+	 * Try and parse from a string, accepts:
+	 * - 'true', 'false'
+	 * - '1', '0' if settings.preventNumeric!==true
+	 * - 'yes','no' if settings.allowYes===true
+	 * - 'on','off' if settings.allowOn===true
+	 *
+	 * Surrounding whitespace will be removed.
+	 * @returns Value or problem if parse was unsuccessful
+	 */
+	static parse(
+		src: WindowStr,
+		settings?: {
+			/**Whether yes/no are accepted as true/false (respectively) */
+			allowYes?: boolean;
+			/**Whether on/off are accepted as true/false (respectively) */
+			allowOn?: boolean;
+			/**Don't accept '1'/'0' as true/false values */
+			preventNumeric?: boolean;
 		}
-	}
-
-	/** If storage empty, builds new, or vets it's the right size */
-	protected static setupStor(storage?: Uint8Array): Uint8Array {
-		if (!storage) return new Uint8Array(self.storageBytes);
-		sLen('storage', storage).atLeast(self.storageBytes).throwNot();
-		return storage;
-	}
-
-	protected static deserializeTo(
-		source: BitReader,
-		storage: Uint8Array,
-		pos: number
-	) {
-		_BoolCore.writeBool(storage, source.readNumberBE(self.serialBits) === 1, pos);
-	}
-}
-
-export class Bool extends _BoolCore {
-	/** true/false */
-	public toString(): string {
-		return this.valueBool() ? 'true' : 'false';
-	}
-
-	/** Copy this value into provided storage, and return a new object from that */
-	public cloneTo(storage: Uint8Array, pos = 0): Bool {
-		this.fill(storage, pos);
-		return new Bool(storage, pos);
-	}
-
-	public static new(value: boolean, storage?: Uint8Array, pos = 0): Bool {
-		const stor = self.setupStor(storage);
-		self.writeBool(stor, value, pos);
-		return new Bool(stor, pos);
-	}
-
-	protected static parseIntoStorage(
-		input: WindowStr,
-		storage: Uint8Array,
-		yesVals: string[],
-		noVals: string[],
-		pos: number,
-		name = 'input'
-	): void {
-		input.trimStart().trimEnd();
-		const str = input.toString().toLowerCase();
-		for (const y of yesVals) {
-			if (str === y) {
-				input.shrink(y.length);
-				self.writeBool(storage, true, pos);
-				return;
+	): boolean | ParseProblem {
+		const tVals = ['true'];
+		const fVals = ['false'];
+		if (!settings?.preventNumeric) {
+			tVals.push('1');
+			fVals.push('0');
+		}
+		if (settings?.allowYes) {
+			tVals.push('yes');
+			fVals.push('no');
+		}
+		if (settings?.allowOn) {
+			tVals.push('on');
+			fVals.push('off');
+		}
+		src.trimStart().trimEnd();
+		const str = src.toString().toLowerCase();
+		for (const t of tVals) {
+			if (str === t) {
+				src.shrink(t.length);
+				return true;
 			}
 		}
-		for (const n of noVals) {
-			if (str === n) {
-				input.shrink(n.length);
-				self.writeBool(storage, false, pos);
-				return;
+		for (const f of fVals) {
+			if (str === f) {
+				src.shrink(f.length);
+				return false;
 			}
 		}
-		throw new ContentError(
-			'expecting ' + yesVals.join('/') + ' or ' + noVals.join('/'),
-			name,
-			input
+		return new ParseProblem(
+			'src',
+			'expecting ' + tVals.join('/') + ' or ' + fVals.join('/'),
+			str
 		);
 	}
-	/**
-	 * Parse from a string, accepts:
-	 * 'true','false',0,1
-	 * - If allowYes: 'yes' ,'no'
-	 * - If allowOn: 'on','off'
-	 *
-	 * Surrounding whitespace will be removed
-	 *
-	 * Throws if:
-	 * - Not a string, or $str is empty
-	 * - There's no available $storage
-	 * - The content of $str isn't valid
-	 */
-	public static parse(
-		input: WindowStr,
-		settings?: IParseSettings,
-		storage?: Uint8Array
-	): Bool {
-		const stor = self.setupStor(storage);
-		const yesVals = ['true', '1'];
-		const noVals = ['false', '0'];
-		if (settings?.allowYes === true) {
-			yesVals.push('yes');
-			noVals.push('no');
-		}
-		if (settings?.allowOn === true) {
-			yesVals.push('on');
-			noVals.push('off');
-		}
-		const pos = (settings?.pos as number) | 0;
-		self.parseIntoStorage(input, stor, yesVals, noVals, pos, 'bool');
-		return new Bool(stor, pos);
+}
+
+export class BoolMut extends Bool {
+	//#region Builds
+	/** Build from a boolean or numeric value (where 0|NaN=false, and anything else=true) */
+	static from(v: number | boolean) {
+		return new BoolMut(Uint8Array.of(v ? 1 : 0), 0);
 	}
 
 	/**
-	 * Deserialize next 1 bit into bool
-	 * Throws if:
-	 * - There's not 1 bits remaining in $source.buffer
-	 * - There's no available $storage
-	 * @param source Source to read bit from
-	 * @param storage Storage location, if undefined will be built
+	 * Mount an existing array, note this **shares** memory with the array,
+	 * changing a value in `arr` will mutate this state.
+	 *
+	 * @param pos Position to link from
+	 * @throws Error if `arr` isn't long enough
 	 */
-	public static deserialize(
-		source: BitReader,
-		storage?: Uint8Array,
-		pos = 0
-	): Bool {
-		const stor = self.setupStor(storage);
-		self.deserializeTo(source, stor, pos);
-		return new Bool(stor, pos);
+	static mount(arr: Uint8Array, pos = 0) {
+		sLen('arr', arr)
+			.atLeast(pos + 1)
+			.throwNot();
+		return new BoolMut(arr, pos);
+	}
+
+	/**
+	 * Read next bit from stream and create a value from it
+	 * @throws Error if there's not enough content
+	 */
+	static deserial(br: BitReader): Bool {
+		return new BoolMut(Uint8Array.of(br.readNumberBE(1)), 0);
+	}
+	//#endregion
+
+	set(v: boolean) {
+		this._arr[this._pos] &= 0xfe;
+		this._arr[this._pos] += +v;
+	}
+
+	/** @hidden */
+	[consoleDebugSymbol](/*depth, options, inspect*/) {
+		return `BoolMut(${this.toString()})`;
 	}
 }
-const self = Bool;

@@ -61,6 +61,7 @@ const badParse: string[] = [
 	'1.1.1.1/0x10', //Bad mask (hex not allowed)
 	'1.1.1.1/+12', //Sign not allowed
 	'1.1.1.1/-1', //Sign not allowed
+	'1.1.1.1/a',
 	'', //Not enough parts
 ];
 

@@ -35,7 +35,6 @@
     Types are numbered for BYTE length (not bit), because this is an encoding format and most
     things are at least byte if not 4*, 8* aligned
  */
-import { Uint64 } from '../../primitive/Uint64.js';
 import { fpb16, fpb32, fpb64 } from '../ieee754-fpb.js';
 import { utf8 } from '../Utf8.js';
 import { BinResult } from '../../primitive/FromBinResult.js';
@@ -49,6 +48,7 @@ import { BitWriter } from '../../primitive/BitWriter.js';
 import { BitReader } from '../../primitive/BitReader.js';
 import { sNum } from '../../safe/safe.js';
 import { I64 } from '../../primitive/number/I64.js';
+import { U64 } from '../../primitive/number/U64.js';
 
 export enum Type {
 	Null, //0Bytes #LITERAL
@@ -101,9 +101,10 @@ export enum Type {
 	//struct
 }
 
-function encodeUint(value: Uint64): Uint8Array {
-	if (value.equals(Uint64.zero)) return new Uint8Array([Type.Zero]);
-	const min = value.toMinBytes();
+function encodeUint(value: U64): Uint8Array {
+	if (value.eq(U64.zero)) return new Uint8Array([Type.Zero]);
+	//Todo minbytes
+	const min = value.toBytesBE();
 	const ret = new Uint8Array(9);
 	switch (min.length) {
 		case 1:
@@ -129,6 +130,7 @@ function encodeUint(value: Uint64): Uint8Array {
 
 function encodeInt(value: I64): Uint8Array {
 	if (value.eq(I64.zero)) return new Uint8Array([Type.Zero]);
+	//Todo minbytes
 	const min = value.toBytesBE();
 	const ret = new Uint8Array(9);
 	switch (min.length) {
@@ -632,7 +634,7 @@ export function encode(value: unknown): Uint8Array {
 			//symbol, function
 			throw new TypeError(`Cannot encoded ${typeof value}`);
 	}
-	if (value instanceof Uint64) {
+	if (value instanceof U64) {
 		return encodeUint(value);
 	}
 	if (value instanceof I64) {

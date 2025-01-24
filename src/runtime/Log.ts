@@ -1,4 +1,5 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+
 import { color } from '../cli/csi-tables.js';
 import { DateTimeUtc } from '../datetime/dt.js';
 import { config } from './Config.js';
@@ -19,7 +20,7 @@ class Entry implements ILogEntry {
 		readonly fields: Record<string, unknown>,
 		when?: DateTimeUtc
 	) {
-        /* c8 ignore next - for now this is always... `now` but in a deser future..*/
+		/* c8 ignore next - for now this is always... `now` but in a deser future..*/
 		this.when = when ? when : DateTimeUtc.now();
 		//Utility, if there's a caller:undefined in fields, we'll determine it here
 		if ('caller' in fields && fields['caller'] == undefined) {
@@ -33,14 +34,14 @@ class Entry implements ILogEntry {
 	toString(inColor: boolean): string {
 		const level = (LogLevel[this.level] + ' ').substring(0, 5);
 		if (!inColor)
-			return `[${level}] `+
-                this.when.toString()+' '+
-                this.message;
+			return `[${level}] ` + this.when.toString() + ' ' + this.message;
 
 		const clr = [gray, cyan, yellow, red][this.level];
-		return `[${clr}${level}${reset}] `+
-            `${magenta}${this.when.toString()}${reset} `+
-            this.message;
+		return (
+			`[${clr}${level}${reset}] ` +
+			`${magenta}${this.when.toString()}${reset} ` +
+			this.message
+		);
 	}
 }
 
@@ -81,52 +82,56 @@ export class LogConsole implements ILogTarget {
 }
 /* c8 ignore stop */
 export class LogFilter implements ILogTarget {
-    /**
+	/**
 	 * Minimum level that's logged, where DEBUG<INFO<WARN<ERROR
 	 */
 	ignoreUnder: LogLevel;
 
-    constructor(readonly target:ILogTarget,ignoreUnder=LogLevel.Info) {
-        /* c8 ignore next - this is just here for invariant JS calls*/
-        this.ignoreUnder = ignoreUnder ?? LogLevel.Info;
-    }
+	constructor(readonly target: ILogTarget, ignoreUnder = LogLevel.Info) {
+		/* c8 ignore next - this is just here for invariant JS calls*/
+		this.ignoreUnder = ignoreUnder ?? LogLevel.Info;
+	}
 
-    get supportColor():boolean {return this.target.supportColor;}
+	get supportColor(): boolean {
+		return this.target.supportColor;
+	}
 
-    log(entry:ILogEntry):void {
-        if (entry.level<this.ignoreUnder) return;
-        this.target.log(entry);
-    }
+	log(entry: ILogEntry): void {
+		if (entry.level < this.ignoreUnder) return;
+		this.target.log(entry);
+	}
 }
 
 class Log {
-	#target: ILogTarget = new LogNone();
+	private _target: ILogTarget = new LogNone();
 
-	set target(log: ILogTarget|undefined) {
-		this.#target.log(
+	set target(log: ILogTarget | undefined) {
+		this._target.log(
 			new Entry(LogLevel.Warn, 'Log target being switched', {
 				caller: undefined,
 			})
 		);
-		this.#target = log ?? new LogNone();
+		this._target = log ?? new LogNone();
 	}
 
-    get supportColor():boolean {return this.#target.supportColor;}
+	get supportColor(): boolean {
+		return this._target.supportColor;
+	}
 
 	debug(message: string, fields: Record<string, unknown> = {}): void {
-		this.#target.log(new Entry(LogLevel.Debug, message, fields));
+		this._target.log(new Entry(LogLevel.Debug, message, fields));
 	}
 
 	info(message: string, fields: Record<string, unknown> = {}): void {
-		this.#target.log(new Entry(LogLevel.Info, message, fields));
+		this._target.log(new Entry(LogLevel.Info, message, fields));
 	}
 
 	warn(message: string, fields: Record<string, unknown> = {}): void {
-		this.#target.log(new Entry(LogLevel.Warn, message, fields));
+		this._target.log(new Entry(LogLevel.Warn, message, fields));
 	}
 
 	error(message: string, fields: Record<string, unknown> = {}): void {
-		this.#target.log(new Entry(LogLevel.Error, message, fields));
+		this._target.log(new Entry(LogLevel.Error, message, fields));
 	}
 }
 

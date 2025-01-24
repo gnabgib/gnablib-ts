@@ -19,23 +19,21 @@ const b512rounds = 16;
 const spaceForLen32 = 8; //Number of bytes needed to append length
 const spaceForLen64 = 16; //Number of bytes needed to append length
 //Same as Sha2-512
+// prettier-ignore
 const iv = [
 	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2,3,5,7,11,13,17,19):
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
-	0x6a09e667,
-	0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a,
-	0x5f1d36f1, 0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab,
-	0xfb41bd6b, 0x5be0cd19, 0x137e2179,
+	0x6a09e667, 0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1, 
+	0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179,
 ];
+// prettier-ignore
 const n = [
 	//256
-	0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822, 0x299f31d0,
-	0x082efa98, 0xec4e6c89, 0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c,
-	0xc0ac29b7, 0xc97c50dd, 0x3f84d5b5, 0xb5470917,
+	0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822, 0x299f31d0, 0x082efa98, 0xec4e6c89, 
+	0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c, 0xc0ac29b7, 0xc97c50dd, 0x3f84d5b5, 0xb5470917,
 	//512
-	0x9216d5d9, 0x8979fb1b, 0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7,
-	0xb8e1afed, 0x6a267e96, 0xba7c9045, 0xf12c7f99, 0x24a19947, 0xb3916cf7,
-	0x0801f2e2, 0x858efc16, 0x636920d8, 0x71574e69,
+	0x9216d5d9, 0x8979fb1b, 0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7, 0xb8e1afed, 0x6a267e96, 
+	0xba7c9045, 0xf12c7f99, 0x24a19947, 0xb3916cf7, 0x0801f2e2, 0x858efc16, 0x636920d8, 0x71574e69,
 ];
 const sigmas = [
 	[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
@@ -313,7 +311,7 @@ class Blake1_64bit implements IHash {
 	 */
 	readonly blockSize = blockSizeEls << 3;
 	/**
-	 * Number of rounds (14 for BLake64, 16 for Blake512)
+	 * Number of rounds (14 for Blake64, 16 for Blake512)
 	 */
 	private readonly _nr: number;
 	/**

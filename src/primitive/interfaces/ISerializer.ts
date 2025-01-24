@@ -7,5 +7,5 @@ export interface ISerializer {
 	/** Serialize into bytes (via a copy) */
 	serialize(target:BitWriter): void;
 	/** Number of bits require to serialize, *could* be content dependent is there's internal compression */
-	serialSizeBits:number;
+	get serialSizeBits():number;
 }

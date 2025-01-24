@@ -1,4 +1,4 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { Cidr } from './Cidr.js';
 import { ICidrValue } from '../interfaces/ICidrValue.js';
@@ -8,14 +8,14 @@ import { IpV4 } from './Ip.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'IpTree';
 
+interface IOutput<T> {
+	(position: number, bit: number, value: T | undefined): void;
+}
+
 interface ITreeNode<T> {
 	readonly value: T | undefined;
 	contains(val: number, bit: number): boolean;
-	output(
-		position: number,
-		bit: number,
-		output: (position: number, bit: number, value: T) => void
-	): void;
+	output(position: number, bit: number, output: IOutput<T>): void;
 }
 
 /**
@@ -23,27 +23,15 @@ interface ITreeNode<T> {
  * Leafs of the tree, only thing that renders output
  */
 class AllTreeNode<T> implements ITreeNode<T> {
-	private _value: T;
-
-	constructor(value: T) {
-		this._value = value;
-	}
-
-	get value(): T {
-		return this._value;
-	}
+	constructor(readonly value: T | undefined) {}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	contains(val: number, bit: number): boolean {
 		return true;
 	}
 
-	output(
-		position: number,
-		bit: number,
-		output: (position: number, bit: number, value: T) => void
-	): void {
-		output(position, 31 - bit, this._value);
+	output(position: number, bit: number, output: IOutput<T>): void {
+		output(position, 31 - bit, this.value);
 	}
 }
 
@@ -51,9 +39,7 @@ class AllTreeNode<T> implements ITreeNode<T> {
  * No values below are represented (aka empty tree)
  */
 class NoneNode<T> implements ITreeNode<T> {
-	get value() {
-		return undefined;
-	}
+	readonly value = undefined;
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	contains(val: number, bit: number): boolean {
 		return false;
@@ -65,7 +51,7 @@ class NoneNode<T> implements ITreeNode<T> {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		bit: number,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		output: (position: number, bit: number, value: T) => void
+		output: IOutput<T>
 	): void {
 		//nop
 	}
@@ -75,12 +61,9 @@ class NoneNode<T> implements ITreeNode<T> {
  * A node (or fork) that represents two paths
  */
 class TreeNode<T> implements ITreeNode<T> {
+	readonly value = undefined;
 	private _left: ITreeNode<T> = new NoneNode<T>();
 	private _right: ITreeNode<T> = new NoneNode<T>();
-
-	get value() {
-		return undefined;
-	}
 
 	contains(val: number, bit: number): boolean {
 		const odd = (val >> bit) & 1;
@@ -89,16 +72,14 @@ class TreeNode<T> implements ITreeNode<T> {
 			: this._left.contains(val, bit - 1);
 	}
 
-	output(
-		position: number,
-		bit: number,
-		output: (position: number, bit: number, value: T) => void
-	): void {
+	output(position: number, bit: number, output: IOutput<T>): void {
+		/* c8 ignore start */
 		if (bit < 0) {
 			//The addTreeNode function shouldn't allow anything but an all/none node at max depth (32)
 			// but just incase we made a code-mistake (ie. saw in early testing)
 			throw new Error("C'est impossible");
 		}
+		/* c8 ignore stop */
 		//A TreeNode has no output.. it's just a fork in the path
 		this._left.output(position, bit - 1, output);
 		this._right.output(position | (1 << bit), bit - 1, output);
@@ -152,7 +133,10 @@ class TreeNode<T> implements ITreeNode<T> {
 }
 
 // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-function pickFirst<T>(value1: T, value2: T): T {
+function pickFirst<T>(
+	value1: T | undefined,
+	value2: T | undefined
+): T | undefined {
 	return value1;
 }
 

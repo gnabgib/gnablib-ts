@@ -15,13 +15,11 @@ export abstract class AInt {
 	) {}
 
 	protected _setValue(n: AInt) {
-		/*DEBUG*/ if (this.size32 != n.size32) throw new Error('Size mismatch');
-		//Assumption: b is same size as this (lib-dev to solve), size is multiple of 2*n*u32 (64,128,256,512 but not 96)
+		// /*DEBUG*/ if (this.size32 != n.size32) throw new Error('Size mismatch');
 		let i = 0;
 		do {
-			this._arr[this._pos + i] = n._arr[n._pos + i++];
-			this._arr[this._pos + i] = n._arr[n._pos + i++];
-		} while (i < this.size32);
+			this._arr[this._pos + i] = n._arr[n._pos + i];
+		} while (++i < this.size32);
 	}
 
 	protected _setZero() {
@@ -91,32 +89,28 @@ export abstract class AInt {
 		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		do {
-			this._arr[this._pos + i] ^= o._arr[o._pos + i++];
-			this._arr[this._pos + i] ^= o._arr[o._pos + i++];
-		} while (i < this.size32);
+			this._arr[this._pos + i] ^= o._arr[o._pos + i];
+		} while (++i < this.size32);
 	}
 	protected _orEq(o: AInt) {
 		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		do {
-			this._arr[this._pos + i] |= o._arr[o._pos + i++];
-			this._arr[this._pos + i] |= o._arr[o._pos + i++];
-		} while (i < this.size32);
+			this._arr[this._pos + i] |= o._arr[o._pos + i];
+		} while (++i < this.size32);
 	}
 	protected _andEq(o: AInt) {
 		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		do {
-			this._arr[this._pos + i] &= o._arr[o._pos + i++];
-			this._arr[this._pos + i] &= o._arr[o._pos + i++];
-		} while (i < this.size32);
+			this._arr[this._pos + i] &= o._arr[o._pos + i];
+		} while (++i < this.size32);
 	}
 	protected _notEq() {
 		let i = 0;
 		do {
-			this._arr[this._pos + i] = ~this._arr[this._pos + i++];
-			this._arr[this._pos + i] = ~this._arr[this._pos + i++];
-		} while (i < this.size32);
+			this._arr[this._pos + i] = ~this._arr[this._pos + i];
+		} while (++i < this.size32);
 	}
 	//#endregion
 
@@ -198,6 +192,7 @@ export abstract class AInt {
 		// /*DEBUG*/if (i<this.size32) d+=`[${i}..${this.size32-1}]=last`;
 		// /*DEBUG*/console.log(d);
 	}
+
 	protected _lRotEq(by: number) {
 		const by32 = by & 0x1f; //aka mod 32
 		const byPos = (by >>> 5) % this.size32; //aka divide by 32 /w wrap

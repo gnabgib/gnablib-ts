@@ -2,7 +2,6 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
 import { Blake2b_256, Blake2b } from '../../../src/crypto/hash';
-import { Uint64 } from '../../../src/primitive/Uint64';
 import { U64 } from '../../../src/primitive/number/U64';
 
 const tsts = suite('Blake2/RFC 7693 (b256)');
@@ -40,7 +39,7 @@ tsts(`build`,()=>{
 	//Just settings to show the diff
 	const salt=Uint8Array.of(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
 	const pers=Uint8Array.of(0xf,0xe,0xd,0xc,0xb,0xa,9,8,7,6,5,4,3,2,1,0);
-	const hash=new Blake2b(1,2,3,4,Uint64.fromNumber(5),6,7,undefined,salt,pers);
+	const hash=new Blake2b(1,2,3,4,U64.fromInt(5),6,7,undefined,salt,pers);
 	assert.is(hash.size,1,'size');
 	assert.is(hash.fanOut,2,'fanOut');
 	assert.is(hash.maxDepth,3,'maxDepth');

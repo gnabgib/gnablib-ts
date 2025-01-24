@@ -1,12 +1,11 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import * as littleEndian from '../../endian/little.js';
-import { Uint64 } from '../../primitive/Uint64.js';
 import type { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32.js';
-import { U64 } from '../../primitive/number/U64.js';
+import { U64, U64Mut, U64MutArray } from '../../primitive/number/U64.js';
 import { LengthError } from '../../error/LengthError.js';
 import { sLen, sNum } from '../../safe/safe.js';
+import { asLE } from '../../endian/platform.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)
 // [BLAKE2 — fast secure hashing](https://www.blake2.net/)
@@ -22,13 +21,12 @@ const sRounds = 10;
 const bRounds = 12;
 
 //Same as Sha2-512
+// prettier-ignore
 const iv = [
 	//(first 64 bits of the fractional parts of the square roots of the first 8 primes 2,3,5,7,11,13,17,19):
 	//These are 64bit numbers.. split into 2*32bit pieces.. there's 4 a line *2 lines=8 numbers
-	0x6a09e667,
-	0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a,
-	0x5f1d36f1 /*..*/, 0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab,
-	0xfb41bd6b, 0x5be0cd19, 0x137e2179 /*..*/,
+	0x6a09e667, 0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1, 
+	0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179,
 ];
 const sigmas = [
 	[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
@@ -73,10 +71,12 @@ class Blake2_32bit implements IHash {
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSizeEls << 2);
+	//todo: we have an endian problem on BE systems
+	readonly #block32 = new Uint32Array(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash (this is just the low count)
 	 */
-	private _ingestBytes = Uint64.zero;
+	private _ingestBytes = U64Mut.fromUint32Pair(0, 0);
 	/**
 	 * Position of data written to block
 	 */
@@ -140,8 +140,8 @@ class Blake2_32bit implements IHash {
 			i2 = i << 1,
 			j = sigma[i2],
 			k = sigma[i2 + 1],
-			mj = U32.iFromBytesLE(this.#block, j * 4), //m[j]
-			mk = U32.iFromBytesLE(this.#block, k * 4); //m[k]
+			mj = this.#block32[j],
+			mk = this.#block32[k];
 
 		//Step 1
 		v[a] += v[b] + mj; //a ← a + b + m[j]
@@ -172,9 +172,9 @@ class Blake2_32bit implements IHash {
 		v[10] = iv[4];
 		v[11] = iv[6];
 		//note it's bytes in Blake2
-		v[12] = iv[8] ^ this._ingestBytes.lowU32;
+		v[12] = iv[8] ^ this._ingestBytes.low;
 		//No need to xor v13, countHigh is always 0 for now
-		v[13] = iv[10] ^ this._ingestBytes.highU32;
+		v[13] = iv[10] ^ this._ingestBytes.high;
 		v[14] = iv[12];
 		v[15] = iv[14];
 
@@ -231,15 +231,11 @@ class Blake2_32bit implements IHash {
 				//Update pos
 				this._bPos += nToWrite;
 				//Update count
-				this._ingestBytes = this._ingestBytes.add(
-					Uint64.fromNumber(subData.length)
-				);
+				this._ingestBytes.addEq(U64.fromInt(subData.length));
 				return;
 			}
 			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
-			this._ingestBytes = this._ingestBytes.add(
-				Uint64.fromNumber(this.blockSize)
-			);
+			this._ingestBytes.addEq(U64.fromInt(this.blockSize));
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -263,7 +259,9 @@ class Blake2_32bit implements IHash {
 		this.#block.fill(0, this._bPos);
 		this.hash(true);
 		const ret = new Uint8Array(this.size);
-		littleEndian.u32ArrIntoBytesSafe(this.#state, ret);
+		const s8 = new Uint8Array(this.#state.buffer);
+		ret.set(s8.subarray(0, Math.floor(this.size / 4) * 4));
+		asLE.i32(ret, 0, this.size / 4);
 		return ret;
 	}
 
@@ -282,7 +280,7 @@ class Blake2_32bit implements IHash {
 		this.#state[7] = iv[14] ^ U32.iFromBytesLE(this.#params, 28);
 
 		//Reset ingest count
-		this._ingestBytes = Uint64.zero;
+		this._ingestBytes.zero();
 		//Reset block (which is just pointing to the start)
 		this._bPos = 0;
 
@@ -313,6 +311,7 @@ class Blake2_32bit implements IHash {
 	}
 }
 
+//todo: Blake2_64bit.#params 32bit access (although LE)
 class Blake2_64bit implements IHash {
 	readonly #key: Uint8Array;
 	readonly #params: Uint8Array;
@@ -330,15 +329,16 @@ class Blake2_64bit implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
-	readonly #state = new Array<Uint64>(maxDigestEls);
+	readonly #state = U64MutArray.fromLen(maxDigestEls);
 	/**
 	 * Temp processing block
 	 */
 	readonly #block = new Uint8Array(blockSizeEls << 3);
+	readonly #block64 = U64MutArray.fromBytes(this.#block.buffer);
 	/**
 	 * Number of bytes added to the hash (this is just the low count)
 	 */
-	private _ingestBytes = Uint64.zero;
+	private _ingestBytes = U64Mut.fromUint32Pair(0, 0);
 	//_ingestBytesHigh=Uint64.zero;//13
 	/**
 	 * Position of data written to block
@@ -394,7 +394,7 @@ class Blake2_64bit implements IHash {
 		b: number,
 		c: number,
 		d: number,
-		v: Uint64[],
+		v: U64MutArray,
 		sigma: number[]
 	): void {
 		//Also referred to as "g" in docs
@@ -402,23 +402,21 @@ class Blake2_64bit implements IHash {
 			i2 = i << 1,
 			j = sigma[i2],
 			k = sigma[i2 + 1],
-			mj = littleEndian.u64FromBytes(this.#block, j * 8), //m[j]
-			mk = littleEndian.u64FromBytes(this.#block, k * 8); //m[k]
-		// console.log(`mj=${hex.fromBytes(mj.toBytes())}`);
-		// console.log(`mk=${hex.fromBytes(mk.toBytes())}`);
+			mj = this.#block64.at(j),
+			mk = this.#block64.at(k);
 
 		//Step 1
-		v[a] = v[a].add(v[b]).add(mj); //a ← a + b + m[j]
-		v[d] = v[d].xor(v[a]).rRot(rRot1_64); //d ← (d ⊕ a) >>> 32
+		v.at(a).addEq(v.at(b)).addEq(mj); //a ← a + b + m[j]
+		v.at(d).xorEq(v.at(a)).rRotEq(rRot1_64); //d ← (d ⊕ a) >>> 32
 		//Step 2
-		v[c] = v[c].add(v[d]); //c ← c + d
-		v[b] = v[b].xor(v[c]).rRot(rRot2_64); //b ← (b ⊕ c) >>> 24
+		v.at(c).addEq(v.at(d)); //c ← c + d
+		v.at(b).xorEq(v.at(c)).rRotEq(rRot2_64); //b ← (b ⊕ c) >>> 24
 		//Step 3
-		v[a] = v[a].add(v[b]).add(mk); //a ← a + b + m[k]
-		v[d] = v[d].xor(v[a]).rRot(rRot3_64); //d ← (d ⊕ a) >>> 16
+		v.at(a).addEq(v.at(b)).addEq(mk); //a ← a + b + m[k]
+		v.at(d).xorEq(v.at(a)).rRotEq(rRot3_64); //d ← (d ⊕ a) >>> 16
 		//Step 4
-		v[c] = v[c].add(v[d]); //c ← c + d
-		v[b] = v[b].xor(v[c]).rRot(rRot4_64); //b ← (b ⊕ c) >>> 63
+		v.at(c).addEq(v.at(d)); //c ← c + d
+		v.at(b).xorEq(v.at(c)).rRotEq(rRot4_64); //b ← (b ⊕ c) >>> 63
 	}
 
 	/**
@@ -427,29 +425,30 @@ class Blake2_64bit implements IHash {
 	 */
 	// h = #state, countLow=#ingestBytes (note it's bytes in Blake2)
 	private hash(last = false): void {
-		const v = new Array<Uint64>(16);
-		v[0] = this.#state[0];
-		v[1] = this.#state[1];
-		v[2] = this.#state[2];
-		v[3] = this.#state[3];
-		v[4] = this.#state[4];
-		v[5] = this.#state[5];
-		v[6] = this.#state[6];
-		v[7] = this.#state[7];
+		const v = U64MutArray.fromLen(16);
+		v.at(0).set(this.#state.at(0));
+		v.at(1).set(this.#state.at(1));
+		v.at(2).set(this.#state.at(2));
+		v.at(3).set(this.#state.at(3));
+		v.at(4).set(this.#state.at(4));
+		v.at(5).set(this.#state.at(5));
+		v.at(6).set(this.#state.at(6));
+		v.at(7).set(this.#state.at(7));
 
-		v[8] = new Uint64(iv[1], iv[0]);
-		v[9] = new Uint64(iv[3], iv[2]);
-		v[10] = new Uint64(iv[5], iv[4]);
-		v[11] = new Uint64(iv[7], iv[6]);
+		v.at(8).set(U64.fromUint32Pair(iv[1], iv[0]));
+		v.at(9).set(U64.fromUint32Pair(iv[3], iv[2]));
+		v.at(10).set(U64.fromUint32Pair(iv[5], iv[4]));
+		v.at(11).set(U64.fromUint32Pair(iv[7], iv[6]));
+
 		//note it's bytes in Blake2
-		v[12] = new Uint64(iv[9], iv[8]).xor(this._ingestBytes);
+		v.at(12).set(U64.fromUint32Pair(iv[9], iv[8]).xor(this._ingestBytes));
 		//No need to xor v13, countHigh is always 0 for now
-		v[13] = new Uint64(iv[11], iv[10]);
-		v[14] = new Uint64(iv[13], iv[12]);
-		v[15] = new Uint64(iv[15], iv[14]);
+		v.at(13).set(U64.fromUint32Pair(iv[11], iv[10]));
+		v.at(14).set(U64.fromUint32Pair(iv[13], iv[12]));
+		v.at(15).set(U64.fromUint32Pair(iv[15], iv[14]));
 
 		if (last) {
-			v[14] = v[14].not();
+			v.at(14).notEq();
 		}
 		// console.log(`v=${hex.fromU64s(v,' ')}`);
 
@@ -469,14 +468,14 @@ class Blake2_64bit implements IHash {
 			// console.log(`v${r+1}=${hex.fromU64s(v,' ')}`);
 		}
 
-		this.#state[0] = this.#state[0].xor(v[0]).xor(v[8]);
-		this.#state[1] = this.#state[1].xor(v[1]).xor(v[9]);
-		this.#state[2] = this.#state[2].xor(v[2]).xor(v[10]);
-		this.#state[3] = this.#state[3].xor(v[3]).xor(v[11]);
-		this.#state[4] = this.#state[4].xor(v[4]).xor(v[12]);
-		this.#state[5] = this.#state[5].xor(v[5]).xor(v[13]);
-		this.#state[6] = this.#state[6].xor(v[6]).xor(v[14]);
-		this.#state[7] = this.#state[7].xor(v[7]).xor(v[15]);
+		this.#state.at(0).xorEq(v.at(0)).xorEq(v.at(8));
+		this.#state.at(1).xorEq(v.at(1)).xorEq(v.at(9));
+		this.#state.at(2).xorEq(v.at(2)).xorEq(v.at(10));
+		this.#state.at(3).xorEq(v.at(3)).xorEq(v.at(11));
+		this.#state.at(4).xorEq(v.at(4)).xorEq(v.at(12));
+		this.#state.at(5).xorEq(v.at(5)).xorEq(v.at(13));
+		this.#state.at(6).xorEq(v.at(6)).xorEq(v.at(14));
+		this.#state.at(7).xorEq(v.at(7)).xorEq(v.at(15));
 		//console.log(`st=${hex.fromU64s(this.#state,' ')}`);
 
 		//Reset block pointer
@@ -501,15 +500,11 @@ class Blake2_64bit implements IHash {
 				//Update pos
 				this._bPos += nToWrite;
 				//Update count
-				this._ingestBytes = this._ingestBytes.add(
-					Uint64.fromNumber(subData.length)
-				);
+				this._ingestBytes.addEq(U64.fromInt(subData.length));
 				return;
 			}
 			this.#block.set(data.subarray(dPos, dPos + this.blockSize), this._bPos);
-			this._ingestBytes = this._ingestBytes.add(
-				Uint64.fromNumber(this.blockSize)
-			);
+			this._ingestBytes.addEq(U64.fromInt(this.blockSize));
 			this.hash();
 			dPos += space;
 			nToWrite -= space;
@@ -532,7 +527,10 @@ class Blake2_64bit implements IHash {
 		this.#block.fill(0, this._bPos);
 		this.hash(true);
 		const ret = new Uint8Array(this.size);
-		littleEndian.u64ArrIntoBytesSafe(this.#state, ret);
+		const b = this.#state.toBytesLE();
+		ret.set(b.subarray(0, this.size));
+
+		//littleEndian.u64ArrIntoBytesSafe(this.#state, ret);
 		return ret;
 	}
 
@@ -541,41 +539,73 @@ class Blake2_64bit implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.#state[0] = new Uint64(
-			(iv[1] ^ U32.iFromBytesLE(this.#params, 0)) >>> 0,
-			(iv[0] ^ U32.iFromBytesLE(this.#params, 4)) >>> 0
-		);
-		this.#state[1] = new Uint64(
-			(iv[3] ^ U32.iFromBytesLE(this.#params, 8)) >>> 0,
-			(iv[2] ^ U32.iFromBytesLE(this.#params, 12)) >>> 0
-		);
-		this.#state[2] = new Uint64(
-			(iv[5] ^ U32.iFromBytesLE(this.#params, 16)) >>> 0,
-			(iv[4] ^ U32.iFromBytesLE(this.#params, 20)) >>> 0
-		);
-		this.#state[3] = new Uint64(
-			(iv[7] ^ U32.iFromBytesLE(this.#params, 24)) >>> 0,
-			(iv[6] ^ U32.iFromBytesLE(this.#params, 28)) >>> 0
-		);
-		this.#state[4] = new Uint64(
-			(iv[9] ^ U32.iFromBytesLE(this.#params, 32)) >>> 0,
-			(iv[8] ^ U32.iFromBytesLE(this.#params, 36)) >>> 0
-		);
-		this.#state[5] = new Uint64(
-			(iv[11] ^ U32.iFromBytesLE(this.#params, 40)) >>> 0,
-			(iv[10] ^ U32.iFromBytesLE(this.#params, 44)) >>> 0
-		);
-		this.#state[6] = new Uint64(
-			(iv[13] ^ U32.iFromBytesLE(this.#params, 48)) >>> 0,
-			(iv[12] ^ U32.iFromBytesLE(this.#params, 52)) >>> 0
-		);
-		this.#state[7] = new Uint64(
-			(iv[15] ^ U32.iFromBytesLE(this.#params, 56)) >>> 0,
-			(iv[14] ^ U32.iFromBytesLE(this.#params, 60)) >>> 0
-		);
+		this.#state
+			.at(0)
+			.set(
+				U64.fromUint32Pair(
+					iv[1] ^ U32.iFromBytesLE(this.#params, 0),
+					iv[0] ^ U32.iFromBytesLE(this.#params, 4)
+				)
+			);
+		this.#state
+			.at(1)
+			.set(
+				U64.fromUint32Pair(
+					iv[3] ^ U32.iFromBytesLE(this.#params, 8),
+					iv[2] ^ U32.iFromBytesLE(this.#params, 12)
+				)
+			);
+		this.#state
+			.at(2)
+			.set(
+				U64.fromUint32Pair(
+					iv[5] ^ U32.iFromBytesLE(this.#params, 16),
+					iv[4] ^ U32.iFromBytesLE(this.#params, 20)
+				)
+			);
+		this.#state
+			.at(3)
+			.set(
+				U64.fromUint32Pair(
+					iv[7] ^ U32.iFromBytesLE(this.#params, 24),
+					iv[6] ^ U32.iFromBytesLE(this.#params, 28)
+				)
+			);
+		this.#state
+			.at(4)
+			.set(
+				U64.fromUint32Pair(
+					iv[9] ^ U32.iFromBytesLE(this.#params, 32),
+					iv[8] ^ U32.iFromBytesLE(this.#params, 36)
+				)
+			);
+		this.#state
+			.at(5)
+			.set(
+				U64.fromUint32Pair(
+					iv[11] ^ U32.iFromBytesLE(this.#params, 40),
+					iv[10] ^ U32.iFromBytesLE(this.#params, 44)
+				)
+			);
+		this.#state
+			.at(6)
+			.set(
+				U64.fromUint32Pair(
+					iv[13] ^ U32.iFromBytesLE(this.#params, 48),
+					iv[12] ^ U32.iFromBytesLE(this.#params, 52)
+				)
+			);
+		this.#state
+			.at(7)
+			.set(
+				U64.fromUint32Pair(
+					iv[15] ^ U32.iFromBytesLE(this.#params, 56),
+					iv[14] ^ U32.iFromBytesLE(this.#params, 60)
+				)
+			);
 
 		//Reset ingest count
-		this._ingestBytes = Uint64.zero;
+		this._ingestBytes.zero();
 		//Reset block (which is just pointing to the start)
 		this._bPos = 0;
 
@@ -598,7 +628,8 @@ class Blake2_64bit implements IHash {
 	 */
 	clone(): IHash {
 		const ret = new Blake2_64bit(this.#key, this.#params);
-		for (let i = 0; i < this.#state.length; i++) ret.#state[i] = this.#state[i];
+		for (let i = 0; i < this.#state.length; i++)
+			ret.#state.at(i).set(this.#state.at(i));
 		ret.#block.set(this.#block);
 		ret._ingestBytes = this._ingestBytes;
 		ret._bPos = this._bPos;
@@ -612,7 +643,7 @@ export class Blake2s extends Blake2_32bit {
 		fanOut: number,
 		maxDepth: number,
 		leafMaxLen: number,
-		nodeOffset: Uint64,
+		nodeOffset: U64,
 		nodeDepth: number,
 		innerHashLen: number,
 		key?: Uint8Array,
@@ -630,7 +661,7 @@ export class Blake2s extends Blake2_32bit {
 		p[2] = fanOut;
 		p[3] = maxDepth;
 		p.set(U32.toBytesLE(leafMaxLen), 4);
-		littleEndian.u64IntoBytesUnsafe(nodeOffset, p, 8);
+		p.set(nodeOffset.toBytesLE(), 8);
 		p[14] = nodeDepth;
 		p[15] = innerHashLen;
 		//Either no salt, or salt must be 16 bytes
@@ -662,7 +693,7 @@ export class Blake2s extends Blake2_32bit {
 			1,
 			1,
 			0,
-			Uint64.zero,
+			U64.zero,
 			0,
 			0,
 			key,
@@ -678,7 +709,7 @@ export class Blake2b extends Blake2_64bit {
 		fanOut: number,
 		maxDepth: number,
 		leafMaxLen: number,
-		nodeOffset: Uint64,
+		nodeOffset: U64,
 		nodeDepth: number,
 		innerHashLen: number,
 		key?: Uint8Array,
@@ -696,7 +727,7 @@ export class Blake2b extends Blake2_64bit {
 		p[2] = fanOut;
 		p[3] = maxDepth;
 		p.set(U32.toBytesLE(leafMaxLen), 4);
-		littleEndian.u64IntoBytesUnsafe(nodeOffset, p, 8);
+		p.set(nodeOffset.toBytesLE(), 8);
 		p[16] = nodeDepth;
 		p[17] = innerHashLen;
 		//Either no salt, or salt must be 16 bytes
@@ -732,7 +763,7 @@ export class Blake2b extends Blake2_64bit {
 			1,
 			1,
 			0,
-			Uint64.zero,
+			U64.zero,
 			0,
 			0,
 			key,
@@ -754,7 +785,7 @@ export class Blake2s_224 extends Blake2s {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(28, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
+		super(28, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -770,7 +801,7 @@ export class Blake2s_256 extends Blake2s {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(32, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
+		super(32, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -786,7 +817,7 @@ export class Blake2b_256 extends Blake2b {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(32, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
+		super(32, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -802,7 +833,7 @@ export class Blake2b_384 extends Blake2b {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(48, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
+		super(48, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
 	}
 }
 
@@ -818,6 +849,6 @@ export class Blake2b_512 extends Blake2b {
 		salt?: Uint8Array,
 		personalization?: Uint8Array
 	) {
-		super(64, 1, 1, 0, Uint64.zero, 0, 0, key, salt, personalization);
+		super(64, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
 	}
 }

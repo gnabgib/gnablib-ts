@@ -89,6 +89,7 @@ tsts(`logFilter`,()=>{
     log.target=new LogFilter(logArr,LogLevel.Error);
     logArr.arr=[];
     assert.equal(logArr.arr.length,0,'len');
+    assert.equal(log.supportColor,logArr.supportColor);
 
     log.warn('You should not see this message');
     assert.equal(logArr.arr.length,0,'len');
@@ -109,9 +110,10 @@ tsts(`log.targetSwitch logs`,()=>{
     assert.equal(logArr.arr[0].message,'Log target being switched','message');
 });
 
-
-
-
+tsts(`logOracle`,()=>{
+    //We can't test this very easily, it's a singleton and could have been set elsewhere
+    assert.type(log.supportColor,'boolean');
+});
 
 if (DEMO) {
     log.target=new LogFilter(new LogConsole(),LogLevel.Debug);

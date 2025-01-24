@@ -17,8 +17,6 @@ const sizeU32 = 2;
 //ES2016 - which we support, does not have BigInt
 //ES2020 - supports BigInt (kinda the main benefit) (was called 2021 in ArrayBufferWindow)
 
-export type U64ish = U64 | number;
-
 function fromBytesBE(source: Uint8Array, pos = 0): Uint32Array {
 	//Clone the source (we don't want to mangle the original data)
 	const cpy = source.slice(pos, pos + sizeBytes);
@@ -902,22 +900,6 @@ export class U64Mut extends U64 {
 	 */
 	static fromBytesLE(src: Uint8Array, pos = 0): U64Mut {
 		return new U64Mut(fromBytesLE(src, pos));
-	}
-
-	/**
-	 * Given a number create a new U64Mut (will throw if <0)
-	 * Given a U64 mutate it (memory copy)
-	 *
-	 * @param uint64
-	 * @returns
-	 */
-	static coerce(uint64: U64ish): U64Mut {
-		if (uint64 instanceof U64) {
-			return uint64.mut();
-		} else {
-			sNum('uint64', uint64).unsigned().throwNot();
-			return new U64Mut(Uint32Array.of(uint64 << 0, uint64 / maxU32Plus1));
-		}
 	}
 }
 

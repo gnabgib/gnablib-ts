@@ -134,12 +134,26 @@ tsts('util.inspect',()=>{
     const o=new IpTree();
     const u=util.inspect(o);
     assert.is(u.startsWith('IpTree('),true);
+	//assert.is(o.value)
 });
 
-// tsts(`emptyTree`,()=>{
-// 	const o=new IpTree();
-// 	assert.is(o.value,undefined);
-// });
+tsts('1.2.3.0/24 contains', () => {
+	const t = new IpTree();
+	t.addCidr(Cidr.fromString('1.2.3.0/24'), 1);
+	const cidrs=t.listCidr();
+	assert.is(cidrs.length,1);
+	assert.is(cidrs[0].value,1);
+
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 3, 0)), true);
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 3, 1)), true);
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 3, 128)), true);
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 3, 255)), true);
+
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 2, 0)), false);
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 2, 255)), false);
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 4, 0)), false);
+// 	assert.equal(t.contains(IpV4.fromParts(1, 2, 4, 255)), false);
+});
 
 // tsts('general',()=>{
 //     const o=new IpTree();

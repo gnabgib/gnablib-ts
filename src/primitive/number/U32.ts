@@ -14,8 +14,6 @@ const sizeBytes = 4;
 const sizeBits = 32;
 const rotMask = 0x1f;
 
-export type U32ish = U32 | Uint32Array | number;
-
 /**
  * U32/U32Mut are designed to be projections down onto a Uint32Array
  * - when built from a number a new one element array is built
@@ -288,27 +286,6 @@ export class U32 {
 	 */
 	static get zero(): U32 {
 		return zero;
-	}
-
-	/**
-	 * Given a number create a new Uint32 (will throw if <0 >0xffffffff)
-	 * Given a Uint32Array link to the first element (linked memory)
-	 * Given a Uint32 return it
-	 *
-	 * If you have a Uint32Array and want something beyond the first element (index 0)
-	 * @see fromArray
-	 * @param uint32
-	 * @returns
-	 */
-	static coerce(uint32: U32ish): U32 {
-		if (uint32 instanceof U32) {
-			return uint32;
-		} else if (uint32 instanceof Uint32Array) {
-			return new U32(uint32);
-		} else {
-			sNum('uint32', uint32).unsigned().atMost(maxU32).throwNot();
-			return new U32(Uint32Array.of(uint32), 0);
-		}
 	}
 
 	/**
@@ -665,28 +642,6 @@ export class U32Mut extends U32 {
 	 */
 	static fromBuffer(src: ArrayBuffer, bytePos = 0): U32Mut {
 		return new U32Mut(new Uint32Array(src, bytePos, 1));
-	}
-
-	/**
-	 * Given a number create a new U32Mut (will throw if <0 >0xffffffff)
-	 * Given a Uint32Array link to the first element (linked memory)
-	 * Given a U32 mutate it (memory copy)
-	 *
-	 * If you have a Uint32Array and want something beyond the first element (index 0)
-	 * @see fromArray
-	 *
-	 * @param uint32
-	 * @returns
-	 */
-	static coerce(uint32: U32ish): U32Mut {
-		if (uint32 instanceof U32) {
-			return uint32.mut();
-		} else if (uint32 instanceof Uint32Array) {
-			return new U32Mut(uint32);
-		} else {
-			sNum('uint32', uint32).unsigned().atMost(maxU32).throwNot();
-			return new U32Mut(Uint32Array.of(uint32), 0);
-		}
 	}
 }
 

@@ -15,9 +15,9 @@ tsts('fromLen',()=>{
 
     assert.is(a.toString(),'len=3')
 
-    a.at(0).addEq(U64Mut.coerce(11));
-    a.at(1).addEq(U64Mut.coerce(13));
-    a.at(2).addEq(U64Mut.coerce(17));
+    a.at(0).addEq(U64Mut.fromInt(11));
+    a.at(1).addEq(U64Mut.fromInt(13));
+    a.at(2).addEq(U64Mut.fromInt(17));
     assert.is(hex.fromBytes(a.toBytesBE()),'000000000000000B'+'000000000000000D'+'0000000000000011');
 
     a.at(1).xorEq(U64Mut.fromBytesBE(hex.toBytes('C3A5A5A5A5A5A53C')));
@@ -45,9 +45,9 @@ tsts('add stays in bounds',()=>{
 tsts('array copy by El',()=>{
     const len=3;
     const a=U64MutArray.fromLen(len);
-    a.at(0).addEq(U64Mut.coerce(11));
-    a.at(1).addEq(U64Mut.coerce(13));
-    a.at(2).addEq(U64Mut.coerce(17));
+    a.at(0).addEq(U64Mut.fromInt(11));
+    a.at(1).addEq(U64Mut.fromInt(13));
+    a.at(2).addEq(U64Mut.fromInt(17));
     assert.is(hex.fromBytes(a.toBytesBE()),'000000000000000B'+'000000000000000D'+'0000000000000011');
 
     const b=U64MutArray.fromLen(len);

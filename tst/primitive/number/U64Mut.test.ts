@@ -513,13 +513,6 @@ tsts(`zero`,()=>{
 	assert.is(hex.fromBytes(a.toBytesBE()), '0000000000000000');
 });
 
-tsts(`coerce`,()=>{
-	const a=U64Mut.coerce(1);
-	assert.equal(a.eq(U64.fromInt(1)),true);
-	const b=U64Mut.coerce(a);
-	assert.equal(b.eq(U64.fromInt(1)),true);
-});
-
 tsts('[Symbol.toStringTag]', () => {
     const o=U64Mut.fromInt(1);
 	const str = Object.prototype.toString.call(o);

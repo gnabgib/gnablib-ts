@@ -18,6 +18,28 @@ Says zero.. probably always will?
 Says not found in red.. like that's bad
 -->
 
+## Contents
+
+- [Installation](#installation)
+- [License](#license)
+- Features:
+  - [Augmented Backus-Naur Form](#augmented-backus-naur-form-rfc5234)
+  - [Checksum/Hash](#checksumhash)
+  - [Command Line Interface](#command-line-interface-cli) (arguments, colour, text style)
+  - [Codecs](#codec)
+  - [Symmetric Encryption](#symmetric-encryption)
+  - [Secure Hashing](#secure-hash)
+  - [Key derivation functions](#key-derivation-function-kdf)
+  - [Message Authentication Codes](#message-authentication-code-mac)
+  - [EXtendable-Output Functions](#extendable-output-function-xof)
+  - [DateTime](#datetime)
+  - [Error Correction Code](#error-correction-codes)
+  - [Endian](#endian)
+  - [Primitive Types](#primitive)
+  - [Seedable PseudoRandom number generators](#pseudorandom-number-generators-prng)
+  - [RegExp tools](#regexp)
+  - [Run time tools](#run-time) (environment vars, logging, stack traces)
+
 
 ## Installation
 
@@ -120,7 +142,7 @@ ECB should not be used.
 - [PKCS#7](https://tools.ietf.org/html/rfc5652#section-6.3) / PKCS#5 padding
 - Zero / Null padding
 
-#### Symmetric
+#### Symmetric Encryption
 
 Name|Block size|Key size|Nonce size|Features
 -|-|-|-|-
@@ -216,26 +238,22 @@ Name|Capacities|Optional parameters
 
 ### Endian
 
-- [Big](https://en.wikipedia.org/wiki/Endianness)
-- Little
+- Convert between big (BE) and little (LE) [Endian](https://en.wikipedia.org/wiki/Endianness) encoding 16/32/64/128 bits, or a stream of bytes.
+- Detects platform endianness
 
+Big endian is closer to the way we write numbers left-to-right in English.  `1726 = 1x1000, 7x100, 2x10, 6x1`
 
-### Net
-
-- [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing)
-- [IPv4](https://en.wikipedia.org/wiki/Internet_Protocol_version_4)
-- IpTree
-
+Little endian is the dominant ordering for processor architectures including; [x86](https://en.wikipedia.org/wiki/X86) and [RISC-V](https://en.wikipedia.org/wiki/RISC-V), [ARM](https://en.wikipedia.org/wiki/Endianness) can be either but defaults to little.  Famous big endian processors include [PDP-10](https://en.wikipedia.org/wiki/PDP-10), Motorola [68000 series](https://en.wikipedia.org/wiki/Motorola_68000_series) (early Macintosh, Amiga, Atari, Sega), [IBM Z](https://en.wikipedia.org/wiki/Z/Architecture) and [SPARC](https://en.wikipedia.org/wiki/SPARC), which can be either but defaults to big.
 
 ### Primitive
 
 - BitReader / BitWriter
 - Fixed TypedArray
 - Lazy
+- Network [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing), [IPv4](https://en.wikipedia.org/wiki/Internet_Protocol_version_4)
 - Readonly TypedArray
 - Scaling TypedArray
 - StringBuilder
-- UInt, UIntMut
 - WindowStr
 - *16 bit*: uint (U16)
 - *32 bit*: uint (U32), mutable uint (U32Mut), mutable uint array (U32MutArray)
@@ -331,7 +349,7 @@ MSVC (LGC)|-|4|16
 - RegExp escape string
 
 
-### RunTime
+### Run time
 
 - Configuration (including collecting from environment variables)
 - Structured logging

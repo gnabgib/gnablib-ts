@@ -71,7 +71,7 @@ for (const test of badByteCount) {
 const badParts:Array<number|undefined> = [-1, 256, 5000000, undefined];
 for (const part of badParts) {
 	tsts('Building from invalid part throws: ' + part, () => {
-		//@ts-ignore - part can be undefined here to make the point
+		//@ts-expect-error - part can be undefined here to make the point
 		assert.throws(() => IpV4.fromParts(part, 0, 0, 0));
 	});
 
