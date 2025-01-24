@@ -88,7 +88,7 @@ export abstract class AInt {
 
 	//#region LogicOps
 	protected _xorEq(o: AInt) {
-		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
+		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		do {
 			this._arr[this._pos + i] ^= o._arr[o._pos + i++];
@@ -96,7 +96,7 @@ export abstract class AInt {
 		} while (i < this.size32);
 	}
 	protected _orEq(o: AInt) {
-		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
+		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		do {
 			this._arr[this._pos + i] |= o._arr[o._pos + i++];
@@ -104,7 +104,7 @@ export abstract class AInt {
 		} while (i < this.size32);
 	}
 	protected _andEq(o: AInt) {
-		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
+		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		do {
 			this._arr[this._pos + i] &= o._arr[o._pos + i++];
@@ -217,26 +217,24 @@ export abstract class AInt {
 		// /*DEBUG*/d += ` =${this}\n`;
 
 		//Now do any bit shifting
-		let back = this._arr[this._pos];
-		// /*DEBUG*/ d += ` [${this._pos}]=[${this._pos}]<<${by32}|(${zeroRshift}*[${this._pos + this.size32 - 1}]>>>${invBy32})\n`;
-		this._arr[this._pos] =
-			(this._arr[this._pos] << by32) |
-			((zeroRshift * this._arr[this._pos + this.size32 - 1]) >>> invBy32);
-		let i = 1;
-		for (; i < this.size32; i++) {
+		let i = this._pos + this.size32 - 1;
+		const back = this._arr[i];
+		do {
 			// /*DEBUG*/ d += ` [${this._pos + i}]=[${this._pos + i}]<<${by32}|(${zeroRshift}*[${this._pos + i - 1}]>>>${invBy32})\n`;
-			const b = this._arr[this._pos + i];
 			this._arr[this._pos + i] =
-				(this._arr[this._pos + i] << by32) | ((zeroRshift * back) >>> invBy32);
-			back = b;
-		}
+				(this._arr[this._pos + i] << by32) |
+				((zeroRshift * this._arr[this._pos + i - 1]) >>> invBy32);
+		} while (--i > 0);
+		// /*DEBUG*/ d += ` [${this._pos}]=[${this._pos}]<<${by32}|(${zeroRshift}*back>>>${invBy32})\n`;
+		this._arr[this._pos] =
+			(this._arr[this._pos] << by32) | ((zeroRshift * back) >>> invBy32);
 		// /*DEBUG*/ console.log(d);
 	}
 	//#endregion
 
 	//#region Arithmetic
 	protected _addEq(o: AInt) {
-		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
+		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		let carry = 0;
 		do {
@@ -256,7 +254,7 @@ export abstract class AInt {
 		} while (++i < this.size32);
 	}
 	protected _subEq(o: AInt) {
-		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
+		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		let i = 0;
 		let borrow = 0;
 		// /*DEBUG*/let d = `-:`;
@@ -270,7 +268,8 @@ export abstract class AInt {
 		// /*DEBUG*/console.log(d);
 	}
 	protected _mul(o: AInt): Uint32Array {
-		/*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
+		//todo: This assumes u32 is LE
+		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
 		const t16 = new Uint16Array(
 			this._arr.subarray(this._pos, this._pos + this.size32).buffer
 		);
@@ -283,6 +282,8 @@ export abstract class AInt {
 		let im = 0;
 		// /*DEBUG*/let d = `${this} x ${o}:\n`;
 		do {
+			//Note we're benefiting from JS support for U52 here, since
+			// U16*U16 can be U32, with multiple additions this can creep >32bits
 			let m = 0;
 			// /*DEBUG*/d+=`m[${im}]=`;
 			for (let it = i * 2; it >= 0; it--) {
