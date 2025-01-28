@@ -1,7 +1,7 @@
 /*! Copyright 2022-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import type { IHash } from '../interfaces/IHash.js';
 
 //[US Secure Hash Algorithm 1 (SHA1)](https://datatracker.ietf.org/doc/html/rfc3174) (2001)
@@ -68,38 +68,38 @@ export class Sha1 implements IHash {
 			asBE.i32(this.#block, j * 4);
 			w[j] = this.#block32[j];
 			// (b&c)|((~b)&d) - Same as MD4-r1
-			t = U32.rol(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
+			t = U32.lRot(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
 			// Rare use of comma!  Make it clear there's a 5 stage swap going on
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
+			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 20; j++) {
-			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			// (b&c)|((~b)&d) - Same as MD4-r1
-			t = U32.rol(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
+			t = U32.lRot(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
+			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 40; j++) {
-			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
-			t = U32.rol(a, 5) + (b ^ c ^ d) + e + w[j] + rc[1];
+			t = U32.lRot(a, 5) + (b ^ c ^ d) + e + w[j] + rc[1];
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
+			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 60; j++) {
-			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r2
-			t = U32.rol(a, 5) + (((b | c) & d) | (b & c)) + e + w[j] + rc[2];
+			t = U32.lRot(a, 5) + (((b | c) & d) | (b & c)) + e + w[j] + rc[2];
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
+			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
 		}
 		for (; j < 80; j++) {
-			w[j] = U32.rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
-			t = U32.rol(a, 5) + (b ^ c ^ d) + e + w[j] + rc[3];
+			t = U32.lRot(a, 5) + (b ^ c ^ d) + e + w[j] + rc[3];
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.rol(b, 30)), (b = a), (a = t);
+			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
 		}
 
 		this.#state[0] += a;

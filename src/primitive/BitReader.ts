@@ -1,30 +1,18 @@
 /*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
 
-import { sNum } from '../safe/safe.js';
+import { sInt } from '../safe/safe.js';
+import { AByteReader } from './_AByteReader.js';
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 
 const mask = [0, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f];
 
-/**
- * Mount a byte array, and read a series of 1-32 bit numbers from it
- */
-export class BitReader {
-	private _byte = 0;
-	protected constructor(private _buff: Uint8Array, private _bit = 0) {}
+/** Mount a byte array, and read a series of 1-32 bit numbers from it */
+export class BitReader extends AByteReader {
+	private _bitPtr = 0;
 
 	/** Remaining bits in the buffer that haven't been read */
 	get unreadBits() {
-		return (this._buff.length - this._byte) * 8 - this._bit;
-	}
-
-	/**
-	 * Set the byte/bit points back to 0
-	 *
-	 * **Warning** If this reader was mounted with a `startBit` other than zero it'll be lost
-	 */
-	reset() {
-		this._bit = 0;
-		this._byte = 0;
+		return (this._buff.length - this._ptr) * 8 - this._bitPtr;
 	}
 
 	/**
@@ -38,38 +26,54 @@ export class BitReader {
 		//todo: check the dev hasn't asked for >32 bits? Better DX but worse performance
 
 		let ret = 0;
-		let byteSpace = 8 - this._bit;
+		let byteSpace = 8 - this._bitPtr;
 		// /*DEBUG*/ let d=`[${this._buff.length} ~${this._byte}.${this._bit}]read${bits}`;
 
 		//Sub-byte read
 		if (bits < byteSpace) {
 			byteSpace -= bits;
-			this._bit += bits;
-			ret = (this._buff[this._byte] >>> byteSpace) & mask[bits];
+			this._bitPtr += bits;
+			ret = (this._buff[this._ptr] >>> byteSpace) & mask[bits];
 			// /*DEBUG*/console.log(d+`sub${bits}=${hex.fromI32(ret)}`);
 			return ret;
 		}
 		//Rem-byte read
-		if (this._bit > 0) {
-			ret = this._buff[this._byte++] & mask[byteSpace];
+		if (this._bitPtr > 0) {
+			ret = this._buff[this._ptr++] & mask[byteSpace];
 			bits -= byteSpace;
-			this._bit = 0;
+			this._bitPtr = 0;
 			// /*DEBUG*/d += `+^${byteSpace}=${hex.fromI32(ret)},`;
 		}
 		//Full-byte read
 		while (bits >= 8) {
-			ret = (ret << 8) | this._buff[this._byte++];
+			ret = (ret << 8) | this._buff[this._ptr++];
 			// /*DEBUG*/d += `+a=${hex.fromI32(ret)},`;
 			bits -= 8;
 		}
 		//start-byte read
 		if (bits > 0) {
-			ret = (ret << bits) | (this._buff[this._byte] >>> (8 - bits));
+			ret = (ret << bits) | (this._buff[this._ptr] >>> (8 - bits));
 			// /*DEBUG*/d += `+v${bits}=${hex.fromI32(ret)}`;
-			this._bit = bits;
+			this._bitPtr = bits;
 		}
 		// /*DEBUG*/console.log(d);
 		return ret;
+	}
+
+	/**
+	 * Skip ahead a number of bits
+	 * @param count Number of bits to skip `[0 - {@link unreadBits}]`
+	 * @throws Error if there's not enough content
+	 */
+	skipBits(count: number) {
+		sInt('count', count).unsigned().atMost(this.unreadBits).throwNot();
+		let c8 = (count / 8) | 0;
+		this._bitPtr += count & 7;
+		if (this._bitPtr > 7) {
+			c8 += 1;
+			this._bitPtr -= 8;
+		}
+		this._ptr += c8;
 	}
 
 	/** @hidden */
@@ -79,7 +83,7 @@ export class BitReader {
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `BitReader([${this._buff.length}]@${this._byte}.${this._bit})`;
+		return `BitReader([${this._buff.length}]@${this._ptr}.${this._bitPtr})`;
 	}
 
 	/**
@@ -88,12 +92,8 @@ export class BitReader {
 	 * If you wish to start at a byte beyond the first, or use less than all the bytes, use
 	 * [Uint8Array.subarray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/subarray)
 	 * to mount a shared portion
-	 *
-	 * @param buff Buffer to mount
-	 * @param startBit Bit position to start from [0 - 7] where 0=first bit, and 7=last bit
 	 */
-	static mount(buff: Uint8Array, startBit = 0) {
-		sNum('bit', startBit).unsigned().atMost(7).throwNot();
-		return new BitReader(buff, startBit);
+	static mount(buff: Uint8Array) {
+		return new BitReader(buff);
 	}
 }

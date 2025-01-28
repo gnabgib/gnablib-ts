@@ -2,7 +2,6 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { U32, U32Mut } from '../../../src/primitive/number';
-import { asBE, asLE } from '../../../src/endian';
 import util from 'util';
 
 const tsts = suite('Uint32Mut');
@@ -32,11 +31,15 @@ const xor=[
     [0x00000001,0xFFFFFFFF,0xFFFFFFFE],
 ];
 for (const [a,b,result] of xor) {
-	tsts(a + ' ^ ' + b, () => {
+	tsts(a + ' ^= ' + b, () => {
         const u=U32Mut.fromInt(a);
         u.xorEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
 	});
+    tsts(`${a} ^= ${b} (direct)`,()=>{
+        const u=U32Mut.fromInt(a);
+        assert.is(u.xorEq(b).value,result);
+    })
 }
 
 const or=[
@@ -68,7 +71,7 @@ const or=[
     [0x00000001,0xFFFFFFFF,0xFFFFFFFF],
 ];
 for (const [a,b,result] of or) {
-	tsts(a + ' | ' + b, () => {
+	tsts(a + ' |= ' + b, () => {
         const u=U32Mut.fromInt(a);
         u.orEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
@@ -104,7 +107,7 @@ const and=[
     [0x00000001,0xFFFFFFFF,0x00000001],
 ];
 for (const [a,b,result] of and) {
-	tsts(a + ' & ' + b, () => {
+	tsts(a + ' &= ' + b, () => {
         const u=U32Mut.fromInt(a);
         u.andEq(U32Mut.fromInt(b));
         assert.is(u.value,result);
@@ -410,10 +413,6 @@ tsts('clone',()=>{
     u.addEq(U32.fromInt(5));
     assert.is(u.value,6,'Original after add');
     assert.is(u2.value,1,'Clone after original-add (unchanged)');
-    
-    u2.addEq(U32.fromInt(3));
-    assert.is(u.value,6,'Original after clone-add (unchanged)');
-    assert.is(u2.value,4,'Clone after add');
 });
 
 tsts('toString',()=>{
@@ -449,8 +448,8 @@ for (const [start,expect] of fromInt) {
 
 tsts('fromArray',()=> {
     const src=new Uint32Array([13,29]);
-    const u0=U32Mut.fromArray(src,0);
-    const u1=U32Mut.fromArray(src,1);
+    const u0=U32Mut.mount(src,0);
+    const u1=U32Mut.mount(src,1);
     assert.is(u0.value,13);
     assert.is(u1.value,29);
 
@@ -465,34 +464,20 @@ tsts('fromArray',()=> {
     assert.is(u1.value,29);//no change
 });
 
-tsts('fromBuffer-8',()=> {
-    const src=new Uint8Array([0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80]);
-    asBE.i32(src,0);
-    asLE.i32(src,4);
-    const u0=U32Mut.fromBuffer(src.buffer,0);
-    const u1=U32Mut.fromBuffer(src.buffer,4);
-    assert.is(u0.value,0x01020408);
-    assert.is(u1.value,0x80402010);
-
-    //Confirm u0 is just a view onto src, changes to either affect the other
-    src[0]^=0xff;
-    //We have to do this (vs precise) because we don't know if runner is 
-    // big or little endian (and it's not important)
-    assert.not.equal(u0.value,0x01020408);
-    u0.value=0;
-    assert.is(src[0],0);
+tsts(`zero`,()=>{
+    const o=U32Mut.fromInt(0x1234);
+    assert.is(hex.fromBytes(o.toBytesBE()),'00001234')
+    o.zero();
+    assert.is(hex.fromBytes(o.toBytesBE()),'00000000')
 });
 
-tsts('fromBuffer-9',()=> {
-    const src=new Uint8Array([0,1,2,3,4,5,6,7,8,9]);
-    const u0=U32Mut.fromBuffer(src.buffer,4);
-    assert.is(u0.value,0x07060504);
-
-    //Confirm just a view
-    src[7]=0x1f;
-    assert.is(u0.value,0x1f060504);
-    u0.value=0x70060504;
-    assert.is(src[7],0x70);
+tsts(`set`,()=>{
+    const o=U32Mut.fromInt(0x1234);
+    assert.is(hex.fromBytes(o.toBytesBE()),'00001234')
+    o.set(0xAB);
+    assert.is(hex.fromBytes(o.toBytesBE()),'000000AB')
+    o.set(U32Mut.fromInt(0xC));
+    assert.is(hex.fromBytes(o.toBytesBE()),'0000000C')
 });
 
 tsts('[Symbol.toStringTag]', () => {

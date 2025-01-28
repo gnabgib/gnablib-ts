@@ -4,15 +4,15 @@ import { ParseProblem } from '../error/index.js';
 import { sLen } from '../safe/safe.js';
 import { BitReader } from './BitReader.js';
 import { BitWriter } from './BitWriter.js';
+import { ISerialBit } from './interfaces/ISerial.js';
 import { WindowStr } from './WindowStr.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const s = ['false', 'true'];
 
-export class Bool {
+export class Bool implements ISerialBit {
 	/** Number of bytes required in memory*/
 	readonly size8 = 1;
-	/** Number of bits required serialized */
 	readonly serialBits = 1;
 
 	protected constructor(protected _arr: Uint8Array, protected _pos: number) {}
@@ -59,10 +59,6 @@ export class Bool {
 		return !!(this._arr[this._pos] & 1);
 	}
 
-	/**
-	 * Serialize value
-	 * @throws Error if not enough space
-	 */
 	serial(bw: BitWriter) {
 		bw.mustPushNumberBE(this._arr[this._pos], 1);
 	}
@@ -159,7 +155,7 @@ export class BoolMut extends Bool {
 	 * Read next bit from stream and create a value from it
 	 * @throws Error if there's not enough content
 	 */
-	static deserial(br: BitReader): Bool {
+	static deserial(br: BitReader): BoolMut {
 		return new BoolMut(Uint8Array.of(br.readNumberBE(1)), 0);
 	}
 	//#endregion

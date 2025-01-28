@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
@@ -359,12 +359,12 @@ function expandKey(key: Uint8Array, enc: Uint32Array, dec: Uint32Array): void {
 	let i;
 	//Encrypt-key
 	for (i = 0; i < nk; i++) {
-		enc[i] = U32.iFromBytesBE(key, i * 4);
+		enc[i] = U32.fromBytesBE(key, i * 4);
 	}
 	for (; i < enc.length; i++) {
 		let t = enc[i - 1];
 		if (i % nk === 0) {
-			t = subWord(U32.rol(t, 8)) ^ (xPow[i / nk - 1] << 24);
+			t = subWord(U32.lRot(t, 8)) ^ (xPow[i / nk - 1] << 24);
 		} else if (nk > 6 && i % nk == 4) {
 			t = subWord(t);
 		}

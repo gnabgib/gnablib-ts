@@ -7,124 +7,7 @@ import util from 'util';
 
 const tsts = suite('U32');
 
-const xor = [
-	// A^0=A: Anything xor zero is anything
-	[0x00000000, 0xffffffff, 0xffffffff],
-	[0x00000000, 0x01234567, 0x01234567],
-	[0x00000000, 0x76543210, 0x76543210],
-	[0x00000000, 0x00000000, 0x00000000],
-	// A^1=~A:  Anything XOR 1 is its compliment
-	[0xffffffff, 0xffffffff, 0x00000000],
-	[0xffffffff, 0x01234567, 0xfedcba98],
-	[0xffffffff, 0x76543210, 0x89abcdef],
-	// A^~A=1 Anything xor its compliment is 1
-	[0x0000ffff, 0xffff0000, 0xffffffff],
-	[0xc3a5a53c, 0x3c5a5ac3, 0xffffffff],
-	[0xc35a5a3c, 0x3ca5a5c3, 0xffffffff],
-	[0xfedcba98, 0x01234567, 0xffffffff],
-	// A^A=A Anything xor itself is 0
-	[0x0000ffff, 0x0000ffff, 0x00000000],
-	[0xc3a5a53c, 0xc3a5a53c, 0x00000000],
-	[0xc35a5a3c, 0xc35a5a3c, 0x00000000],
-	[0xfedcba98, 0xfedcba98, 0x00000000],
-	// Other cases
-	[0x00000001, 0x00000002, 0x00000003],
-	[0x00000001, 0xffffffff, 0xfffffffe],
-];
-for (const [a, b, result] of xor) {
-	tsts(a + ' ^ ' + b, () => {
-		const u = U32.fromInt(a);
-		assert.is(u.xor(U32.fromInt(b)).value, result);
-	});
-}
-
-const or = [
-	// A|0=A: Anything or zero is anything
-	[0x00000000, 0xffffffff, 0xffffffff],
-	[0x00000000, 0x01234567, 0x01234567],
-	[0x00000000, 0x76543210, 0x76543210],
-	[0x00000000, 0x00000000, 0x00000000],
-	// A|1=1:  Anything or 1 is 1
-	[0xffffffff, 0xffffffff, 0xffffffff],
-	[0xffffffff, 0x01234567, 0xffffffff],
-	[0xffffffff, 0x76543210, 0xffffffff],
-	// A|~A=1: Anything or its compliment is 1
-	[0x0000ffff, 0xffff0000, 0xffffffff],
-	[0xc3a5a53c, 0x3c5a5ac3, 0xffffffff],
-	[0xc35a5a3c, 0x3ca5a5c3, 0xffffffff],
-	[0x76543210, 0x01234567, 0x77777777],
-	// A|A=A: Anything or itself is itself
-	[0x0000ffff, 0x0000ffff, 0x0000ffff],
-	[0xc3a5a53c, 0xc3a5a53c, 0xc3a5a53c],
-	[0xc35a5a3c, 0xc35a5a3c, 0xc35a5a3c],
-	[0x76543210, 0x76543210, 0x76543210],
-	// Any bits set override the other value (form of masking)
-	[0x76543210, 0x000fffff, 0x765fffff],
-	[0xc3a5a53c, 0x000fffff, 0xc3afffff],
-	[0x76543210, 0xfffff000, 0xfffff210],
-	[0xc3a5a53c, 0xfffff000, 0xfffff53c],
-	[0x00000001, 0x00000002, 0x00000003],
-	[0x00000001, 0xffffffff, 0xffffffff],
-];
-for (const [a, b, result] of or) {
-	tsts(a + ' | ' + b, () => {
-		const u = U32.fromInt(a);
-		assert.is(u.or(U32.fromInt(b)).value, result);
-	});
-}
-
-const and = [
-	// A&0=0: Zero and anything is zero
-	[0x00000000, 0xffffffff, 0x00000000],
-	[0x00000000, 0x01234567, 0x00000000],
-	[0x00000000, 0x76543210, 0x00000000],
-	[0x00000000, 0x00000000, 0x00000000],
-	// A&1=A:  All set and anything is anything
-	[0xffffffff, 0xffffffff, 0xffffffff],
-	[0xffffffff, 0x01234567, 0x01234567],
-	[0xffffffff, 0x76543210, 0x76543210],
-	// A&~A=0: Anything and its compliment is 0
-	[0x0000ffff, 0xffff0000, 0x00000000],
-	[0xc3a5a53c, 0x3c5a5ac3, 0x00000000],
-	[0xc35a5a3c, 0x3ca5a5c3, 0x00000000],
-	[0x76543210, 0x01234567, 0x00000000],
-	// A&A=A: Anything and itself is itself
-	[0x0000ffff, 0x0000ffff, 0x0000ffff],
-	[0xc3a5a53c, 0xc3a5a53c, 0xc3a5a53c],
-	[0xc35a5a3c, 0xc35a5a3c, 0xc35a5a3c],
-	[0x76543210, 0x76543210, 0x76543210],
-	// Only bits set to true in both survive (form of masking)
-	[0x76543210, 0x000fffff, 0x00043210],
-	[0xc3a5a53c, 0x000fffff, 0x0005a53c],
-	[0x76543210, 0xfffff000, 0x76543000],
-	[0xc3a5a53c, 0xfffff000, 0xc3a5a000],
-	[0x00000001, 0x00000002, 0x00000000],
-	[0x00000001, 0xffffffff, 0x00000001],
-];
-for (const [a, b, result] of and) {
-	tsts(a + ' & ' + b, () => {
-		const u = U32.fromInt(a);
-		assert.is(u.and(U32.fromInt(b)).value, result);
-	});
-}
-
-const not = [
-	[0x00000000, 0xffffffff],
-	[0x0000ffff, 0xffff0000],
-	[0xffff0000, 0x0000ffff],
-	[0xffffffff, 0x00000000],
-	[0xc3a5a53c, 0x3c5a5ac3], //A=1010, 5=0101, C=1100, 3=0011
-	[0xc35a5a3c, 0x3ca5a5c3],
-	[0x76543210, 0x89abcdef],
-	[0x01234567, 0xfedcba98],
-];
-for (const [start, result] of not) {
-	tsts('~' + start, () => {
-		const u = U32.fromInt(start);
-		assert.is(u.not().value, result);
-	});
-}
-
+//#region ShiftOps
 const lRot = [
 	[0x00000000, 0, 0x00000000],
 	[0x00000000, 1, 0x00000000],
@@ -168,13 +51,14 @@ const lRot = [
 	[0xffffffff, 29, 0xffffffff],
 	[0xffffffff, 32, 0xffffffff],
 
+	[0x12345678, 0, 0x12345678],
 	[0x12345678, 1, 0x2468acf0],
 	[0x12345678, 31, 0x91a2b3c],
 	[0x12345678, 32, 0x12345678],
 	[0x12345678, 33, 0x2468acf0],
 ];
 for (const [start, by, result] of lRot) {
-	tsts(start + ' rol ' + by, () => {
+	tsts(`${start}.lRot(${by})`, () => {
 		const u = U32.fromInt(start);
 		assert.is(u.lRot(by).value, result);
 	});
@@ -294,6 +178,7 @@ const rRot = [
 	[0xffffffff, 29, 0xffffffff],
 	[0xffffffff, 32, 0xffffffff],
 
+	[0x12345678, 0, 0x12345678],
 	[0x12345678, 1, 0x91a2b3c],
 	[0x12345678, 31, 0x2468acf0],
 	[0x12345678, 32, 0x12345678],
@@ -305,7 +190,129 @@ for (const [start, by, result] of rRot) {
 		assert.is(u.rRot(by).value, result);
 	});
 }
+//#endregion
 
+//#region LogicOps
+const xor = [
+	// A^0=A: Anything xor zero is anything
+	[0x00000000, 0xffffffff, 0xffffffff],
+	[0x00000000, 0x01234567, 0x01234567],
+	[0x00000000, 0x76543210, 0x76543210],
+	[0x00000000, 0x00000000, 0x00000000],
+	// A^1=~A:  Anything XOR 1 is its compliment
+	[0xffffffff, 0xffffffff, 0x00000000],
+	[0xffffffff, 0x01234567, 0xfedcba98],
+	[0xffffffff, 0x76543210, 0x89abcdef],
+	// A^~A=1 Anything xor its compliment is 1
+	[0x0000ffff, 0xffff0000, 0xffffffff],
+	[0xc3a5a53c, 0x3c5a5ac3, 0xffffffff],
+	[0xc35a5a3c, 0x3ca5a5c3, 0xffffffff],
+	[0xfedcba98, 0x01234567, 0xffffffff],
+	// A^A=A Anything xor itself is 0
+	[0x0000ffff, 0x0000ffff, 0x00000000],
+	[0xc3a5a53c, 0xc3a5a53c, 0x00000000],
+	[0xc35a5a3c, 0xc35a5a3c, 0x00000000],
+	[0xfedcba98, 0xfedcba98, 0x00000000],
+	// Other cases
+	[0x00000001, 0x00000002, 0x00000003],
+	[0x00000001, 0xffffffff, 0xfffffffe],
+];
+for (const [a, b, result] of xor) {
+	tsts(a + ' ^ ' + b, () => {
+		const u = U32.fromInt(a);
+		assert.is(u.xor(U32.fromInt(b)).value, result);
+	});
+}
+
+const or = [
+	// A|0=A: Anything or zero is anything
+	[0x00000000, 0xffffffff, 0xffffffff],
+	[0x00000000, 0x01234567, 0x01234567],
+	[0x00000000, 0x76543210, 0x76543210],
+	[0x00000000, 0x00000000, 0x00000000],
+	// A|1=1:  Anything or 1 is 1
+	[0xffffffff, 0xffffffff, 0xffffffff],
+	[0xffffffff, 0x01234567, 0xffffffff],
+	[0xffffffff, 0x76543210, 0xffffffff],
+	// A|~A=1: Anything or its compliment is 1
+	[0x0000ffff, 0xffff0000, 0xffffffff],
+	[0xc3a5a53c, 0x3c5a5ac3, 0xffffffff],
+	[0xc35a5a3c, 0x3ca5a5c3, 0xffffffff],
+	[0x76543210, 0x01234567, 0x77777777],
+	// A|A=A: Anything or itself is itself
+	[0x0000ffff, 0x0000ffff, 0x0000ffff],
+	[0xc3a5a53c, 0xc3a5a53c, 0xc3a5a53c],
+	[0xc35a5a3c, 0xc35a5a3c, 0xc35a5a3c],
+	[0x76543210, 0x76543210, 0x76543210],
+	// Any bits set override the other value (form of masking)
+	[0x76543210, 0x000fffff, 0x765fffff],
+	[0xc3a5a53c, 0x000fffff, 0xc3afffff],
+	[0x76543210, 0xfffff000, 0xfffff210],
+	[0xc3a5a53c, 0xfffff000, 0xfffff53c],
+	[0x00000001, 0x00000002, 0x00000003],
+	[0x00000001, 0xffffffff, 0xffffffff],
+];
+for (const [a, b, result] of or) {
+	tsts(a + ' | ' + b, () => {
+		const u = U32.fromInt(a);
+		assert.is(u.or(U32.fromInt(b)).value, result);
+	});
+}
+
+const and = [
+	// A&0=0: Zero and anything is zero
+	[0x00000000, 0xffffffff, 0x00000000],
+	[0x00000000, 0x01234567, 0x00000000],
+	[0x00000000, 0x76543210, 0x00000000],
+	[0x00000000, 0x00000000, 0x00000000],
+	// A&1=A:  All set and anything is anything
+	[0xffffffff, 0xffffffff, 0xffffffff],
+	[0xffffffff, 0x01234567, 0x01234567],
+	[0xffffffff, 0x76543210, 0x76543210],
+	// A&~A=0: Anything and its compliment is 0
+	[0x0000ffff, 0xffff0000, 0x00000000],
+	[0xc3a5a53c, 0x3c5a5ac3, 0x00000000],
+	[0xc35a5a3c, 0x3ca5a5c3, 0x00000000],
+	[0x76543210, 0x01234567, 0x00000000],
+	// A&A=A: Anything and itself is itself
+	[0x0000ffff, 0x0000ffff, 0x0000ffff],
+	[0xc3a5a53c, 0xc3a5a53c, 0xc3a5a53c],
+	[0xc35a5a3c, 0xc35a5a3c, 0xc35a5a3c],
+	[0x76543210, 0x76543210, 0x76543210],
+	// Only bits set to true in both survive (form of masking)
+	[0x76543210, 0x000fffff, 0x00043210],
+	[0xc3a5a53c, 0x000fffff, 0x0005a53c],
+	[0x76543210, 0xfffff000, 0x76543000],
+	[0xc3a5a53c, 0xfffff000, 0xc3a5a000],
+	[0x00000001, 0x00000002, 0x00000000],
+	[0x00000001, 0xffffffff, 0x00000001],
+];
+for (const [a, b, result] of and) {
+	tsts(a + ' & ' + b, () => {
+		const u = U32.fromInt(a);
+		assert.is(u.and(U32.fromInt(b)).value, result);
+	});
+}
+
+const not = [
+	[0x00000000, 0xffffffff],
+	[0x0000ffff, 0xffff0000],
+	[0xffff0000, 0x0000ffff],
+	[0xffffffff, 0x00000000],
+	[0xc3a5a53c, 0x3c5a5ac3], //A=1010, 5=0101, C=1100, 3=0011
+	[0xc35a5a3c, 0x3ca5a5c3],
+	[0x76543210, 0x89abcdef],
+	[0x01234567, 0xfedcba98],
+];
+for (const [start, result] of not) {
+	tsts('~' + start, () => {
+		const u = U32.fromInt(start);
+		assert.is(u.not().value, result);
+	});
+}
+//#endregion
+
+//#region Arithmetic
 const addTest = [
 	// A+0=A: Anything plus zero is anything (like or)
 	[0x00000000, 0xffffffff, 0xffffffff],
@@ -388,6 +395,70 @@ for (const [a, b, result] of mul) {
 		assert.is(u.mul(U32.fromInt(b)).value, result);
 	});
 }
+//#endregion
+
+//#region Comparable
+const neq_tests:[number,number][]=[
+	[0, 1],
+	[0x12345678,0],
+	[0x12345678,1],
+	[0x12345678,0xffffffff],
+];
+for (const [aNum, bNum] of neq_tests) {
+	const a =U32.fromInt(aNum);
+	const b = U32.fromInt(bNum);
+	tsts(`${aNum} != ${bNum}`, () => {
+		assert.is(a.eq(b), false);
+	});
+	tsts(`${bNum} != ${aNum}`, () => {
+		assert.is(b.eq(a), false);
+	});
+}
+
+const eq_set: number[] = [0, 1, 0x12345678, 0xffffffff];
+for (const aNum of eq_set) {
+	const bNum = aNum;
+	const a =U32.fromInt(aNum);
+	const b = U32.fromInt(bNum);
+	tsts(`${aNum} == ${aNum}`, () => {
+		assert.is(a.eq(b), true);
+		assert.is(a.eq(bNum), true);
+	});
+	tsts(`${aNum} <= ${bNum}`, () => {
+		assert.is(a.lte(b), true);
+		assert.is(a.lte(bNum), true);
+	});
+	tsts(`${aNum} >= ${bNum}`, () => {
+		assert.is(a.gte(b), true);
+		assert.is(a.gte(bNum), true);
+	});
+}
+
+const lt_set:[number,number][]=[
+	[0,1],
+	[1,0x12345678],
+	[0x12345678,0xffffffff],
+	[0x12345678,0x12345679],
+];
+for (const [aNum, bNum] of lt_set) {
+	const a =U32.fromInt(aNum);
+	const b = U32.fromInt(bNum);
+	tsts(`${aNum} < ${bNum}`, () => {
+		assert.is(a.lt(b), true);
+		assert.is(a.lt(bNum), true);
+	});
+	tsts(`${bNum} > ${aNum}`, () => {
+		assert.is(b.gt(a), true);
+		assert.is(b.gt(aNum), true);
+	});
+	tsts(`${aNum} <= ${bNum}`, () => {
+		assert.is(a.lte(b), true);
+	});
+	tsts(`${bNum} >= ${aNum}`, () => {
+		assert.is(b.gte(a), true);
+	});
+}
+//#endregion
 
 tsts('toString', () => {
 	const u = U32.fromInt(0x12345678);
@@ -425,8 +496,8 @@ for (const [start, expect] of fromInt) {
 
 tsts('fromArray', () => {
 	const src = new Uint32Array([13, 29]);
-	const u0 = U32.fromArray(src, 0);
-	const u1 = U32.fromArray(src, 1);
+	const u0 = U32.mount(src, 0);
+	const u1 = U32.mount(src, 1);
 	assert.is(u0.value, 13);
 	assert.is(u1.value, 29);
 
@@ -436,364 +507,9 @@ tsts('fromArray', () => {
 	assert.is(u1.value, 29); //no change
 });
 
-tsts('fromBuffer', () => {
-	const a = Uint32Array.of(0x12345678);
-	const u = U32.fromBuffer(a.buffer);
-	assert.equal(u.toString(), '12345678');
-});
-
-tsts('zero/min/max', () => {
+tsts('zero', () => {
 	assert.is(U32.zero.value, 0, 'zero');
-	assert.is(U32.min.value, 0, 'min');
-	assert.is(U32.max.value, 0xffffffff, 'max');
 });
-
-const rot32 = [
-	//Start, left, end
-	[0, 0, 0],
-	[0, 1, 0],
-	[0, 4, 0],
-	[0, 7, 0],
-	[0, 15, 0],
-	[0, 31, 0],
-
-	[1, 0, 1],
-	[1, 1, 2],
-	[1, 4, 0x10],
-	[1, 7, 0x80],
-	[1, 15, 0x8000],
-	[1, 31, 0x80000000],
-	[1, 32, 1],
-
-	[2, 0, 2],
-	[2, 1, 4],
-	[2, 4, 0x20],
-	[2, 7, 0x100],
-	[2, 15, 0x10000],
-	[2, 31, 1],
-
-	[4, 0, 4],
-	[4, 1, 0x8],
-	[4, 4, 0x40],
-	[4, 7, 0x200],
-	[4, 15, 0x20000],
-	[4, 31, 2],
-
-	[8, 0, 8],
-	[8, 1, 0x10],
-	[8, 4, 0x80],
-	[8, 7, 0x400],
-	[8, 15, 0x40000],
-	[8, 31, 4],
-
-	[0x80, 0, 0x80],
-	[0x80, 1, 0x100],
-	[0x80, 4, 0x800],
-	[0x80, 7, 0x4000],
-	[0x80, 15, 0x400000],
-	[0x80, 31, 0x40],
-
-	[0x800, 0, 0x800],
-	[0x800, 1, 0x1000],
-	[0x800, 4, 0x8000],
-	[0x800, 7, 0x40000],
-	[0x800, 15, 0x4000000],
-	[0x800, 31, 0x400],
-
-	[0x8000, 0, 0x8000],
-	[0x8000, 1, 0x10000],
-	[0x8000, 4, 0x80000],
-	[0x8000, 7, 0x400000],
-	[0x8000, 15, 0x40000000],
-	[0x8000, 31, 0x4000],
-
-	[0x80000, 0, 0x80000],
-	[0x80000, 1, 0x100000],
-	[0x80000, 4, 0x800000],
-	[0x80000, 7, 0x4000000],
-	[0x80000, 15, 4],
-	[0x80000, 31, 0x40000],
-
-	[0x800000, 0, 0x800000],
-	[0x800000, 1, 0x1000000],
-	[0x800000, 4, 0x8000000],
-	[0x800000, 7, 0x40000000],
-	[0x800000, 15, 0x40],
-	[0x800000, 31, 0x400000],
-
-	[0x8000000, 0, 0x8000000],
-	[0x8000000, 1, 0x10000000],
-	[0x8000000, 4, 0x80000000],
-	[0x8000000, 7, 0x4],
-	[0x8000000, 15, 0x400],
-	[0x8000000, 31, 0x4000000],
-
-	[0x10000000, 0, 0x10000000],
-	[0x10000000, 1, 0x20000000],
-	[0x10000000, 4, 1],
-	[0x10000000, 7, 8],
-	[0x10000000, 15, 0x800],
-	[0x10000000, 31, 0x8000000],
-
-	[0x20000000, 0, 0x20000000],
-	[0x20000000, 1, 0x40000000],
-	[0x20000000, 4, 2],
-	[0x20000000, 7, 0x10],
-	[0x20000000, 15, 0x1000],
-	[0x20000000, 31, 0x10000000],
-
-	[0x40000000, 0, 0x40000000],
-	[0x40000000, 1, 0x80000000],
-	[0x40000000, 4, 4],
-	[0x40000000, 7, 0x20],
-	[0x40000000, 15, 0x2000],
-	[0x40000000, 31, 0x20000000],
-
-	[0x80000000, 0, 0x80000000],
-	[0x80000000, 1, 1],
-	[0x80000000, 4, 8],
-	[0x80000000, 7, 0x40],
-	[0x80000000, 15, 0x4000],
-	[0x80000000, 31, 0x40000000],
-
-	//1010=a, 0101=5, odd shift=switch, even shift=other
-	[0xaaaaaaaa, 0, 0xaaaaaaaa],
-	[0xaaaaaaaa, 1, 0x55555555],
-	[0xaaaaaaaa, 4, 0xaaaaaaaa],
-	[0xaaaaaaaa, 7, 0x55555555],
-	[0xaaaaaaaa, 15, 0x55555555],
-	[0xaaaaaaaa, 31, 0x55555555],
-
-	//1000=8 move 1 0001, move 2 0010 move 3 0100, move 4=1000
-	[0x88888888, 0, 0x88888888],
-	[0x88888888, 1, 0x11111111],
-	[0x88888888, 4, 0x88888888],
-	[0x88888888, 7, 0x44444444],
-	[0x88888888, 15, 0x44444444],
-	[0x88888888, 31, 0x44444444],
-
-	//=0100 1001 0010 0100 1001 0010 0100 1001
-	[0x49249249, 0, 0x49249249],
-	[0x49249249, 1, 0x92492492],
-	[0x49249249, 4, 0x92492494],
-	[0x49249249, 7, 0x924924a4],
-	[0x49249249, 15, 0x4924a492],
-	[0x49249249, 31, 0xa4924924],
-
-	[0x01234567, 0, 0x01234567],
-	[0x01234567, 1, 0x02468ace],
-	[0x01234567, 4, 0x12345670],
-	[0x01234567, 7, 0x91a2b380],
-	[0x01234567, 15, 0xa2b38091],
-	[0x01234567, 31, 0x8091a2b3],
-
-	[0x0a442081, 0, 0x0a442081],
-	[0x0a442081, 1, 0x14884102],
-	[0x0a442081, 4, 0xa4420810],
-	[0x0a442081, 7, 0x22104085],
-	[0x0a442081, 15, 0x10408522],
-	[0x0a442081, 31, 0x85221040],
-
-	[0x0103070f, 0, 0x0103070f],
-	[0x0103070f, 1, 0x02060e1e],
-	[0x0103070f, 4, 0x103070f0],
-	[0x0103070f, 7, 0x81838780],
-	[0x0103070f, 15, 0x83878081],
-	[0x0103070f, 31, 0x80818387],
-];
-
-for (const [start, by, expectLeft] of rot32) {
-	const left = U32.rol(start, by) >>> 0;
-	tsts('rol32:' + start + ',' + by, () => {
-		assert.is(left, expectLeft);
-	});
-
-	tsts('ror32:' + left + ',' + by, () => {
-		assert.is(U32.ror(left, by) >>> 0, start);
-	});
-}
-
-const rol32OversizedTests = [
-	[0xffff0000, 1, 0xfffe0001], //Would catch an unsigned right shift
-	//Oversized tests - make sure the input is truncated
-	[0x1fffff1ff, 3, 0xffff8fff],
-	[0x1fffff1ff, 11, 0xff8fffff],
-	[0x1fffff1ff, 31, 0xfffff8ff],
-	[0xf0f0f0f0f0, 4, 0x0f0f0f0f],
-	[0xf0f0f0f0f0, 8, 0xf0f0f0f0],
-];
-for (const [start, by, expect] of rol32OversizedTests) {
-	tsts(`rol32 (${hex.fromI32(start)},${by})`, () => {
-		const actual = U32.rol(start, by) >>> 0;
-		assert.is(actual, expect);
-	});
-}
-
-const ror32OversizedTests = [
-	[0xffff0000, 1, 0x7fff8000], //Would catch an unsigned right shift
-	//Oversized tests - make sure the input is truncated
-	[0x1fffff1ff, 3, 0xfffffe3f],
-	[0x1fffff1ff, 11, 0x3ffffffe],
-	[0x1fffff1ff, 31, 0xffffe3ff],
-	[0xf0f0f0f0f0, 4, 0x0f0f0f0f],
-	[0xf0f0f0f0f0, 8, 0xf0f0f0f0],
-];
-for (const [start, by, expect] of ror32OversizedTests) {
-	tsts(`ror32 (${hex.fromI32(start)},${by})`, () => {
-		const actual = U32.ror(start, by) >>> 0;
-		assert.is(actual, expect);
-	});
-}
-
-const ltTest: [number, number][] = [
-	[0x01020304, 0x01020305],
-	[0x00000000, 0xffffffff],
-	[0x00000000, 0x00000001],
-	[0xfffffff0, 0xffffffff],
-];
-for (const [a, b] of ltTest) {
-	//Constant time
-	tsts(`${a} <=.ct ${b}`, () => {
-		assert.is(U32.ctLte(a, b), true);
-	});
-	tsts(`! ${b} <=.ct ${a}`, () => {
-		assert.is(U32.ctLte(b, a), false);
-	});
-
-	tsts(`${a} <.ct ${b}`, () => {
-		assert.is(U32.ctLt(a, b), true);
-	});
-	tsts(`! ${b} <.ct ${a}`, () => {
-		assert.is(U32.ctLt(b, a), false);
-	});
-
-	tsts(`${b} >=.ct ${a}`, () => {
-		assert.is(U32.ctGte(b, a), true);
-	});
-	tsts(`! ${a} >=.ct ${b}`, () => {
-		assert.is(U32.ctGte(a, b), false);
-	});
-
-	tsts(`${b} >.ct ${a}`, () => {
-		assert.is(U32.ctGt(b, a), true);
-	});
-	tsts(`! ${a} >.ct ${b}`, () => {
-		assert.is(U32.ctGt(a, b), false);
-	});
-
-	tsts(`! ${a} ==.ct ${b}`, () => {
-		assert.is(U32.ctEq(a, b), false);
-	});
-	tsts(`! ${b} ==.ct ${a}`, () => {
-		assert.is(U32.ctEq(b, a), false);
-	});
-}
-
-const eq64Test: number[] = [
-	0x00000000, 0x00000001, 0x01020304, 0x01020305, 0xfffffff0, 0xffffffff,
-];
-for (const a of eq64Test) {
-	const b = a;
-
-	//Constant time
-	tsts(`${a} ==.ct ${a}`, () => {
-		assert.is(U32.ctEq(a, b), true);
-	});
-
-	tsts(`${a} <=.ct ${a}`, () => {
-		assert.is(U32.ctLte(a, b), true);
-	});
-
-	tsts(`! ${a} <.ct ${a}`, () => {
-		assert.is(U32.ctLt(a, b), false);
-	});
-
-	tsts(`${a} >=.ct ${a}`, () => {
-		assert.is(U32.ctGte(a, b), true);
-	});
-
-	tsts(`! ${a} >.ct ${a}`, () => {
-		assert.is(U32.ctGt(a, b), false);
-	});
-}
-
-tsts(`ctSelect`, () => {
-	const a = 0x01020304;
-	const b = 0xf0e0d0c0;
-
-	assert.equal(U32.ctSelect(a, b, true) >>> 0, a);
-	assert.equal(U32.ctSelect(a, b, false) >>> 0, b);
-});
-
-const sameSignTests: [number, number, boolean][] = [
-	[0, 2147483647, true], //highest i32
-	[0, 2147483648, false], //While these are the same sign, we've exceeded U32
-	[0, -1, false],
-	[-1, -1000000, true],
-	[-1, -2147483648, true], //lowest i32
-];
-for (const [a, b, match] of sameSignTests) {
-	tsts(`${a} same sign as ${b}`, () => {
-		assert.is(U32.sameSign(a, b), match);
-	});
-}
-
-const averageTests: [number, number, number][] = [
-	[1, 3, 2],
-	[10, 30, 20],
-];
-for (const [a, b, avg] of averageTests) {
-	tsts(`average(${a},${b})`, () => {
-		assert.is(U32.average(a, b), avg);
-	});
-}
-
-const fromBytesLeTests: [Uint8Array, number, number][] = [
-	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 0, 0x78563412],
-	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 0, 0x12345678],
-	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 1, 0x123456],
-	[Uint8Array.of(0x78, 0x56), 0, 0x5678],
-];
-for (const [u8, pos, expect] of fromBytesLeTests) {
-	tsts(`${u8}[${pos}]`, () => {
-		assert.equal(U32.iFromBytesLE(u8, pos), expect);
-	});
-}
-
-const fromBytesBeTests: [Uint8Array, number, number][] = [
-	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 0, 0x12345678],
-	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 0, 0x78563412],
-	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 1, 0x345678],
-	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 2, 0x5678],
-	[Uint8Array.of(0x12, 0x34, 0x56, 0x78), 3, 0x78],
-	[Uint8Array.of(0x78, 0x56, 0x34, 0x12), 1, 0x563412],
-	[Uint8Array.of(0x56, 0x78), 0, 0x5678],
-];
-for (const [u8, pos, expect] of fromBytesBeTests) {
-	tsts(`${u8}[${pos}]`, () => {
-		assert.equal(U32.iFromBytesBE(u8, pos), expect);
-	});
-}
-
-const toBytesLETests: [number, string][] = [
-	[0x12345678, '78563412'],
-	[0x78563412, '12345678'],
-];
-for (const [num, expect] of toBytesLETests) {
-	tsts(`toBytesLE(${num})`, () => {
-		assert.equal(hex.fromBytes(U32.toBytesLE(num)), expect);
-	});
-}
-
-const toBytesBETests: [number, string][] = [
-	[0x12345678, '12345678'],
-	[0x78563412, '78563412'],
-];
-for (const [num, expect] of toBytesBETests) {
-	tsts(`toBytesBE(${num})`, () => {
-		assert.equal(hex.fromBytes(U32.toBytesBE(num)), expect);
-	});
-}
 
 const lsbTests: [number, number, number][] = [
 	[0x12345678, 0, 0x78],
@@ -804,9 +520,21 @@ const lsbTests: [number, number, number][] = [
 for (const [u32, which, expect] of lsbTests) {
 	tsts(`lsb(${u32}[which])`, () => {
 		const u = U32.fromInt(u32);
-		assert.equal(u.lsb(which), expect);
+		assert.equal(u.getByte(which), expect);
 	});
 }
+
+tsts('clone', () => {
+	const a = U32.fromInt(1);
+	const b = a.clone();
+	assert.equal(a.toString(), b.toString());
+});
+
+tsts('clone32', () => {
+	const a = U32.fromInt(1);
+	const b = a.clone32();
+	assert.is(a.value,b[0]);
+});
 
 tsts(`mut`, () => {
 	const h13 = '0000000D';
@@ -830,11 +558,7 @@ tsts('util.inspect', () => {
 	assert.is(u.startsWith('U32('), true);
 });
 
-tsts('clone', () => {
-	const a = U32.fromInt(1);
-	const b = a.clone();
-	assert.equal(a.toString(), b.toString());
-});
+
 
 // tsts('general',()=>{
 //     const o=U32.fromInt(13);

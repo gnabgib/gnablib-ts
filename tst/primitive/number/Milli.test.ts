@@ -26,11 +26,11 @@ const serSet:[number,string][] = [
     [99,'18C0'],
     [999,'F9C0'],//max
 ];
+const bytes=new Uint8Array(Math.ceil(Milli.serialBits/8));
 for (const [us,ser] of serSet) {
     tsts(`ser(${us})`,()=>{
         const m = Milli.new(us);
         assert.equal(m.valueOf(),us);
-        const bytes=new Uint8Array(Math.ceil(Milli.serialBits/8));
         const bw=BitWriter.mount(bytes);
         m.serialize(bw);
         assert.is(hex.fromBytes(bytes),ser);

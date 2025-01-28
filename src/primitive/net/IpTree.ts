@@ -133,11 +133,8 @@ class TreeNode<T> implements ITreeNode<T> {
 }
 
 // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-function pickFirst<T>(
-	value1: T | undefined,
-	value2: T | undefined
-): T | undefined {
-	return value1;
+function pickFirst<T>(v1: T | undefined, v2: T | undefined): T | undefined {
+	return v1;
 }
 
 export class IpTree<T> {

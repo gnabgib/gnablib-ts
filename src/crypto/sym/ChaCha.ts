@@ -2,7 +2,7 @@
 
 import { asLE } from '../../endian/platform.js';
 import { ContentError } from '../../error/ContentError.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { sLen } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
@@ -22,10 +22,10 @@ class ChaChaBlock {
 
 	// prettier-ignore
 	private quartRound(a: number, b: number, c: number, d: number) {
-		this.u32[a] += this.u32[b]; this.u32[d] = U32.rol(this.u32[d] ^ this.u32[a], 16);
-		this.u32[c] += this.u32[d]; this.u32[b] = U32.rol(this.u32[b] ^ this.u32[c], 12);
-		this.u32[a] += this.u32[b]; this.u32[d] = U32.rol(this.u32[d] ^ this.u32[a], 8);
-		this.u32[c] += this.u32[d]; this.u32[b] = U32.rol(this.u32[b] ^ this.u32[c], 7);
+		this.u32[a] += this.u32[b]; this.u32[d] = U32.lRot(this.u32[d] ^ this.u32[a], 16);
+		this.u32[c] += this.u32[d]; this.u32[b] = U32.lRot(this.u32[b] ^ this.u32[c], 12);
+		this.u32[a] += this.u32[b]; this.u32[d] = U32.lRot(this.u32[d] ^ this.u32[a], 8);
+		this.u32[c] += this.u32[d]; this.u32[b] = U32.lRot(this.u32[b] ^ this.u32[c], 7);
 	}
 
 	public block(): void {

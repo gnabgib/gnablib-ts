@@ -1,10 +1,11 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { IHash } from '../interfaces/IHash.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { IAeadCrypt } from '../interfaces/IAeadCrypt.js';
 import { sLen } from '../../safe/safe.js';
 import { xorEq } from '../../primitive/xtUint8Array.js';
+import { ByteWriter } from '../../primitive/ByteWriter.js';
 
 // prettier-ignore
 /** Round constants (expand into 64bit) 2.6.1 */
@@ -74,17 +75,13 @@ function ror64(a: Uint8Array, aPos64: number, by: number): void {
 		sPull = aPos64;
 		by -= 32;
 	}
-	const first = U32.iFromBytesBE(a, fPull);
-	const second = U32.iFromBytesBE(a, sPull);
-	//Complete implementation, but Ascon doesn't 0/32/64 bit rotate so we can skip
-	// if (by === 0) {
-	// 	a.set(U32.toBytesBE(first), aPos64);
-	// 	a.set(U32.toBytesBE(second), aPos64 + 4);
-	// } else {
+	const first = U32.fromBytesBE(a, fPull);
+	const second = U32.fromBytesBE(a, sPull);
 	const iBy = 32 - by;
-	a.set(U32.toBytesBE((first >>> by) | (second << iBy)), aPos64);
-	a.set(U32.toBytesBE((second >>> by) | (first << iBy)), aPos64 + 4);
-	// }
+	const bw = ByteWriter.mount(a);
+	bw.skip(aPos64);
+	U32.intoBytesBE((first >>> by) | (second << iBy), bw);
+	U32.intoBytesBE((second >>> by) | (first << iBy), bw);
 }
 
 const tagSize = 16;

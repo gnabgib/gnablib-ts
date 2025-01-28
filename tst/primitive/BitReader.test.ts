@@ -1,7 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { BitReader } from '../../src/primitive/BitReader';
-import { hex } from '../../src/codec';
 import util from 'util';
 
 const tsts = suite('BitReader');
@@ -43,7 +42,7 @@ for(const [bytes,bitReadSet,vals] of read_tests) {
     });
 }
 
-const read_ff_startBit_tests:[number,number,number][]=[
+const read_ff_skipBits_tests:[number,number,number][]=[
     [0,0,0],
     //Exhaustive read some-all from byte
     [0,1,1],
@@ -64,14 +63,15 @@ const read_ff_startBit_tests:[number,number,number][]=[
     [1,6,0x3f],
     [1,7,0x7f],
 ];
-for(const [startBit,bitRead,expect] of read_ff_startBit_tests) {
+for(const [skipBits,bitRead,expect] of read_ff_skipBits_tests) {
     const bytes=Uint8Array.of(0xff);
-    tsts(`BitReader(xff,${startBit}).readNumberBE(${bitRead})`,()=>{
-        const br=BitReader.mount(bytes,startBit);
+    tsts(`BitReader(xFF).skipBits(${skipBits}).readNumberBE(${bitRead})`,()=>{
+        const br=BitReader.mount(bytes);
+        br.skipBits(skipBits);
         assert.equal(br.readNumberBE(bitRead),expect);
     });
 }
-const read_aa_startBit_tests:[number,number,number][]=[
+const read_aa_skipBits_tests:[number,number,number][]=[
     [0,0,0],
     //Exhaustive read some-all from byte
     [0,1,1],
@@ -92,10 +92,11 @@ const read_aa_startBit_tests:[number,number,number][]=[
     [1,6,0x15],
     [1,7,0x2a],
 ];
-for(const [startBit,bitRead,expect] of read_aa_startBit_tests) {
+for(const [skipBits,bitRead,expect] of read_aa_skipBits_tests) {
     const bytes=Uint8Array.of(0xaa);
-    tsts(`BitReader(xaa,${startBit}).readNumberBE(${bitRead})`,()=>{
-        const br=BitReader.mount(bytes,startBit);
+    tsts(`BitReader(xAA).skipBits(${skipBits}).readNumberBE(${bitRead})`,()=>{
+        const br=BitReader.mount(bytes);
+        br.skipBits(skipBits);
         assert.equal(br.readNumberBE(bitRead),expect);
     });
 }
@@ -128,44 +129,27 @@ for(const [bytes,bitRead,throws] of read_throw_tests) {
     });
 }
 
-tsts('BitReader with out of range startBit throws',()=>{
+const bad_skipBits_tests:number[]=[
+    -1,
+    9
+];
+for(const skip of bad_skipBits_tests) {
     const buff=new Uint8Array(1);
-    assert.throws(()=>BitReader.mount(buff,-1));
-    assert.throws(()=>BitReader.mount(buff,8));
-});
+    const br=BitReader.mount(buff);
+    tsts(`BitWriter(1).skipBits(${skip}) throws`,()=>{
+        assert.throws(()=>br.skipBits(skip));
+    })
+}
 
-
-
-// tsts('3x2,5x3,7x4,0x2,Fx2 in 2 bytes',()=>{
-//     var bw=new BitWriter(2);
-//     bw.writeNumber(3,2);
-//     bw.writeNumber(5,3);
-//     bw.writeNumber(7,4);
-//     bw.writeNumber(0,2);
-//     bw.writeNumber(0xf,2);
-//     bw.writeNumber(0,3);//This is just here to make sure exact bits doesn't cause a size override
-
-//     // 3x2 =b11, 5x3 = b101, 7x4 = b0111, 0x2 = b00, fx2 = b11 = 1110101110011000
-//     assert.is(hex.fromBytes(bw.getBytes()),'EB98');
-// });
-
-tsts(`reset`,()=>{
-    const bytes=Uint8Array.of(0xff,0xff);
-    assert.equal(hex.fromBytes(bytes),'FFFF')
-    
-    const br=BitReader.mount(bytes);
-    assert.equal(br.unreadBits,16);
-    br.readNumberBE(8);
-    assert.equal(br.unreadBits,8);
-    assert.throws(()=>br.readNumberBE(16),"Reading 8+16 is too many");
-    
-    br.reset();
-    assert.equal(br.unreadBits,16);
-    br.readNumberBE(16);
-    assert.equal(br.unreadBits,0);
-
-    br.reset();
-    assert.equal(br.unreadBits,16);
+tsts(`BitReader(1).skipBits(3).skipBits(5)`, () => {
+    //This test catches the bit-skip case where the second skip causes a byte-skip
+    const buff=new Uint8Array(1);
+    const bw=BitReader.mount(buff);
+    assert.is(bw.unreadBits,8);
+    bw.skipBits(3);
+    assert.is(bw.unreadBits,5);
+    bw.skipBits(5);
+    assert.is(bw.unreadBits,0);
 });
 
 tsts('[Symbol.toStringTag]', () => {

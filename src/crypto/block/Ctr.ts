@@ -1,10 +1,11 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { incrBE } from '../../primitive/xtUint8Array.js';
 import { LengthError } from '../../error/LengthError.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
+import { ByteWriter } from '../../primitive/ByteWriter.js';
 
 export class IncrBytes implements Iterable<Uint8Array> {
 	private readonly _iv: Uint8Array;
@@ -61,12 +62,13 @@ export class Concat32 implements Iterable<Uint8Array> {
 	[Symbol.iterator](): Iterator<Uint8Array> {
 		//Runtime copy of IV
 		const run = new Uint8Array(this._iv.length + 4);
+		const bw=ByteWriter.mount(run);
+		bw.write(this._iv);
+
 		let count = this._count;
-		const offset = this._iv.length;
-		run.set(this._iv);
 		return {
 			next(): IteratorResult<Uint8Array> {
-				run.set(U32.toBytesBE(count++), offset);
+				U32.intoBytesBE(count++, bw.sub(4,true));
 				return {
 					done: false,
 					value: run.slice(),

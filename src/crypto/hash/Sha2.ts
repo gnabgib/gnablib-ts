@@ -1,7 +1,7 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { asBE } from '../../endian/platform.js';
 import { U64, U64MutArray } from '../../primitive/number/U64.js';
 
@@ -124,8 +124,8 @@ class Sha2_32bit implements IHash {
 		for (; j < w.length; j++) {
 			const w15 = w[j - 15];
 			const w2 = w[j - 2];
-			const s0 = U32.ror(w15, 7) ^ U32.ror(w15, 18) ^ (w15 >>> 3);
-			const s1 = U32.ror(w2, 17) ^ U32.ror(w2, 19) ^ (w2 >>> 10);
+			const s0 = U32.rRot(w15, 7) ^ U32.rRot(w15, 18) ^ (w15 >>> 3);
+			const s1 = U32.rRot(w2, 17) ^ U32.rRot(w2, 19) ^ (w2 >>> 10);
 			w[j] = w[j - 16] + s0 + w[j - 7] + s1;
 		}
 
@@ -139,11 +139,11 @@ class Sha2_32bit implements IHash {
 			h = this.#state[7];
 
 		for (j = 0; j < w.length; j++) {
-			const s1 = U32.ror(e, 6) ^ U32.ror(e, 11) ^ U32.ror(e, 25);
+			const s1 = U32.rRot(e, 6) ^ U32.rRot(e, 11) ^ U32.rRot(e, 25);
 			//const ch=(e&f)^((~e)&g);//Same as MD4-r1
 			const ch = g ^ (e & (f ^ g)); //Same as MD4-r1
 			const temp1 = h + s1 + ch + k[j * 2] + w[j];
-			const s0 = U32.ror(a, 2) ^ U32.ror(a, 13) ^ U32.ror(a, 22);
+			const s0 = U32.rRot(a, 2) ^ U32.rRot(a, 13) ^ U32.rRot(a, 22);
 			//const maj=(a&b)^(a&c)^(b&c);
 			const maj = ((a ^ b) & c) ^ (a & b); //Similar to MD4-r2 (| -> ^)
 			const temp2 = s0 + maj;

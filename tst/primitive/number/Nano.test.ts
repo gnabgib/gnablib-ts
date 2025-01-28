@@ -28,12 +28,12 @@ const serSet:[number,string][] = [
     // [99999,'1869F0'],
     // [999999,'F423F0']//max
 ];
+const bytes=new Uint8Array(Math.ceil(Nano.serialBits/8));
 for (const [ns,ser] of serSet) {
     tsts(`ser(${ns})`,()=>{
         const m = Nano.new(ns);
         assert.equal(m.valueOf(),ns);
     
-        const bytes=new Uint8Array(Math.ceil(Nano.serialBits/8));
         const bw=BitWriter.mount(bytes);
         m.serialize(bw);
         assert.is(hex.fromBytes(bytes),ser);

@@ -1,30 +1,21 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../crypto/interfaces/IHash.js';
 import { asLE } from '../endian/platform.js';
+import { AChecksum32 } from './_AChecksum.js';
 
 //[Wikipedia: Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function)
 //[lookup3.c](http://www.burtleburtle.net/bob/c/lookup3.c) (2006)
 
-const blockSize = 12;
-const digestSize = 4;
 const A = 0,
 	B = 1,
 	C = 2;
 
 /**
  * NOT Cryptographic
- * NOTE: This has requires length to be known at the start, so you can only call .write ONCE (after that you'll get an exception)
+ * NOTE: This requires the length to be known at the start, so you can only call .write ONCE (after that you'll get an exception)
  */
-export class Lookup3 implements IHash {
-	/**
-	 * Digest size in bytes
-	 */
-	readonly size = digestSize;
-	/**
-	 * Block size in bytes
-	 */
-	readonly blockSize = blockSize;
+export class Lookup3 extends AChecksum32 implements IHash {
 	/**
 	 * Runtime state of the hash
 	 */
@@ -37,22 +28,11 @@ export class Lookup3 implements IHash {
 	/**
 	 * Temp processing block
 	 */
-	private readonly _block = new Uint8Array(blockSize);
-	private readonly _block32 = new Uint32Array(this._block.buffer);
-	/**
-	 * Number of bytes added to the hash
-	 */
-	private _ingestBytes = 0;
-	/**
-	 * Position of data written to block
-	 */
-	private _bPos = 0;
+	private readonly _b32 = new Uint32Array(this._b8.buffer);
 
-	/**
-	 * Build a new Lookup3 (non-crypto) hash generator
-	 * @param seed
-	 */
+	/** Build a new Lookup3 (non-crypto) hash generator */
 	constructor(seed = 0, seed2 = 0) {
+		super(4,12);
 		this._state[A] += seed;
 		this._state[B] += seed;
 		this._state[C] += seed + seed2;
@@ -60,16 +40,14 @@ export class Lookup3 implements IHash {
 		this._seed2 = seed2;
 	}
 
-	/**
-	 * aka Mix
-	 */
-	private hash(): void {
+	/** aka Mix */
+	protected hash() {
 		//Make sure block is little-endian
-		asLE.i32(this._block, 0, 3);
+		asLE.i32(this._b8, 0, 3);
 		//Add in data
-		this._state[A] += this._block32[0];
-		this._state[B] += this._block32[1];
-		this._state[C] += this._block32[2];
+		this._state[A] += this._b32[0];
+		this._state[B] += this._b32[1];
+		this._state[C] += this._b32[2];
 
 		///MIX
 		//a=this.#state[0], b=this.#state[1], c=this.#state[2]
@@ -95,13 +73,13 @@ export class Lookup3 implements IHash {
 
 		this._bPos = 0;
 	}
-	private final(): void {
+	private final() {
 		//Make sure block is little-endian
-		asLE.i32(this._block, 0, 3);
+		asLE.i32(this._b8, 0, 3);
 		//Add in data
-		this._state[A] += this._block32[0];
-		this._state[B] += this._block32[1];
-		this._state[C] += this._block32[2];
+		this._state[A] += this._b32[0];
+		this._state[B] += this._b32[1];
+		this._state[C] += this._b32[2];
 
 		this._state[C] ^= this._state[B];
 		this._state[C] -= (this._state[B] << 14) | (this._state[B] >>> 18);
@@ -122,42 +100,31 @@ export class Lookup3 implements IHash {
 	}
 
 	/**
-	 * Write data to the hash (can be called multiple times)
+	 * Write data to the hash
 	 * NOTE: This has requires length to be known at the start, so you can only call .write ONCE (after that you'll get an exception)
 	 * @param data
 	 */
-	write(data: Uint8Array): void {
+	write(data: Uint8Array) {
 		if (this._ingestBytes > 0)
 			throw new Error('Can only write to this hash once');
-		this._ingestBytes += data.length;
-		this._state[0] += data.length;
-		this._state[1] += data.length;
-		this._state[2] += data.length;
-
-		let nToWrite = data.length;
-		let dPos = 0;
-		let space = blockSize - this._bPos;
-		while (nToWrite > 0) {
-			//We want >= BECAUSE we only to interim hashes if there's more than one block of data
-			if (space >= nToWrite) {
-				//More space than data, copy in verbatim
-				this._block.set(data.subarray(dPos), this._bPos);
-				//Update pos
-				this._bPos += nToWrite;
-				return;
-			}
-			this._block.set(data.subarray(dPos, dPos + blockSize), this._bPos);
-			this.hash();
-			dPos += space;
-			nToWrite -= space;
-			space = blockSize;
-		}
+		this._state[A] += data.length;
+		this._state[B] += data.length;
+		this._state[C] += data.length;
+		//Lookup3 requires dropping the last hash in favour of the final
+		// func in the event the input is a multiple of <blockSize>, so we push in all
+		// but one character in that event (knowing there's still space for 1) and
+		// append the last
+		if (data.length>0 && data.length%12==0) {
+			super.write(data.subarray(0,data.length-1));
+			this._ingestBytes+=1;
+			this._b8[this._bPos++]=data[data.length-1];
+		} else super.write(data);
 	}
 
 	private static _sum(alt: Lookup3): void {
 		//We only finalize if there's >0 bits
-		if (alt._bPos > 0 || alt._ingestBytes === 12) {
-			alt._block.fill(0, alt._bPos);
+		if (alt._ingestBytes>0) {
+			alt.fillBlock();
 			alt.final();
 		}
 	}
@@ -193,18 +160,17 @@ export class Lookup3 implements IHash {
 	/**
 	 * Set hash state. Any past writes will be forgotten
 	 */
-	reset(): void {
+	reset() {
 		this._state[A] = 0xdeadbeef + this._seed;
 		this._state[B] = 0xdeadbeef + this._seed;
 		this._state[C] = 0xdeadbeef + this._seed + this._seed2;
-		this._ingestBytes = 0;
-		this._bPos = 0;
+		super._reset();
 	}
 
 	/**
 	 * Create an empty IHash using the same algorithm
 	 */
-	newEmpty(): IHash {
+	newEmpty() {
 		return new Lookup3(this._seed, this._seed2);
 	}
 
@@ -215,9 +181,7 @@ export class Lookup3 implements IHash {
 	clone(): Lookup3 {
 		const ret = new Lookup3(this._seed, this._seed2);
 		ret._state.set(this._state);
-		ret._block.set(this._block);
-		ret._ingestBytes = this._ingestBytes;
-		ret._bPos = this._bPos;
+		super._clone(ret);
 		return ret;
 	}
 }

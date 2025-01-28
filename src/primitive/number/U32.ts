@@ -1,18 +1,12 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
-import { sNum } from '../../safe/safe.js';
+import { sInt } from '../../safe/safe.js';
+import { IUint, IUintMut } from '../interfaces/IUint.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
-const DBG_RPT_U32 = 'U32';
-const DBG_RPT_U32Mut = 'U32Mut';
 const DBG_RPT_U32MutArray = 'U32MutArray';
-const maxU32 = 0xffffffff;
-const maxU16 = 0xffff;
-const sizeBytes = 4;
-const sizeBits = 32;
-const rotMask = 0x1f;
 
 /**
  * U32/U32Mut are designed to be projections down onto a Uint32Array
@@ -27,175 +21,172 @@ const rotMask = 0x1f;
  *  the best pattern is manually cloning (.mut for either, .clone for U32Mut) and the *Eq() methods whereever possible
  */
 
-export class U32 {
-	protected arr: Uint32Array;
-	protected pos: number;
-
-	protected constructor(arr: Uint32Array, pos = 0) {
-		this.arr = arr;
-		this.pos = pos;
-	}
+export class U32 implements IUint<U32> {
+	readonly size32 = 1;
+	protected constructor(
+		protected _arr: Uint32Array,
+		protected _pos = 0,
+		protected readonly _name = 'U32'
+	) {}
 
 	get value(): number {
-		return this.arr[this.pos];
+		return this._arr[this._pos];
+	}
+	protected _value(v: U32 | number): number {
+		return v instanceof U32 ? v._arr[v._pos] : v;
 	}
 
+	//#region Builds
 	/**
-	 * Used by U32Mut (notice protection) so we can look inside
-	 * @param v
-	 * @returns
+	 * Build from an integer
+	 * @param uint32 Unsigned integer `[0 - 4294967295]`
+	 * @throws If uint32 is out of range or not an int
 	 */
-	protected _valueOf(v: U32): number {
-		return v.arr[v.pos];
+	static fromInt(uint32: number): U32 {
+		sInt('uint32', uint32).unsigned().atMost(4294967295).throwNot();
+		return new U32(Uint32Array.of(uint32));
 	}
-	protected static _mulEq(a: Uint32Array, aPos: number, b32: U32): number {
-		const b0 = b32.arr[b32.pos] & maxU16;
-		const b1 = b32.arr[b32.pos] >>> 16;
-		return a[aPos] * b0 + ((a[aPos] * b1) << 16);
-	}
+	//fromI32s - see fromInt
+	//fromBytesBE - see fromInt(U32Static.fromBytesBE(src,pos))
+	//fromBytesLE - see fromInt(U32Static.fromBytesLE(src,pos))
+
+	// /**
+	//  * Create from a **copy** of bytes assuming they are in big endian order
+	//  * (eg. as humans write)
+	//  * @param pos Position to start from in `src`
+	//  * @throws Error if `src` isn't long enough
+	//  */
+	// static fromBytesBE(src: Uint8Array, pos = 0) {
+	// 	const cpy = src.slice(pos, pos + 4);
+	// 	asBE.i32(cpy, 0, 1);
+	// 	return new U32(new Uint32Array(cpy.buffer), 0);
+	// }
+
+	// /**
+	//  * Create from a **copy** of bytes assuming they are in little endian order
+	//  * (eg. as humans write)
+	//  * @param pos Position to start from in `src`
+	//  * @throws Error if `src` isn't long enough
+	//  */
+	// static fromBytesLE(src: Uint8Array, pos = 0) {
+	// 	const cpy = src.slice(pos, pos + 4);
+	// 	asLE.i32(cpy, 0, 1);
+	// 	return new U32(new Uint32Array(cpy.buffer), 0);
+	// }
 
 	/**
-	 * @see value ⊕ @param u32
-	 * @param u32
-	 * @returns @see value ⊕ @param u32
+	 * Mount an existing array, note this **shares** memory with the array,
+	 * changing a value in `arr` will mutate this state.
+	 *
+	 * @param pos Position to link from
 	 */
-	xor(u32: U32): U32 {
-		return new U32(Uint32Array.of(this.arr[this.pos] ^ u32.arr[u32.pos]));
+	static mount(arr: Uint32Array, pos = 0): U32 {
+		return new U32(arr, pos);
+	}
+	//#endregion
+
+	/** Create a **copy** of this element */
+	clone() {
+		return new U32(this._arr.slice(this._pos, this._pos + 1));
 	}
 
-	/**
-	 * @see value ∨ @param u32
-	 * @param u32
-	 * @returns @see value ∨ @param u32
-	 */
-	or(u32: U32): U32 {
-		return new U32(Uint32Array.of(this.arr[this.pos] | u32.arr[u32.pos]));
+	clone32() {
+		return this._arr.slice(this._pos, this._pos + 1);
 	}
 
-	/**
-	 * @see value ∧ @param u32
-	 * @param u32
-	 * @returns @see value ∧ @param u32
-	 */
-	and(u32: U32): U32 {
-		return new U32(Uint32Array.of(this.arr[this.pos] & u32.arr[u32.pos]));
-	}
-
-	/**
-	 * ¬ @see value
-	 * @returns ¬ @see value
-	 */
-	not(): U32 {
-		return new U32(Uint32Array.of(~this.arr[this.pos]));
-	}
-
-	/**
-	 * @see value ROL @param by
-	 * @param by Integer 0-31
-	 * @returns @see value ROL @see param
-	 */
-	lRot(by: number): U32 {
-		by &= 31;
-		return new U32(
-			Uint32Array.of(
-				(this.arr[this.pos] << by) | (this.arr[this.pos] >>> (sizeBits - by))
-			)
-		);
-	}
-
-	/**
-	 * @see value << @param by - zeros are brought in
-	 * @param by integer 0-31
-	 * @returns @see value << @param by
-	 */
-	lShift(by: number): U32 {
-		const arr = new Uint32Array(1);
-		arr[by >>> 5] = this.arr[this.pos] << by;
-		return new U32(arr);
-	}
-
-	/**
-	 * @see value ROR @param by
-	 * @param by integer 0-31
-	 * @returns @see value ROR  @param by
-	 */
-	rRot(by: number): U32 {
-		by &= 31;
-		return new U32(
-			Uint32Array.of(
-				(this.arr[this.pos] >>> by) | (this.arr[this.pos] << (sizeBits - by))
-			)
-		);
-	}
-
-	/**
-	 * @see value >> @param by - zeros are brought in
-	 * @param by integer 0-31
-	 * @returns @see value >> @param by
-	 */
-	rShift(by: number): U32 {
-		const arr = new Uint32Array(1);
-		arr[by >>> 5] = this.arr[this.pos] >>> by;
-		return new U32(arr);
-	}
-
-	/**
-	 * @see value + @param u32
-	 * @param u32
-	 * @returns @see value + @param u32
-	 */
-	add(u32: U32): U32 {
-		return new U32(Uint32Array.of(this.arr[this.pos] + u32.arr[u32.pos]));
-	}
-
-	/**
-	 * `$value` - `$u32`
-	 * @param u32
-	 * @returns Subtraction
-	 */
-	sub(u32: U32): U32 {
-		return new U32(Uint32Array.of(this.arr[this.pos] - u32.arr[u32.pos]));
-	}
-
-	/**
-	 * `$value` *  `$n`
-	 * Multiply without going int o floating point (possible if large numbers)
-	 * @param n
-	 * @returns Product (may overflow)
-	 */
-	mul(n: U32): U32 {
-		return new U32(Uint32Array.of(U32._mulEq(this.arr, this.pos, n)));
-	}
-
-	/**
-	 * Create a copy of this U32
-	 * @returns
-	 */
-	clone(): U32 {
-		return new U32(this.arr.slice(this.pos, this.pos + 1));
-	}
-
-	/**
-	 * Mutate - create a new Uint32Mut with a copy of this value
-	 */
+	/** Create a clone of this value, with mutable state */
 	mut(): U32Mut {
-		return U32Mut.fromArray(this.arr.slice(this.pos, this.pos + 1));
+		const arr = this._arr.slice(this._pos, this._pos + 1);
+		return U32Mut.mount(arr, 0);
 	}
 
-	/**
-	 * String version of this value, in big endian
-	 * @returns
-	 */
-	toString(): string {
-		return hex.fromI32(this.arr[this.pos]);
+	//#region ShiftOps
+	lShift(by: number) {
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this._arr[this._pos] << by;
+		return new U32(arr);
 	}
+	rShift(by: number) {
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this._arr[this._pos] >>> by;
+		return new U32(arr);
+	}
+	lRot(by: number) {
+		by &= 31;
+		return new U32(
+			Uint32Array.of(
+				(this._arr[this._pos] << by) | (this._arr[this._pos] >>> (32 - by))
+			)
+		);
+	}
+	rRot(by: number) {
+		by &= 31;
+		return new U32(
+			Uint32Array.of(
+				(this._arr[this._pos] >>> by) | (this._arr[this._pos] << (32 - by))
+			)
+		);
+	}
+	//#endregion
+
+	//#region LogicOps
+	xor(o: U32) {
+		return new U32(Uint32Array.of(this._arr[this._pos] ^ o._arr[o._pos]));
+	}
+	or(o: U32) {
+		return new U32(Uint32Array.of(this._arr[this._pos] | o._arr[o._pos]));
+	}
+	and(o: U32) {
+		return new U32(Uint32Array.of(this._arr[this._pos] & o._arr[o._pos]));
+	}
+	not() {
+		return new U32(Uint32Array.of(~this._arr[this._pos]));
+	}
+	//#endregion
+
+	//#region ArithmeticOps
+	add(o: U32) {
+		return new U32(Uint32Array.of(this._arr[this._pos] + o._arr[o._pos]));
+	}
+	sub(o: U32) {
+		return new U32(Uint32Array.of(this._arr[this._pos] - o._arr[o._pos]));
+	}
+	mul(o: U32) {
+		return new U32(
+			Uint32Array.of(Math.imul(this._arr[this._pos], o._arr[o._pos]))
+		);
+	}
+	//#endregion
+
+	//#region Comparable
+	eq(o: U32 | number) {
+		const o2 = o instanceof U32 ? o._arr[o._pos] : o;
+		return this._arr[this._pos] == o2;
+	}
+	gt(o: U32 | number) {
+		const o2 = o instanceof U32 ? o._arr[o._pos] : o;
+		return this._arr[this._pos] > o2;
+	}
+	gte(o: U32 | number) {
+		const o2 = o instanceof U32 ? o._arr[o._pos] : o;
+		return this._arr[this._pos] >= o2;
+	}
+	lt(o: U32 | number) {
+		const o2 = o instanceof U32 ? o._arr[o._pos] : o;
+		return this._arr[this._pos] < o2;
+	}
+	lte(o: U32 | number) {
+		const o2 = o instanceof U32 ? o._arr[o._pos] : o;
+		return this._arr[this._pos] <= o2;
+	}
+	//#endregion
 
 	/**
 	 * Value as a stream of bytes (big-endian order) COPY
 	 * @returns Uint8Array[4]
 	 */
 	toBytesBE(): Uint8Array {
-		const r = new Uint8Array(this.arr.slice(this.pos, this.pos + 1).buffer);
+		const r = new Uint8Array(this._arr.slice(this._pos, this._pos + 1).buffer);
 		asBE.i32(r, 0);
 		return r;
 	}
@@ -205,444 +196,143 @@ export class U32 {
 	 * @returns Uint8Array[4]
 	 */
 	toBytesLE(): Uint8Array {
-		const r = new Uint8Array(this.arr.slice(this.pos, this.pos + 1).buffer);
+		const r = new Uint8Array(this._arr.slice(this._pos, this._pos + 1).buffer);
 		asLE.i32(r, 0);
 		return r;
 	}
 
 	/**
 	 * Get the least significant byte
-	 * @param idx 0-3 (%3)
+	 * @param byteIdx 0-3 (%3)
 	 */
-	lsb(idx = 0): number {
+	getByte(byteIdx = 0): number {
+		sInt('byteIdx', byteIdx).unsigned().atMost(3).throwNot();
 		//NOTE: This relies on numbers always being reported as Big Endian
 		// no matter the platform endianness
-		idx &= 3; //Only 4 spaces to chose from (zero indexed)
-		//Switch idx to bits
-		idx <<= 3; //*8
-		return (this.arr[this.pos] >>> idx) & 0xff;
+		const low = 8 * byteIdx; //(0,8,16,24)
+		return (this._arr[this._pos] >>> low) & 0xff;
+	}
+
+	/** String version of this value, as hex, in big endian */
+	toString(): string {
+		return hex.fromI32(this._arr[this._pos]);
 	}
 
 	/** @hidden */
 	get [Symbol.toStringTag](): string {
-		return DBG_RPT_U32;
+		return this._name;
 	}
 
 	/** @hidden */
 	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `${DBG_RPT_U32}(${this.toString()})`;
+		return `${this._name}(${this.toString()})`;
 	}
 
-	/**
-	 * Build a Uint32 from an integer
-	 * @param uint32 Integer 0-0xFFFFFFFF (4294967295)
-	 * @throws If uint32 is out of range or not an int
-	 * @returns
-	 */
-	static fromInt(uint32: number): U32 {
-		sNum('uint32', uint32).unsigned().atMost(maxU32).throwNot();
-		return new U32(Uint32Array.of(uint32));
-	}
-
-	/**
-	 * Created a "view" into an existing Uint32Array
-	 * **NOTE** the memory is shared, changing a value in @param source will mutate the state
-	 * @param source
-	 * @param pos Position to link (default 0), note this is an array-position not bytes
-	 * @returns
-	 */
-	static fromArray(source: Uint32Array, pos = 0): U32 {
-		return new U32(source, pos);
-	}
-
-	/**
-	 * Create a view into an `ArrayBuffer`.  Note this relies on platform endian (likely little endian)
-	 * **NOTE** Memory is shared (like @see fromArray)
-	 * **NOTE** Subject to the same JS limitation that `bytePos` must be a multiple of element-size (4)
-	 * @param src
-	 * @param bytePos
-	 * @returns
-	 */
-	static fromBuffer(src: ArrayBuffer, bytePos = 0): U32 {
-		return new U32(new Uint32Array(src, bytePos, 1));
-	}
-
-	/**
-	 * A new Uint32 with value 4294967295 (the maximum uint32)
-	 */
-	static get max(): U32 {
-		return max;
-	}
-
-	/**
-	 * A new Uint32 with value 0 (the minimum uint32)
-	 */
-	static get min(): U32 {
-		return zero;
-	}
-
-	/**
-	 * A new Uint32 with value 0
-	 */
+	/** U32(0) */
 	static get zero(): U32 {
 		return zero;
 	}
-
-	/**
-	 * Treat i32 as a signed/unsigned 32bit number, and rotate left
-	 * NOTE: JS will sign the result, (fix by `>>>0`)
-	 * NOTE: If you're using with UInt32Array you don't need to worry about sign
-	 * @param i32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @param by amount to rotate 0-31 (%32 if oversized)
-	 * @returns Left rotated number, NOTE you may wish to `>>>0`
-	 */
-	static rol(i32: number, by: number): number {
-		//No need to truncate input (bitwise is only 32bit)
-		by &= rotMask;
-		return (i32 << by) | (i32 >>> (sizeBits - by));
-	}
-
-	/**
-	 * Treat i32 as a signed/unsigned 32bit number, and rotate right
-	 * NOTE: JS will sign the result, (fix by `>>>0`)
-	 * NOTE: If you're using with UInt32Array you don't need to worry about sign
-	 * @param i32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @param by amount to rotate 0-31 (%32 if oversized)
-	 * @returns Right rotated number, NOTE you may wish to `>>>0`
-	 */
-	static ror(i32: number, by: number): number {
-		//No need to truncate input (bitwise is only 32bit)
-		by &= rotMask;
-		return (i32 >>> by) | (i32 << (sizeBits - by));
-	}
-
-	//static mul(a32: number, b32: number): number : use Math.imul instead
-
-	/**
-	 * Compare two numbers for equality in constant time
-	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @returns
-	 */
-	static ctEq(a32: number, b32: number): boolean {
-		return (a32 ^ b32) === 0;
-	}
-
-	/**
-	 * ` a32 <= b32` in constant time
-	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
-	 * @param a32 uint32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns
-	 */
-	static ctLte(a32: number, b32: number): boolean {
-		const l = ((a32 & maxU16) - (b32 & maxU16) - 1) >>> 31;
-		const h = (((a32 >>> 16) & maxU16) - ((b32 >>> 16) & maxU16) - 1) >>> 31;
-		return (l & h) === 1;
-	}
-
-	/**
-	 * `a32 >= b32` in constant time
-	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
-	 * @param a32 uint32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns
-	 */
-	static ctGte(a32: number, b32: number): boolean {
-		const l = ((b32 & maxU16) - (a32 & maxU16) - 1) >>> 31;
-		const h = (((b32 >>> 16) & maxU16) - ((a32 >>> 16) & maxU16) - 1) >>> 31;
-		return (l & h) === 1;
-	}
-
-	/**
-	 * `a32 > b32` in constant time
-	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
-	 * @param a32 uint32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns
-	 */
-	static ctGt(a32: number, b32: number): boolean {
-		const l = ((a32 & maxU16) - (b32 & maxU16) - 1) >>> 31;
-		const h = (((a32 >>> 16) & maxU16) - ((b32 >>> 16) & maxU16) - 1) >>> 31;
-		return (l & h) === 0;
-	}
-
-	/**
-	 * `a32 < b32` in constant time
-	 * **NOTE** Behaviour is undefined if params are int32 (because in 2s compliment negative numbers are > positive)
-	 * @param a32 uint32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32, if larger than 32 bits it'll be truncated
-	 * @returns
-	 */
-	static ctLt(a32: number, b32: number): boolean {
-		const l = ((b32 & maxU16) - (a32 & maxU16) - 1) >>> 31;
-		const h = (((b32 >>> 16) & maxU16) - ((a32 >>> 16) & maxU16) - 1) >>> 31;
-		return (l & h) === 0;
-	}
-
-	/**
-	 * Constant time select returns a32 if first==true, or b32 if first==false
-	 * Result may be negative (`>>>0` to fix)
-	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @param first
-	 * @returns a32 or b32
-	 */
-	static ctSelect(a32: number, b32: number, first: boolean): number {
-		// @ts-expect-error: We're casting bool->number on purpose
-		const fNum = (first | 0) - 1; //-1 or 0
-		return (~fNum & a32) | (fNum & b32);
-	}
-
-	/**
-	 * Whether two int32 values have the same sign (both negative, both positive)
-	 * @param i64a int32, if larger than 32 bits it'll be truncated 0-2147483647
-	 * @param i64b int32, if larger than 32 bits it'll be truncated 0-2147483647
-	 */
-	static sameSign(i64a: number, i64b: number): boolean {
-		//The MSBit is 1 if it's negative, 0 if not.. so if both or neither are ^=0
-		// If only one is, then ^=1.  Since MSbit=1 is <0 we can xor the two, and
-		// see if it's positive to confirm they're the same sign
-		return (i64a ^ i64b) >= 0;
-	}
-
-	/**
-	 * Get the average of two 32 bit numbers
-	 * @param a32 uint32/int32, if larger than 32 bits it'll be truncated
-	 * @param b32 uint32/int32, if larger than 32 bits it'll be truncated
-	 */
-	static average(a32: number, b32: number): number {
-		//Either works
-		return (a32 | b32) - ((a32 ^ b32) >>> 1);
-		//return ((a32^b32)>>1) + (a32&b32)
-	}
-
-	/**
-	 * Convert 0-4 bytes from @param src starting at @param pos into a u32/i32 in little endian order (smallest byte first)
-	 * Zeros will be appended if src is short (ie 0xff will be considered 256)
-	 * Result may be negative (`>>>0` to fix)
-	 * @param src
-	 * @param pos
-	 * @returns
-	 */
-	static iFromBytesLE(src: Uint8Array, pos = 0): number {
-		return (
-			src[pos] |
-			(src[pos + 1] << 8) |
-			(src[pos + 2] << 16) |
-			(src[pos + 3] << 24)
-		);
-	}
-
-	/**
-	 * Convert 0-4 bytes from @param src starting at @param pos into a u32/i32 in big endian order (smallest byte last)
-	 * Zeros will be prepended if src is short (ie 0xff will be considered 256)
-	 * Result may be negative (`>>>0` to fix)
-	 * @param src
-	 * @param pos
-	 * @returns
-	 */
-	static iFromBytesBE(src: Uint8Array, pos = 0): number {
-		const rem = sizeBytes - (src.length - pos);
-		let ret =
-			(src[pos] << 24) |
-			(src[pos + 1] << 16) |
-			(src[pos + 2] << 8) |
-			src[pos + 3];
-		//If there's not enough space, downshift the result
-		// (sizeBytes+rem) turns the negative number into the amount of byte shifting to do
-		// <<3 turns the byte shift into bit shift (aka *8)
-		if (rem > 0) ret >>>= rem << 3;
-		return ret;
-	}
-
-	static toBytesLE(src: number): Uint8Array {
-		return Uint8Array.of(src, src >> 8, src >> 16, src >>> 24);
-	}
-
-	static toBytesBE(src: number): Uint8Array {
-		return Uint8Array.of(src >>> 24, src >> 16, src >> 8, src);
-	}
 }
-const zero = U32.fromArray(Uint32Array.of(0));
-const max = U32.fromArray(Uint32Array.of(0xffffffff));
+const zero = U32.mount(Uint32Array.of(0));
 
-export class U32Mut extends U32 {
-	//For some reason we have to redefine the getter here (it doesn't inherit from U32) - can't find an
-	// MDN doc that explains this behaviour
-	get value(): number {
-		return this.arr[this.pos];
-	}
-	set value(value: number) {
-		this.arr[this.pos] = value;
+export class U32Mut extends U32 implements IUintMut<U32Mut, U32> {
+	protected constructor(arr: Uint32Array, pos: number) {
+		super(arr, pos, 'U32Mut');
 	}
 
-	/**
-	 * @see value ⊕= @param u32
-	 * @param u32
-	 * @returns this (chainable)
-	 */
-	xorEq(u32: U32): U32Mut {
-		this.arr[this.pos] ^= this._valueOf(u32);
+	set(v: U32 | number) {
+		const v2 = v instanceof U32 ? v.value : v;
+		this._arr[this._pos] = v2;
 		return this;
 	}
 
-	/**
-	 * @see value ∨= @param u32
-	 * @param u32
-	 * @returns this (chainable)
-	 */
-	orEq(u32: U32): U32Mut {
-		this.arr[this.pos] |= this._valueOf(u32);
+	zero() {
+		this._arr[this._pos] = 0;
 		return this;
 	}
 
+	//#region Build
 	/**
-	 * @see value ∧= @param u32
-	 * @param u32
-	 * @returns this (chainable)
-	 */
-	andEq(u32: U32): U32Mut {
-		this.arr[this.pos] &= this._valueOf(u32);
-		return this;
-	}
-
-	/**
-	 * ¬= @see value
-	 * @returns this (chainable)
-	 */
-	notEq(): U32Mut {
-		this.arr[this.pos] = ~this.arr[this.pos];
-		return this;
-	}
-
-	/**
-	 * @see value ROL @param by
-	 * @param by integer 0-31
-	 * @returns this (chainable)
-	 */
-	lRotEq(by: number): U32Mut {
-		by &= 31;
-		this.arr[this.pos] =
-			(this.arr[this.pos] << by) | (this.arr[this.pos] >>> (sizeBits - by));
-		return this;
-	}
-
-	/**
-	 * @see value <<= @param by - zeros are brought in
-	 * @param by integer 0-31
-	 * @returns this (chainable)
-	 */
-	lShiftEq(by: number): U32Mut {
-		const arr = new Uint32Array(1);
-		arr[by >>> 5] = this.arr[this.pos] << by;
-		this.arr[this.pos] = arr[0];
-		return this;
-	}
-
-	/**
-	 * @see value ROR @param by
-	 * @param by integer 0-31
-	 * @returns this (chainable)
-	 */
-	rRotEq(by: number): U32Mut {
-		by &= 31;
-		this.arr[this.pos] =
-			(this.arr[this.pos] >>> by) | (this.arr[this.pos] << (sizeBits - by));
-		return this;
-	}
-
-	/**
-	 * @see value >>>= @param by - zeros are brought in
-	 * @param by integer 0-31
-	 * @returns this (chainable)
-	 */
-	rShiftEq(by: number): U32Mut {
-		const arr = new Uint32Array(1);
-		arr[by >>> 5] = this.arr[this.pos] >>> by;
-		this.arr[this.pos] = arr[0];
-		return this;
-	}
-
-	/**
-	 * @see value += @param u32
-	 * @param u32
-	 * @returns this (chainable)
-	 */
-	addEq(u32: U32): U32Mut {
-		this.arr[this.pos] += this._valueOf(u32);
-		return this;
-	}
-
-	/**
-	 * @see value -= @param u32
-	 * @param u32
-	 * @returns this (chainable)
-	 */
-	subEq(u32: U32): U32Mut {
-		this.arr[this.pos] -= this._valueOf(u32);
-		return this;
-	}
-
-	/**
-	 * @see value *= @param u32
-	 * @param u32
-	 * @returns this (chainable)
-	 */
-	mulEq(u32: U32): U32Mut {
-		this.arr[this.pos] = U32._mulEq(this.arr, this.pos, u32);
-		return this;
-	}
-
-	clone(): U32Mut {
-		return new U32Mut(this.arr.slice(this.pos, this.pos + 1));
-	}
-
-	/** @hidden */
-	get [Symbol.toStringTag](): string {
-		return DBG_RPT_U32Mut;
-	}
-
-	/** @hidden */
-	[consoleDebugSymbol](/*depth, options, inspect*/) {
-		return `${DBG_RPT_U32Mut}(${this.toString()})`;
-	}
-
-	/**
-	 * Build a U32Mut from an integer
-	 * @param uint32 Integer 0-0xFFFFFFFF (4294967295)
+	 * Build from an integer
+	 * @param uint32 Unsigned integer `[0 - 4294967295]`
 	 * @throws If uint32 is out of range or not an int
-	 * @returns
 	 */
 	static fromInt(uint32: number): U32Mut {
-		sNum('uint32', uint32).unsigned().atMost(maxU32).throwNot();
-		return new U32Mut(Uint32Array.of(uint32));
+		sInt('uint32', uint32).unsigned().atMost(4294967295).throwNot();
+		return new U32Mut(Uint32Array.of(uint32), 0);
 	}
 
 	/**
-	 * Created a "view" into an existing Uint32Array
-	 * **NOTE** the memory is shared, changing a value in `src` will mutate the state
-	 *      AND changes to the result will alter `src`
-	 * If you don't need the shared-memory aspect append a `.slice()` to the source (creates a memory copy)
-	 * @param src
-	 * @param pos Position to link (default 0), note this is an array-position not bytes
-	 * @returns
+	 * Mount an existing array, note this **shares** memory with the array,
+	 * changing a value in `arr` will mutate this state.
+	 *
+	 * @param pos Position to link from
 	 */
-	static fromArray(src: Uint32Array, pos = 0): U32Mut {
+	static mount(src: Uint32Array, pos = 0): U32Mut {
 		return new U32Mut(src, pos);
 	}
+	//#endregion
 
-	/**
-	 * Create a view into an `ArrayBuffer`.  Note this relies on platform endian (likely little endian)
-	 * **NOTE** Memory is shared (like @see fromArray)
-	 * **NOTE** Subject to the same JS limitation that `bytePos` must be a multiple of element-size (4)
-	 * @param src
-	 * @param bytePos
-	 * @returns
-	 */
-	static fromBuffer(src: ArrayBuffer, bytePos = 0): U32Mut {
-		return new U32Mut(new Uint32Array(src, bytePos, 1));
+	//#region ShiftEqOps
+	lShiftEq(by: number) {
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this._arr[this._pos] << by;
+		this._arr[this._pos] = arr[0];
+		return this;
 	}
+	lRotEq(by: number) {
+		by &= 31;
+		this._arr[this._pos] =
+			(this._arr[this._pos] << by) | (this._arr[this._pos] >>> (32 - by));
+		return this;
+	}
+	rShiftEq(by: number) {
+		const arr = new Uint32Array(1);
+		arr[by >>> 5] = this._arr[this._pos] >>> by;
+		this._arr[this._pos] = arr[0];
+		return this;
+	}
+	rRotEq(by: number) {
+		by &= 31;
+		this._arr[this._pos] =
+			(this._arr[this._pos] >>> by) | (this._arr[this._pos] << (32 - by));
+		return this;
+	}
+	//#endregion
+
+	//#region LogicEqOps
+	xorEq(o: U32 | number) {
+		this._arr[this._pos] ^= this._value(o);
+		return this;
+	}
+	orEq(o: U32 | number) {
+		this._arr[this._pos] |= this._value(o);
+		return this;
+	}
+	andEq(o: U32 | number) {
+		this._arr[this._pos] &= this._value(o);
+		return this;
+	}
+	notEq() {
+		this._arr[this._pos] = ~this._arr[this._pos];
+		return this;
+	}
+	//#endregion
+
+	//#region ArithmeticEqOps
+	addEq(o: U32 | number) {
+		this._arr[this._pos] += this._value(o);
+		return this;
+	}
+	subEq(o: U32 | number) {
+		this._arr[this._pos] -= this._value(o);
+		return this;
+	}
+	mulEq(o: U32 | number) {
+		this._arr[this._pos] = Math.imul(this._arr[this._pos], this._value(o));
+		return this;
+	}
+	//#endregion
 }
 
 export class U32MutArray {
@@ -658,7 +348,7 @@ export class U32MutArray {
 		this.bufPos = bufPos;
 		this.arr = new Array<U32Mut>(len);
 		for (let i = 0; i < len; i++)
-			this.arr[i] = U32Mut.fromArray(this.buf, this.bufPos + i);
+			this.arr[i] = U32Mut.mount(this.buf, this.bufPos + i);
 
 		//While a proxy is nice to have, it causes some pretty wicked slowdown in ANY access to this
 		// object (.. I mean, it's in the name).  Even if you're accessing a valid element it still

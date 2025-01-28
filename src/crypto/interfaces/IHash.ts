@@ -1,11 +1,8 @@
 /*! Copyright 2023 the gnablib contributors MPL-1.1 */
 
-export interface IHash {
-    /**
-     * Write data to the hash (can be called multiple times)
-     * @param data 
-     */
-    write(data:Uint8Array):void;
+import { IWriter } from "../../primitive/interfaces/IWriter.js";
+
+export interface IHash extends IWriter {
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
      * - You can call write(a)-sum-write(b)-sum to get hash(a) and hash(ab)
@@ -17,7 +14,7 @@ export interface IHash {
      */
     sumIn():Uint8Array;
     /**
-     * Set hash to initial state. Any past writes will be forgotten
+     * Set hash to initial state. Any past writes will be forgotten (used in crypto)
      */
     reset():void;
     /**

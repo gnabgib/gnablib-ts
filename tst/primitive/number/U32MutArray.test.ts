@@ -17,7 +17,7 @@ tsts('set',()=>{
     const arr=U32MutArray.fromLen(3);
     assert.equal(hex.fromBytes(arr.toBytesBE()),'000000000000000000000000')
     const b=U32MutArray.fromLen(1);
-    b.at(0).value=0xbeef;
+    b.at(0).set(0xbeef);
     assert.equal(hex.fromBytes(b.toBytesBE()),'0000BEEF')
     arr.set(b,1);
     assert.equal(hex.fromBytes(arr.toBytesBE()),'000000000000BEEF00000000')
@@ -25,13 +25,13 @@ tsts('set',()=>{
 
 tsts('xorEq',()=>{
     const a=U32MutArray.fromLen(3);
-    a.at(0).value=1;
-    a.at(1).value=2;
-    a.at(2).value=4;
+    a.at(0).set(1);
+    a.at(1).set(2);
+    a.at(2).set(4);
     assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
     const b=U32MutArray.fromLen(2);
-    b.at(0).value=2;
-    b.at(1).value=160;
+    b.at(0).set(2);
+    b.at(1).set(160);
     //b.barf();
     assert.equal(hex.fromBytes(b.toBytesBE()),'00000002000000A0')
     a.xorEq(b);
@@ -40,9 +40,9 @@ tsts('xorEq',()=>{
 
 tsts('zero',()=>{
     const a=U32MutArray.fromLen(3);
-    a.at(0).value=1;
-    a.at(1).value=2;
-    a.at(2).value=4;
+    a.at(0).set(1);
+    a.at(1).set(2);
+    a.at(2).set(4);
     assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
     a.zero();
     assert.equal(hex.fromBytes(a.toBytesBE()),'000000000000000000000000')
@@ -50,12 +50,12 @@ tsts('zero',()=>{
 
 tsts('clone',()=>{
     const a=U32MutArray.fromLen(3);
-    a.at(0).value=1;
-    a.at(1).value=2;
-    a.at(2).value=4;
+    a.at(0).set(1);
+    a.at(1).set(2);
+    a.at(2).set(4);
     assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
     const b=a.clone();
-    b.at(0).value=0xBE;
+    b.at(0).set(0xBE);
     assert.equal(hex.fromBytes(a.toBytesBE()),'000000010000000200000004')
     assert.equal(hex.fromBytes(b.toBytesBE()),'000000BE0000000200000004')
 });

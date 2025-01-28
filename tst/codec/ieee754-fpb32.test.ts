@@ -1,7 +1,8 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { fpb32, hex } from '../../src/codec';
-import { U32 } from '../../src/primitive/number';
+import { U32 } from '../../src/primitive/number/U32Static';
+import { ByteWriter } from '../../src/primitive/ByteWriter';
 
 const tsts = suite('IEEE754/Float32');
 
@@ -46,15 +47,18 @@ const encode32Pairs = [
 	//[NaN,0x7fffffff],
 ];
 
-for (const test of encode32Pairs) {
-	tsts('decode: ' + test[1].toString(16), () => {
-		const b = U32.toBytesBE(test[1]);
-		assert.is(fpb32.fromBytes(b), test[0]);
+const bytes=new Uint8Array(4);
+for (const [f,u] of encode32Pairs) {
+	tsts('decode: ' + u.toString(16), () => {
+		const bw=ByteWriter.mount(bytes);
+		U32.intoBytesBE(u,bw);
+		assert.is(fpb32.fromBytes(bytes), f);
 	});
-	tsts('encode: ' + test[0], () => {
-		const b = fpb32.toBytes(test[0]);
-		const expHex = hex.fromBytes(U32.toBytesBE(test[1]));
-		assert.is(hex.fromBytes(b), expHex);
+	tsts('encode: ' + f, () => {
+		const b = fpb32.toBytes(f);
+		const bw=ByteWriter.mount(bytes);
+		U32.intoBytesBE(u,bw);
+		assert.is(hex.fromBytes(b), hex.fromBytes(bytes));
 	});
 }
 

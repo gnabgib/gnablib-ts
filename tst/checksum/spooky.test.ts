@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../src/codec';
-import { Spooky } from '../../src/checksum';
+import { Spooky } from '../../src/checksum/Spooky';
 import { U64 } from '../../src/primitive/number';
 
 const tsts = suite('Spooky');
@@ -40,16 +40,15 @@ for (const [data,seed,expect] of test) {
 	});
 }
 
-
 tsts(`reset`,()=>{
     const h=new Spooky(U64.fromInt(1));
     const sumEmpty='0D6ADB776D017E08E0AC00827873FA3D';
     const sumFox='5D8F2D77F7DB556F262BB3771A0E70AF';
-    assert.is(hex.fromBytes(h.sum()),sumEmpty);
+    assert.is(hex.fromBytes(h.sum()),sumEmpty,'original empty');
     h.write(fox);
-    assert.is(hex.fromBytes(h.sum()),sumFox);
+    assert.is(hex.fromBytes(h.sum()),sumFox,'sum fox');
     h.reset();
-    assert.is(hex.fromBytes(h.sum()),sumEmpty);
+    assert.is(hex.fromBytes(h.sum()),sumEmpty,'reset empty');
 });
 
 tsts(`newEmpty`,()=>{
@@ -84,12 +83,12 @@ tsts(`clone`,()=>{
     const sumFox='5D8F2D77F7DB556F262BB3771A0E70AF';
 
     h.write(fox);
-    assert.is(hex.fromBytes(h.sum()),sumFox);
+    assert.is(hex.fromBytes(h.sum()),sumFox,'h fox');
     const h2=h.clone();
-    assert.is(hex.fromBytes(h2.sum()),sumFox);
+    assert.is(hex.fromBytes(h2.sum()),sumFox,'h2 fox');
     h.reset();
-    assert.is(hex.fromBytes(h.sum()),sumEmpty);
-    assert.is(hex.fromBytes(h2.sum()),sumFox);
+    assert.is(hex.fromBytes(h.sum()),sumEmpty,'h reset empty');
+    assert.is(hex.fromBytes(h2.sum()),sumFox,'h2 fox still');
 });
 
 tsts(`double-long`,()=>{

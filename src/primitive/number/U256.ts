@@ -147,7 +147,7 @@ export class U256 extends AInt implements IUint<U256> {
 	//#endregion
 
 	/** U256(0) */
-	static get zero(): U256 {
+	static get zero() {
 		return zero;
 	}
 }

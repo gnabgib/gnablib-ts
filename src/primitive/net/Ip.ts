@@ -1,8 +1,9 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import { U32 } from '../number/U32.js';
+import { U32 } from '../number/U32Static.js';
 import { sLen, sNum } from '../../safe/safe.js';
 import { parseDec } from '../number/xtUint.js';
+import { ByteWriter } from '../ByteWriter.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
 const DBG_RPT = 'IpV4';
@@ -10,8 +11,7 @@ const DBG_RPT = 'IpV4';
 export class IpV4 {
 	readonly bytes: Uint8Array;
 
-	constructor(bytes: Uint8Array) {
-		sLen('bytes', bytes).exactly(4).throwNot();
+	private constructor(bytes: Uint8Array) {
 		this.bytes = bytes;
 	}
 
@@ -87,6 +87,15 @@ export class IpV4 {
 	}
 
 	static fromInt(value: number): IpV4 {
-		return new IpV4(U32.toBytesBE(value));
+		const b = new Uint8Array(4);
+		const bw=ByteWriter.mount(b);
+		U32.intoBytesBE(value,bw);
+		return new IpV4(b);
+	}
+
+	/** Build from a 4 byte array */
+	static fromBytes(bytes:Uint8Array):IpV4 {
+		sLen('bytes',bytes).exactly(4).throwNot();
+		return new IpV4(bytes);
 	}
 }

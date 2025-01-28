@@ -1,15 +1,10 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { U16 } from '../../../src/primitive/number';
+import { U16 } from '../../../src/primitive/number/U16Static';
+import { ByteWriter } from '../../../src/primitive/ByteWriter';
 
-const tsts = suite('U16');
-
-tsts('max min zero',()=>{
-	assert.is(U16.max,0xffff);
-	assert.is(U16.min,0);
-	assert.is(U16.zero,0);
-});
+const tsts = suite('U16Static');
 
 const rot16 = [
 	[0, 0, 0],
@@ -73,13 +68,13 @@ const rot16 = [
 	[0x8000, 15, 0x4000],
 ];
 for (const [start,by,expectLeft] of rot16) {
-	const left = U16.rol(start, by);
+	const left = U16.lRot(start, by);
 	tsts(`rol16(${hex.fromI32(start)}, ${by})`, () => {
 		assert.is(left, expectLeft);
 	});
 
     tsts(`rol16(${hex.fromI32(left)}, ${by})`, () => {
-		assert.is(U16.ror(left, by), start);
+		assert.is(U16.rRot(left, by), start);
 	});
 }
 
@@ -95,7 +90,7 @@ const rol16OversizedTests=[
 ];
 for (const [start,by,expect] of rol16OversizedTests) {
     tsts(`rol16 (${hex.fromI32(start)},${by})`,()=>{
-        const actual=U16.rol(start,by)>>>0;
+        const actual=U16.lRot(start,by)>>>0;
         assert.is(actual,expect);
     })
 }
@@ -111,52 +106,63 @@ const ror16OversizedTests=[
 ];
 for (const [start,by,expect] of ror16OversizedTests) {
     tsts(`ror16 (${hex.fromI32(start)},${by})`,()=>{
-        const actual=U16.ror(start,by)>>>0;
+        const actual=U16.rRot(start,by)>>>0;
         assert.is(actual,expect);
     })
 }
 
-const bytesLETests:[Uint8Array,number,number][]=[
-	[new Uint8Array(0),0,0],
-	[Uint8Array.of(1),0,1],
-	[Uint8Array.of(2,1),0,0x102],
-	[Uint8Array.of(2,1),1,1],
-	[Uint8Array.of(3,2,1),0,0x203],//Note source can be oversized (it's funny)
-	[Uint8Array.of(3,2,1),1,0x102],
-	[Uint8Array.of(3,2,1),2,1],
-	[Uint8Array.of(3,2,1),3,0],//Note pos can be out of bounds
+// const bytesBETests:[Uint8Array,number,number][]=[
+// 	[new Uint8Array(0),0,0],
+// 	[Uint8Array.of(1),0,1],
+// 	[Uint8Array.of(2,1),0,0x201],
+// 	[Uint8Array.of(2,1),1,1],
+// 	[Uint8Array.of(3,2,1),0,0x302],//Note source can be oversized (it's funny)
+// 	[Uint8Array.of(3,2,1),1,0x201],
+// 	[Uint8Array.of(3,2,1),2,1],
+// 	[Uint8Array.of(3,2,1),3,0],//Note pos can be out of bounds
+// ];
+// for (const [src,pos,expect] of bytesBETests) {
+//     tsts(`fromBytesBE(0x${hex.fromBytes(src)}, ${pos}):`,()=>{
+// 		const actual=U16.fromBytesBE(src,pos);
+//         assert.is(actual,expect);
+//     })
+// }
+
+const bytesLE_tests:[number,number,string][]=[
+	[2,0x201,'0102'],
+	[4,0x201,'01020000'],
+	[4,0x102,'02010000'],
 ];
-for (const [src,pos,expect] of bytesLETests) {
-    tsts(`iFromBytesLE(${hex.fromBytes(src)}, ${pos}):`,()=>{
-		const actual=U16.iFromBytesLE(src,pos);
-        assert.is(actual,expect);
-    })
+for(const [size,u16,uHex] of bytesLE_tests) {
+	tsts(`[${size}].intoBytesLE(${u16})`,()=>{
+		const bytes=new Uint8Array(size);
+		const bw=ByteWriter.mount(bytes);
+		U16.intoBytesLE(u16,bw);
+		assert.is(hex.fromBytes(bytes),uHex);
+	});
+	tsts(`fromBytesLE(${uHex})`,()=>{
+		const bytes=hex.toBytes(uHex);
+		assert.is(U16.fromBytesLE(bytes),u16);
+	})
 }
 
-const bytesBETests:[Uint8Array,number,number][]=[
-	[new Uint8Array(0),0,0],
-	[Uint8Array.of(1),0,1],
-	[Uint8Array.of(2,1),0,0x201],
-	[Uint8Array.of(2,1),1,1],
-	[Uint8Array.of(3,2,1),0,0x302],//Note source can be oversized (it's funny)
-	[Uint8Array.of(3,2,1),1,0x201],
-	[Uint8Array.of(3,2,1),2,1],
-	[Uint8Array.of(3,2,1),3,0],//Note pos can be out of bounds
+const bytesBE_tests:[number,number,string][]=[
+	[2,0x201,'0201'],
+	[4,0x201,'02010000'],
+	[4,0x102,'01020000'],
 ];
-for (const [src,pos,expect] of bytesBETests) {
-    tsts(`iFromBytesBE(0x${hex.fromBytes(src)}, ${pos}):`,()=>{
-		const actual=U16.iFromBytesBE(src,pos);
-        assert.is(actual,expect);
-    })
+for(const [size,u16,expect] of bytesBE_tests) {
+	tsts(`[${size}].intoBytesBE(${u16})`,()=>{
+		const bytes=new Uint8Array(size);
+		const bw=ByteWriter.mount(bytes);
+		U16.intoBytesBE(u16,bw);
+		assert.is(hex.fromBytes(bytes),expect);
+	});
+	tsts(`fromBytesBE(${expect})`,()=>{
+		const bytes=hex.toBytes(expect);
+		assert.is(U16.fromBytesBE(bytes),u16);
+	})
 }
-
-tsts('toBytesLE',()=>{
-	assert.equal(U16.toBytesLE(0x0201),Uint8Array.of(0x01,0x02));
-});
-
-tsts('toBytesBE',()=>{
-	assert.equal(U16.toBytesBE(0x0201),Uint8Array.of(0x02,0x01));
-});
 
 const ltTest:[number,number][]=[
 	[0x0102,0x0103],

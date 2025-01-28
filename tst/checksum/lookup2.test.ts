@@ -53,4 +53,9 @@ tsts(`newEmpty`,()=>{
     assert.is((hash2 as Lookup2).sum32(),1948748577,'second hash is 0, /w same seed');
 })
 
+tsts(`blockSize`,()=>{
+    const hash=new Lookup2(1);
+    assert.is(hash.blockSize,12);
+});
+
 tsts.run();

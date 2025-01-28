@@ -24,12 +24,12 @@ const serSet:[number,string][] = [
     [58,'E8'],
     [59,'EC']
 ];
+const bytes=new Uint8Array(Math.ceil(Sexagesimal.serialBits/8));
 for (const [mi,ser] of serSet) {
     tsts(`ser(${mi})`,()=>{
         const m = Sexagesimal.new(mi);
         assert.equal(m.valueOf(),mi);
-    
-        const bytes=new Uint8Array(Math.ceil(Sexagesimal.serialBits/8));
+        
         const bw=BitWriter.mount(bytes);
         m.serialize(bw);
         assert.is(hex.fromBytes(bytes),ser);

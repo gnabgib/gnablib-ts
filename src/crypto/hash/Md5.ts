@@ -1,7 +1,7 @@
 /*! Copyright 2022-2024 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import type { IHash } from '../interfaces/IHash.js';
 
 //[The MD5 Message-Digest Algorithm](https://datatracker.ietf.org/doc/html/rfc1321) (1992)
@@ -66,7 +66,7 @@ export class Md5 implements IHash {
 		const round0col3 = 22;
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
 					this.#state[3]) +
 					this.#state[0] +
@@ -76,7 +76,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
 					this.#state[2]) +
 					this.#state[3] +
@@ -86,7 +86,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
 					this.#state[1]) +
 					this.#state[2] +
@@ -96,7 +96,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
 					this.#state[0]) +
 					this.#state[1] +
@@ -107,7 +107,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
 					this.#state[3]) +
 					this.#state[0] +
@@ -117,7 +117,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
 					this.#state[2]) +
 					this.#state[3] +
@@ -127,7 +127,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
 					this.#state[1]) +
 					this.#state[2] +
@@ -137,7 +137,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
 					this.#state[0]) +
 					this.#state[1] +
@@ -148,7 +148,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
 					this.#state[3]) +
 					this.#state[0] +
@@ -158,7 +158,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
 					this.#state[2]) +
 					this.#state[3] +
@@ -168,7 +168,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
 					this.#state[1]) +
 					this.#state[2] +
@@ -178,7 +178,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
 					this.#state[0]) +
 					this.#state[1] +
@@ -189,7 +189,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[1]) ^
 					this.#state[3]) +
 					this.#state[0] +
@@ -199,7 +199,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[0]) ^
 					this.#state[2]) +
 					this.#state[3] +
@@ -209,7 +209,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[3]) ^
 					this.#state[1]) +
 					this.#state[2] +
@@ -219,7 +219,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[2]) ^
 					this.#state[0]) +
 					this.#state[1] +
@@ -237,7 +237,7 @@ export class Md5 implements IHash {
 		const round1col3 = 20;
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
 					this.#state[2]) +
 					this.#state[0] +
@@ -247,7 +247,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
 					this.#state[1]) +
 					this.#state[3] +
@@ -257,7 +257,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
 					this.#state[0]) +
 					this.#state[2] +
@@ -267,7 +267,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
 					this.#state[3]) +
 					this.#state[1] +
@@ -278,7 +278,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
 					this.#state[2]) +
 					this.#state[0] +
@@ -288,7 +288,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
 					this.#state[1]) +
 					this.#state[3] +
@@ -298,7 +298,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
 					this.#state[0]) +
 					this.#state[2] +
@@ -308,7 +308,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
 					this.#state[3]) +
 					this.#state[1] +
@@ -319,7 +319,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
 					this.#state[2]) +
 					this.#state[0] +
@@ -329,7 +329,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
 					this.#state[1]) +
 					this.#state[3] +
@@ -339,7 +339,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
 					this.#state[0]) +
 					this.#state[2] +
@@ -349,7 +349,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
 					this.#state[3]) +
 					this.#state[1] +
@@ -360,7 +360,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[1] ^ this.#state[2]) & this.#state[3]) ^
 					this.#state[2]) +
 					this.#state[0] +
@@ -370,7 +370,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[0] ^ this.#state[1]) & this.#state[2]) ^
 					this.#state[1]) +
 					this.#state[3] +
@@ -380,7 +380,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[3] ^ this.#state[0]) & this.#state[1]) ^
 					this.#state[0]) +
 					this.#state[2] +
@@ -390,7 +390,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(((this.#state[2] ^ this.#state[3]) & this.#state[0]) ^
 					this.#state[3]) +
 					this.#state[1] +
@@ -408,7 +408,7 @@ export class Md5 implements IHash {
 		const round2col3 = 23;
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
 					this.#block32[5] +
@@ -417,7 +417,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
 					this.#block32[8] +
@@ -426,7 +426,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
 					this.#block32[11] +
@@ -435,7 +435,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
 					this.#block32[14] +
@@ -445,7 +445,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
 					this.#block32[1] +
@@ -454,7 +454,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
 					this.#block32[4] +
@@ -463,7 +463,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
 					this.#block32[7] +
@@ -472,7 +472,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
 					this.#block32[10] +
@@ -482,7 +482,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
 					this.#block32[13] +
@@ -491,7 +491,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
 					this.#block32[0] +
@@ -500,7 +500,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
 					this.#block32[3] +
@@ -509,7 +509,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
 					this.#block32[6] +
@@ -519,7 +519,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 					this.#state[0] +
 					this.#block32[9] +
@@ -528,7 +528,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 					this.#state[3] +
 					this.#block32[12] +
@@ -537,7 +537,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 					this.#state[2] +
 					this.#block32[15] +
@@ -546,7 +546,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 					this.#state[1] +
 					this.#block32[2] +
@@ -563,7 +563,7 @@ export class Md5 implements IHash {
 		const round3col3 = 21;
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
 					this.#block32[0] +
@@ -572,7 +572,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
 					this.#block32[7] +
@@ -581,7 +581,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
 					this.#block32[14] +
@@ -590,7 +590,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
 					this.#block32[5] +
@@ -600,7 +600,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
 					this.#block32[12] +
@@ -609,7 +609,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
 					this.#block32[3] +
@@ -618,7 +618,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
 					this.#block32[10] +
@@ -627,7 +627,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
 					this.#block32[1] +
@@ -637,7 +637,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
 					this.#block32[8] +
@@ -646,7 +646,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
 					this.#block32[15] +
@@ -655,7 +655,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
 					this.#block32[6] +
@@ -664,7 +664,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
 					this.#block32[13] +
@@ -674,7 +674,7 @@ export class Md5 implements IHash {
 
 		this.#state[0] =
 			this.#state[1] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[2] ^ (this.#state[1] | ~this.#state[3])) +
 					this.#state[0] +
 					this.#block32[4] +
@@ -683,7 +683,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[3] =
 			this.#state[0] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[1] ^ (this.#state[0] | ~this.#state[2])) +
 					this.#state[3] +
 					this.#block32[11] +
@@ -692,7 +692,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[2] =
 			this.#state[3] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[0] ^ (this.#state[3] | ~this.#state[1])) +
 					this.#state[2] +
 					this.#block32[2] +
@@ -701,7 +701,7 @@ export class Md5 implements IHash {
 			);
 		this.#state[1] =
 			this.#state[2] +
-			U32.rol(
+			U32.lRot(
 				(this.#state[3] ^ (this.#state[2] | ~this.#state[0])) +
 					this.#state[1] +
 					this.#block32[9] +

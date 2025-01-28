@@ -1,7 +1,7 @@
 /*! Copyright 2022-2024 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import type { IHash } from '../interfaces/IHash.js';
 
 //[MD4 to Historic Status](https://datatracker.ietf.org/doc/html/rfc6150) (2011)
@@ -65,112 +65,112 @@ export class Md4 implements IHash {
 		const round0col1 = 7;
 		const round0col2 = 11;
 		const round0col3 = 19;
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[3] ^
 					(this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				this.#block32[0],
 			round0col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[2] ^
 					(this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				this.#block32[1],
 			round0col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[1] ^
 					(this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				this.#block32[2],
 			round0col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[0] ^
 					(this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
 				this.#block32[3],
 			round0col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[3] ^
 					(this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				this.#block32[4],
 			round0col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[2] ^
 					(this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				this.#block32[5],
 			round0col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[1] ^
 					(this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				this.#block32[6],
 			round0col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[0] ^
 					(this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
 				this.#block32[7],
 			round0col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[3] ^
 					(this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				this.#block32[8],
 			round0col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[2] ^
 					(this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				this.#block32[9],
 			round0col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[1] ^
 					(this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				this.#block32[10],
 			round0col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[0] ^
 					(this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
 				this.#block32[11],
 			round0col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[3] ^
 					(this.#state[1] & (this.#state[2] ^ this.#state[3]))) +
 				this.#block32[12],
 			round0col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[2] ^
 					(this.#state[0] & (this.#state[1] ^ this.#state[2]))) +
 				this.#block32[13],
 			round0col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[1] ^
 					(this.#state[3] & (this.#state[0] ^ this.#state[1]))) +
 				this.#block32[14],
 			round0col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[0] ^
 					(this.#state[2] & (this.#state[3] ^ this.#state[0]))) +
@@ -186,7 +186,7 @@ export class Md4 implements IHash {
 		const round1col2 = 9;
 		const round1col3 = 13;
 		const round2Add = 0x5a827999; //sqrt(2)
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
 					(this.#state[1] & this.#state[2])) +
@@ -194,7 +194,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
 					(this.#state[0] & this.#state[1])) +
@@ -202,7 +202,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
 					(this.#state[0] & this.#state[1])) +
@@ -210,7 +210,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
 					(this.#state[0] & this.#state[2])) +
@@ -218,7 +218,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
 					(this.#state[1] & this.#state[2])) +
@@ -226,7 +226,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
 					(this.#state[0] & this.#state[1])) +
@@ -234,7 +234,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
 					(this.#state[0] & this.#state[1])) +
@@ -242,7 +242,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
 					(this.#state[0] & this.#state[2])) +
@@ -250,7 +250,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
 					(this.#state[1] & this.#state[2])) +
@@ -258,7 +258,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
 					(this.#state[0] & this.#state[1])) +
@@ -266,7 +266,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
 					(this.#state[0] & this.#state[1])) +
@@ -274,7 +274,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
 					(this.#state[0] & this.#state[2])) +
@@ -282,7 +282,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(((this.#state[1] | this.#state[2]) & this.#state[3]) |
 					(this.#state[1] & this.#state[2])) +
@@ -290,7 +290,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(((this.#state[0] | this.#state[1]) & this.#state[2]) |
 					(this.#state[0] & this.#state[1])) +
@@ -298,7 +298,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(((this.#state[0] | this.#state[1]) & this.#state[3]) |
 					(this.#state[0] & this.#state[1])) +
@@ -306,7 +306,7 @@ export class Md4 implements IHash {
 				round2Add,
 			round1col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(((this.#state[0] | this.#state[2]) & this.#state[3]) |
 					(this.#state[0] & this.#state[2])) +
@@ -323,112 +323,112 @@ export class Md4 implements IHash {
 		const round2col2 = 11;
 		const round2col3 = 15;
 		const round3Add = 0x6ed9eba1; //sqrt(3)
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				this.#block32[0] +
 				round3Add,
 			round2col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				this.#block32[8] +
 				round3Add,
 			round2col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				this.#block32[4] +
 				round3Add,
 			round2col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				this.#block32[12] +
 				round3Add,
 			round2col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				this.#block32[2] +
 				round3Add,
 			round2col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				this.#block32[10] +
 				round3Add,
 			round2col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				this.#block32[6] +
 				round3Add,
 			round2col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				this.#block32[14] +
 				round3Add,
 			round2col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				this.#block32[1] +
 				round3Add,
 			round2col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				this.#block32[9] +
 				round3Add,
 			round2col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				this.#block32[5] +
 				round3Add,
 			round2col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				this.#block32[13] +
 				round3Add,
 			round2col3
 		);
-		this.#state[0] = U32.rol(
+		this.#state[0] = U32.lRot(
 			this.#state[0] +
 				(this.#state[1] ^ this.#state[2] ^ this.#state[3]) +
 				this.#block32[3] +
 				round3Add,
 			round2col0
 		);
-		this.#state[3] = U32.rol(
+		this.#state[3] = U32.lRot(
 			this.#state[3] +
 				(this.#state[0] ^ this.#state[1] ^ this.#state[2]) +
 				this.#block32[11] +
 				round3Add,
 			round2col1
 		);
-		this.#state[2] = U32.rol(
+		this.#state[2] = U32.lRot(
 			this.#state[2] +
 				(this.#state[3] ^ this.#state[0] ^ this.#state[1]) +
 				this.#block32[7] +
 				round3Add,
 			round2col2
 		);
-		this.#state[1] = U32.rol(
+		this.#state[1] = U32.lRot(
 			this.#state[1] +
 				(this.#state[2] ^ this.#state[3] ^ this.#state[0]) +
 				this.#block32[15] +

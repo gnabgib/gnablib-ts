@@ -1,11 +1,10 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { IBlockCrypt } from '../../../src/crypto';
+import { IBlockCrypt } from '../../../src/crypto/interfaces/IBlockCrypt';
 import { Aes, Blowfish } from '../../../src/crypto/sym';
 import {
 	Ctr,
-	ICountMode,
 	IncrBytes,
 	Concat32,
 } from '../../../src/crypto/block/Ctr';
@@ -20,7 +19,7 @@ const ctr_blowfishKeyZero_zeroIv = new Ctr(
 	new IncrBytes(new Uint8Array(8))
 );
 
-const tests: [IBlockCrypt, ICountMode, string, string][] = [
+const tests: [IBlockCrypt, IncrBytes|Concat32, string, string][] = [
 	[
 		blowfish_KeyZero,
 		new IncrBytes(hex.toBytes('0000000000000000')),

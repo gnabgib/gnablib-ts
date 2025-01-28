@@ -1,20 +1,9 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-const sizeBytes = 2;
-const sizeBits = 16;
-const i16Mask = 0xffff;
-const rotMask = 0xf;
+import { IWriter } from '../interfaces/IWriter.js';
 
 export class U16 {
-	static get max(): number {
-		return i16Mask;
-	}
-	static get min(): number {
-		return 0;
-	}
-	static get zero(): number {
-		return 0;
-	}
+	static readonly size8 = 2;
 
 	/**
 	 * Treat i16 as a signed/unsigned 16bit number, and rotate left
@@ -22,10 +11,9 @@ export class U16 {
 	 * @param by amount to rotate 0-15 (%16 if oversized)
 	 * @returns Left rotated number
 	 */
-	static rol(i16: number, by: number): number {
-		i16 &= i16Mask;
-		by &= rotMask;
-		return ((i16 << by) | (i16 >>> (sizeBits - by))) & i16Mask;
+	static lRot(i16: number, by: number): number {
+		by &= 0xf;
+		return ((i16 << by) | ((i16 & 0xffff) >>> (16 - by))) & 0xffff;
 	}
 
 	/**
@@ -34,14 +22,39 @@ export class U16 {
 	 * @param by amount to rotate 0-15 (%16 if oversized)
 	 * @returns Right rotated number
 	 */
-	static ror(i16: number, by: number): number {
-		i16 &= i16Mask;
-		by &= rotMask;
-		return ((i16 >>> by) | (i16 << (sizeBits - by))) & i16Mask;
+	static rRot(i16: number, by: number): number {
+		by &= 0xf;
+		return (((i16 & 0xffff) >>> by) | (i16 << (16 - by))) & 0xffff;
 	}
 
-	//mul is handled by JS natively
+	/** Read 2 bytes from the array as a u16 little endian number */
+	static fromBytesLE(src: Uint8Array, pos = 0): number {
+		return src[pos] | (src[pos + 1] << 8);
+	}
 
+	/** Read 2 bytes from the array as a u16 big endian number */
+	static fromBytesBE(src: Uint8Array, pos = 0): number {
+		//When src is short, you need late-shifting (see U32Static.fromBytesBE comments)
+		return (src[pos] << 8) | src[pos + 1];
+	}
+
+	/**
+	 * Project `src` as a little-endian stream of bytes
+	 * @throws If there's not enough space ({@link size8} bytes) in target
+	 */
+	static intoBytesLE(src: number, target: IWriter) {
+		target.write(Uint8Array.of(src, src >> 8));
+	}
+
+	/**
+	 * Project `src` as a big-endian stream of bytes
+	 * @throws If there's not enough space ({@link size8} bytes) in target
+	 */
+	static intoBytesBE(src: number, target: IWriter) {
+		target.write(Uint8Array.of(src >> 8, src));
+	}
+
+	//#region Constant time
 	/**
 	 * Compare two numbers for equality in constant time
 	 * @param a16 uint16/int16, if larger than 16 bits it'll be truncated
@@ -49,9 +62,7 @@ export class U16 {
 	 * @returns
 	 */
 	static ctEq(a16: number, b16: number): boolean {
-		a16 &= i16Mask;
-		b16 &= i16Mask;
-		return (a16 ^ b16) === 0;
+		return ((a16 ^ b16) & 0xffff) === 0;
 	}
 
 	/**
@@ -62,7 +73,7 @@ export class U16 {
 	 * @returns
 	 */
 	static ctLte(a16: number, b16: number): boolean {
-		const l = ((a16 & i16Mask) - (b16 & i16Mask) - 1) >>> 31;
+		const l = ((a16 & 0xffff) - (b16 & 0xffff) - 1) >>> 31;
 		return l === 1;
 	}
 
@@ -74,7 +85,7 @@ export class U16 {
 	 * @returns
 	 */
 	static ctGte(a16: number, b16: number): boolean {
-		const l = ((b16 & i16Mask) - (a16 & i16Mask) - 1) >>> 31;
+		const l = ((b16 & 0xffff) - (a16 & 0xffff) - 1) >>> 31;
 		return l === 1;
 	}
 
@@ -86,7 +97,7 @@ export class U16 {
 	 * @returns
 	 */
 	static ctGt(a16: number, b16: number): boolean {
-		const l = ((a16 & i16Mask) - (b16 & i16Mask) - 1) >>> 31;
+		const l = ((a16 & 0xffff) - (b16 & 0xffff) - 1) >>> 31;
 		return l === 0;
 	}
 
@@ -98,7 +109,7 @@ export class U16 {
 	 * @returns
 	 */
 	static ctLt(a16: number, b16: number): boolean {
-		const l = ((b16 & i16Mask) - (a16 & i16Mask) - 1) >>> 31;
+		const l = ((b16 & 0xffff) - (a16 & 0xffff) - 1) >>> 31;
 		return l === 0;
 	}
 
@@ -112,43 +123,8 @@ export class U16 {
 	 */
 	static ctSelect(a16: number, b16: number, first: boolean): number {
 		// @ts-expect-error: We're casting bool->number on purpose
-		const fNum = (first | 0) - 1; //-1 or 0
-		return ((~fNum & a16) | (fNum & b16)) & i16Mask;
+		const fNum = ((first | 0) - 1) & 0xffff; //-1 or 0
+		return (~fNum & a16) | (fNum & b16);
 	}
-
-	/**
-	 * Convert 0-2 bytes from @param src starting at @param pos into a u16/i16 in little endian order (smallest byte first)
-	 * Zeros will be appended if src is short (ie 0xff will be considered 256)
-	 * @param src
-	 * @param pos
-	 * @returns
-	 */
-	static iFromBytesLE(src: Uint8Array, pos = 0): number {
-		return src[pos] | (src[pos + 1] << 8);
-	}
-
-	/**
-	 * Convert 0-2 bytes from @param src starting at @param pos into a u16/i16 in big endian order (smallest byte last)
-	 * Zeros will be prepended if src is short (ie 0xff will be considered 256)
-	 * @param src
-	 * @param pos
-	 * @returns
-	 */
-	static iFromBytesBE(src: Uint8Array, pos = 0): number {
-		const rem = src.length - pos - sizeBytes;
-		let ret = (src[pos] << 8) | src[pos + 1];
-		//If there's not enough space, downshift the result
-		// (sizeBytes+rem) turns the negative number into the amount of byte shifting to do
-		// <<3 turns the byte shift into bit shift (aka *8)
-		if (rem < 0) ret >>>= (sizeBytes + rem) << 3;
-		return ret;
-	}
-
-	static toBytesLE(src: number): Uint8Array {
-		return Uint8Array.of(src, src >> 8);
-	}
-
-	static toBytesBE(src: number): Uint8Array {
-		return Uint8Array.of(src >> 8, src);
-	}
+	//#endregion
 }

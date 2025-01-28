@@ -1,10 +1,10 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { utf8 } from '../../codec/Utf8.js';
 import type { IHash } from '../interfaces/IHash.js';
 import { Sha1, Sha256, Sha512 } from '../hash/index.js';
 import { Hmac } from '../mac/index.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { sNum } from '../../safe/safe.js';
 
 //(PKCS #5: Password-Based Cryptography Specification Version 2.1)[https://www.rfc-editor.org/rfc/rfc8018] (2017)
@@ -27,8 +27,8 @@ export function pbkdf2(
 	keySize: number
 ): Uint8Array {
 	//  PBKDF2 (<PRF>, P, S, c, dkLen)
-	sNum('keySize',keySize).natural().atMost(0xffffffff).throwNot();
-	sNum('count',count).natural().throwNot();//Lock the original value as the minimum complexity
+	sNum('keySize', keySize).natural().atMost(0xffffffff).throwNot();
+	sNum('count', count).natural().throwNot(); //Lock the original value as the minimum complexity
 	const pBytes =
 		password instanceof Uint8Array ? password : utf8.toBytes(password);
 	const sBytes = salt instanceof Uint8Array ? salt : utf8.toBytes(salt);
@@ -39,7 +39,7 @@ export function pbkdf2(
 	let ptr = 0;
 	for (let i = 1; i <= n; i++) {
 		hmac.write(sBytes);
-		hmac.write(U32.toBytesBE(i));
+		U32.intoBytesBE(i,hmac);
 		const u = hmac.sumIn();
 		hmac.reset();
 		let ui = u;

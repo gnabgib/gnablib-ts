@@ -2,7 +2,7 @@
 
 import { asLE } from '../../endian/platform.js';
 import { ContentError } from '../../error/ContentError.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
 import { sLen } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
@@ -38,25 +38,25 @@ class SalsaBlock {
 			 * o v v 3
 			 */
 			// this.quartRound(0, 4, 8, 12);
-            this.u32[4] ^=  U32.rol(this.u32[0] + this.u32[12], 7);
-            this.u32[8] ^=  U32.rol(this.u32[4] + this.u32[0], 9);
-            this.u32[12] ^=  U32.rol(this.u32[8] + this.u32[4], 13);
-            this.u32[0] ^=  U32.rol(this.u32[12] + this.u32[8], 18);
+            this.u32[4] ^=  U32.lRot(this.u32[0] + this.u32[12], 7);
+            this.u32[8] ^=  U32.lRot(this.u32[4] + this.u32[0], 9);
+            this.u32[12] ^=  U32.lRot(this.u32[8] + this.u32[4], 13);
+            this.u32[0] ^=  U32.lRot(this.u32[12] + this.u32[8], 18);
 			// this.quartRound(5, 9, 13, 1);
-            this.u32[9] ^=  U32.rol(this.u32[5] + this.u32[1], 7);
-            this.u32[13] ^=  U32.rol(this.u32[9] + this.u32[5], 9);
-            this.u32[1] ^=  U32.rol(this.u32[13] + this.u32[9], 13);
-            this.u32[5] ^=  U32.rol(this.u32[1] + this.u32[13], 18);
+            this.u32[9] ^=  U32.lRot(this.u32[5] + this.u32[1], 7);
+            this.u32[13] ^=  U32.lRot(this.u32[9] + this.u32[5], 9);
+            this.u32[1] ^=  U32.lRot(this.u32[13] + this.u32[9], 13);
+            this.u32[5] ^=  U32.lRot(this.u32[1] + this.u32[13], 18);
             // this.quartRound(10, 14, 2, 6);
-            this.u32[14] ^=  U32.rol(this.u32[10] + this.u32[6], 7);
-            this.u32[2] ^=  U32.rol(this.u32[14] + this.u32[10], 9);
-            this.u32[6] ^=  U32.rol(this.u32[2] + this.u32[14], 13);
-            this.u32[10] ^=  U32.rol(this.u32[6] + this.u32[2], 18);
+            this.u32[14] ^=  U32.lRot(this.u32[10] + this.u32[6], 7);
+            this.u32[2] ^=  U32.lRot(this.u32[14] + this.u32[10], 9);
+            this.u32[6] ^=  U32.lRot(this.u32[2] + this.u32[14], 13);
+            this.u32[10] ^=  U32.lRot(this.u32[6] + this.u32[2], 18);
 			// this.quartRound(15, 3, 7, 11);
-            this.u32[3] ^=  U32.rol(this.u32[15] + this.u32[11], 7);
-            this.u32[7] ^=  U32.rol(this.u32[3] + this.u32[15], 9);
-            this.u32[11] ^=  U32.rol(this.u32[7] + this.u32[3], 13);
-            this.u32[15] ^=  U32.rol(this.u32[11] + this.u32[7], 18);
+            this.u32[3] ^=  U32.lRot(this.u32[15] + this.u32[11], 7);
+            this.u32[7] ^=  U32.lRot(this.u32[3] + this.u32[15], 9);
+            this.u32[11] ^=  U32.lRot(this.u32[7] + this.u32[3], 13);
+            this.u32[15] ^=  U32.lRot(this.u32[11] + this.u32[7], 18);
 			
             //Row round
 			/*[0 > > o
@@ -65,25 +65,25 @@ class SalsaBlock {
 			 * > > o[3
 			 */
 			//this.quartRound(0, 1, 2, 3);
-            this.u32[1] ^=  U32.rol(this.u32[0] + this.u32[3], 7);
-            this.u32[2] ^=  U32.rol(this.u32[1] + this.u32[0], 9);
-            this.u32[3] ^=  U32.rol(this.u32[2] + this.u32[1], 13);
-            this.u32[0] ^=  U32.rol(this.u32[3] + this.u32[2], 18);
+            this.u32[1] ^=  U32.lRot(this.u32[0] + this.u32[3], 7);
+            this.u32[2] ^=  U32.lRot(this.u32[1] + this.u32[0], 9);
+            this.u32[3] ^=  U32.lRot(this.u32[2] + this.u32[1], 13);
+            this.u32[0] ^=  U32.lRot(this.u32[3] + this.u32[2], 18);
 			//this.quartRound(5, 6, 7, 4);
-            this.u32[6] ^=  U32.rol(this.u32[5] + this.u32[4], 7);
-            this.u32[7] ^=  U32.rol(this.u32[6] + this.u32[5], 9);
-            this.u32[4] ^=  U32.rol(this.u32[7] + this.u32[6], 13);
-            this.u32[5] ^=  U32.rol(this.u32[4] + this.u32[7], 18);
+            this.u32[6] ^=  U32.lRot(this.u32[5] + this.u32[4], 7);
+            this.u32[7] ^=  U32.lRot(this.u32[6] + this.u32[5], 9);
+            this.u32[4] ^=  U32.lRot(this.u32[7] + this.u32[6], 13);
+            this.u32[5] ^=  U32.lRot(this.u32[4] + this.u32[7], 18);
 			//this.quartRound(10, 11, 8, 9);
-            this.u32[11] ^=  U32.rol(this.u32[10] + this.u32[9], 7);
-            this.u32[8] ^=  U32.rol(this.u32[11] + this.u32[10], 9);
-            this.u32[9] ^=  U32.rol(this.u32[8] + this.u32[11], 13);
-            this.u32[10] ^=  U32.rol(this.u32[9] + this.u32[8], 18);
+            this.u32[11] ^=  U32.lRot(this.u32[10] + this.u32[9], 7);
+            this.u32[8] ^=  U32.lRot(this.u32[11] + this.u32[10], 9);
+            this.u32[9] ^=  U32.lRot(this.u32[8] + this.u32[11], 13);
+            this.u32[10] ^=  U32.lRot(this.u32[9] + this.u32[8], 18);
 			//this.quartRound(15, 12, 13, 14);
-            this.u32[12] ^=  U32.rol(this.u32[15] + this.u32[14], 7);
-            this.u32[13] ^=  U32.rol(this.u32[12] + this.u32[15], 9);
-            this.u32[14] ^=  U32.rol(this.u32[13] + this.u32[12], 13);
-            this.u32[15] ^=  U32.rol(this.u32[14] + this.u32[13], 18);
+            this.u32[12] ^=  U32.lRot(this.u32[15] + this.u32[14], 7);
+            this.u32[13] ^=  U32.lRot(this.u32[12] + this.u32[15], 9);
+            this.u32[14] ^=  U32.lRot(this.u32[13] + this.u32[12], 13);
+            this.u32[15] ^=  U32.lRot(this.u32[14] + this.u32[13], 18);
 		}
 	}
 }

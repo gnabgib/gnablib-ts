@@ -29,13 +29,12 @@ const serSet:[number,string][] = [
     [999999,'F423F0']//max
 ];
 const bytes=new Uint8Array(Math.ceil(Micro.serialBits/8));
-const bw=BitWriter.mount(bytes);
 for (const [us,ser] of serSet) {
     tsts(`ser(${us})`,()=>{
         const m = Micro.new(us);
         assert.equal(m.valueOf(),us);
     
-        bw.reset();
+        const bw=BitWriter.mount(bytes);
         m.serialize(bw);
         assert.is(hex.fromBytes(bytes),ser);
     });

@@ -1,7 +1,7 @@
 /*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
 
 import { asBE, asLE } from '../../endian/platform.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { sLen } from '../../safe/safe.js';
 import { IFullCrypt } from '../interfaces/IFullCrypt.js';
 
@@ -135,14 +135,14 @@ export class Rabbit implements IFullCrypt {
 		}
 
 		//We get mod WORDSIZE for free because of Uint32Array
-		this.#x[0] = g[0] + U32.rol(g[7], 16) + U32.rol(g[6], 16);
-		this.#x[1] = g[1] + U32.rol(g[0], 8) + g[7];
-		this.#x[2] = g[2] + U32.rol(g[1], 16) + U32.rol(g[0], 16);
-		this.#x[3] = g[3] + U32.rol(g[2], 8) + g[1];
-		this.#x[4] = g[4] + U32.rol(g[3], 16) + U32.rol(g[2], 16);
-		this.#x[5] = g[5] + U32.rol(g[4], 8) + g[3];
-		this.#x[6] = g[6] + U32.rol(g[5], 16) + U32.rol(g[4], 16);
-		this.#x[7] = g[7] + U32.rol(g[6], 8) + g[5];
+		this.#x[0] = g[0] + U32.lRot(g[7], 16) + U32.lRot(g[6], 16);
+		this.#x[1] = g[1] + U32.lRot(g[0], 8) + g[7];
+		this.#x[2] = g[2] + U32.lRot(g[1], 16) + U32.lRot(g[0], 16);
+		this.#x[3] = g[3] + U32.lRot(g[2], 8) + g[1];
+		this.#x[4] = g[4] + U32.lRot(g[3], 16) + U32.lRot(g[2], 16);
+		this.#x[5] = g[5] + U32.lRot(g[4], 8) + g[3];
+		this.#x[6] = g[6] + U32.lRot(g[5], 16) + U32.lRot(g[4], 16);
+		this.#x[7] = g[7] + U32.lRot(g[6], 8) + g[5];
 
 		//Extraction (2.7)
 		this.#s32[0] = this.#x[0] ^ (this.#x[5] >>> 16) ^ (this.#x[3] << 16);

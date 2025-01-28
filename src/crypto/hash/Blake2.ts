@@ -1,14 +1,16 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { U64, U64Mut, U64MutArray } from '../../primitive/number/U64.js';
 import { LengthError } from '../../error/LengthError.js';
-import { sLen, sNum } from '../../safe/safe.js';
+import { sInt, sLen, sNum } from '../../safe/safe.js';
 import { asLE } from '../../endian/platform.js';
+import { ByteWriter } from '../../primitive/ByteWriter.js';
 
 // [The BLAKE2 Cryptographic Hash and Message Authentication Code (MAC)](https://datatracker.ietf.org/doc/html/rfc7693) (2015)
 // [BLAKE2 — fast secure hashing](https://www.blake2.net/)
+// https://www.blake2.net/blake2.pdf
 // [Wikipedia: Blake2](https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2)
 
 const maxDigestEls = 8;
@@ -102,7 +104,7 @@ class Blake2_32bit implements IHash {
 	}
 
 	get leafLen(): number {
-		return U32.iFromBytesLE(this.#params, 4);
+		return U32.fromBytesLE(this.#params, 4);
 	}
 
 	get nodeOffset(): U64 {
@@ -145,16 +147,16 @@ class Blake2_32bit implements IHash {
 
 		//Step 1
 		v[a] += v[b] + mj; //a ← a + b + m[j]
-		v[d] = U32.ror(v[d] ^ v[a], rRot1_32); //d ← (d ⊕ a) >>> 32
+		v[d] = U32.rRot(v[d] ^ v[a], rRot1_32); //d ← (d ⊕ a) >>> 32
 		//Step 2
 		v[c] += v[d]; //c ← c + d
-		v[b] = U32.ror(v[b] ^ v[c], rRot2_32); //b ← (b ⊕ c) >>> 12
+		v[b] = U32.rRot(v[b] ^ v[c], rRot2_32); //b ← (b ⊕ c) >>> 12
 		//Step 3
 		v[a] += v[b] + mk; //a ← a + b + m[k]
-		v[d] = U32.ror(v[d] ^ v[a], rRot3_32); //d ← (d ⊕ a) >>> 8
+		v[d] = U32.rRot(v[d] ^ v[a], rRot3_32); //d ← (d ⊕ a) >>> 8
 		//Step 4
 		v[c] += v[d]; //c ← c + d
-		v[b] = U32.ror(v[b] ^ v[c], rRot4_32); //b ← (b ⊕ c) >>> 7
+		v[b] = U32.rRot(v[b] ^ v[c], rRot4_32); //b ← (b ⊕ c) >>> 7
 	}
 
 	/**
@@ -213,10 +215,6 @@ class Blake2_32bit implements IHash {
 		this._bPos = 0;
 	}
 
-	/**
-	 * Write data to the hash (can be called multiple times)
-	 * @param data
-	 */
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
@@ -270,14 +268,14 @@ class Blake2_32bit implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.#state[0] = iv[0] ^ U32.iFromBytesLE(this.#params, 0);
-		this.#state[1] = iv[2] ^ U32.iFromBytesLE(this.#params, 4);
-		this.#state[2] = iv[4] ^ U32.iFromBytesLE(this.#params, 8);
-		this.#state[3] = iv[6] ^ U32.iFromBytesLE(this.#params, 12);
-		this.#state[4] = iv[8] ^ U32.iFromBytesLE(this.#params, 16);
-		this.#state[5] = iv[10] ^ U32.iFromBytesLE(this.#params, 20);
-		this.#state[6] = iv[12] ^ U32.iFromBytesLE(this.#params, 24);
-		this.#state[7] = iv[14] ^ U32.iFromBytesLE(this.#params, 28);
+		this.#state[0] = iv[0] ^ U32.fromBytesLE(this.#params, 0);
+		this.#state[1] = iv[2] ^ U32.fromBytesLE(this.#params, 4);
+		this.#state[2] = iv[4] ^ U32.fromBytesLE(this.#params, 8);
+		this.#state[3] = iv[6] ^ U32.fromBytesLE(this.#params, 12);
+		this.#state[4] = iv[8] ^ U32.fromBytesLE(this.#params, 16);
+		this.#state[5] = iv[10] ^ U32.fromBytesLE(this.#params, 20);
+		this.#state[6] = iv[12] ^ U32.fromBytesLE(this.#params, 24);
+		this.#state[7] = iv[14] ^ U32.fromBytesLE(this.#params, 28);
 
 		//Reset ingest count
 		this._ingestBytes.zero();
@@ -365,7 +363,7 @@ class Blake2_64bit implements IHash {
 	}
 
 	get leafLen(): number {
-		return U32.iFromBytesLE(this.#params, 4);
+		return U32.fromBytesLE(this.#params, 4);
 	}
 
 	get nodeOffset(): U64 {
@@ -482,10 +480,6 @@ class Blake2_64bit implements IHash {
 		this._bPos = 0;
 	}
 
-	/**
-	 * Write data to the hash (can be called multiple times)
-	 * @param data
-	 */
 	write(data: Uint8Array): void {
 		let nToWrite = data.length;
 		let dPos = 0;
@@ -543,64 +537,64 @@ class Blake2_64bit implements IHash {
 			.at(0)
 			.set(
 				U64.fromUint32Pair(
-					iv[1] ^ U32.iFromBytesLE(this.#params, 0),
-					iv[0] ^ U32.iFromBytesLE(this.#params, 4)
+					iv[1] ^ U32.fromBytesLE(this.#params, 0),
+					iv[0] ^ U32.fromBytesLE(this.#params, 4)
 				)
 			);
 		this.#state
 			.at(1)
 			.set(
 				U64.fromUint32Pair(
-					iv[3] ^ U32.iFromBytesLE(this.#params, 8),
-					iv[2] ^ U32.iFromBytesLE(this.#params, 12)
+					iv[3] ^ U32.fromBytesLE(this.#params, 8),
+					iv[2] ^ U32.fromBytesLE(this.#params, 12)
 				)
 			);
 		this.#state
 			.at(2)
 			.set(
 				U64.fromUint32Pair(
-					iv[5] ^ U32.iFromBytesLE(this.#params, 16),
-					iv[4] ^ U32.iFromBytesLE(this.#params, 20)
+					iv[5] ^ U32.fromBytesLE(this.#params, 16),
+					iv[4] ^ U32.fromBytesLE(this.#params, 20)
 				)
 			);
 		this.#state
 			.at(3)
 			.set(
 				U64.fromUint32Pair(
-					iv[7] ^ U32.iFromBytesLE(this.#params, 24),
-					iv[6] ^ U32.iFromBytesLE(this.#params, 28)
+					iv[7] ^ U32.fromBytesLE(this.#params, 24),
+					iv[6] ^ U32.fromBytesLE(this.#params, 28)
 				)
 			);
 		this.#state
 			.at(4)
 			.set(
 				U64.fromUint32Pair(
-					iv[9] ^ U32.iFromBytesLE(this.#params, 32),
-					iv[8] ^ U32.iFromBytesLE(this.#params, 36)
+					iv[9] ^ U32.fromBytesLE(this.#params, 32),
+					iv[8] ^ U32.fromBytesLE(this.#params, 36)
 				)
 			);
 		this.#state
 			.at(5)
 			.set(
 				U64.fromUint32Pair(
-					iv[11] ^ U32.iFromBytesLE(this.#params, 40),
-					iv[10] ^ U32.iFromBytesLE(this.#params, 44)
+					iv[11] ^ U32.fromBytesLE(this.#params, 40),
+					iv[10] ^ U32.fromBytesLE(this.#params, 44)
 				)
 			);
 		this.#state
 			.at(6)
 			.set(
 				U64.fromUint32Pair(
-					iv[13] ^ U32.iFromBytesLE(this.#params, 48),
-					iv[12] ^ U32.iFromBytesLE(this.#params, 52)
+					iv[13] ^ U32.fromBytesLE(this.#params, 48),
+					iv[12] ^ U32.fromBytesLE(this.#params, 52)
 				)
 			);
 		this.#state
 			.at(7)
 			.set(
 				U64.fromUint32Pair(
-					iv[15] ^ U32.iFromBytesLE(this.#params, 56),
-					iv[14] ^ U32.iFromBytesLE(this.#params, 60)
+					iv[15] ^ U32.fromBytesLE(this.#params, 56),
+					iv[14] ^ U32.fromBytesLE(this.#params, 60)
 				)
 			);
 
@@ -654,32 +648,39 @@ export class Blake2s extends Blake2_32bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
-		sNum('digestSize', digestSize).natural().atMost(32).throwNot();
-		sNum('fanOut', fanOut).unsigned().atMost(255).throwNot();
-		p[0] = digestSize;
-		p[1] = key.length;
-		p[2] = fanOut;
-		p[3] = maxDepth;
-		p.set(U32.toBytesLE(leafMaxLen), 4);
+		const bw=ByteWriter.mount(p);
+		sInt('digestSize', digestSize).natural().atMost(32).throwNot();
+		sInt('fanOut', fanOut).unsigned().atMost(255).throwNot();
+		bw.writeByte(digestSize);
+		bw.writeByte(key.length);
+		bw.writeByte(fanOut);
+		bw.writeByte(maxDepth);
+		
+		U32.intoBytesLE(leafMaxLen,bw);
+		bw.skip(6);
 		p.set(nodeOffset.toBytesLE(), 8);
-		p[14] = nodeDepth;
-		p[15] = innerHashLen;
+		//Note the last two bytes of nodeOffset are truncated
+		
+		bw.writeByte(nodeDepth);
+		bw.writeByte(innerHashLen);
 		//Either no salt, or salt must be 16 bytes
 		if (!salt || salt.length == 0) {
-			//nop
+			bw.skip(saltSize32);
 		} else if (salt.length != saltSize32) {
 			sLen('salt', salt).exactly(saltSize32).throwNot();
 		} else {
-			p.set(salt, 16);
+			bw.write(salt);
+			//p.set(salt, 16);
 		}
 		//Either no personalize or it must be 16 bytes
 		if (!personalization || personalization.length == 0) {
-			//nop
+			bw.skip(saltSize32);
 		} else if (personalization.length != saltSize32) {
 			sLen('personalization', personalization).exactly(saltSize32).throwNot();
 		} else {
-			p.set(personalization, 24);
+			bw.write(personalization);
 		}
+		// console.log(hex.fromBytes(p));
 		super(key, p);
 	}
 	static Sequential(
@@ -720,27 +721,37 @@ export class Blake2b extends Blake2_64bit {
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
+		const bw=ByteWriter.mount(p);
 		sNum('digestSize', digestSize).natural().atMost(64).throwNot();
 		sNum('fanOut', fanOut).unsigned().atMost(255).throwNot();
-		p[0] = digestSize;
-		p[1] = key.length;
-		p[2] = fanOut;
-		p[3] = maxDepth;
-		p.set(U32.toBytesLE(leafMaxLen), 4);
+		bw.writeByte(digestSize);
+		bw.writeByte(key.length);
+		bw.writeByte(fanOut);
+		bw.writeByte(maxDepth);
+
+		U32.intoBytesLE(leafMaxLen,bw);
+		bw.skip(8);
 		p.set(nodeOffset.toBytesLE(), 8);
-		p[16] = nodeDepth;
-		p[17] = innerHashLen;
+
+		bw.writeByte(nodeDepth);
+		bw.writeByte(innerHashLen);
+		
+		//RFU: Reserved for future use 18-32
+		bw.skip(14);
+
 		//Either no salt, or salt must be 16 bytes
 		if (!salt || salt.length == 0) {
 			//nop
+			bw.skip(saltSize64);
 		} else if (salt.length != saltSize64) {
 			throw new LengthError(saltSize64, 'salt', salt.length);
 		} else {
-			p.set(salt, 32);
+			bw.write(salt);
 		}
 		//Either no personalize or it must be 16 bytes
 		if (!personalization || personalization.length == 0) {
 			//nop
+			bw.skip(saltSize64);
 		} else if (personalization.length != saltSize64) {
 			throw new LengthError(
 				saltSize64,
@@ -748,7 +759,7 @@ export class Blake2b extends Blake2_64bit {
 				personalization.length
 			);
 		} else {
-			p.set(personalization, 48);
+			bw.write(personalization);
 		}
 		super(key, p);
 	}

@@ -2,7 +2,9 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { proquint } from '../../src/codec';
 import { IpV4 } from '../../src/primitive/net';
-import { U16, U32 } from '../../src/primitive/number';
+import { U16 } from '../../src/primitive/number';
+import {U32} from '../../src/primitive/number/U32Static';
+import { ByteWriter } from '../../src/primitive/ByteWriter';
 
 const tsts = suite('Proquint');
 
@@ -29,7 +31,7 @@ for (const [ip,pq] of ipSet) {
 	});
 
 	tsts(`toBytes(${pq})`, () => {
-		assert.is(new IpV4(proquint.toBytes(pq)).toString(), ip);
+		assert.is(IpV4.fromBytes(proquint.toBytes(pq)).toString(), ip);
 	});
 }
 
@@ -58,13 +60,15 @@ const bit16Set:[number,string][] = [
 	[0xff, 'baguz'],
 	[0xffff, 'zuzuz'],
 ];
-for (const pair of bit16Set) {
-	const ua = U16.toBytesBE(pair[0]);
-	tsts('Encode int16:' + pair[0], () => {
-		assert.is(proquint.fromBytes(ua), pair[1]);
+const bytes2=new Uint8Array(2);
+for (const [num,pro] of bit16Set) {
+	tsts(`encode(${num})`, () => {
+		const bw=ByteWriter.mount(bytes2);
+		U16.intoBytesBE(num,bw);
+		assert.is(proquint.fromBytes(bytes2), pro);
 	});
-	tsts('Decode int16:' + pair[0], () => {
-		assert.is(U16.iFromBytesBE(proquint.toBytes(pair[1])), pair[0]);
+	tsts(`decode(${pro})`, () => {
+		assert.is(U16.fromBytesBE(proquint.toBytes(pro)),num)
 	});
 	//Decode
 }
@@ -75,13 +79,15 @@ const numSet:[number,string][] = [
 	[12345678, 'bafus-kajav'], //From docs
 ];
 
-for (const pair of numSet) {
-	const ua = U32.toBytesBE(pair[0]);
-	tsts('Encode int32:' + pair[0], () => {
-		assert.is(proquint.fromBytes(ua), pair[1]);
+const bytes4=new Uint8Array(4);
+for (const [num,pro] of numSet) {
+	tsts('Encode int32:' + num, () => {
+		const bw=ByteWriter.mount(bytes4);
+		U32.intoBytesBE(num,bw);
+		assert.is(proquint.fromBytes(bytes4), pro);
 	});
-	tsts('Decode int32:' + pair[0], () => {
-		assert.is(U32.iFromBytesBE(proquint.toBytes(pair[1]))>>>0, pair[0]);
+	tsts('Decode int32:' + num, () => {
+		assert.is(U32.fromBytesBE(proquint.toBytes(pro))>>>0, num);
 	});
 }
 

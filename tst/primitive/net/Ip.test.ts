@@ -6,7 +6,7 @@ import util from 'util';
 const tsts = suite('IP/v4');
 
 // prettier-ignore
-const partsIntsStrings:[number[],number,string][] = [
+const partsIntsStrings:[[number,number,number,number],number,string][] = [
 	[[0, 0, 0, 0],          0,          '0.0.0.0'],
 	[[0, 1, 2, 3],          66051,      '0.1.2.3'],
 	[[0, 1, 2, 30],         66078,      '0.1.2.30'],
@@ -25,14 +25,8 @@ const partsIntsStrings:[number[],number,string][] = [
 ];
 
 for (const [parts,iVal,str] of partsIntsStrings) {
-
-	tsts('Constructor: ' + str, () => {
-		const ipAddr = new IpV4(new Uint8Array(parts));
-		assert.is(ipAddr.toString(), str);
-	});
-
 	tsts('fromParts:' + str, () => {
-		const ipAddr = IpV4.fromParts(parts[0],parts[1],parts[2],parts[3]);
+		const ipAddr = IpV4.fromParts(...parts);
 		assert.is(ipAddr.toString(), str);
 	});
 
@@ -44,29 +38,26 @@ for (const [parts,iVal,str] of partsIntsStrings) {
 	tsts('fromInt:' + iVal, () => {
 		const ipAddr = IpV4.fromInt(iVal);
 		assert.is(ipAddr.toString(), str);
-	});
-	tsts('valueOf: ' + str, () => {
-		const ipAddr = new IpV4(new Uint8Array(parts));
 		assert.is(ipAddr.valueOf(), iVal);
 	});
 }
-
-const badByteCount:number[][] = [
-	//Too few
-	[],
-	[0],
-	[0, 0],
-	[0, 0, 0],
-	//Too many
-	[0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0],
-	[0, 0, 0, 0, 0, 0, 0],
+const bytes_tests:[Uint8Array,string][]=[
+	[new Uint8Array(4),'0.0.0.0'],
+	[Uint8Array.of(192,168,1,1),'192.168.1.1'],
+	//Bad:
+	[new Uint8Array(0),''],
+	[new Uint8Array(1),''],
+	[new Uint8Array(2),''],
+	[new Uint8Array(3),''],
+	[new Uint8Array(5),''],
 ];
-for (const test of badByteCount) {
-	tsts(`Building from ${test.length} bytes throws`, () => {
-		assert.throws(() => new IpV4(Uint8Array.from(test)));
-	});
+for(const [bytes,str] of bytes_tests) {
+	tsts(`fromBytes(${bytes})`,()=>{
+		if (str=='') assert.throws(()=>IpV4.fromBytes(bytes));
+		else assert.is(IpV4.fromBytes(bytes).toString(),str);
+	})
 }
+
 
 const badParts:Array<number|undefined> = [-1, 256, 5000000, undefined];
 for (const part of badParts) {

@@ -1,8 +1,9 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
+import { asLE } from '../../endian/platform.js';
 import { ContentError } from '../../error/ContentError.js';
 import { NotEnoughSpaceError } from '../../error/NotEnoughSpaceError.js';
-import { U32 } from '../../primitive/number/U32.js';
+import { U32 } from '../../primitive/number/U32Static.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 const blockSize = 16;
@@ -186,12 +187,12 @@ export class Twofish implements IBlockCrypt {
 			// B = rol(h(p * (2x + 1), Mo), 8)
 			tmp.fill(2 * i + 1);
 			let b = sBoxGen(tmp, key, 1);
-			b = U32.rol(b, 8);
+			b = U32.lRot(b, 8);
 
 			this.#k[2 * i] = a + b;
 
 			// K[2i+1] = (A + 2B) <<< 9
-			this.#k[2 * i + 1] = U32.rol(2 * b + a, 9);
+			this.#k[2 * i + 1] = U32.lRot(2 * b + a, 9);
 		}
 
 		// prettier-ignore
@@ -224,24 +225,27 @@ export class Twofish implements IBlockCrypt {
 	}
 
 	private _decBlock(data: Uint8Array) {
+		//Make sure data is LE
+		asLE.i32(data, 0, 4);
+		const d32 = new Uint32Array(data.buffer);
 		// Undo undo final swap
-		let a = U32.iFromBytesLE(data, 8) ^ this.#k[6];
-		let b = U32.iFromBytesLE(data, 12) ^ this.#k[7];
-		let c = U32.iFromBytesLE(data) ^ this.#k[4];
-		let d = U32.iFromBytesLE(data, 4) ^ this.#k[5];
+		let a = d32[2] ^ this.#k[6];
+		let b = d32[3] ^ this.#k[7];
+		let c = d32[0] ^ this.#k[4];
+		let d = d32[1] ^ this.#k[5];
 
 		let kPos = 39;
 		// prettier-ignore
 		for (let i = 8; i > 0; i--) {
 			let t0 = this._s0[c & 0xff] ^ this._s1[(c >>> 8) & 0xff] ^ this._s2[(c >>> 16) & 0xff] ^ this._s3[c >>> 24];
 			let t1 = this._s1[d & 0xff] ^ this._s2[(d >>> 8) & 0xff] ^ this._s3[(d >>> 16) & 0xff] ^ this._s0[d >>> 24];
-            b = U32.rol(b ^ (t1 + t1 + t0 + this.#k[kPos--]), -1);
-            a = U32.rol(a, 1) ^ (t1 + t0 + this.#k[kPos--]);
+            b = U32.lRot(b ^ (t1 + t1 + t0 + this.#k[kPos--]), -1);
+            a = U32.lRot(a, 1) ^ (t1 + t0 + this.#k[kPos--]);
 
 			t0 = this._s0[a & 0xff] ^ this._s1[(a >>> 8) & 0xff] ^ this._s2[(a >>> 16) & 0xff] ^ this._s3[a >>> 24];
 			t1 = this._s1[b & 0xff] ^ this._s2[(b >>> 8) & 0xff] ^ this._s3[(b >>> 16) & 0xff] ^ this._s0[b >>> 24];
-            d = U32.ror(d ^ (t1 + t1 + t0 + this.#k[kPos--]), 1);
-            c = U32.rol(c, 1) ^ (t0 + t1 + this.#k[kPos--]);
+            d = U32.rRot(d ^ (t1 + t1 + t0 + this.#k[kPos--]), 1);
+            c = U32.lRot(c, 1) ^ (t0 + t1 + this.#k[kPos--]);
 		}
 
 		// Undo pre-whitening
@@ -250,43 +254,44 @@ export class Twofish implements IBlockCrypt {
 		c ^= this.#k[2];
 		d ^= this.#k[3];
 
-		data.set(U32.toBytesLE(a));
-		data.set(U32.toBytesLE(b), 4);
-		data.set(U32.toBytesLE(c), 8);
-		data.set(U32.toBytesLE(d), 12);
+		d32[0] = a;
+		d32[1] = b;
+		d32[2] = c;
+		d32[3] = d;
+		//Undo any LE changes
+		asLE.i32(data, 0, 4);
 	}
 
 	private _encBlock(data: Uint8Array) {
-		// Load input
-		let a = U32.iFromBytesLE(data);
-		let b = U32.iFromBytesLE(data, 4);
-		let c = U32.iFromBytesLE(data, 8);
-		let d = U32.iFromBytesLE(data, 12);
-
-		// Pre-whitening
-		a ^= this.#k[0];
-		b ^= this.#k[1];
-		c ^= this.#k[2];
-		d ^= this.#k[3];
+		//Make sure data is LE
+		asLE.i32(data, 0, 4);
+		const d32 = new Uint32Array(data.buffer);
+		// Load input & pre-whiten
+		let a = d32[0] ^ this.#k[0];
+		let b = d32[1] ^ this.#k[1];
+		let c = d32[2] ^ this.#k[2];
+		let d = d32[3] ^ this.#k[3];
 
 		let kPos = 8;
 		// prettier-ignore
 		for (let i = 0; i < 8; i++) {
 			let t0 = this._s0[a & 0xff] ^ this._s1[(a >>> 8) & 0xff] ^ this._s2[(a >>> 16) & 0xff] ^ this._s3[a >>> 24];
 			let t1 = this._s1[b & 0xff] ^ this._s2[(b >>> 8) & 0xff] ^ this._s3[(b >>> 16) & 0xff] ^ this._s0[b >>> 24];
-			c = U32.ror(c ^ (t0 + t1 + this.#k[kPos++]), 1);
-			d = U32.rol(d, 1) ^ (t1 + t1 + t0 + this.#k[kPos++]);
+			c = U32.rRot(c ^ (t0 + t1 + this.#k[kPos++]), 1);
+			d = U32.lRot(d, 1) ^ (t1 + t1 + t0 + this.#k[kPos++]);
 
 			t0 = this._s0[c & 0xff] ^ this._s1[(c >>> 8) & 0xff] ^ this._s2[(c >>> 16) & 0xff] ^ this._s3[c >>> 24];
 			t1 = this._s1[d & 0xff] ^ this._s2[(d >>> 8) & 0xff] ^ this._s3[(d >>> 16) & 0xff] ^ this._s0[d >>> 24];
-			a = U32.ror(a ^ (t0 + t1 + this.#k[kPos++]), 1);
-			b = U32.rol(b, 1) ^ (t1 + t1 + t0 + this.#k[kPos++]);
+			a = U32.rRot(a ^ (t0 + t1 + this.#k[kPos++]), 1);
+			b = U32.lRot(b, 1) ^ (t1 + t1 + t0 + this.#k[kPos++]);
 		}
 
-		data.set(U32.toBytesLE(c ^ this.#k[4]));
-		data.set(U32.toBytesLE(d ^ this.#k[5]), 4);
-		data.set(U32.toBytesLE(a ^ this.#k[6]), 8);
-		data.set(U32.toBytesLE(b ^ this.#k[7]), 12);
+		d32[0] = c ^ this.#k[4];
+		d32[1] = d ^ this.#k[5];
+		d32[2] = a ^ this.#k[6];
+		d32[3] = b ^ this.#k[7];
+		//Undo any LE changes
+		asLE.i32(data, 0, 4);
 	}
 
 	/**

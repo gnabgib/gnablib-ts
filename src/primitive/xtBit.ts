@@ -41,7 +41,7 @@ export function lsbMask(bits: number): number {
  * Note the results are unpredictable if n uses more bits than 2^bitsPow2
  *
  * @param n Number to reverse
- * @param bitsPow2 How many bits to reverse, treated as a power of two [1 - 5]
+ * @param bitsPow2 How many bits to reverse, treated as a power of two `[1 - 5]`
  * @returns Reversed number
  */
 export function reverse(n: number, bitsPow2: number): number {

@@ -24,29 +24,6 @@ tsts('3x2,5x3,7x4,0x2,Fx2 in 2 bytes-2',()=>{
     assert.is(hex.fromBytes(fill),'EB98');
 });
 
-tsts(`reset`,()=>{
-    const target=new Uint8Array(2);
-    assert.equal(hex.fromBytes(target),'0000')
-    
-    const bw=BitWriter.mount(target);
-    bw.pushNumberBE(255,8);
-    assert.equal(hex.fromBytes(target),'FF00')
-    
-    bw.reset();
-    bw.pushNumberBE(0x12,8);
-    assert.equal(hex.fromBytes(target),'1200')
-
-    bw.reset();
-    bw.pushNumberBE(0xF,4);
-    assert.equal(hex.fromBytes(target),'F000',"Note the byte is replaced even though only some bits were written");
-    bw.pushNumberBE(0xFF,8);
-    assert.equal(hex.fromBytes(target),'FFF0');
-    
-    bw.reset();
-    bw.pushNumberBE(0,1);
-    assert.equal(hex.fromBytes(target),'00F0',"Note prior data from byte 2 isn't erased");
-});
-
 const seq_full:[Uint8Array,number,number,boolean][]=[
     [new Uint8Array(0),0,0,true],
     [new Uint8Array(0),0,1,true],
@@ -116,22 +93,40 @@ const push_1byte_bitSet_tests:[number,number,number,string][]=[
     [5,3,2,'06'],
     [6,3,2,'03'],
     [7,3,2,'01'],
+    [8,0,0,'00'],
 ];
-for(const [startBit,n32,bits,expect] of push_1byte_bitSet_tests) {
-    tsts(`BitWriter(buff,${startBit}).pushNumberBE(${n32},${bits})`, () => {
+for(const [skip,n32,bits,expect] of push_1byte_bitSet_tests) {
+    tsts(`BitWriter(buff).skipBits(${skip}).pushNumberBE(${n32},${bits})`, () => {
         const buff=new Uint8Array(1);
-        const bw=BitWriter.mount(buff,startBit);
+        const bw=BitWriter.mount(buff);
+        bw.skipBits(skip);
         bw.pushNumberBE(n32,bits);
         assert.equal(hex.fromBytes(buff), expect);
     });
 }
 
-tsts('BitWriter with out of range startBit throws',()=>{
+const bad_skipBits_tests:number[]=[
+    -1,
+    9
+];
+for(const skip of bad_skipBits_tests) {
     const buff=new Uint8Array(1);
-    assert.throws(()=>BitWriter.mount(buff,-1));
-    assert.throws(()=>BitWriter.mount(buff,8));
-});
+    const bw=BitWriter.mount(buff);
+    tsts(`BitWriter(1).skipBits(${skip}) throws`,()=>{
+        assert.throws(()=>bw.skipBits(skip));
+    })
+}
 
+tsts(`BitWriter(1).skipBits(3).skipBits(5)`, () => {
+    //This test catches the bit-skip case where the second skip causes a byte-skip
+    const buff=new Uint8Array(1);
+    const bw=BitWriter.mount(buff);
+    assert.is(bw.spaceBits,8);
+    bw.skipBits(3);
+    assert.is(bw.spaceBits,5);
+    bw.skipBits(5);
+    assert.is(bw.spaceBits,0);
+});
 
 const w28=0b1111111011011100101110101001;
 const seq_w28:[Uint8Array,string][]=[

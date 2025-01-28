@@ -1,8 +1,8 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import { asLE } from '../endian/platform.js';
-import { U16 } from '../primitive/number/U16.js';
-import { U32 } from '../primitive/number/U32.js';
+import { asBE, asLE } from '../endian/platform.js';
+import { U16 } from '../primitive/number/U16Static.js';
+import { U32 } from '../primitive/number/U32Static.js';
 
 //http://www.zlib.net/maxino06_fletcher-adler.pdf -> Lower cpu and Adler and mostly more effective (in their tests)
 //https://datatracker.ietf.org/doc/html/rfc1146 (Appendix I)
@@ -49,8 +49,8 @@ export function fletcher32(bytes: Uint8Array): number {
 		// (0xffffffff * 0xffff (max byte) still fits in 2^48 bits)
 		const safeLen = Math.min(0xffffffff, bytes.length);
 		for (; ptr < safeLen; ptr += 2) {
-			asLE.i16(bytes,ptr);
-			c0 += U16.iFromBytesLE(bytes,ptr);
+			asLE.i16(bytes, ptr);
+			c0 += U16.fromBytesLE(bytes, ptr);
 			c1 += c0;
 		}
 		//The mod operation (%) is in math(53bit max) not bit(32bit max)
@@ -72,20 +72,22 @@ export function fletcher64(bytes: Uint8Array): Uint8Array {
 	let c1 = 0;
 	const mod = 0xffffffff; //2^32-1
 	let ptr = 0;
-	const ret = new Uint8Array(8);
 	while (ptr < bytes.length) {
 		//JS doesn't overflow until 53 bits we we've got lots of space here
 		// (0xffff * 0xffffffff (max byte) still fits in 2^48 bits)
 		const safeLen = Math.min(0xffff, bytes.length);
 		for (; ptr < safeLen; ptr += 4) {
-			asLE.i32(bytes,ptr);
-			c0 += U32.iFromBytesLE(bytes,ptr)>>>0;
+			asLE.i32(bytes, ptr);
+			c0 += U32.fromBytesLE(bytes, ptr) >>> 0;
 			c1 += c0;
 		}
 		c0 %= mod;
 		c1 %= mod;
 	}
-	ret.set(U32.toBytesBE(c1),0);
-	ret.set(U32.toBytesBE(c0),4);
-	return ret;
+	const r8=new Uint8Array(8);
+	const r32=new Uint32Array(r8.buffer);
+	r32[0]=c1;
+	r32[1]=c0;
+	asBE.i32(r8,0,2);
+	return r8;
 }

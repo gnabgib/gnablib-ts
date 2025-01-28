@@ -1,55 +1,51 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { fpb16,hex } from '../../src/codec';
-import { U16 } from '../../src/primitive/number';
 
 const tsts = suite('IEEE754/Float Binary16');
 
-const encode16Pairs:[number,number][] = [
-	[0, 0x0000],
-	[-0, 0x8000],
+const encode16Pairs:[number,string][] = [
+	[0, '0000'],
+	[-0, '8000'],
 	//Smallest subnormal
-	[0.00000005960464477539063, 0x0001],
+	[0.00000005960464477539063, '0001'],
 	//Largest subnormal
-	[0.00006097555160522461, 0x03ff],
+	[0.00006097555160522461, '03FF'],
 	//Smallest normal
-	[0.00006103515625, 0x0400],
+	[0.00006103515625, '0400'],
 	//Largest <1
-	[0.99951171875, 0x3bff],
+	[0.99951171875, '3BFF'],
 	//Largest representable int
-	[fpb16.MAX_INT, 0x6800],
-	[-fpb16.MAX_INT, 0xe800],
-	[fpb16.MAX_INT - 1, 0x67ff],
-	[1 - fpb16.MAX_INT, 0xe7ff],
-	[fpb16.MAX_INT - 2, 0x67fe],
-	[2 - fpb16.MAX_INT, 0xe7fe],
+	[fpb16.MAX_INT, '6800'],
+	[-fpb16.MAX_INT, 'E800'],
+	[fpb16.MAX_INT - 1, '67FF'],
+	[1 - fpb16.MAX_INT, 'E7FF'],
+	[fpb16.MAX_INT - 2, '67FE'],
+	[2 - fpb16.MAX_INT, 'E7FE'],
 
-	[1, 0x3c00],
-	[-1, 0xbc00],
+	[1, '3C00'],
+	[-1, 'BC00'],
 
-	[2, 0x4000],
-	[-2, 0xc000],
+	[2, '4000'],
+	[-2, 'C000'],
 
-	[100, 0x5640],
-	[-100, 0xd640],
+	[100, '5640'],
+	[-100, 'D640'],
 
 	//Extremes
-	[65504, 0x7bff],
-	[-65504, 0xfbff],
+	[65504, '7BFF'],
+	[-65504, 'FBFF'],
 
-	[Infinity, 0x7c00],
-	[-Infinity, 0xfc00],
+	[Infinity, '7C00'],
+	[-Infinity, 'FC00'],
 ];
-
-for (const [fp,enc] of encode16Pairs) {
-	tsts('decode: ' + enc.toString(16), () => {
-		const b = U16.toBytesBE(enc);
-		assert.is(fpb16.fromBytes(b), fp);
-	});
-	tsts('encode: ' + fp, () => {
+for (const [fp,encHex] of encode16Pairs) {
+	tsts(`encode(${fp})`,()=>{
 		const b = fpb16.toBytes(fp);
-		const expHex = hex.fromBytes(U16.toBytesBE(enc));
-		assert.is(hex.fromBytes(b), expHex);
+		assert.is(hex.fromBytes(b), encHex);
+	})
+	tsts(`decode(${encHex})`, () => {
+		assert.is(fpb16.fromBytes(hex.toBytes(encHex)), fp);
 	});
 }
 
@@ -83,9 +79,9 @@ tsts(`inexact number`,()=> {
 	//Shows floating point error
 
 	// 0x3266 -> 0.199951171875 (under .2)
-	assert.is(fpb16.fromBytes(U16.toBytesBE(0x3266)),0.199951171875);
+	assert.is(fpb16.fromBytes(hex.toBytes('3266')),0.199951171875);
 	// 0x3267 -> 0.199951171875 (over .2)
-	assert.is(fpb16.fromBytes(U16.toBytesBE(0x3267)),0.2000732421875);
+	assert.is(fpb16.fromBytes(hex.toBytes('3267')),0.2000732421875);
 
 	//0.2 -> 0x3266
 	const e=fpb16.toBytes(0.2);
