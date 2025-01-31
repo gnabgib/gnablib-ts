@@ -16,39 +16,30 @@ const A = 0,
  * NOT Cryptographic
  */
 export class Lookup2 extends AChecksum32 implements IHash {
-	/**
-	 * Runtime state of the hash
-	 */
+	/** Runtime state of the hash */
 	private readonly _state = Uint32Array.of(0x9e3779b9, 0x9e3779b9, 0);
-	/**
-	 * Starting seed, uint32 0-0xffffffff
-	 */
+	/** Starting seed, uint32 `[0 - 0xffffffff]` */
 	private readonly _seed: number;
-	/**
-	 * Temp processing block
-	 */
-	private readonly _block32 = new Uint32Array(this._b8.buffer);
+	/** Temp processing block */
+	private readonly _b32 = new Uint32Array(this._b8.buffer);
 
 	/**
 	 * Build a new Lookup2 (non-crypto) hash generator
 	 * @param seed
 	 */
 	constructor(seed = 0) {
-		super(4,12);
+		super(4, 12);
 		this._state[2] = seed;
 		this._seed = this._state[2];
 	}
 
-	/**
-	 * aka Mix
-	 */
 	protected hash() {
 		//Make sure block is little-endian
 		asLE.i32(this._b8, 0, 3);
 		//Add in data
-		this._state[A] += this._block32[0];
-		this._state[B] += this._block32[1];
-		this._state[C] += this._block32[2];
+		this._state[A] += this._b32[0];
+		this._state[B] += this._b32[1];
+		this._state[C] += this._b32[2];
 
 		///MIX
 		//a=this.#state[0], b=this.#state[1], c=this.#state[2]
@@ -75,24 +66,15 @@ export class Lookup2 extends AChecksum32 implements IHash {
 
 		this._bPos = 0;
 	}
-	
-	private static _sum(alt:Lookup2):void {
-		alt._state[2] += alt._ingestBytes;
-		alt.fillBlock();
-		alt.hash();
+
+	private _sum() {
+		this._state[2] += this._ingestBytes;
+		this.fillBlock();
+		this.hash();
 	}
 
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum(): Uint8Array {
-		return this.clone().sumIn();
-	}
-	/**
-     * Sum the hash - mutates internal state, but avoids memory alloc.
-     */
-	sumIn():Uint8Array {
-		Lookup2._sum(this);
+	sumIn() {
+		this._sum();
 		const ret = new Uint8Array(this._state.slice(2).buffer);
 		//Wiki implies big-endian (since that's how we write numbers)
 		asBE.i32(ret);
@@ -101,15 +83,14 @@ export class Lookup2 extends AChecksum32 implements IHash {
 
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
+	 * @returns Sum as uint32
 	 */
 	sum32(): number {
-		Lookup2._sum(this);
-		return this._state[2];
+		const ret = this.clone();
+		ret._sum();
+		return ret._state[2];
 	}
 
-	/**
-	 * Set hash state. Any past writes will be forgotten
-	 */
 	reset() {
 		this._state[A] = 0x9e3779b9;
 		this._state[B] = 0x9e3779b9;
@@ -117,17 +98,10 @@ export class Lookup2 extends AChecksum32 implements IHash {
 		super._reset();
 	}
 
-	/**
-	 * Create an empty IHash using the same algorithm
-	 */
 	newEmpty() {
 		return new Lookup2(this._seed);
 	}
 
-	/**
-	 * Create a copy of the current context (uses different memory)
-	 * @returns
-	 */
 	clone(): Lookup2 {
 		const ret = new Lookup2(this._seed);
 		ret._state.set(this._state);

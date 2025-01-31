@@ -4,8 +4,8 @@ import { IWriter } from "../../primitive/interfaces/IWriter.js";
 
 export interface IHash extends IWriter {
 	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-     * - You can call write(a)-sum-write(b)-sum to get hash(a) and hash(ab)
+	 * Sum the hash with the all content written so far (does not mutate state).
+     * You can call `write(a), sum(), write(b), sum()` to get `hash(a)` and `hash(ab)`
 	 */
     sum():Uint8Array;
     /**
@@ -18,6 +18,7 @@ export interface IHash extends IWriter {
      */
     reset():void;
     /**
+     * 
      * Create an empty IHash using the same algorithm
      */
     newEmpty():IHash;

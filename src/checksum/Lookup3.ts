@@ -32,7 +32,7 @@ export class Lookup3 extends AChecksum32 implements IHash {
 
 	/** Build a new Lookup3 (non-crypto) hash generator */
 	constructor(seed = 0, seed2 = 0) {
-		super(4,12);
+		super(8,12);
 		this._state[A] += seed;
 		this._state[B] += seed;
 		this._state[C] += seed + seed2;
@@ -121,45 +121,34 @@ export class Lookup3 extends AChecksum32 implements IHash {
 		} else super.write(data);
 	}
 
-	private static _sum(alt: Lookup3): void {
+	private _sum() {
 		//We only finalize if there's >0 bits
-		if (alt._ingestBytes>0) {
-			alt.fillBlock();
-			alt.final();
+		if (this._ingestBytes>0) {
+			this.fillBlock();
+			this.final();
 		}
 	}
-
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum(): Uint8Array {
-		return this.clone().sumIn();
-	}
-	/**
-	 * Sum the hash - mutates internal state, but avoids memory alloc.
-	 */
-	sumIn(): Uint8Array {
-		Lookup3._sum(this);
+	
+	sumIn() {
+		this._sum();
 		const ret = new Uint8Array(this._state.slice(1).buffer);
-		//Wiki implies big-endian (since that's how we right numbers)
+		//Wiki implies big-endian (since that's how we write numbers)
 		//asBE.i32(ret);
 		return ret;
 	}
 
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum32(): [number, number] {
-		Lookup3._sum(this);
-		const s8 = new Uint8Array(this._state.buffer);
-		asLE.i32(s8, 0, 3);
-		const ret = new Uint32Array(s8.buffer);
-		return [ret[1], ret[2]];
+	/** Sum the hash and generate a pair of uint32 values (aka hashlittle2) */
+	sum32pair():[number,number] {
+		this._sum();
+		return [this._state[2],this._state[1]];
 	}
 
-	/**
-	 * Set hash state. Any past writes will be forgotten
-	 */
+	/** Sum the hash and generate a uint32 (aka hashlittle) */
+	sum32(): number {
+		this._sum();
+		return this._state[2];
+	}
+
 	reset() {
 		this._state[A] = 0xdeadbeef + this._seed;
 		this._state[B] = 0xdeadbeef + this._seed;
@@ -167,17 +156,10 @@ export class Lookup3 extends AChecksum32 implements IHash {
 		super._reset();
 	}
 
-	/**
-	 * Create an empty IHash using the same algorithm
-	 */
 	newEmpty() {
 		return new Lookup3(this._seed, this._seed2);
 	}
 
-	/**
-	 * Create a copy of the current context (uses different memory)
-	 * @returns
-	 */
 	clone(): Lookup3 {
 		const ret = new Lookup3(this._seed, this._seed2);
 		ret._state.set(this._state);

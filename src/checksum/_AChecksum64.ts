@@ -13,12 +13,12 @@ export abstract class AChecksum64 extends _AChecksum {
 		super.write(data);
 	}
 
-	protected reset(): void {
+	protected _reset(): void {
 		this._ingestBytes.set(U64.zero);
 		this._bPos = 0;
 	}
 
-	protected clone(o: AChecksum64) {
+	protected _clone(o: AChecksum64) {
 		o._b8.set(this._b8);
 		o._ingestBytes.set(this._ingestBytes);
 		o._bPos = this._bPos;

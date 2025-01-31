@@ -41,9 +41,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 		this._bPos = 16;
 	}
 
-	/**
-	 * aka Mix
-	 */
+	/** aka Mix */
 	protected hash() {
 		//Make sure block is little-endian
 		asLE.i64(this._b8, 0, sBlockSizeEls);
@@ -93,6 +91,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 
 		this._bPos = 0;
 	}
+
 	private final() {
 		//Make sure block is little-endian
 		asLE.i64(this._b8, 0, sBlockSizeEls);
@@ -147,14 +146,8 @@ export class SpookyShort extends AChecksum32 implements IHash {
 		this._state.at(0).lRotEq(63);
 		this._state.at(1).addEq(this._state.at(0));
 	}
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum(): Uint8Array {
-		return this.clone().sumIn();
-	}
-	/** Sum the hash - mutates internal state, but avoids memory alloc */
-	sumIn(): Uint8Array {
+
+	sumIn() {
 		//In the bPos 1-15 range (remember it starts at 16 = 17-31 ingest%32) we need to zero
 		// up to 16, move AB->CD, and zero AB
 		if (this._bPos >= 1 && this._bPos < 16) {
@@ -179,8 +172,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 		return ret;
 	}
 
-	/** Set hash state. Any past writes will be forgotten */
-	reset(): void {
+	reset() {
 		this._state.at(0).set(this.seed);
 		this._state.at(1).set(this.seed2);
 		this._state.at(2).set(sc);
@@ -190,7 +182,6 @@ export class SpookyShort extends AChecksum32 implements IHash {
 		this._bPos = 16;
 	}
 
-	/** Create an empty IHash using the same algorithm */
 	newEmpty(): IHash {
 		return new SpookyShort(this.seed, this.seed2);
 	}
@@ -240,10 +231,8 @@ export class SpookyLong extends AChecksum32 {
 		this._state.at(11).set(sc);
 	}
 
-	/**
-	 * aka Mix
-	 */
-	protected hash(): void {
+	/** aka Mix */
+	protected hash() {
 		//Make sure block is little-endian
 		asLE.i64(this._b8, 0, lBlockSizeEls);
 
@@ -310,7 +299,8 @@ export class SpookyLong extends AChecksum32 {
 
 		this._bPos = 0;
 	}
-	private finalPartial(): void {
+
+	private finalPartial() {
 		// h11+= h1;    h2 ^= h11;   h1 = Rot64(h1,44);
 		this._state.at(11).addEq(this._state.at(1));
 		this._state.at(2).xorEq(this._state.at(11));
@@ -360,7 +350,8 @@ export class SpookyLong extends AChecksum32 {
 		this._state.at(1).xorEq(this._state.at(10));
 		this._state.at(0).lRotEq(54);
 	}
-	private final(): void {
+
+	private final() {
 		//Make sure block is little-endian
 		asLE.i64(this._b8, 0, lBlockSizeEls);
 
@@ -384,43 +375,7 @@ export class SpookyLong extends AChecksum32 {
 		this.finalPartial();
 	}
 
-	/**
-	 * Write data to the hash (can be called multiple times)
-	 * @param data
-	 */
-	write(data: Uint8Array): void {
-		this._ingestBytes += data.length;
-
-		let nToWrite = data.length;
-		let dPos = 0;
-		let space = lBlockSizeBytes - this._bPos;
-		while (nToWrite > 0) {
-			if (space > nToWrite) {
-				//More space than data, copy in verbatim
-				this._b8.set(data.subarray(dPos), this._bPos);
-				//Update pos
-				this._bPos += nToWrite;
-				return;
-			}
-			this._b8.set(data.subarray(dPos, dPos + space), this._bPos);
-			this.hash();
-			dPos += space;
-			nToWrite -= space;
-			space = lBlockSizeBytes;
-		}
-	}
-
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum(): Uint8Array {
-		return this.clone().sumIn();
-	}
-
-	/**
-	 * Sum the hash - mutates internal state, but avoids memory alloc.
-	 */
-	sumIn(): Uint8Array {
+	sumIn() {
 		this.fillBlock();
 		this._b8[lBlockSizeBytes - 1] = this._ingestBytes % lBlockSizeBytes;
 		this.final();
@@ -428,9 +383,6 @@ export class SpookyLong extends AChecksum32 {
 		return ret;
 	}
 
-	/**
-	 * Set hash state. Any past writes will be forgotten
-	 */
 	reset() {
 		this._state.at(0).set(this.seed);
 		this._state.at(1).set(this.seed2);
@@ -447,17 +399,10 @@ export class SpookyLong extends AChecksum32 {
 		super._reset();
 	}
 
-	/**
-	 * Create an empty IHash using the same algorithm
-	 */
 	newEmpty() {
 		return new SpookyLong(this.seed, this.seed2);
 	}
 
-	/**
-	 * Create a copy of the current context (uses different memory)
-	 * @returns
-	 */
 	clone(): SpookyLong {
 		const ret = new SpookyLong(this.seed, this.seed2);
 		ret._state.set(this._state);
@@ -475,7 +420,7 @@ export class SpookyLong extends AChecksum32 {
  */
 export class Spooky extends SpookyShort {
 	private _l: SpookyLong;
-	private _u: SpookyShort | SpookyLong = this;
+	private _long = false;
 
 	constructor(seed = U64.zero, seed2 = U64.zero) {
 		super(seed, seed2);
@@ -483,10 +428,10 @@ export class Spooky extends SpookyShort {
 	}
 
 	write(data: Uint8Array) {
-		if (this._u != this) return this._u.write(data);
+		if (this._long) return this._l.write(data);
 		if (data.length + this._ingestBytes > sToL) {
-			this._u = this._l;
-			return this._u.write(data);
+			this._long = true;
+			return this._l.write(data);
 		}
 		//Unfortunately we have to double write data in case another write pushes length over sToL
 		super.write(data);
@@ -494,37 +439,30 @@ export class Spooky extends SpookyShort {
 	}
 
 	sum(): Uint8Array {
-		return this._u != this ? this._u.sum() : super.sum();
+		return this._long ? this._l.sum() : super.sum();
 	}
 
-	/** Sum the hash - mutates internal state, but avoids memory alloc. */
 	sumIn(): Uint8Array {
-		return this._u != this ? this._u.sumIn() : super.sumIn();
+		return this._long ? this._l.sumIn() : super.sumIn();
 	}
 
-	/**
-	 * Set hash state. Any past writes will be forgotten, both short and
-	 * long will be available until length exceeds 192
-	 */
 	reset() {
-		this._u = this;
 		super.reset();
 		this._l.reset();
+		this._long = false;
 	}
 
-	/** Create an empty IHash using the same algorithm */
 	newEmpty(): IHash {
 		return new Spooky(this.seed, this.seed2);
 	}
 
-	/** Create a copy of the current context (uses different memory) */
 	clone(): Spooky {
 		const ret = new Spooky(this.seed, this.seed2);
 		ret._state.set(this._state);
 		super._clone(ret);
 
 		ret._l = this._l.clone();
-		if (this._u != this) ret._u = ret._l;
+		ret._long = this._long;
 		return ret;
 	}
 }

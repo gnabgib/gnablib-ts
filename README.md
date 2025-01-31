@@ -295,7 +295,7 @@ Name|Year|Variant|State B| |Out b|Safe b
 |||xoroshiro128+|16|‡|64|53
 |||xoroshiro128++|16|‡|64|〃
 |||xoroshiro128**|16|‡|64|〃
-[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|xorShift128+|16|‡|64|〃
+[XorShift+](https://en.wikipedia.org/wiki/Xorshift#xorshift+)|2003|xorshift128+|16|‡|64|〃
 [XoShiRo](https://prng.di.unimi.it/#intro)|2018|xoshiro128+|16||32|24
 |||xoshiro128++|16||32|〃
 |||xoshiro128**|16||32|〃
@@ -337,7 +337,7 @@ Name|Variant|State B|Out b
 [Lehmer/LCG/MCG 1988](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|all|4|31
 [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)|-|1|4
 [Middle-Square](https://en.wikipedia.org/wiki/Middle-square_method)|-|4|n digits
-MSVC (LGC)|-|4|16
+MSVC (LCG)|-|4|16
 [RANDU (LCG)](https://en.wikipedia.org/wiki/RANDU)|-|4|31
 [XorShift 2003](https://www.jstatsoft.org/article/view/v008i14)|xorshift32|4|32
 ||xorshift64|8|64

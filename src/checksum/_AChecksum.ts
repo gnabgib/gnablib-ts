@@ -1,5 +1,7 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
+import { IHash } from "../crypto/interfaces/IHash.js";
+
 export abstract class _AChecksum {
 	/** Temp block pos */
 	protected _bPos = 0;
@@ -20,6 +22,7 @@ export abstract class _AChecksum {
 	}
 
 	protected abstract hash(): void;
+    abstract clone():IHash;
 
 	write(data: Uint8Array) {
 		let nToWrite = data.length;
@@ -42,13 +45,16 @@ export abstract class _AChecksum {
 			space = this._b8.length;
 		}
 	}
+
+    sum(): Uint8Array {
+		return this.clone().sumIn();
+	}
 }
 
 export abstract class AChecksum32 extends _AChecksum {
 	/** Number of bytes added to the hash */
 	protected _ingestBytes = 0;
 
-	/** Write data to the hash (can be called multiple times) */
 	write(data: Uint8Array) {
 		this._ingestBytes += data.length;
 		super.write(data);

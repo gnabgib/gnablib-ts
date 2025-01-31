@@ -63,6 +63,7 @@ export class XxHash32 extends AChecksum32 implements IHash {
 	}
 
 	_sum(): number {
+		//This just compiles a result /except/ the call to asLE.i32
 		let result = this._ingestBytes;
 		if (this._ingestBytes >= this._b8.length) {
 			result +=
@@ -97,15 +98,6 @@ export class XxHash32 extends AChecksum32 implements IHash {
 		return result;
 	}
 
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 */
-	sum(): Uint8Array {
-		return this.sumIn();
-	}
-	/**
-	 * Sum the hash (doesn't mutate internal state, here for compat)
-	 */
 	sumIn(): Uint8Array {
 		const r32 = Uint32Array.of(this._sum());
 		//Copy the first element and convert to bytes
@@ -116,15 +108,12 @@ export class XxHash32 extends AChecksum32 implements IHash {
 
 	/**
 	 * Sum the hash with the all content written so far (does not mutate state)
-	 * @returns Unsigned 32bit integer (0-0xffffffff)
+	 * @returns Sum as uint32
 	 */
 	sum32(): number {
-		return this._sum() >>> 0;
+		return this.clone()._sum() >>> 0;
 	}
 
-	/**
-	 * Set hash state. Any past writes will be forgotten
-	 */
 	reset() {
 		this._state[0] = this._seed + p32_1 + p32_2;
 		this._state[1] = this._seed + p32_2;
@@ -133,17 +122,10 @@ export class XxHash32 extends AChecksum32 implements IHash {
 		super._reset();
 	}
 
-	/**
-	 * Create an empty IHash using the same algorithm
-	 */
 	newEmpty() {
 		return new XxHash32(this._seed);
 	}
 
-	/**
-	 * Create a copy of the current context (uses different memory)
-	 * @returns
-	 */
 	clone(): XxHash32 {
 		const ret = new XxHash32(this._seed);
 		ret._state.set(this._state);
@@ -207,14 +189,6 @@ export class XxHash64 extends AChecksum64 implements IHash {
 		this._bPos = 0;
 	}
 
-	/** Sum the hash with the all content written so far (does not mutate state) */
-	sum(): Uint8Array {
-		return this.sumIn();
-	}
-
-	/**
-	 * Sum the hash (doesn't mutate internal state, here for compat)
-	 */
 	sumIn(): Uint8Array {
 		const result = U64Mut.fromUint32Pair(0, 0);
 		if (this._ingestBytes.gte(U64.fromInt(this._b8.length))) {
@@ -318,28 +292,22 @@ export class XxHash64 extends AChecksum64 implements IHash {
 		return result.toBytesBE();
 	}
 
-	/** Set hash state. Any past writes will be forgotten */
 	reset() {
 		this._state.at(0).set(this._seed.mut().addEq(p64_1).addEq(p64_2));
 		this._state.at(1).set(this._seed.mut().addEq(p64_2));
 		this._state.at(2).set(this._seed);
 		this._state.at(3).set(this._seed).subEq(p64_1);
-		super.reset();
+		super._reset();
 	}
 
-	/** Create an empty IHash using the same algorithm */
 	newEmpty() {
 		return new XxHash64(this._seed);
 	}
 
-	/**
-	 * Create a copy of the current context (uses different memory)
-	 * @returns
-	 */
 	clone(): XxHash64 {
 		const ret = new XxHash64(this._seed);
 		ret._state.set(this._state);
-		super.clone(ret);
+		super._clone(ret);
 		return ret;
 	}
 }

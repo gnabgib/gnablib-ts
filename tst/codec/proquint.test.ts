@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { proquint } from '../../src/codec';
+import { hex, proquint } from '../../src/codec';
 import { IpV4 } from '../../src/primitive/net';
 import { U16 } from '../../src/primitive/number';
 import {U32} from '../../src/primitive/number/U32Static';
@@ -73,6 +73,15 @@ for (const [num,pro] of bit16Set) {
 	//Decode
 }
 
+const fromBytes_tests:string[]=[
+	'00'
+];
+for(const bHex of fromBytes_tests) {
+	tsts(`decode(${bHex})`, () => {
+		assert.throws(()=>proquint.fromBytes(hex.toBytes(bHex)));
+	});
+}
+
 const numSet:[number,string][] = [
 	//'bdfghjklmnprstvz'
 	[0xffffffff, 'zuzuz-zuzuz'], //From docs
@@ -91,13 +100,14 @@ for (const [num,pro] of numSet) {
 	});
 }
 
-const badSizeSet:string[]=[
+const bad_toBytes_tests:string[]=[
 	'baba',
 	'bab',
 	'ba',
-	'b'
+	'b',
+	'c'
 ];
-for(const test of badSizeSet) {
+for(const test of bad_toBytes_tests) {
 	tsts(`decode(${test}) throws`,()=>{
 		assert.throws(()=>proquint.toBytes(test));
 	});

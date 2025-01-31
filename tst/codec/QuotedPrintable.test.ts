@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { quotedPrintable, utf8 } from '../../src/codec';
+import { hex, quotedPrintable, utf8 } from '../../src/codec';
 
 const tsts = suite('QuotedPrintable/RFC 2045');
 
@@ -88,12 +88,31 @@ const decodePairs = [
 		"J'interdis aux marchands de vanter trop leurs marchandises. Car ils se font=\r\n vite p=C3=A9dagogues et t'enseignent comme but ce qui n'est par essence qu=\r\n'un moyen, et te trompant ainsi sur la route =C3=A0 suivre les voil=C3=\r\n=A0 bient=C3=B4t qui te d=C3=A9gradent, car si leur musique est vulgaire il=\r\ns te fabriquent pour te la vendre une =C3=A2me vulgaire.\r\n=E2=80=94=E2=80=89Antoine de Saint-Exup=C3=A9ry, Citadelle (1948)",
 	],
 ];
-
 for (const pair of decodePairs) {
 	tsts('toBytes: ' + pair[1], () => {
 		const b = quotedPrintable.toBytes(pair[1]);
 		assert.is(utf8.fromBytes(b), pair[0]);
 	});
+}
+
+const bad_fromBytes_lineLength_tests:[string,number][]=[
+	['',1],
+	['',1000],
+];
+for(const [qpHex,lineLen] of bad_fromBytes_lineLength_tests) {
+	tsts(`fromBytes(${qpHex})`,()=>{
+		assert.throws(()=>quotedPrintable.fromBytes(hex.toBytes(qpHex),{lineLength:lineLen}));
+	});
+}
+
+const bad_toBytes_tests:string[]=[
+	'=Q',
+	'𣎴'
+];
+for(const bad of bad_toBytes_tests) {
+	tsts(`toBytes(${bad})`,()=>{
+		assert.throws(()=>quotedPrintable.toBytes(bad));
+	})
 }
 
 tsts.run();

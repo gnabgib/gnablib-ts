@@ -36,6 +36,7 @@ tsts(`sum`,()=>{
     const hash=new XxHash32(0);
     hash.write(Uint8Array.of(0));
     assert.is(hex.fromBytes(hash.sum()),'CF65B03E');
+    assert.is(hex.fromBytes(hash.sum()),'CF65B03E');
 });
 
 tsts(`sumIn`,()=>{
