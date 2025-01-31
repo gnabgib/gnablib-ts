@@ -2,11 +2,6 @@
 
 export interface IWriter {
 	/**
-	 * Write a byte, will be truncated to 8bits
-	 * @throws Error if there's not enough space
-	 */
-	//writeByte(b: number): void;
-	/**
 	 * Write a series of bytes
 	 * @throws Error if there's not enough space
 	 */

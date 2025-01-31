@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { U32MutArray } from '../../../src/primitive/number';
+import { U32MutArray } from '../../../src/primitive/number/U32MutArray';
 import util from 'util';
 import { hex } from '../../../src/codec/Hex';
 
