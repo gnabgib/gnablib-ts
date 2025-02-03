@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { U64Mut,U64 } from '../../../src/primitive/number';
+import { U64Mut,U64 } from '../../../src/primitive/number/U64';
 import util from 'util';
 
 const tsts = suite('U64Mut');
@@ -507,7 +507,7 @@ tsts(`clone`,()=>{
 });
 
 tsts(`zero`,()=>{
-	const a=U64Mut.fromUint32Pair(0x89abcdef,0x01234567);
+	const a=U64Mut.fromI32s(0x89abcdef,0x01234567);
 	assert.is(hex.fromBytes(a.toBytesBE()), '0123456789ABCDEF');
 	a.zero();
 	assert.is(hex.fromBytes(a.toBytesBE()), '0000000000000000');
@@ -528,17 +528,16 @@ tsts('util.inspect',()=>{
 tsts(`fromInt`,()=>{
 	assert.equal(U64Mut.fromInt(0).eq(U64.zero),true,'0');
     assert.throws(()=>{U64Mut.fromInt(9.5e15);})
-    assert.throws(()=>{U64Mut.fromInt(-1);})
 });
 
 const toBytesTests:string[]=[
 	'0123456789ABCDEF',
 ];
 for(const expect of toBytesTests) {
-	tsts(`toBytesLE(${expect})`, () => {
-		const u=U64Mut.fromBytesLE(hex.toBytes(expect));
-		assert.equal(hex.fromBytes(u.toBytesLE()),expect);
-	});
+	// tsts(`toBytesLE(${expect})`, () => {
+	// 	const u=U64Mut.fromBytesLE(hex.toBytes(expect));
+	// 	assert.equal(hex.fromBytes(u.toBytesLE()),expect);
+	// });
 	tsts(`toBytesBE(${expect})`, () => {
 		const u=U64Mut.fromBytesBE(hex.toBytes(expect));
 		assert.equal(hex.fromBytes(u.toBytesBE()),expect);

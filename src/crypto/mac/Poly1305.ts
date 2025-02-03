@@ -290,8 +290,8 @@ class Poly1305Aead implements IAeadCrypt {
 	private _crypt: IFullCrypt;
 	/** Stage Init=0/AssocData=1/Data=2 */
 	private _stage = stage_init;
-	private readonly _adLen = U64Mut.fromUint32Pair(0, 0);
-	private readonly _cLen = U64Mut.fromUint32Pair(0, 0);
+	private readonly _adLen = U64Mut.fromI32s(0, 0);
+	private readonly _cLen = U64Mut.fromI32s(0, 0);
 
 	constructor(key: Uint8Array, nonce: Uint8Array, ctor: IFullCryptBuilder) {
 		this._crypt = new ctor(key, nonce);

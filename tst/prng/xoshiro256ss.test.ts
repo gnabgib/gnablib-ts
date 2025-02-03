@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Xoshiro256ss } from '../../src/prng/xoshiro256';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('xoshiro256**');
@@ -14,10 +14,10 @@ const seq100: string[] = [
     '8852F10B70A289F7'
 ];
 const rng_100=Xoshiro256ss.seed(
-    U64.fromUint32Pair(0xF13CF544,0x23259B94),
-    U64.fromUint32Pair(0xC6B89FE4,0x03BC38D6),
-    U64.fromUint32Pair(0xFBD2E5CD,0x3E540F97),
-    U64.fromUint32Pair(0x68859A70,0x40DBD7E6));
+    U64.fromI32s(0xF13CF544,0x23259B94),
+    U64.fromI32s(0xC6B89FE4,0x03BC38D6),
+    U64.fromI32s(0xFBD2E5CD,0x3E540F97),
+    U64.fromI32s(0x68859A70,0x40DBD7E6));
 let i = 0;
 for (const expect of seq100) {
 	const act = rng_100.rawNext();
@@ -92,10 +92,10 @@ const seq_1: string[] = [
     '8B721B33265CC975',
 ];
 const rng_1c=Xoshiro256ss.seed(
-    U64.fromUint32Pair(0x36ed852f,0x96a1743c),
-    U64.fromUint32Pair(0x32c50c9f,0x8c0ac257),
-    U64.fromUint32Pair(0xc2947a21,0xec65ea85),
-    U64.fromUint32Pair(0xfe9971f9,0x6cd5a2d6));
+    U64.fromI32s(0x36ed852f,0x96a1743c),
+    U64.fromI32s(0x32c50c9f,0x8c0ac257),
+    U64.fromI32s(0xc2947a21,0xec65ea85),
+    U64.fromI32s(0xfe9971f9,0x6cd5a2d6));
 i = 0;
 for (const expect of seq_1) {
 	const act = rng_1c.rawNext();

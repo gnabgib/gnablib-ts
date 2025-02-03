@@ -3,7 +3,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Xoroshiro128pp } from '../../src/prng/xoroshiro128';
 import { hex } from '../../src/codec/Hex';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 
 const tsts = suite('Xoroshiro128++');
 
@@ -30,7 +30,7 @@ const seq_1_2:string[]=[
     '180ACC04718606D3',
     '9E226D35036FC4C7',
 ];
-const rng_1_2=Xoroshiro128pp.seed(U64.fromUint32Pair(1,0),U64.fromUint32Pair(2,0));
+const rng_1_2=Xoroshiro128pp.seed(U64.fromI32s(1,0),U64.fromI32s(2,0));
 i=0;
 for (const expect of seq_1_2) {
 	const act = rng_1_2.rawNext();

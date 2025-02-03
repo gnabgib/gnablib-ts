@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../../src/codec';
 import { Salsa20 } from '../../../src/crypto/sym';
-import { U64 } from '../../../src/primitive/number';
+import { U64 } from '../../../src/primitive/number/U64';
 
 
 const tsts = suite('Salsa20');
@@ -71,7 +71,7 @@ for(const [descr,key,nonce,counter,plain,enc] of testEnc) {
 }
 
 tsts(`Encrypt size matches plaintext`,()=>{
-    var cc=new Salsa20(new Uint8Array(32),new Uint8Array(8));
+    const cc=new Salsa20(new Uint8Array(32),new Uint8Array(8));
     assert.is(cc.encryptSize(13),13);
 });
 

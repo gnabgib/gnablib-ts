@@ -2,7 +2,7 @@
 
 import type { IHash } from '../crypto/interfaces/IHash.js';
 import { asLE } from '../endian/platform.js';
-import { U64, U64Mut, U64MutArray } from '../primitive/number/U64.js';
+import { U64,U64MutArray } from '../primitive/number/U64.js';
 import { AChecksum32 } from './_AChecksum.js';
 
 //[Wikipedia: Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function)
@@ -11,7 +11,7 @@ import { AChecksum32 } from './_AChecksum.js';
 //SpookyHash v2 was released shortly after V1, and improved on it, so no v1 implementation planned
 
 const sBlockSizeEls = 4;
-const sc = U64Mut.fromUint32Pair(0xdeadbeef, 0xdeadbeef);
+const sc = U64.fromI32s(0xdeadbeef, 0xdeadbeef);
 const lBlockSizeEls = 12;
 const lBlockSizeBytes = lBlockSizeEls << 3; //96
 const sToL = lBlockSizeBytes << 1; //192
@@ -44,7 +44,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 	/** aka Mix */
 	protected hash() {
 		//Make sure block is little-endian
-		asLE.i64(this._b8, 0, sBlockSizeEls);
+		asLE.i32(this._b8,0,sBlockSizeEls*2);
 		//Add in data
 		this._state.at(0).addEq(this._b64.at(0));
 		this._state.at(1).addEq(this._b64.at(1));
@@ -94,7 +94,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 
 	private final() {
 		//Make sure block is little-endian
-		asLE.i64(this._b8, 0, sBlockSizeEls);
+		asLE.i32(this._b8,0,sBlockSizeEls*2);
 		//Add in data
 		this._state.at(0).addEq(this._b64.at(0));
 		this._state.at(1).addEq(this._b64.at(1));
@@ -160,8 +160,8 @@ export class SpookyShort extends AChecksum32 implements IHash {
 			//Zero the rest
 			this.fillBlock();
 		}
-		//Add the length
-		this._b64.at(3).addEq(U64Mut.fromUint32Pair(0, this._ingestBytes << 24));
+		//Add the length (<<56 = MSU32 << 24)
+		this._b64.at(3).addEq(U64.fromI32s(0, this._ingestBytes << 24));
 		//If a multiple of 16, add SC to C/D (bPos =0 or 16)
 		if ((this._bPos & 15) === 0) {
 			this._b64.at(2).addEq(sc);

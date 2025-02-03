@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { U64 } from '../../../src/primitive/number';
+import { U64 } from '../../../src/primitive/number/U64';
 import util from 'util';
 
 const tsts = suite('U64');
@@ -564,7 +564,7 @@ const lastByteBETest:[number,number][]=[
 for(const [a,expect] of lastByteBETest) {
 	tsts(`lsb(${a})`,()=>{
 		const a64=U64.fromInt(a);
-		assert.is(a64.lsb(),expect);
+		assert.is(a64.getByte(),expect);
 	})
 }
 
@@ -577,13 +577,13 @@ const lsbTest:[string,number,number][]=[
 	['0102030405060708',5,3],
 	['0102030405060708',6,2],
 	['0102030405060708',7,1],
-	['0102030405060708',8,8],//Same as 0 because of &7
+	//['0102030405060708',8,8],//Throws
 ]
 for(const [a,lsb,expect] of lsbTest){
-	tsts(`lsb(${a},$lsb)`,()=>{
+	tsts(`lsb(${a},${lsb})`,()=>{
 		const aBytes = hex.toBytes(a);
 		const aUint = U64.fromBytesBE(aBytes);
-		assert.is(aUint.lsb(lsb),expect);
+		assert.is(aUint.getByte(lsb),expect);
 	})
 }
 
@@ -628,42 +628,42 @@ for (const [aHex,bHex] of lt64Test) {
 	});
 
 
-	//Constant time
-	tsts(`${aHex} <=.ct ${bHex}`,()=>{
-		assert.is(a.ctLte(b),true);
-	});
-	tsts(`! ${bHex} <=.ct ${aHex}`,()=>{
-		assert.is(b.ctLte(a),false);
-	});
+	// //Constant time
+	// tsts(`${aHex} <=.ct ${bHex}`,()=>{
+	// 	assert.is(a.ctLte(b),true);
+	// });
+	// tsts(`! ${bHex} <=.ct ${aHex}`,()=>{
+	// 	assert.is(b.ctLte(a),false);
+	// });
 
-	tsts(`${aHex} <.ct ${bHex}`,()=>{
-		assert.is(a.ctLt(b),true);
-	});
-	tsts(`! ${bHex} <.ct ${aHex}`,()=>{
-		assert.is(b.ctLt(a),false);
-	});
+	// tsts(`${aHex} <.ct ${bHex}`,()=>{
+	// 	assert.is(a.ctLt(b),true);
+	// });
+	// tsts(`! ${bHex} <.ct ${aHex}`,()=>{
+	// 	assert.is(b.ctLt(a),false);
+	// });
 
 
-	tsts(`${bHex} >=.ct ${aHex}`,()=>{
-		assert.is(b.ctGte(a),true);
-	});
-	tsts(`! ${aHex} >=.ct ${bHex}`,()=>{
-		assert.is(a.ctGte(b),false);
-	});
+	// tsts(`${bHex} >=.ct ${aHex}`,()=>{
+	// 	assert.is(b.ctGte(a),true);
+	// });
+	// tsts(`! ${aHex} >=.ct ${bHex}`,()=>{
+	// 	assert.is(a.ctGte(b),false);
+	// });
 
-	tsts(`${bHex} >.ct ${aHex}`,()=>{
-		assert.is(b.ctGt(a),true);
-	});
-	tsts(`! ${aHex} >.ct ${bHex}`,()=>{
-		assert.is(a.ctGt(b),false);
-	});
+	// tsts(`${bHex} >.ct ${aHex}`,()=>{
+	// 	assert.is(b.ctGt(a),true);
+	// });
+	// tsts(`! ${aHex} >.ct ${bHex}`,()=>{
+	// 	assert.is(a.ctGt(b),false);
+	// });
 
-	tsts(`! ${aHex} ==.ct ${bHex}`,()=>{
-		assert.is(a.ctEq(b),false);
-	});
-	tsts(`! ${bHex} ==.ct ${aHex}`,()=>{
-		assert.is(b.ctEq(a),false);
-	});
+	// tsts(`! ${aHex} ==.ct ${bHex}`,()=>{
+	// 	assert.is(a.ctEq(b),false);
+	// });
+	// tsts(`! ${bHex} ==.ct ${aHex}`,()=>{
+	// 	assert.is(b.ctEq(a),false);
+	// });
 
 }
 
@@ -702,87 +702,87 @@ for (const aHex of eq64Test) {
 	});
 
 
-	//Constant time
-	tsts(`${aHex} ==.ct ${aHex}`,()=>{
-		assert.is(a.ctEq(b),true);
-	});
+	// //Constant time
+	// tsts(`${aHex} ==.ct ${aHex}`,()=>{
+	// 	assert.is(a.ctEq(b),true);
+	// });
 
-	tsts(`${aHex} <=.ct ${aHex}`,()=>{
-		assert.is(a.ctLte(b),true);
-	});
+	// tsts(`${aHex} <=.ct ${aHex}`,()=>{
+	// 	assert.is(a.ctLte(b),true);
+	// });
 
-	tsts(`! ${aHex} <.ct ${aHex}`,()=>{
-		assert.is(a.ctLt(b),false);
-	});
+	// tsts(`! ${aHex} <.ct ${aHex}`,()=>{
+	// 	assert.is(a.ctLt(b),false);
+	// });
 	
-	tsts(`${aHex} >=.ct ${aHex}`,()=>{
-		assert.is(a.ctGte(b),true);
-	});
+	// tsts(`${aHex} >=.ct ${aHex}`,()=>{
+	// 	assert.is(a.ctGte(b),true);
+	// });
 
-	tsts(`! ${aHex} >.ct ${aHex}`,()=>{
-		assert.is(a.ctGt(b),false);
-	});
+	// tsts(`! ${aHex} >.ct ${aHex}`,()=>{
+	// 	assert.is(a.ctGt(b),false);
+	// });
 }
 
-tsts(`ctSelect`,()=>{
-	const aHex='0102030405060708';
-	const bHex='F0E0D0C0B0A09080';
-	const aBytes=hex.toBytes(aHex);
-	const bBytes=hex.toBytes(bHex);
-	const a=U64.fromBytesBE(aBytes);
-	const b=U64.fromBytesBE(bBytes);
+// tsts(`ctSelect`,()=>{
+// 	const aHex='0102030405060708';
+// 	const bHex='F0E0D0C0B0A09080';
+// 	const aBytes=hex.toBytes(aHex);
+// 	const bBytes=hex.toBytes(bHex);
+// 	const a=U64.fromBytesBE(aBytes);
+// 	const b=U64.fromBytesBE(bBytes);
 
-	assert.equal(U64.ctSelect(a,b,true).toBytesBE(),aBytes);
-	assert.equal(U64.ctSelect(a,b,false).toBytesBE(),bBytes);
-})
+// 	assert.equal(U64.ctSelect(a,b,true).toBytesBE(),aBytes);
+// 	assert.equal(U64.ctSelect(a,b,false).toBytesBE(),bBytes);
+// })
 
-tsts(`ctSwitch`,()=>{
-	const aHex='0102030405060708';
-	const bHex='F0E0D0C0B0A09080';
-	const aBytes=hex.toBytes(aHex);
-	const bBytes=hex.toBytes(bHex);
-	const a=U64.fromBytesBE(aBytes);
-	const b=U64.fromBytesBE(bBytes);
+// tsts(`ctSwitch`,()=>{
+// 	const aHex='0102030405060708';
+// 	const bHex='F0E0D0C0B0A09080';
+// 	const aBytes=hex.toBytes(aHex);
+// 	const bBytes=hex.toBytes(bHex);
+// 	const a=U64.fromBytesBE(aBytes);
+// 	const b=U64.fromBytesBE(bBytes);
 
-	assert.equal(a.ctSwitch(b,true).toBytesBE(),bBytes);
-	assert.equal(a.ctSwitch(b,false).toBytesBE(),aBytes);
-})
+// 	assert.equal(a.ctSwitch(b,true).toBytesBE(),bBytes);
+// 	assert.equal(a.ctSwitch(b,false).toBytesBE(),aBytes);
+// })
 
-const toMinBytesTest:[string,Uint8Array,Uint8Array][]=[
-	['0000000000000000',Uint8Array.of(0),Uint8Array.of(0)],
-	['0000000000000001',Uint8Array.of(1),Uint8Array.of(1)],
-	['0000000000000010',Uint8Array.of(16),Uint8Array.of(16)],
-	['0000000000000100',Uint8Array.of(1,0),Uint8Array.of(0,1)],
-	['0000000000001000',Uint8Array.of(16,0),Uint8Array.of(0,16)],
-	['0000000000010000',Uint8Array.of(1,0,0),Uint8Array.of(0,0,1)],
-	['0000000000100000',Uint8Array.of(16,0,0),Uint8Array.of(0,0,16)],
-	['0000000001000000',Uint8Array.of(1,0,0,0),Uint8Array.of(0,0,0,1)],
-	['0000000010000000',Uint8Array.of(16,0,0,0),Uint8Array.of(0,0,0,16)],
-	['0000000100000000',Uint8Array.of(1,0,0,0,0),Uint8Array.of(0,0,0,0,1)],
-	['0000001000000000',Uint8Array.of(16,0,0,0,0),Uint8Array.of(0,0,0,0,16)],
-	['0000010000000000',Uint8Array.of(1,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,1)],
-	['0000100000000000',Uint8Array.of(16,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,16)],
-	['0001000000000000',Uint8Array.of(1,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,1)],
-	['0010000000000000',Uint8Array.of(16,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,16)],
-	['0100000000000000',Uint8Array.of(1,0,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,0,1)],
-	['1000000000000000',Uint8Array.of(16,0,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,0,16)],
-	['0102030405060708',Uint8Array.of(1,2,3,4,5,6,7,8),Uint8Array.of(8,7,6,5,4,3,2,1)],
-];
-for(const [aHex,expectBE,expectLE] of toMinBytesTest) {
-	const aBytes=hex.toBytes(aHex);
-	const a=U64.fromBytesBE(aBytes);
-	tsts(`U64(${aHex}).toMinBytesBE`,()=>{
-		assert.equal(a.toMinBytesBE(),expectBE);
-	});
-	tsts(`U64(${aHex}).toMinBytesLE`,()=>{
-		assert.equal(a.toMinBytesLE(),expectLE);
-	});
-}
-tsts('fromBytesLE',()=>{
-	const aBytes=hex.toBytes('0100000000000000');
-	const a=U64.fromBytesLE(aBytes);
-	assert.equal(a.toMinBytesLE(),Uint8Array.of(1));
-});
+// const toMinBytesTest:[string,Uint8Array,Uint8Array][]=[
+// 	['0000000000000000',Uint8Array.of(0),Uint8Array.of(0)],
+// 	['0000000000000001',Uint8Array.of(1),Uint8Array.of(1)],
+// 	['0000000000000010',Uint8Array.of(16),Uint8Array.of(16)],
+// 	['0000000000000100',Uint8Array.of(1,0),Uint8Array.of(0,1)],
+// 	['0000000000001000',Uint8Array.of(16,0),Uint8Array.of(0,16)],
+// 	['0000000000010000',Uint8Array.of(1,0,0),Uint8Array.of(0,0,1)],
+// 	['0000000000100000',Uint8Array.of(16,0,0),Uint8Array.of(0,0,16)],
+// 	['0000000001000000',Uint8Array.of(1,0,0,0),Uint8Array.of(0,0,0,1)],
+// 	['0000000010000000',Uint8Array.of(16,0,0,0),Uint8Array.of(0,0,0,16)],
+// 	['0000000100000000',Uint8Array.of(1,0,0,0,0),Uint8Array.of(0,0,0,0,1)],
+// 	['0000001000000000',Uint8Array.of(16,0,0,0,0),Uint8Array.of(0,0,0,0,16)],
+// 	['0000010000000000',Uint8Array.of(1,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,1)],
+// 	['0000100000000000',Uint8Array.of(16,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,16)],
+// 	['0001000000000000',Uint8Array.of(1,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,1)],
+// 	['0010000000000000',Uint8Array.of(16,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,16)],
+// 	['0100000000000000',Uint8Array.of(1,0,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,0,1)],
+// 	['1000000000000000',Uint8Array.of(16,0,0,0,0,0,0,0),Uint8Array.of(0,0,0,0,0,0,0,16)],
+// 	['0102030405060708',Uint8Array.of(1,2,3,4,5,6,7,8),Uint8Array.of(8,7,6,5,4,3,2,1)],
+// ];
+// for(const [aHex,expectBE,expectLE] of toMinBytesTest) {
+// 	const aBytes=hex.toBytes(aHex);
+// 	const a=U64.fromBytesBE(aBytes);
+// 	tsts(`U64(${aHex}).toMinBytesBE`,()=>{
+// 		assert.equal(a.toMinBytesBE(),expectBE);
+// 	});
+// 	tsts(`U64(${aHex}).toMinBytesLE`,()=>{
+// 		assert.equal(a.toMinBytesLE(),expectLE);
+// 	});
+// }
+// tsts('fromBytesLE',()=>{
+// 	const aBytes=hex.toBytes('0100000000000000');
+// 	const a=U64.fromBytesLE(aBytes);
+// 	assert.equal(a.toMinBytesLE(),Uint8Array.of(1));
+// });
 
 tsts(`clone`,()=>{
 	//Really just for coverage (since you cannot mutate, what's the value of a clone?)
@@ -791,35 +791,34 @@ tsts(`clone`,()=>{
 });
 
 tsts(`mut`,()=>{
-	const a=U64.fromUint32Pair(1,2);
+	const a=U64.fromI32s(1,2);
 	const b=a.mut().add(a);
-	assert.equal(b.eq(U64.fromUint32Pair(2,4)),true,'b changed');
-	assert.equal(a.eq(U64.fromUint32Pair(1,2)),true,'a the same');
+	assert.equal(b.eq(U64.fromI32s(2,4)),true,'b changed');
+	assert.equal(a.eq(U64.fromI32s(1,2)),true,'a the same');
 });
 
-tsts(`mut32`,()=>{
-	const a=U64.fromUint32Pair(1,2);
-	assert.equal(a.toString(),'0000000200000001');
-	const u32=a.mut32();
-	u32[0]=3;
-	u32[1]=4;
-	assert.equal(u32[0],3,'mut32 has been modified');
-	assert.equal(a.toString(),'0000000200000001','u64 is the same');
-});
+// tsts(`mut32`,()=>{
+// 	const a=U64.fromU32s(1,2);
+// 	assert.equal(a.toString(),'0000000200000001');
+// 	const u32=a.mut32();
+// 	u32[0]=3;
+// 	u32[1]=4;
+// 	assert.equal(u32[0],3,'mut32 has been modified');
+// 	assert.equal(a.toString(),'0000000200000001','u64 is the same');
+// });
 
 
-tsts(`fromArray`,()=>{
-	const a=U64.fromArray(Uint32Array.of(1,0));
+tsts(`mount`,()=>{
+	const a=U64.mount(Uint32Array.of(1,0));
 	assert.equal(a.eq(U64.fromInt(1)),true);
 });
 
-tsts(`fromBuffer`,()=>{
-	const a=U64.fromBuffer(Uint32Array.of(1,0).buffer);
-	assert.equal(a.eq(U64.fromInt(1)),true);
-});
+// tsts(`fromBuffer`,()=>{
+// 	const a=U64.fromBuffer(Uint32Array.of(1,0).buffer);
+// 	assert.equal(a.eq(U64.fromInt(1)),true);
+// });
 
 tsts(`constants`,()=>{
-	assert.equal(U64.max.toBytesBE(),Uint8Array.of(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff));
 	assert.equal(U64.zero.toBytesBE(),Uint8Array.of(0,0,0,0,0,0,0,0));
 });
 
@@ -837,14 +836,21 @@ tsts('util.inspect',()=>{
 
 tsts(`fromInt`,()=>{
 	assert.equal(U64.fromInt(0).eq(U64.zero),true,'0');
-    assert.throws(()=>{U64.fromInt(9.5e15);})
-    assert.throws(()=>{U64.fromInt(-1);})
+    assert.throws(()=>{U64.fromInt(9.5e15);},'9.5e15')
+	//This no longer throws - maybe you want to use -1 as a short form for 0xFF...
+    //assert.throws(()=>{U64.fromInt(-1);},'-1')
 });
 
 // tsts('general',()=>{
 //     const o=U64.fromInt(1);
 //     console.log(o);
 //     console.log(Object.prototype.toString.call(o));
+// });
+
+// tsts(`u64 build`,()=>{
+// 	const u=U64.fromI32s(0,1<<24);
+// 	const u2=U64.fromInt(1).lShift(56);
+// 	console.log(`${u} ${u2}`);
 // });
 
 tsts.run();

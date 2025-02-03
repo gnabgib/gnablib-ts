@@ -45,7 +45,7 @@ export abstract class APrng64<T extends ItoBytesLEer> {
 
 	private _nextU(bits: number): U64 {
 		//Note to libdev: bits must be 64 max
-		const ret = U64Mut.fromUint32Pair(0, 0);
+		const ret = U64Mut.fromI32s(0, 0);
 		let shift = bits;
 		while (shift > this.bitGen) {
 			shift -= this.bitGen;

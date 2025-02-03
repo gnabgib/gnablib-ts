@@ -2,7 +2,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { XorShift128p } from '../../src/prng/xorShift128p';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('XorShift128+');
@@ -30,7 +30,7 @@ const seq_15: string[] = [
     '9CB685AAC26271D1',
     '8170ABFAC60F741D',
 ];
-const rng_15=XorShift128p.seed(U64.fromUint32Pair(123456789,0),U64.fromUint32Pair(362436069,0));
+const rng_15=XorShift128p.seed(U64.fromI32s(123456789,0),U64.fromI32s(362436069,0));
 //0x000000000 159A55E5 00000000 075BCD15 / 6685765407924336135579094293
 let i = 0;
 for (const expect of seq_15) {
@@ -63,7 +63,7 @@ const seq_25: string[] = [
     'E53D50FBBB47EC3C',
     'B2AFD6425E980404',
 ];
-const rng_25=XorShift128p.seed(U64.fromUint32Pair(2579111315,0),U64.fromUint32Pair(362436069,0));
+const rng_25=XorShift128p.seed(U64.fromI32s(2579111315,0),U64.fromI32s(362436069,0));
 //0x00000000 159A55E5 00000000 99BA1D93 / 6685765407924336138034748819
 i = 0;
 for (const expect of seq_25) {

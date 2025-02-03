@@ -1,12 +1,13 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
+import { asLE } from '../endian/platform.js';
 import { U64, U64Mut } from '../primitive/number/U64.js';
 import { sLen } from '../safe/safe.js';
 import { APrng32 } from './APrng32.js';
 
-const u64_1 = U64.fromUint32Pair(1, 0);
+const u64_1 = U64.fromI32s(1, 0);
 //Mul defined in source: https://github.com/imneme/pcg-c
-const mul = U64.fromUint32Pair(0x4c957f2d, 0x5851f42d); //6364136223846793005
+const mul = U64.fromI32s(0x4c957f2d, 0x5851f42d); //6364136223846793005
 
 /**
  * Permuted Congruential Generator (PCG) using 64bit state, 32bit return as described in
@@ -53,10 +54,10 @@ export class Pcg32 extends APrng32<U64Mut> {
 	static new(saveable = false) {
 		//Default add provided in demo source: https://github.com/imneme/pcg-c
 		//0xda3e39cb94b95bdb | 15726070495360670683
-		const inc = U64.fromUint32Pair(0x94b95bdb, 0xda3e39cb);
+		const inc = U64.fromI32s(0x94b95bdb, 0xda3e39cb);
 		//Default seed provided in demo source: https://github.com/imneme/pcg-c
 		//0x853c49e6748fea9bULL | 9600629759793949339
-		const state = U64Mut.fromUint32Pair(0x748fea9b, 0x853c49e6);
+		const state = U64Mut.fromI32s(0x748fea9b, 0x853c49e6);
 		//This default seed comes from the paper
 		return new Pcg32(state, inc, saveable);
 	}
@@ -73,8 +74,8 @@ export class Pcg32 extends APrng32<U64Mut> {
 		const inc64 =
 			inc != undefined
 				? inc.mut().lShiftEq(1).xorEq(u64_1)
-				: U64.fromUint32Pair(0x94b95bdb, 0xda3e39cb);
-		const state = U64Mut.fromUint32Pair(0, 0);
+				: U64.fromI32s(0x94b95bdb, 0xda3e39cb);
+		const state = U64Mut.fromI32s(0, 0);
 		state.mulEq(mul).addEq(inc64);
 		state.addEq(seed);
 		state.mulEq(mul).addEq(inc64);
@@ -89,8 +90,10 @@ export class Pcg32 extends APrng32<U64Mut> {
 	static restore(state: Uint8Array, saveable = false) {
 		sLen('state', state).exactly(16).throwNot();
 		const s2 = state.slice();
-		const state64 = U64Mut.fromBytesLE(s2);
-		const inc64 = U64.fromBytesLE(s2, 8);
+		asLE.i32(s2, 0, 4);
+		const s32 = new Uint32Array(s2.buffer);
+		const state64 = U64Mut.mount(s32, 0);
+		const inc64 = U64.mount(s32, 2);
 		return new Pcg32(state64, inc64, saveable);
 	}
 }

@@ -362,8 +362,8 @@ class Blake1_64bit implements IHash {
 			i2 = i << 1,
 			j = sigma[i2],
 			k = sigma[i2 + 1],
-			nj = U64Mut.fromUint32Pair(n[2 * j + 1], n[2 * j]),
-			nk = U64Mut.fromUint32Pair(n[2 * k + 1], n[2 * k]),
+			nj = U64Mut.fromI32s(n[2 * j + 1], n[2 * j]),
+			nk = U64Mut.fromI32s(n[2 * k + 1], n[2 * k]),
 			mj = this.#block64.at(j),
 			mk = this.#block64.at(k);
 
@@ -388,7 +388,7 @@ class Blake1_64bit implements IHash {
 	 */
 	private hash(countOverride?: number): void {
 		countOverride = countOverride ?? this._ingestBytes;
-		const count64a = U64Mut.fromUint32Pair(
+		const count64a = U64Mut.fromI32s(
 			countOverride << 3,
 			countOverride / 0x20000000
 		);
@@ -396,14 +396,14 @@ class Blake1_64bit implements IHash {
 		const v = U64MutArray.fromLen(16);
 		v.set(this.#state);
 
-		v.at(8).set(U64Mut.fromUint32Pair(n[1], n[0]).xorEq(this.#salt.at(0)));
-		v.at(9).set(U64Mut.fromUint32Pair(n[3], n[2]).xorEq(this.#salt.at(1)));
-		v.at(10).set(U64Mut.fromUint32Pair(n[5], n[4]).xorEq(this.#salt.at(2)));
-		v.at(11).set(U64Mut.fromUint32Pair(n[7], n[6]).xorEq(this.#salt.at(3)));
-		v.at(12).set(U64Mut.fromUint32Pair(n[9], n[8]).xorEq(count64a));
-		v.at(13).set(U64Mut.fromUint32Pair(n[11], n[10]).xorEq(count64a));
-		v.at(14).set(U64Mut.fromUint32Pair(n[13], n[12]) /*.xorEq(count64b)*/);
-		v.at(15).set(U64Mut.fromUint32Pair(n[15], n[14]) /*.xorEq(count64b)*/);
+		v.at(8).set(U64Mut.fromI32s(n[1], n[0]).xorEq(this.#salt.at(0)));
+		v.at(9).set(U64Mut.fromI32s(n[3], n[2]).xorEq(this.#salt.at(1)));
+		v.at(10).set(U64Mut.fromI32s(n[5], n[4]).xorEq(this.#salt.at(2)));
+		v.at(11).set(U64Mut.fromI32s(n[7], n[6]).xorEq(this.#salt.at(3)));
+		v.at(12).set(U64Mut.fromI32s(n[9], n[8]).xorEq(count64a));
+		v.at(13).set(U64Mut.fromI32s(n[11], n[10]).xorEq(count64a));
+		v.at(14).set(U64Mut.fromI32s(n[13], n[12]) /*.xorEq(count64b)*/);
+		v.at(15).set(U64Mut.fromI32s(n[15], n[14]) /*.xorEq(count64b)*/);
 
 		//Switch (maybe) block to big endian (may mangle storage)
 		for (let i = 0; i < this.#block.length; i += 8) {
@@ -506,10 +506,7 @@ class Blake1_64bit implements IHash {
 		this.#block64
 			.at(ss64 + 1)
 			.set(
-				U64Mut.fromUint32Pair(
-					this._ingestBytes << 3,
-					this._ingestBytes / 0x20000000
-				)
+				U64Mut.fromI32s(this._ingestBytes << 3, this._ingestBytes / 0x20000000)
 			);
 		//Note hash also applies asBE to the block.  We call it twice because we want this value to be LE
 		asBE.i64(this.#block, sizeSpace + 8);
@@ -522,14 +519,14 @@ class Blake1_64bit implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.#state.at(0).set(U64Mut.fromUint32Pair(iv[1], iv[0]));
-		this.#state.at(1).set(U64Mut.fromUint32Pair(iv[3], iv[2]));
-		this.#state.at(2).set(U64Mut.fromUint32Pair(iv[5], iv[4]));
-		this.#state.at(3).set(U64Mut.fromUint32Pair(iv[7], iv[6]));
-		this.#state.at(4).set(U64Mut.fromUint32Pair(iv[9], iv[8]));
-		this.#state.at(5).set(U64Mut.fromUint32Pair(iv[11], iv[10]));
-		this.#state.at(6).set(U64Mut.fromUint32Pair(iv[13], iv[12]));
-		this.#state.at(7).set(U64Mut.fromUint32Pair(iv[15], iv[14]));
+		this.#state.at(0).set(U64Mut.fromI32s(iv[1], iv[0]));
+		this.#state.at(1).set(U64Mut.fromI32s(iv[3], iv[2]));
+		this.#state.at(2).set(U64Mut.fromI32s(iv[5], iv[4]));
+		this.#state.at(3).set(U64Mut.fromI32s(iv[7], iv[6]));
+		this.#state.at(4).set(U64Mut.fromI32s(iv[9], iv[8]));
+		this.#state.at(5).set(U64Mut.fromI32s(iv[11], iv[10]));
+		this.#state.at(6).set(U64Mut.fromI32s(iv[13], iv[12]));
+		this.#state.at(7).set(U64Mut.fromI32s(iv[15], iv[14]));
 
 		//Reset ingest count
 		this._ingestBytes = 0;

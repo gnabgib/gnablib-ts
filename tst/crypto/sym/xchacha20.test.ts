@@ -2,8 +2,6 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { XChaCha20 } from '../../../src/crypto/sym';
-import { U64 } from '../../../src/primitive';
-
 
 const tsts = suite('XChaCha20');
 

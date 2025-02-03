@@ -32,7 +32,7 @@ const seq_64:string[] = [
     '2235350C5555A578', 
     'B6212D855D88A8F7'
 ];
-const rng_64b=Gjrand64.seed(U64.fromUint32Pair(987654321,123456789));
+const rng_64b=Gjrand64.seed(U64.fromI32s(987654321,123456789));
 i=0;
 for (const expect of seq_64) {
     const act = rng_64b.rawNext();
@@ -46,7 +46,7 @@ const seq_128:string[] = [
     'D30BD8DFD8821DB0', 
     'C56106C70292A42D'
 ];
-const rng_128=Gjrand64.seed(U64.fromUint32Pair(123, 456),U64.fromUint32Pair(789, 987654321));
+const rng_128=Gjrand64.seed(U64.fromI32s(123, 456),U64.fromI32s(789, 987654321));
 i=0;
 for (const expect of seq_128) {
     const act = rng_128.rawNext();

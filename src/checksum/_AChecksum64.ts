@@ -5,7 +5,7 @@ import { _AChecksum } from './_AChecksum.js';
 
 export abstract class AChecksum64 extends _AChecksum {
 	/** Number of bytes added to the hash */
-	protected _ingestBytes = U64Mut.fromUint32Pair(0, 0);
+	protected _ingestBytes = U64Mut.fromI32s(0, 0);
 
 	/** Write data to the hash (can be called multiple times) */
 	write(data: Uint8Array) {

@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { XxHash64 } from '../../src/checksum';
 import { hex, utf8 } from '../../src/codec';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 
 const tsts = suite('XxHash64');
 

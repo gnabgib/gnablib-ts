@@ -44,6 +44,7 @@ tsts(`build`,()=>{
 	assert.is(hash.fanOut,2,'fanOut');
 	assert.is(hash.maxDepth,3,'maxDepth');
 	assert.is(hash.leafLen,4,'leafLen');
+	//console.log(hash.nodeOffset);
 	assert.is(hash.nodeOffset.eq(U64.fromInt(5)),true,'nodeOffset');
 	assert.is(hash.nodeDepth,6,'nodeDepth');
 	assert.is(hash.innerLen,7,'innerLen');

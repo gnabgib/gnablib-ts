@@ -26,18 +26,17 @@ abstract class AXoshiro256 extends APrng64<U64MutArray> {
 /**
  * [XoShiRo256+](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
  * using xor-shift-rotate, has 256bit state, and 64bit return
- * 
- * This is slightly (+15%) faster than {@link Xoshiro256pp | XoShiRo256++}/{@link Xoshiro256ss | XoShiRo256**}, 
+ *
+ * This is slightly (+15%) faster than {@link Xoshiro256pp | XoShiRo256++}/{@link Xoshiro256ss | XoShiRo256**},
  * if you're generating F64, otherwise use one of them.
  *
  * *NOT cryptographically secure*
- * 
+ *
  * Related:
  * - [C source](https://prng.di.unimi.it/xoshiro256plus.c)
  * - [xoshiro / xoroshiro generators and the PRNG shootout](https://prng.di.unimi.it/#intro)
  */
 export class Xoshiro256p extends AXoshiro256 {
-   
 	readonly safeBits = 53;
 	protected _gen(): U64 {
 		return this._state.at(0).add(this._state.at(3));
@@ -176,8 +175,8 @@ export class Xoshiro256pp extends AXoshiro256 {
 	}
 }
 
-const u64_5 = U64.fromUint32Pair(5, 0);
-const u64_9 = U64.fromUint32Pair(9, 0);
+const u64_5 = U64.fromI32s(5, 0);
+const u64_9 = U64.fromI32s(9, 0);
 
 /**
  * [XoShiRo256**](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)

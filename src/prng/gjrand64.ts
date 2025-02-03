@@ -11,7 +11,7 @@ import { APrng64 } from './APrng64.js';
  * [gjrand random numbers](https://gjrand.sourceforge.net/) 4.3.0 release
  *
  * *NOT cryptographically secure*
- * 
+ *
  * Related:
  * - {@link prng.Gjrand32b | Gjrand32b}
  */
@@ -43,12 +43,13 @@ export class Gjrand64 extends APrng64<U64MutArray> {
 	static new(saveable = false) {
 		//Pre computed state from gjrand32(0) + 14*crank
 		// prettier-ignore
-		const state = U64MutArray.fromU32s(
+		const u32s=Uint32Array.of(
 			2361955991, 2308445249,
 			4286249029, 4038403806,
 			403824257, 4256023257,
 			2941533446, 4
 		);
+		const state = U64MutArray.mount(u32s);
 		return new Gjrand64(state, saveable);
 	}
 
@@ -65,16 +66,16 @@ export class Gjrand64 extends APrng64<U64MutArray> {
 			//32bit build (note seed1 isn't even tested to avoid 96bit seed, which
 			// also means a developer won't get feedback with the invalid combo
 			state.at(0).set(U64.fromInt(seed0));
-			state.at(2).set(U64.fromUint32Pair(1000001, 0));
+			state.at(2).set(U64.fromI32s(1000001, 0));
 		} else if (seed1) {
 			//128bit build
 			state.at(0).set(seed1);
 			state.at(1).set(seed0);
-			state.at(2).set(U64.fromUint32Pair(5000001, 0));
+			state.at(2).set(U64.fromI32s(5000001, 0));
 		} else {
 			//64bit build
 			state.at(0).set(seed0);
-			state.at(2).set(U64.fromUint32Pair(2000001, 0));
+			state.at(2).set(U64.fromI32s(2000001, 0));
 		}
 		const ret = new Gjrand64(state, saveable);
 		for (let i = 0; i < 14; i++) ret.rawNext();

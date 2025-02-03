@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../src/codec';
 import { SpookyShort } from '../../src/checksum';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 
 const tsts = suite('SpookyShort');
 
@@ -53,7 +53,7 @@ for (const [data,seed,expect] of testShort) {
     tsts(`SpookyShort[${count++}]`,()=>{
 		const hash=new SpookyShort(seed[0],seed[1]);
 		hash.write(data);
-        const md=hash.sum();
+        const md=hash.sumIn();
         assert.is(hex.fromBytes(md),expect);
 	});
 }

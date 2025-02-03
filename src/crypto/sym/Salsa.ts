@@ -138,7 +138,9 @@ class Salsa implements IFullCrypt {
 
 		//COUNTER
 		//Bind #count to the state array in position 8/9 (we know U64 uses little endian order)
-		this._count = U64Mut.fromArray(this.#state, 8);
+
+		this._count = U64Mut.mount(this.#state,8);
+		//.fromArray(this.#state, 8);
 		this._count.set(count);
 
 		//NONCE

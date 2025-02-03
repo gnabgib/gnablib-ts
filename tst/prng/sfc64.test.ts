@@ -2,7 +2,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Sfc64 } from '../../src/prng/sfc64';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 
 const tsts = suite('Sfc64');
 
@@ -33,7 +33,7 @@ const seq_1_2:string[]=[
     'C2B84D8F374F9F68',
     'EB98768B2F214403'
 ];
-const rng_4294967298=Sfc64.seed(U64.fromUint32Pair(1,2));
+const rng_4294967298=Sfc64.seed(U64.fromI32s(1,2));
 i=0;
 for (const expect of seq_1_2) {
     const act = rng_4294967298.rawNext();
@@ -53,7 +53,7 @@ const seq_1_2_3_4_5_6:string[]=[
     '28F734DE11AC1CF6',
     '84A43DDE75BF539C'
 ];
-const rng_3_U64=Sfc64.seed(U64.fromUint32Pair(1,2),U64.fromUint32Pair(3,4),U64.fromUint32Pair(5,6));
+const rng_3_U64=Sfc64.seed(U64.fromI32s(1,2),U64.fromI32s(3,4),U64.fromI32s(5,6));
 i=0;
 for (const expect of seq_1_2_3_4_5_6) {
     const act = rng_3_U64.rawNext();

@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Xoshiro256p } from '../../src/prng/xoshiro256';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('Xoshiro256+');
@@ -65,10 +65,10 @@ const seq_1: string[] = [
     '9B8C1D6E46E065BB',
 ];
 const rng_1c=Xoshiro256p.seed(
-    U64.fromUint32Pair(0x36ed852f,0x96a1743c),
-    U64.fromUint32Pair(0x32c50c9f,0x8c0ac257),
-    U64.fromUint32Pair(0xc2947a21,0xec65ea85),
-    U64.fromUint32Pair(0xfe9971f9,0x6cd5a2d6));
+    U64.fromI32s(0x36ed852f,0x96a1743c),
+    U64.fromI32s(0x32c50c9f,0x8c0ac257),
+    U64.fromI32s(0xc2947a21,0xec65ea85),
+    U64.fromI32s(0xfe9971f9,0x6cd5a2d6));
 i = 0;
 for (const expect of seq_1) {
 	const act = rng_1c.rawNext();

@@ -210,10 +210,9 @@ export abstract class AInt {
 		this._arr.subarray(this._pos, this._pos + byPos).reverse();
 		this._arr.subarray(this._pos + byPos, this._pos + this.size32).reverse();
 		// /*DEBUG*/d += ` =${this}\n`;
-
 		//Now do any bit shifting
-		let i = this._pos + this.size32 - 1;
-		const back = this._arr[i];
+		let i = this.size32 - 1;
+		const back = this._arr[this._pos + i];
 		do {
 			// /*DEBUG*/ d += ` [${this._pos + i}]=[${this._pos + i}]<<${by32}|(${zeroRshift}*[${this._pos + i - 1}]>>>${invBy32})\n`;
 			this._arr[this._pos + i] =
@@ -265,12 +264,19 @@ export abstract class AInt {
 	protected _mul(o: AInt): Uint32Array {
 		//todo: This assumes u32 is LE
 		// /*DEBUG*/ if (this.size32 != o.size32) throw new Error('Size mismatch');
+
+		//WARNING: this._arr.subarray(...).buffer returns.. the whole array, because
+		// subarray is just a view into the same buffer.  You either need to:
+		// - copy a piece of the original (this._arr.slice(pos,pos+size).buffer)
+		// - Project into u16 and constrain after (this._arr.buffer,this._pos*4,this.size32*2)
+		//!INCONSISTENT! The third argument is length (not end.. unlike subarray/slice)
+		//		and in elements, not bytes (unlike the positional argument)
 		const t16 = new Uint16Array(
-			this._arr.subarray(this._pos, this._pos + this.size32).buffer
+			this._arr.buffer,
+			this._pos * 4,
+			this.size32 * 2
 		);
-		const o16 = new Uint16Array(
-			o._arr.subarray(o._pos, o._pos + this.size32).buffer
-		);
+		const o16 = new Uint16Array(o._arr.buffer, o._pos * 4, this.size32 * 2);
 		const m16 = new Uint16Array(t16.length);
 		let carry = 0;
 		let i = 0;

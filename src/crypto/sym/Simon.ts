@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 //Just during dev: @todo REMOVE
 /* eslint-disable  @typescript-eslint/no-unused-vars */
@@ -22,7 +22,7 @@ class Simon_32bit implements IBlockCrypt {
 
 		//keySchedule
 		const c = 0xfffffffc;
-		const z = U64Mut.fromUint32Pair(0x192c0ef5, 0x7369f885);
+		const z = U64Mut.fromI32s(0x192c0ef5, 0x7369f885);
 	}
 
 	keySchedule(key: Uint8Array): void {}

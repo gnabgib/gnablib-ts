@@ -147,7 +147,7 @@ class KeccakCore implements IHash {
 		//console.log(`hash : ${hex.fromU64s(st,' ')}`);
 
 		const bc = U64MutArray.fromLen(5);
-		const t = U64Mut.fromUint32Pair(0, 0);
+		const t = U64Mut.fromI32s(0, 0);
 		// prettier-ignore
 		for (let r = this.#roundStart; r < 24; r++) {
 			// Theta
@@ -194,7 +194,7 @@ class KeccakCore implements IHash {
 
 			//  Iota
 			st.at(0).xorEq(
-				U64.fromUint32Pair(roundConst[2 * r + 1], roundConst[2 * r])
+				U64.fromI32s(roundConst[2 * r + 1], roundConst[2 * r])
 			);
 			//console.log(`r[${r}] : ${hex.fromU64s(st,' ')}`);
 		}

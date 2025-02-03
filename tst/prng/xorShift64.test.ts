@@ -2,7 +2,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { XorShift64 } from '../../src/prng/xorShift64';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('XorShift64');
@@ -30,7 +30,7 @@ const seq_1: string[] = [
     '0EF1DE18CDA219AF',
     '711F0D367B32D65C',
 ];
-const rng_1=XorShift64.seed(U64.fromUint32Pair(1,0));
+const rng_1=XorShift64.seed(U64.fromI32s(1,0));
 let i = 0;
 for (const expect of seq_1) {
 	const act = rng_1.rawNext();
@@ -62,7 +62,7 @@ const seq_11234: string[] = [
     '09074831AC217796',
     '1F5CACE2C82410F9',
 ];
-const rng_11234=XorShift64.seed(U64.fromUint32Pair(11234,0));
+const rng_11234=XorShift64.seed(U64.fromI32s(11234,0));
 i = 0;
 for (const expect of seq_11234) {
 	const act = rng_11234.rawNext();

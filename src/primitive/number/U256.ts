@@ -27,7 +27,7 @@ export class U256 extends AInt implements IUint<U256> {
 	 * Build from a series of Int32 numbers,
 	 * each will be truncated to 32 bits.
 	 * Assumes little endian order.
-	 * Assumes unspecified values are 0/-1 (depending on MSB of final number)
+	 * Assumes unspecified values are 0
 	 * @throws Error if too many numbers are provided.
 	 */
 	static fromI32s(...ns: number[]) {

@@ -26,7 +26,7 @@ export class Sfc64 extends APrng64<U64MutArray> {
 			.mut()
 			.addEq(this._state.at(1))
 			.addEq(this._state.at(3));
-		this._state.at(3).addEq(U64.fromUint32Pair(1, 0));
+		this._state.at(3).addEq(U64.fromI32s(1, 0));
 		this._state
 			.at(0)
 			.set(this._state.at(1).xorEq(this._state.at(1).rShiftEq(11))); //rshift=11
@@ -43,12 +43,19 @@ export class Sfc64 extends APrng64<U64MutArray> {
 	/** Build using a reasonable default seed and increment */
 	static new(saveable = false) {
 		// prettier-ignore
-		const state = U64MutArray.fromU32s(
+		const s32=Uint32Array.of(
 			0x7b1dcdaf, 0xe220a839, //e220a8397b1dcdaf
 			0xa1b965f4, 0x6e789e6a, //6e789e6aa1b965f4
 			0x8009454f, 0x06c45d18, //06c45d188009454f
 			1, 0 //0000000000000001
 		);
+		const state = U64MutArray.mount(s32);
+		// const state = U64MutArray.fromU32s(
+		// 	0x7b1dcdaf, 0xe220a839, //e220a8397b1dcdaf
+		// 	0xa1b965f4, 0x6e789e6a, //6e789e6aa1b965f4
+		// 	0x8009454f, 0x06c45d18, //06c45d188009454f
+		// 	1, 0 //0000000000000001
+		// );
 		//This default seed comes from the paper
 		return new Sfc64(state, saveable);
 	}
@@ -77,7 +84,7 @@ export class Sfc64 extends APrng64<U64MutArray> {
 			state.at(2).set(seed0);
 			drop = 12;
 		}
-		state.at(3).set(U64.fromUint32Pair(1, 0));
+		state.at(3).set(U64.fromI32s(1, 0));
 		const ret = new Sfc64(state, saveable);
 		for (let i = 0; i < drop; i++) ret.rawNext();
 		return ret;

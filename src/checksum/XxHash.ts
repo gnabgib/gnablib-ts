@@ -16,11 +16,11 @@ const p32_2 = 2246822519;
 const p32_3 = 3266489917;
 const p32_4 = 668265263;
 const p32_5 = 374761393;
-const p64_1 = U64.fromUint32Pair(0x85ebca87, 0x9e3779b1); //11400714785074694791
-const p64_2 = U64.fromUint32Pair(0x27d4eb4f, 0xc2b2ae3d); //14029467366897019727
-const p64_3 = U64.fromUint32Pair(0x9e3779f9, 0x165667b1); //1609587929392839161
-const p64_4 = U64.fromUint32Pair(0xc2b2ae63, 0x85ebca77); //9650029242287828579
-const p64_5 = U64.fromUint32Pair(0x165667c5, 0x27d4eb2f); //2870177450012600261
+const p64_1 = U64.fromI32s(0x85ebca87, 0x9e3779b1); //11400714785074694791
+const p64_2 = U64.fromI32s(0x27d4eb4f, 0xc2b2ae3d); //14029467366897019727
+const p64_3 = U64.fromI32s(0x9e3779f9, 0x165667b1); //1609587929392839161
+const p64_4 = U64.fromI32s(0xc2b2ae63, 0x85ebca77); //9650029242287828579
+const p64_5 = U64.fromI32s(0x165667c5, 0x27d4eb2f); //2870177450012600261
 
 export class XxHash32 extends AChecksum32 implements IHash {
 	/** Runtime state of the hash */
@@ -142,55 +142,39 @@ export class XxHash64 extends AChecksum64 implements IHash {
 	/** Starting seed */
 	private readonly _seed: U64;
 
-	constructor(seed = U64.fromInt(0)) {
+	constructor(seed = U64.zero) {
 		super(8, 32);
 		this._seed = seed;
 		this.reset();
 	}
 
 	protected hash() {
-		asLE.i64(this._b8, 0, 4);
+		asLE.i32(this._b8, 0, blockSizeEls * 2);
 		this._state
 			.at(0)
-			.set(
-				this._state
-					.at(0)
-					.addEq(this._b64.at(0).mulEq(p64_2))
-					.lRotEq(31)
-					.mulEq(p64_1)
-			);
+			.addEq(this._b64.at(0).mulEq(p64_2))
+			.lRotEq(31)
+			.mulEq(p64_1);
 		this._state
 			.at(1)
-			.set(
-				this._state
-					.at(1)
-					.addEq(this._b64.at(1).mulEq(p64_2))
-					.lRotEq(31)
-					.mulEq(p64_1)
-			);
+			.addEq(this._b64.at(1).mulEq(p64_2))
+			.lRotEq(31)
+			.mulEq(p64_1);
 		this._state
 			.at(2)
-			.set(
-				this._state
-					.at(2)
-					.addEq(this._b64.at(2).mulEq(p64_2))
-					.lRotEq(31)
-					.mulEq(p64_1)
-			);
+			.addEq(this._b64.at(2).mulEq(p64_2))
+			.lRotEq(31)
+			.mulEq(p64_1);
 		this._state
 			.at(3)
-			.set(
-				this._state
-					.at(3)
-					.addEq(this._b64.at(3).mulEq(p64_2))
-					.lRotEq(31)
-					.mulEq(p64_1)
-			);
+			.addEq(this._b64.at(3).mulEq(p64_2))
+			.lRotEq(31)
+			.mulEq(p64_1);
 		this._bPos = 0;
 	}
 
 	sumIn(): Uint8Array {
-		const result = U64Mut.fromUint32Pair(0, 0);
+		const result = U64Mut.fromI32s(0, 0);
 		if (this._ingestBytes.gte(U64.fromInt(this._b8.length))) {
 			result
 				.addEq(this._state.at(0).lRot(1))
@@ -250,8 +234,8 @@ export class XxHash64 extends AChecksum64 implements IHash {
 		let nToAdd = this._bPos;
 		//i is el-pos
 		let i = 0;
+		asLE.i32(this._b8, 0, blockSizeEls * 2);
 		for (; nToAdd >= 8; i++) {
-			asLE.i64(this._b8, i * 4);
 			result.set(
 				result
 					.xorEq(this._b64.at(i).mulEq(p64_2).lRotEq(31).mulEq(p64_1))
@@ -265,7 +249,7 @@ export class XxHash64 extends AChecksum64 implements IHash {
 		i *= 8;
 		if (nToAdd >= 4) {
 			result.set(
-				U64Mut.fromUint32Pair(U32.fromBytesLE(this._b8, i), 0)
+				U64Mut.fromI32s(U32.fromBytesLE(this._b8, i), 0)
 					.mulEq(p64_1)
 					.xorEq(result)
 					.lRotEq(23)
@@ -276,7 +260,7 @@ export class XxHash64 extends AChecksum64 implements IHash {
 		}
 		for (; i < this._bPos; i++) {
 			result.set(
-				U64Mut.fromUint32Pair(this._b8[i], 0)
+				U64Mut.fromI32s(this._b8[i], 0)
 					.mulEq(p64_5)
 					.xorEq(result)
 					.lRotEq(11)

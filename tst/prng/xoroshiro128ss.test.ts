@@ -30,7 +30,7 @@ const seq_1_2:string[]=[
     '86B5B3AD00004380',
     '800044A4CD1497B2',
 ];
-const rng_1_2=Xoroshiro128ss.seed(U64.fromUint32Pair(1,0),U64.fromUint32Pair(2,0));
+const rng_1_2=Xoroshiro128ss.seed(U64.fromI32s(1,0),U64.fromI32s(2,0));
 i=0;
 for (const expect of seq_1_2) {
     const act = rng_1_2.rawNext();

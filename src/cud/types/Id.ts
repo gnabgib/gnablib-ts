@@ -12,7 +12,7 @@ import { U64 } from '../../primitive/number/U64.js';
 
 //sql engines keep everything signed, even when IDs cannot be negative
 const min64 = U64.zero;
-const max64 = U64.fromUint32Pair(0xffffffff, 0xffffffff);
+const max64 = U64.fromI32s(0xffffffff, 0xffffffff);
 
 abstract class AId extends ACudColType implements IValid<number | U64> {
 	protected abstract get _maxByteLen(): number;
@@ -95,7 +95,7 @@ abstract class AId extends ACudColType implements IValid<number | U64> {
 export class Id2 extends AId {
 	readonly _colType = ColType.Id2;
 	readonly _maxByteLen = 2;
-	readonly _max64 = U64.fromUint32Pair(0x7fff, 0);
+	readonly _max64 = U64.fromI32s(0x7fff, 0);
 
 	readonly mysqlType = 'SMALLINT AUTO_INCREMENT PRIMARY KEY';
 	readonly sqliteType = 'INT2 PRIMARY KEY NOT NULL'; //Integer affinity
@@ -107,7 +107,7 @@ export class Id2 extends AId {
 export class Id4 extends AId {
 	readonly _colType = ColType.Id4;
 	readonly _maxByteLen = 4;
-	readonly _max64 = U64.fromUint32Pair(0x7fffffff, 0);
+	readonly _max64 = U64.fromI32s(0x7fffffff, 0);
 
 	readonly mysqlType = 'INT AUTO_INCREMENT PRIMARY KEY';
 	readonly sqliteType = 'INT PRIMARY KEY NOT NULL'; //Integer affinity

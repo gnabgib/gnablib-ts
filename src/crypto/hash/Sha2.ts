@@ -345,7 +345,7 @@ class Sha2_64bit implements IHash {
 			h = this.#state.at(7);
 
 		for (j = 0; j < wSize64; j++) {
-			const kU64 = U64.fromUint32Pair(k[j * 2 + 1], k[j * 2]);
+			const kU64 = U64.fromI32s(k[j * 2 + 1], k[j * 2]);
 			const s1 = e.mut().rRotEq(14).xorEq(e.rRot(18)).xorEq(e.rRot(41));
 			const ch = g.xor(e.and(f.xor(g))); //Same as MD4-r1
 			const temp1 = h.mut().addEq(s1).addEq(ch).addEq(kU64).addEq(w.at(j));
@@ -569,14 +569,14 @@ export class Sha384 extends Sha2_64bit {
 
 	private static iv(state: U64MutArray): void {
 		//Setup state
-		state.at(0).set(U64.fromUint32Pair(iv384[1], iv384[0]));
-		state.at(1).set(U64.fromUint32Pair(iv384[3], iv384[2]));
-		state.at(2).set(U64.fromUint32Pair(iv384[5], iv384[4]));
-		state.at(3).set(U64.fromUint32Pair(iv384[7], iv384[6]));
-		state.at(4).set(U64.fromUint32Pair(iv384[9], iv384[8]));
-		state.at(5).set(U64.fromUint32Pair(iv384[11], iv384[10]));
-		state.at(6).set(U64.fromUint32Pair(iv384[13], iv384[12]));
-		state.at(7).set(U64.fromUint32Pair(iv384[15], iv384[14]));
+		state.at(0).set(U64.fromI32s(iv384[1], iv384[0]));
+		state.at(1).set(U64.fromI32s(iv384[3], iv384[2]));
+		state.at(2).set(U64.fromI32s(iv384[5], iv384[4]));
+		state.at(3).set(U64.fromI32s(iv384[7], iv384[6]));
+		state.at(4).set(U64.fromI32s(iv384[9], iv384[8]));
+		state.at(5).set(U64.fromI32s(iv384[11], iv384[10]));
+		state.at(6).set(U64.fromI32s(iv384[13], iv384[12]));
+		state.at(7).set(U64.fromI32s(iv384[15], iv384[14]));
 	}
 }
 
@@ -590,14 +590,14 @@ export class Sha512 extends Sha2_64bit {
 
 	private static iv(state: U64MutArray): void {
 		//Setup state
-		state.at(0).set(U64.fromUint32Pair(iv512[1], iv512[0]));
-		state.at(1).set(U64.fromUint32Pair(iv512[3], iv512[2]));
-		state.at(2).set(U64.fromUint32Pair(iv512[5], iv512[4]));
-		state.at(3).set(U64.fromUint32Pair(iv512[7], iv512[6]));
-		state.at(4).set(U64.fromUint32Pair(iv512[9], iv512[8]));
-		state.at(5).set(U64.fromUint32Pair(iv512[11], iv512[10]));
-		state.at(6).set(U64.fromUint32Pair(iv512[13], iv512[12]));
-		state.at(7).set(U64.fromUint32Pair(iv512[15], iv512[14]));
+		state.at(0).set(U64.fromI32s(iv512[1], iv512[0]));
+		state.at(1).set(U64.fromI32s(iv512[3], iv512[2]));
+		state.at(2).set(U64.fromI32s(iv512[5], iv512[4]));
+		state.at(3).set(U64.fromI32s(iv512[7], iv512[6]));
+		state.at(4).set(U64.fromI32s(iv512[9], iv512[8]));
+		state.at(5).set(U64.fromI32s(iv512[11], iv512[10]));
+		state.at(6).set(U64.fromI32s(iv512[13], iv512[12]));
+		state.at(7).set(U64.fromI32s(iv512[15], iv512[14]));
 	}
 }
 
@@ -611,14 +611,14 @@ export class Sha512_224 extends Sha2_64bit {
 
 	private static iv(state: U64MutArray): void {
 		//Setup state
-		state.at(0).set(U64.fromUint32Pair(init512_224[1], init512_224[0]));
-		state.at(1).set(U64.fromUint32Pair(init512_224[3], init512_224[2]));
-		state.at(2).set(U64.fromUint32Pair(init512_224[5], init512_224[4]));
-		state.at(3).set(U64.fromUint32Pair(init512_224[7], init512_224[6]));
-		state.at(4).set(U64.fromUint32Pair(init512_224[9], init512_224[8]));
-		state.at(5).set(U64.fromUint32Pair(init512_224[11], init512_224[10]));
-		state.at(6).set(U64.fromUint32Pair(init512_224[13], init512_224[12]));
-		state.at(7).set(U64.fromUint32Pair(init512_224[15], init512_224[14]));
+		state.at(0).set(U64.fromI32s(init512_224[1], init512_224[0]));
+		state.at(1).set(U64.fromI32s(init512_224[3], init512_224[2]));
+		state.at(2).set(U64.fromI32s(init512_224[5], init512_224[4]));
+		state.at(3).set(U64.fromI32s(init512_224[7], init512_224[6]));
+		state.at(4).set(U64.fromI32s(init512_224[9], init512_224[8]));
+		state.at(5).set(U64.fromI32s(init512_224[11], init512_224[10]));
+		state.at(6).set(U64.fromI32s(init512_224[13], init512_224[12]));
+		state.at(7).set(U64.fromI32s(init512_224[15], init512_224[14]));
 	}
 }
 
@@ -632,13 +632,13 @@ export class Sha512_256 extends Sha2_64bit {
 
 	private static iv(state: U64MutArray): void {
 		//Setup state
-		state.at(0).set(U64.fromUint32Pair(init512_256[1], init512_256[0]));
-		state.at(1).set(U64.fromUint32Pair(init512_256[3], init512_256[2]));
-		state.at(2).set(U64.fromUint32Pair(init512_256[5], init512_256[4]));
-		state.at(3).set(U64.fromUint32Pair(init512_256[7], init512_256[6]));
-		state.at(4).set(U64.fromUint32Pair(init512_256[9], init512_256[8]));
-		state.at(5).set(U64.fromUint32Pair(init512_256[11], init512_256[10]));
-		state.at(6).set(U64.fromUint32Pair(init512_256[13], init512_256[12]));
-		state.at(7).set(U64.fromUint32Pair(init512_256[15], init512_256[14]));
+		state.at(0).set(U64.fromI32s(init512_256[1], init512_256[0]));
+		state.at(1).set(U64.fromI32s(init512_256[3], init512_256[2]));
+		state.at(2).set(U64.fromI32s(init512_256[5], init512_256[4]));
+		state.at(3).set(U64.fromI32s(init512_256[7], init512_256[6]));
+		state.at(4).set(U64.fromI32s(init512_256[9], init512_256[8]));
+		state.at(5).set(U64.fromI32s(init512_256[11], init512_256[10]));
+		state.at(6).set(U64.fromI32s(init512_256[13], init512_256[12]));
+		state.at(7).set(U64.fromI32s(init512_256[15], init512_256[14]));
 	}
 }

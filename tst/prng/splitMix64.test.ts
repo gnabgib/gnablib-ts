@@ -14,7 +14,7 @@ const seq_1234567: string[] = [
     '3FBEF740E9177B3F',
     'E3B8346708CB5ECD'
 ];
-const rng_1234567=SplitMix64.seed(U64.fromUint32Pair(1234567,0));
+const rng_1234567=SplitMix64.seed(U64.fromI32s(1234567,0));
 let i = 0;
 for (const expect of seq_1234567) {
 	const act = rng_1234567.rawNext();

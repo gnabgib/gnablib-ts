@@ -27,8 +27,8 @@ abstract class AXoroshiro128 extends APrng64<U64MutArray> {
 /**
  * XoRoShiRo128+ using xor-rotate-shift-rotate, with 128bit state, 64bit return as described in
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
- * 
- * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**}, 
+ *
+ * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**},
  * if you're generating {@link nextF64 |F64}, otherwise use one of them.
  *
  * **Note** these are the updated a/b/c parameters from 2018 (preferred)
@@ -95,8 +95,8 @@ export class Xoroshiro128p extends AXoroshiro128 {
 /**
  * XoRoShiRo128+ using xor-rotate-shift-rotate, with 128bit state, 64bit return as described in
  * [Scrambled Linear Pseudorandom Number Generators](https://vigna.di.unimi.it/ftp/papers/ScrambledLinear.pdf)
- * 
- * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**}, 
+ *
+ * This is slightly (+15%) faster than {@link Xoroshiro128pp | XoRoShiRo128++}/{@link Xoroshiro128ss | XoRoShiRo128**},
  * if you're generating {@link nextF64 |F64}, otherwise use one of them.
  *
  * **Note** these are the original a/b/c parameters from 2016, prefer {@link Xoroshiro128p | Xoroshiro128+}
@@ -224,8 +224,8 @@ export class Xoroshiro128pp extends AXoroshiro128 {
 	}
 }
 
-const u64_5 = U64.fromUint32Pair(5, 0);
-const u64_9 = U64.fromUint32Pair(9, 0);
+const u64_5 = U64.fromI32s(5, 0);
+const u64_9 = U64.fromI32s(9, 0);
 
 /**
  * XoRoShiRo128** using xor-rotate-shift-rotate, with 128bit state, 64bit return as described in

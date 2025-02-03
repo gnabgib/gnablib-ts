@@ -25,10 +25,9 @@ export class U128 extends AInt implements IUint<U128> {
 	}
 
 	/**
-	 * Build from a series of Int32 numbers,
-	 * each will be truncated to 32 bits.
+	 * Build from a series of Uint32 numbers, each will be truncated to 32 bits.
 	 * Assumes little endian order.
-	 * Assumes unspecified values are 0/-1 (depending on MSB of final number)
+	 * Assumes unspecified values are 0
 	 * @throws Error if too many numbers are provided.
 	 */
 	static fromI32s(...ns: number[]) {
@@ -192,7 +191,7 @@ export class U128Mut extends U128 implements IUintMut<U128Mut, U128> {
 	 */
 	u64at(idx = 0): U64 {
 		sInt('idx', idx).unsigned().atMost(1).throwNot();
-		return U64.fromArray(this._arr, idx * 2);
+		return U64.mount(this._arr,this._pos+idx*2);
 	}
 
 	//#region Builds
@@ -206,10 +205,9 @@ export class U128Mut extends U128 implements IUintMut<U128Mut, U128> {
 	}
 
 	/**
-	 * Build from a series of Int32 numbers,
-	 * each will be truncated to 32 bits.
+	 * Build from a series of Uint32 numbers, each will be truncated to 32 bits.
 	 * Assumes little endian order.
-	 * Assumes unspecified values are 0/-1 (depending on MSB of final number)
+	 * Assumes unspecified values are 0
 	 * @throws Error if too many numbers are provided.
 	 */
 	static fromI32s(...ns: number[]) {

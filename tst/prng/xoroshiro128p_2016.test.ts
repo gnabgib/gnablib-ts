@@ -2,7 +2,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Xoroshiro128p_2016 } from '../../src/prng/xoroshiro128';
-import {  U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('Xoroshiro128+ 2016');
@@ -31,8 +31,8 @@ const seq_2016_F:string[] = [
     '4FE2A6B2DCE63BBB',
 ]
 const rng_2016_f=Xoroshiro128p_2016.seed(
-    U64.fromUint32Pair(0x75376EA4,0x4E6932AD),
-    U64.fromUint32Pair(0x3B248514,0xF1C33E16));
+    U64.fromI32s(0x75376EA4,0x4E6932AD),
+    U64.fromI32s(0x3B248514,0xF1C33E16));
 i=0;
 for (const expect of seq_2016_F) {
     const act = rng_2016_f.rawNext();
@@ -57,8 +57,8 @@ const seq_2016:string[]=[
     '5CE24B9D2D87C94D',
 ];
 const rng_3=Xoroshiro128p_2016.seed(
-    U64.fromUint32Pair(0x32C4CD14,0x8BE85000),
-    U64.fromUint32Pair(0x0BC44601,0xAF10AB7F));
+    U64.fromI32s(0x32C4CD14,0x8BE85000),
+    U64.fromI32s(0x0BC44601,0xAF10AB7F));
 i=0;
 for (const expect of seq_2016) {
     const act = rng_3.rawNext();

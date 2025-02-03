@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { APrng64 } from '../../src/prng/APrng64';
 import { hex } from '../../src/codec/Hex';
-import { U64, U64MutArray } from '../../src/primitive/number';
+import { U64, U64MutArray } from '../../src/primitive/number/U64';
 
 const tsts = suite('APrng64');
 
@@ -45,7 +45,7 @@ class Gen16Bit extends ZeroByteState {
         //x9234
         // 37428
         //b1001001000110100
-        return U64.fromUint32Pair(0x9234,0);
+        return U64.fromI32s(0x9234,0);
     }
 
 }
@@ -62,7 +62,7 @@ class Gen60Bit extends ZeroByteState {
         //xFEDCBA987654321
         // 1147797409030816545
         //b111111101101110010111010100110000111011001010100001100100001
-        return U64.fromUint32Pair(0x87654321,0xFEDCBA9);
+        return U64.fromI32s(0x87654321,0xFEDCBA9);
     }
 }
 class Gen33Bit extends ZeroByteState {
@@ -78,7 +78,7 @@ class Gen33Bit extends ZeroByteState {
         //xFEDCBA987654321
         // 1147797409030816545
         //b110000111011001010100001100100001
-        return U64.fromUint32Pair(0x87654321,1);
+        return U64.fromI32s(0x87654321,1);
     }
 }
 const rng16=new Gen16Bit();

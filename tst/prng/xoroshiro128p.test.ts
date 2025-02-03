@@ -2,7 +2,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Xoroshiro128p } from '../../src/prng/xoroshiro128';
-import {  U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 import { hex } from '../../src/codec/Hex';
 
 const tsts = suite('Xoroshiro128+');
@@ -29,8 +29,8 @@ const seq_F:string[] = [
     'E0E1EBDDF72F19EB',
 ]
 const rng_f=Xoroshiro128p.seed(
-    U64.fromUint32Pair(0x75376EA4,0x4E6932AD),
-    U64.fromUint32Pair(0x3B248514,0xF1C33E16));
+    U64.fromI32s(0x75376EA4,0x4E6932AD),
+    U64.fromI32s(0x3B248514,0xF1C33E16));
 i=0;
 for (const expect of seq_F) {
 	const act = rng_f.rawNext();

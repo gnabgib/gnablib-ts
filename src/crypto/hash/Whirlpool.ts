@@ -63,7 +63,7 @@ function init() {
 		ct
 			.at(x)
 			.set(
-				U64Mut.fromUint32Pair(
+				U64Mut.fromI32s(
 					(v8 << 24) | (v5 << 16) | (v2 << 8) | v9,
 					(v1 << 24) | (v1 << 16) | (v4 << 8) | v1
 				)
@@ -78,14 +78,14 @@ function init() {
 	for (let r = 0; r < rounds; r++) {
 		let r8 = r << 3;
 		rc.at(r).set(
-			U64Mut.fromUint32Pair(0, 0xff000000).andEq(ct.at(r8++))
-				.xorEq(U64Mut.fromUint32Pair(0, 0x00ff0000).andEq(ct.at(256 | r8++)))
-				.xorEq(U64Mut.fromUint32Pair(0, 0x0000ff00).andEq(ct.at(512 | r8++)))
-				.xorEq(U64Mut.fromUint32Pair(0, 0x000000ff).andEq(ct.at(768 | r8++)))
-				.xorEq(U64Mut.fromUint32Pair(0xff000000, 0).andEq(ct.at(1024 | r8++)))
-				.xorEq(U64Mut.fromUint32Pair(0x00ff0000, 0).andEq(ct.at(1280 | r8++)))
-				.xorEq(U64Mut.fromUint32Pair(0x0000ff00, 0).andEq(ct.at(1536 | r8++)))
-				.xorEq(U64Mut.fromUint32Pair(0x000000ff, 0).andEq(ct.at(1792 | r8++)))
+			U64Mut.fromI32s(0, 0xff000000).andEq(ct.at(r8++))
+				.xorEq(U64Mut.fromI32s(0, 0x00ff0000).andEq(ct.at(256 | r8++)))
+				.xorEq(U64Mut.fromI32s(0, 0x0000ff00).andEq(ct.at(512 | r8++)))
+				.xorEq(U64Mut.fromI32s(0, 0x000000ff).andEq(ct.at(768 | r8++)))
+				.xorEq(U64Mut.fromI32s(0xff000000, 0).andEq(ct.at(1024 | r8++)))
+				.xorEq(U64Mut.fromI32s(0x00ff0000, 0).andEq(ct.at(1280 | r8++)))
+				.xorEq(U64Mut.fromI32s(0x0000ff00, 0).andEq(ct.at(1536 | r8++)))
+				.xorEq(U64Mut.fromI32s(0x000000ff, 0).andEq(ct.at(1792 | r8++)))
 		);
 	}
 }
@@ -112,7 +112,7 @@ export class Whirlpool implements IHash {
 	/**
 	 * Number of bytes added to the hash
 	 */
-	private readonly _ingestBytes = U64Mut.fromUint32Pair(0,0);
+	private readonly _ingestBytes = U64Mut.fromI32s(0, 0);
 	/**
 	 * Position of data written to block
 	 */
@@ -137,7 +137,8 @@ export class Whirlpool implements IHash {
 		// Set the block contents to Big endian (if not already)
 		asBE.i64(this.#block, 0, 8);
 		//state = this.#state ^ this.#block64 (requires BE fix above)
-		state.xorEq(this.#block64);
+		for(let i=0;i<blockSizeEls;i++) state.at(i).xorEq(this.#block64.at(i));
+		//state.xorEq(this.#block64);
 
 		for (let r = 0; r < rounds; r++) {
 			for (let i = 0; i < 8; i++) {
@@ -150,14 +151,14 @@ export class Whirlpool implements IHash {
 				// }
 
 				L.at(i).set(
-					ct.at(K.at(i).lsb(7)).mut()
-						.xorEq(ct.at(256 | K.at((i - 1) & 7).lsb(6)))
-						.xorEq(ct.at(512 | K.at((i - 2) & 7).lsb(5)))
-						.xorEq(ct.at(768 | K.at((i - 3) & 7).lsb(4)))
-						.xorEq(ct.at(1024 | K.at((i - 4) & 7).lsb(3)))
-						.xorEq(ct.at(1280 | K.at((i - 5) & 7).lsb(2)))
-						.xorEq(ct.at(1536 | K.at((i - 6) & 7).lsb(1)))
-						.xorEq(ct.at(1792 | K.at((i - 7) & 7).lsb()))
+					ct.at(K.at(i).getByte(7)).mut()
+						.xorEq(ct.at(256 | K.at((i - 1) & 7).getByte(6)))
+						.xorEq(ct.at(512 | K.at((i - 2) & 7).getByte(5)))
+						.xorEq(ct.at(768 | K.at((i - 3) & 7).getByte(4)))
+						.xorEq(ct.at(1024 | K.at((i - 4) & 7).getByte(3)))
+						.xorEq(ct.at(1280 | K.at((i - 5) & 7).getByte(2)))
+						.xorEq(ct.at(1536 | K.at((i - 6) & 7).getByte(1)))
+						.xorEq(ct.at(1792 | K.at((i - 7) & 7).getByte()))
 				);
 			}
 			L.at(0).xorEq(rc.at(r));
@@ -172,21 +173,28 @@ export class Whirlpool implements IHash {
 				// 	L[i]=L[i].xor(circulantTable[ctPos]);
 				// }
 				L.at(i)
-					.xorEq(ct.at(state.at(i).lsb(7)))
-					.xorEq(ct.at(256 | state.at((i - 1) & 7).lsb(6)))
-					.xorEq(ct.at(512 | state.at((i - 2) & 7).lsb(5)))
-					.xorEq(ct.at(768 | state.at((i - 3) & 7).lsb(4)))
-					.xorEq(ct.at(1024 | state.at((i - 4) & 7).lsb(3)))
-					.xorEq(ct.at(1280 | state.at((i - 5) & 7).lsb(2)))
-					.xorEq(ct.at(1536 | state.at((i - 6) & 7).lsb(1)))
-					.xorEq(ct.at(1792 | state.at((i - 7) & 7).lsb()));
+					.xorEq(ct.at(state.at(i).getByte(7)))
+					.xorEq(ct.at(256 | state.at((i - 1) & 7).getByte(6)))
+					.xorEq(ct.at(512 | state.at((i - 2) & 7).getByte(5)))
+					.xorEq(ct.at(768 | state.at((i - 3) & 7).getByte(4)))
+					.xorEq(ct.at(1024 | state.at((i - 4) & 7).getByte(3)))
+					.xorEq(ct.at(1280 | state.at((i - 5) & 7).getByte(2)))
+					.xorEq(ct.at(1536 | state.at((i - 6) & 7).getByte(1)))
+					.xorEq(ct.at(1792 | state.at((i - 7) & 7).getByte()));
 			}
 			//Because state is used in L gen (above), we need to do this separately
 			state.set(L);
 		}
 		//Apply the Miyaguchi-Preneel compression function:
-		state.xorEq(this.#block64);
-		this.#state.xorEq(state);
+
+		for(let i=0;i<blockSizeEls;i++) {
+			this.#state.at(i).xorEq(state.at(i)).xorEq(this.#block64.at(i));
+			//state.at(i).xorEq(this.#block64.at(i));
+		}
+		//state.xorEq(this.#block64);
+
+		//state.xorEq(this.#block64);
+		//this.#state.xorEq(state);
 
 		//Reset block pointer
 		this._bPos = 0;
@@ -267,7 +275,7 @@ export class Whirlpool implements IHash {
 	 */
 	reset(): void {
 		//Setup state
-		this.#state.zero();
+		for (let i = 0; i < digestSizeEls; i++) this.#state.at(i).zero();
 		//Reset ingest count
 		this._ingestBytes.zero();
 		//Reset block (which is just pointing to the start)

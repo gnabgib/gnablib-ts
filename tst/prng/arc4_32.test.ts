@@ -3,7 +3,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Arc4 } from '../../src/prng/arc4';
 import { hex } from '../../src/codec/Hex';
-import { U64 } from '../../src/primitive/number';
+import { U64 } from '../../src/primitive/number/U64';
 
 const tsts = suite('Arc4');
 
@@ -147,7 +147,7 @@ tsts(`Arc4().save/restore loop`,()=>{
 
 tsts(`Arc4().U64 gen`,()=>{
     const rng_def=Arc4.new();
-    const u64=U64.fromArray(Uint32Array.of(...rng_def.seqU32(2)));
+    const u64=U64.mount(Uint32Array.of(...rng_def.seqU32(2)));
     //Little endian so first U32 is low-order
     assert.equal(u64.toString(),'B25FDB062C1BC8CD');
     //console.log(u64);

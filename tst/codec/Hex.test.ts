@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../src/codec';
-import { U64, U64MutArray } from '../../src/primitive/number';
+import { U64, U64MutArray } from '../../src/primitive/number/U64';
 
 const tsts = suite('Hex/RFC 4648');
 
