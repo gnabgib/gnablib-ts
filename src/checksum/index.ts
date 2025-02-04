@@ -1,5 +1,5 @@
 // checksum barrel file
-export { adler32 } from './adler.js';
+export { Adler32 } from './adler.js';
 export { bcc } from './bcc.js';
 export { cksum } from './cksum.js';
 export { crc24 } from './crc24.js';
