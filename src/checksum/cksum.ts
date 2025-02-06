@@ -1,9 +1,7 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../endian/platform.js';
-
-// - https://en.wikipedia.org/wiki/Cksum
-// - https://pubs.opengroup.org/onlinepubs/009695399/utilities/cksum.html
+import { IChecksum } from './interfaces/IChecksum.js';
 
 // prettier-ignore
 const crcTab=[
@@ -41,15 +39,37 @@ const crcTab=[
 	0xAFB010B1, 0xAB710D06, 0xA6322BDF, 0xA2F33668,  0xBCB4666D, 0xB8757BDA, 0xB5365D03, 0xB1F740B4
 ];
 
-export function cksum(bytes: Uint8Array): number {
-	let crc = 0;
-	for (const byte of bytes) {
-		crc = (crc << 8) ^ crcTab[(crc >>> 24) ^ byte];
-	}
-	const lenBytes = asLE.uintMinBytes(bytes.length);
-	for (const byte of lenBytes) {
-		crc = (crc << 8) ^ crcTab[(crc >>> 24) ^ byte];
+/**
+ * [cksum](https://pubs.opengroup.org/onlinepubs/009695399/utilities/cksum.html)
+ * generates a 32bit checksum of a stream of data.  It uses the generator polynomial `0x04C11DB7`
+ *
+ * Related:
+ * - [Wikipedia: cksum](https://en.wikipedia.org/wiki/Cksum)
+ */
+export class Cksum implements IChecksum {
+	private _crc = 0;
+	private _ingestBytes = 0;
+	readonly size = 4;
+
+	write(data: Uint8Array) {
+		for (const b of data) {
+			this._crc = (this._crc << 8) ^ crcTab[(this._crc >>> 24) ^ b];
+		}
+		this._ingestBytes += data.length;
 	}
 
-	return ~crc >>> 0;
+	/** Get the checksum as a 32bit unsigned integer */
+	sum32() {
+		let crc = this._crc;
+		const len = asLE.uintMinBytes(this._ingestBytes);
+		for (const b of len) {
+			crc = (crc << 8) ^ crcTab[(crc >>> 24) ^ b];
+		}
+		return ~crc >>> 0;
+	}
+
+	sum() {
+		const crc = this.sum32();
+		return Uint8Array.of(crc >>> 24, crc >>> 16, crc >>> 8, crc);
+	}
 }

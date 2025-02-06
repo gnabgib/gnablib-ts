@@ -1,4 +1,4 @@
-/*! Copyright 2022-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2025 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -740,7 +740,7 @@ export class Md5 implements IHash {
 				this._bPos += nToWrite;
 				return;
 			}
-			this.#block.set(data.subarray(dPos, dPos + blockSize), this._bPos);
+			this.#block.set(data.subarray(dPos, dPos + space), this._bPos);
 			this.hash();
 			dPos += space;
 			nToWrite -= space;

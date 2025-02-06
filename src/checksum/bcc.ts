@@ -1,11 +1,21 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-//[Block check character](https://en.wikipedia.org/wiki/Block_check_character)
+import { IChecksum } from './interfaces/IChecksum.js';
 
-export function bcc(bytes: Uint8Array): number {
-	let sum = 0;
-	for (const byte of bytes) {
-		sum ^= byte;
+/**
+ * [Block Check Character (BCC)](https://en.wikipedia.org/wiki/Block_check_character)
+ * generates an 8bit checksum of a stream of data.  Described in
+ * [RFC-914](https://datatracker.ietf.org/doc/html/rfc914)
+ */
+export class Bcc implements IChecksum {
+	private _sum = 0;
+	readonly size = 1;
+
+	write(data: Uint8Array) {
+		for (const b of data) this._sum ^= b;
 	}
-	return sum;
+
+	sum() {
+		return Uint8Array.of(this._sum);
+	}
 }

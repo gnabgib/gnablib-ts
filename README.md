@@ -77,13 +77,13 @@ used for hash tables, or to speed up comparison.
 
 Name|Sum size bits|Optional parameters
 -------|----------------------|-------------------
-[adler32](https://datatracker.ietf.org/doc/html/rfc1950)|32|
-[Block check character](https://en.wikipedia.org/wiki/Block_check_character)|8|
-[cksum](https://en.wikipedia.org/wiki/Cksum)|32|
+[Adler32](https://datatracker.ietf.org/doc/html/rfc1950)|32|
+[Block Check Character](https://en.wikipedia.org/wiki/Block_check_character)|8|
+[Cksum](https://en.wikipedia.org/wiki/Cksum)|32|
 [CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)|24|
 [CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)|32|
-[fletcher](http://www.zlib.net/maxino06_fletcher-adler.pdf)|16, 32, 64|
-[Longitudinal redundancy check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)|8|
+[Fletcher](http://www.zlib.net/maxino06_fletcher-adler.pdf)|16, 32, 64|
+[Longitudinal Redundancy Check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)|8|
 [Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed
 [Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|seed
 [Luhn](https://en.wikipedia.org/wiki/Luhn_algorithm)|3.5|

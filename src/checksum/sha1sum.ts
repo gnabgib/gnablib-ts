@@ -1,15 +1,13 @@
-/*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2025 the gnablib contributors MPL-1.1 */
 
 import { Sha1 } from '../crypto/hash/Sha1.js';
+import { IChecksum } from './interfaces/IChecksum.js';
 
 /**
- * Same as SHA1
- * SHA1 already includes a length, this is just a wrapper
- * @param bytes
- * @returns
+ * Sha1Sum generates a 160bit checksum of a stream of data.
+ * The Sha1 hash is described in
+ * [RFC-3174](https://datatracker.ietf.org/doc/html/rfc3174)
+ * and formerly considered cryptographically secure, but no longer is
  */
-export function sha1Sum(bytes: Uint8Array): Uint8Array {
-	const hash=new Sha1();
-	hash.write(bytes);
-	return hash.sum();
+export class Sha1Sum extends Sha1 implements IChecksum {
 }

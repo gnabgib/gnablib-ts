@@ -1,15 +1,13 @@
-/*! Copyright 2022-2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2025 the gnablib contributors MPL-1.1 */
 
 import { Md5 } from '../crypto/hash/Md5.js';
+import { IChecksum } from './interfaces/IChecksum.js';
 
 /**
- * Same as MD5
- * MD5 already includes a length, this is just a wrapper
- * @param bytes
- * @returns
+ * Md5Sum generates a 128bit checksum of a stream of data.
+ * The MD5 hash is described in
+ * [RFC-1321](https://datatracker.ietf.org/doc/html/rfc1321)
+ * and formerly considered cryptographically secure, but no longer is
  */
-export function md5Sum(bytes: Uint8Array): Uint8Array {
-	const hash=new Md5();
-	hash.write(bytes);
-	return hash.sum();
+export class Md5Sum extends Md5 implements IChecksum {
 }

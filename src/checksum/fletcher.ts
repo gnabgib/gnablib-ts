@@ -1,93 +1,203 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import { asBE, asLE } from '../endian/platform.js';
-import { U16 } from '../primitive/number/U16Static.js';
-import { U32 } from '../primitive/number/U32Static.js';
+import { IChecksum } from './interfaces/IChecksum.js';
 
-//http://www.zlib.net/maxino06_fletcher-adler.pdf -> Lower cpu and Adler and mostly more effective (in their tests)
-//https://datatracker.ietf.org/doc/html/rfc1146 (Appendix I)
+const maxSpace = 0xffff;
+//const maxSpace = 4000;
 
 /**
- * Fletcher checksum algorithm per byte
- * @param bytes
- * @returns 16 bit checksum
+ * [Fletcher16](https://en.wikipedia.org/wiki/Fletcher%27s_checksum#Fletcher-16)
+ * generates a 16bit checksum of a stream of data. Described in
+ * [RFC-1146](https://datatracker.ietf.org/doc/html/rfc1146) (Appendix I)
+ *
+ * ## Weaknesses:
+ *
+ * The Fletcher checksum cannot distinguish between blocks of all 0 bits and blocks of
+ * all 1 bits. For example, if a 16-bit block in the data word changes from 0x0000 to
+ * 0xFFFF, the Fletcher-32 checksum remains the same. This also means a sequence of
+ * all 00 bytes has the same checksum as a sequence (of the same size) of all FF bytes.
+ *
+ * Related:
+ *
+ * - [Revisiting Fletcher and Adler Checksums (2006)](http://www.zlib.net/maxino06_fletcher-adler.pdf)
  */
-export function fletcher16(bytes: Uint8Array): number {
-	let c0 = 0;
-	let c1 = 0;
-	const mod = 0xff; //2^8-1
-	let ptr = 0;
-	while (ptr < bytes.length) {
-		//JS doesn't overflow until 53 bits we we've got lots of space here
-		// (0xffffffff * 0xff (max byte) still fits in 2^40 bits)
-		const safeLen = Math.min(0xffffffff, bytes.length - ptr);
-		for (; ptr < safeLen; ptr++) {
-			c0 += bytes[ptr];
-			c1 += c0;
-		}
-		c0 %= mod;
-		c1 %= mod;
+export class Fletcher16 implements IChecksum {
+	private _modSpace = maxSpace; //0xffff * 0xff fits in 2^24 bits
+	private _c0 = 0;
+	private _c1 = 0;
+	readonly size = 2;
+
+	private mod() {
+		this._c0 %= 0xff;
+		this._c1 %= 0xff;
+		this._modSpace = maxSpace;
 	}
-	return (c1 << 8) | c0;
+
+	write(data: Uint8Array) {
+		let i = 0;
+		/* c8 ignore start*/
+		//Writing >64K bytes takes a long time.
+		//During dev we used a smaller max-space (4k) to test/cover this
+		while (data.length > this._modSpace) {
+			for (; i < this._modSpace; i++) {
+				this._c0 += data[i];
+				this._c1 += this._c0;
+			}
+			this.mod();
+		}
+		/* c8 ignore stop */
+		this._modSpace -= data.length - i;
+		for (; i < data.length; i++) {
+			this._c0 += data[i];
+			this._c1 += this._c0;
+		}
+	}
+
+	/** Get the checksum as a 16bit unsigned integer */
+	sum16() {
+		if (this._modSpace < maxSpace) this.mod();
+		return (this._c1 << 8) | this._c0;
+	}
+
+	sum() {
+		if (this._modSpace < maxSpace) this.mod();
+		//Big endian
+		return Uint8Array.of(this._c1, this._c0);
+	}
 }
 
-//https://datatracker.ietf.org/doc/html/rfc1146 (Appendix 2)
 /**
- * Fletcher checksum algorithm per int16/word (2 bytes)
- * @param bytes
- * @returns 32 bit checksum
+ * [Fletcher32](https://en.wikipedia.org/wiki/Fletcher%27s_checksum#Fletcher-32)
+ * generates a 32bit checksum of a stream of data. Described in
+ * [RFC-1146](https://datatracker.ietf.org/doc/html/rfc1146) (Appendix II)
+ *
+ * ## Weaknesses:
+ *
+ * The Fletcher checksum cannot distinguish between blocks of all 0 bits and blocks of
+ * all 1 bits. For example, if a 16-bit block in the data word changes from 0x0000 to
+ * 0xFFFF, the Fletcher-32 checksum remains the same. This also means a sequence of
+ * all 00 bytes has the same checksum as a sequence (of the same size) of all FF bytes.
+ *
+ * Related:
+ * - [Revisiting Fletcher and Adler Checksums (2006)](http://www.zlib.net/maxino06_fletcher-adler.pdf)
  */
-export function fletcher32(bytes: Uint8Array): number {
-	//We should add trailing 0 to bytes, but JS allows us to ask for
-	// bytes beyond the end (and get back undefined, which coerces to zero)
-	let c0 = 0;
-	let c1 = 0;
-	const mod = 0xffff; //2^16-1
-	let ptr = 0;
-	while (ptr < bytes.length) {
-		//JS doesn't overflow until 53 bits we we've got lots of space here
-		// (0xffffffff * 0xffff (max byte) still fits in 2^48 bits)
-		const safeLen = Math.min(0xffffffff, bytes.length);
-		for (; ptr < safeLen; ptr += 2) {
-			asLE.i16(bytes, ptr);
-			c0 += U16.fromBytesLE(bytes, ptr);
-			c1 += c0;
-		}
-		//The mod operation (%) is in math(53bit max) not bit(32bit max)
-		c0 %= mod;
-		c1 %= mod;
+export class Fletcher32 implements IChecksum {
+	private _modSpace = maxSpace; //0xffff * 0xffff fits in 2^32 bits
+	private _c0 = 0;
+	private _c1 = 0;
+	readonly size = 4;
+
+	private mod() {
+		this._c0 %= 0xffff;
+		this._c1 %= 0xffff;
+		this._modSpace = maxSpace;
 	}
-	return ((c1 << 16) | c0) >>> 0;
+
+	write(data: Uint8Array) {
+		//We should technically handle data.length%2!=0, but JS allows us to
+		// step off the end of the array (and get zeros) so nbd
+		let i = 0;
+		/* c8 ignore start*/
+		//Writing >64K bytes takes a long time.
+		//During dev we used a smaller max-space (4k) to test/cover this
+		while (data.length > this._modSpace) {
+			for (; i < this._modSpace; i++) {
+				//LE read
+				this._c0 += data[i++] | (data[i] << 8);
+				this._c1 += this._c0;
+			}
+			this.mod();
+		}
+		/* c8 ignore stop */
+		this._modSpace -= data.length - i;
+		for (; i < data.length; i++) {
+			this._c0 += data[i++] | (data[i] << 8);
+			this._c1 += this._c0;
+		}
+	}
+
+	/** Get the checksum as a 32bit unsigned integer */
+	sum32() {
+		if (this._modSpace < maxSpace) this.mod();
+		return ((this._c1 << 16) | this._c0) >>> 0;
+	}
+
+	sum() {
+		if (this._modSpace < maxSpace) this.mod();
+		//Big endian
+		return Uint8Array.of(this._c1 >>> 8, this._c1, this._c0 >>> 8, this._c0);
+	}
 }
 
 /**
- * Fletcher checksum algorithm per int32/dword (4 bytes)
- * @param bytes
- * @returns 64 bit checksum (8 bytes)
+ * [Fletcher64](https://en.wikipedia.org/wiki/Fletcher%27s_checksum#Fletcher-64)
+ * generates a 64bit checksum of a stream of data.
+ *
+ * ## Weaknesses:
+ *
+ * The Fletcher checksum cannot distinguish between blocks of all 0 bits and blocks of
+ * all 1 bits. For example, if a 16-bit block in the data word changes from 0x0000 to
+ * 0xFFFF, the Fletcher-32 checksum remains the same. This also means a sequence of
+ * all 00 bytes has the same checksum as a sequence (of the same size) of all FF bytes.
+ *
+ * Related:
+ *
+ * - [Revisiting Fletcher and Adler Checksums (2006)](http://www.zlib.net/maxino06_fletcher-adler.pdf)
  */
-export function fletcher64(bytes: Uint8Array): Uint8Array {
-	//We should add trailing 0 to bytes, but JS allows us to ask for
-	// bytes beyond the end (and get back undefined, which coerces to zero)
-	let c0 = 0;
-	let c1 = 0;
-	const mod = 0xffffffff; //2^32-1
-	let ptr = 0;
-	while (ptr < bytes.length) {
-		//JS doesn't overflow until 53 bits we we've got lots of space here
-		// (0xffff * 0xffffffff (max byte) still fits in 2^48 bits)
-		const safeLen = Math.min(0xffff, bytes.length);
-		for (; ptr < safeLen; ptr += 4) {
-			asLE.i32(bytes, ptr);
-			c0 += U32.fromBytesLE(bytes, ptr) >>> 0;
-			c1 += c0;
-		}
-		c0 %= mod;
-		c1 %= mod;
+export class Fletcher64 implements IChecksum {
+	private _modSpace = maxSpace; //0xffff * 0xffffffff fits in 2^48 bits
+	private _c0 = 0;
+	private _c1 = 0;
+	readonly size = 8;
+
+	private mod() {
+		this._c0 %= 4294967295;
+		this._c1 %= 4294967295;
+		this._modSpace = maxSpace;
 	}
-	const r8=new Uint8Array(8);
-	const r32=new Uint32Array(r8.buffer);
-	r32[0]=c1;
-	r32[1]=c0;
-	asBE.i32(r8,0,2);
-	return r8;
+
+	write(data: Uint8Array) {
+		//We should technically handle data.length%4!=0, but JS allows us to
+		// step off the end of the array (and get zeros) so nbd
+		let i = 0;
+		/* c8 ignore start*/
+		//Writing >64K bytes takes a long time.
+		//During dev we used a smaller max-space (4k) to test/cover this
+		while (data.length > this._modSpace) {
+			for (; i < this._modSpace; i++) {
+				//LE read
+				this._c0 +=
+					(data[i++] |
+						(data[i++] << 8) |
+						(data[i++] << 16) |
+						(data[i] << 24)) >>>
+					0;
+				this._c1 += this._c0;
+			}
+			this.mod();
+		}
+		/* c8 ignore stop */
+		this._modSpace -= data.length - i;
+		for (; i < data.length; i++) {
+			this._c0 +=
+				(data[i++] | (data[i++] << 8) | (data[i++] << 16) | (data[i] << 24)) >>>
+				0;
+			this._c1 += this._c0;
+		}
+	}
+
+	sum() {
+		if (this._modSpace < maxSpace) this.mod();
+		//Big endian
+		return Uint8Array.of(
+			this._c1 >>> 24,
+			this._c1 >>> 16,
+			this._c1 >>> 8,
+			this._c1,
+			this._c0 >>> 24,
+			this._c0 >>> 16,
+			this._c0 >>> 8,
+			this._c0
+		);
+	}
 }

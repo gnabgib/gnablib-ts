@@ -1,4 +1,6 @@
-/*! Copyright 2023 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+
+import { IChecksum } from './interfaces/IChecksum.js';
 
 const reversedPoly = 0xedb88320;
 
@@ -24,12 +26,26 @@ function makeTable(poly: number): Uint32Array {
 }
 const tblRp = makeTable(reversedPoly);
 
-export function crc32(bytes: Uint8Array, crc = 0): number {
-	//This is subject to CRC of more than 32bits being injected, but the following
-	// line prevents it messing up the algo
-	crc = ~crc & 0xffffffff;
-	for (const byte of bytes) {
-		crc = (crc >>> 8) ^ tblRp[(crc ^ byte) & 0xff];
+/**
+ * crc32 generates a 32bit checksum of a stream of data.  It uses the generator polynomial `0x04C11DB7`
+ */
+export class Crc32 implements IChecksum {
+	private _crc = 0xffffffff;
+	readonly size = 4;
+
+	write(data: Uint8Array) {
+		for (const b of data) {
+			this._crc = (this._crc >>> 8) ^ tblRp[(this._crc ^ b) & 0xff];
+		}
 	}
-	return ~crc >>> 0; //(crc ^ (-1)) >>> 0;
+
+	/** Get the checksum as a 32bit unsigned integer */
+	sum32() {
+		return ~this._crc >>> 0;
+	}
+
+	sum() {
+		const crc = ~this._crc;
+		return Uint8Array.of(crc >>> 24, crc >>> 16, crc >>> 8, crc);
+	}
 }
