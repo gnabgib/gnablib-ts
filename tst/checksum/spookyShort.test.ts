@@ -1,88 +1,77 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../src/codec';
-import { SpookyShort } from '../../src/checksum';
+import { SpookyShort } from '../../src/checksum/Spooky';
 import { U64 } from '../../src/primitive/number/U64';
+import { ascii_abcd, ascii_efgh, b1K } from './_include.test';
 
 const tsts = suite('SpookyShort');
 
-const testShort:[Uint8Array,[U64,U64],string][]=[
-    //1-15: C D _
-    [utf8.toBytes('a'),[U64.zero,U64.zero],"1A108191A0BBC9BD754258F061412A92"],
-    [utf8.toBytes('abdcdefg'),[U64.zero,U64.zero],"08A5CA707387A7EDD77409D3D5AA735B"],
-    [utf8.toBytes('hello'),[U64.zero,U64.zero],"3768826AD382E6CA5C941ED1C71AE043"],
-    [utf8.toBytes('hello, world'),[U64.zero,U64.zero],"1DC684B1EE36B01D3193D5870F9BD24A"],
+const sum_abcd = '5C6DB4E0725121B4ED4D2A6BF05F6D02';
+const sum_abcdefgh = '101C8730A539EB6EA8F6B7FCF2CDF12E';
 
-    // 16/2: C D | c=sc d=sc _
-    [utf8.toBytes('1234567891123456'),[U64.zero,U64.zero],"CF70CA9B6019ECE857D5EDD9787BE86C"],
-
-    // 17-31: C D | C D _
-    [utf8.toBytes('12345678911234567'),[U64.zero,U64.zero],"DC93885C980E2E4E6FF3BD49596D734B"],
-    [utf8.toBytes('123456789112345678921234'),[U64.zero,U64.zero],"A742D316339B7585E098B060ED1FD841"],
-    [utf8.toBytes('1234567891123456789212345678931'),[U64.zero,U64.zero],"9950C85ABC8A125410653913D7790DDC"],
-
-    // 32/4: C D | A B c=sc d=sc _
-    [utf8.toBytes('12345678911234567892123456789312'),[U64.zero,U64.zero],"140BBE628104B717DE3431E0FB001E09"],
-
-    // 33-47: C D | A B C D _
-    [utf8.toBytes('123456789112345678921234567893123'),[U64.zero,U64.zero],"E60A9A85836FCD9D0A93B1019E53E1E2"],
-    [utf8.toBytes('1234567891123456789212345678931234567894'),[U64.zero,U64.zero],"750D7D05851AE27A9589D27963AA7D8A"],
-    //wikipedia: 43 bytes
-    [utf8.toBytes('The quick brown fox jumps over the lazy dog'),[U64.zero,U64.zero],"2B12E846AA0693C71D367E742407341B"],
-
-    // 48/6: C D | A B C D | c=sc d=sc _
-    [utf8.toBytes('123456789112345678921234567893123456789412345678'),[U64.zero,U64.zero],"BAD6ACCE2828AD15A4E8F318239B80ED"],
-
-    // 49-63: C D | A B C D | C D _
-    [utf8.toBytes('1234567891123456789212345678931234567894123456789'),[U64.zero,U64.zero],"7BF23BC093BFBEC1E22F14A751AF3757"],
-    
-    // 64/8: C D | A B C D | A B c=sc d=sc _
-    [utf8.toBytes('1234567891123456789212345678931234567894123456789512345678961234'),[U64.zero,U64.zero],"02D17C823DB8047222E239B472E2D2EA"],
-
-    [utf8.toBytes('12345678911234567892123456789312345678941234567895123456789612345'),[U64.zero,U64.zero],"518208C91AB28F50B00550D66079E2C0"],
-
-    [
-        new Uint8Array(0),
-        [U64.fromInt(1),U64.zero],
-        '0D6ADB776D017E08E0AC00827873FA3D'
-    ]
+// prettier-ignore
+const string_tests: [string, string][] = [
+	['', '232706FC6BF509198B72EE65B4E851C7'],
+	['a', '1A108191A0BBC9BD754258F061412A92'],
+	['ab', 'F9DBB6AD202A090F9C7059B0DAD5AE93'],
+	['abc', '8AAB15F77537C967C61367F8CA7811B0'],
+	['abcd', sum_abcd],
+	['abcdefg', 'E134FB62C64BA57E82370D1A277E05E1'],
+	['abcdefgh', sum_abcdefgh],
+	['message digest', 'A087095CA5C2309692A1679D4F4344DB'],
+	['hello', '3768826AD382E6CA5C941ED1C71AE043'],
+	['hello, world', '1DC684B1EE36B01D3193D5870F9BD24A'],
+	['1234567891123456', 'CF70CA9B6019ECE857D5EDD9787BE86C'],
+	['12345678911234567', 'DC93885C980E2E4E6FF3BD49596D734B'],
+	['123456789112345678921234', 'A742D316339B7585E098B060ED1FD841'],
+	['1234567891123456789212345678931', '9950C85ABC8A125410653913D7790DDC'],
+	['12345678911234567892123456789312', '140BBE628104B717DE3431E0FB001E09'],
+	['123456789112345678921234567893123', 'E60A9A85836FCD9D0A93B1019E53E1E2'],
+	['1234567891123456789212345678931234567894', '750D7D05851AE27A9589D27963AA7D8A'],
+	['123456789112345678921234567893123456789412345678', 'BAD6ACCE2828AD15A4E8F318239B80ED'],
+	['1234567891123456789212345678931234567894123456789', '7BF23BC093BFBEC1E22F14A751AF3757'],
+	['1234567891123456789212345678931234567894123456789512345678961234', '02D17C823DB8047222E239B472E2D2EA'],
+	['12345678911234567892123456789312345678941234567895123456789612345', '518208C91AB28F50B00550D66079E2C0'],
+	//wikipedia: 43 bytes
+	['The quick brown fox jumps over the lazy dog', '2B12E846AA0693C71D367E742407341B'],
 ];
-
-let count=0;
-for (const [data,seed,expect] of testShort) {
-    tsts(`SpookyShort[${count++}]`,()=>{
-		const hash=new SpookyShort(seed[0],seed[1]);
-		hash.write(data);
-        const md=hash.sumIn();
-        assert.is(hex.fromBytes(md),expect);
+for (const [src, expect] of string_tests) {
+	tsts(`SpookyShort(${src})`, () => {
+		const hash = new SpookyShort();
+		hash.write(utf8.toBytes(src));
+		const md = hash.sum();
+		assert.is(hex.fromBytes(md), expect);
 	});
 }
 
-tsts(`reset`,()=>{
-    const h=new SpookyShort(U64.fromInt(1));
-    const sumEmpty='0D6ADB776D017E08E0AC00827873FA3D';
-    const sum123='2EE37123EF83D6F7222E09E98D2D926E';
-    assert.is(hex.fromBytes(h.sum()),sumEmpty);
-    h.write(Uint8Array.of(1,2,3));
-    assert.is(hex.fromBytes(h.sum()),sum123);
-    h.reset();
-    assert.is(hex.fromBytes(h.sum()),sumEmpty);
+const altSeed: [U64, U64] = [U64.fromInt(1), U64.zero];
+const alt_seed_tests: [Uint8Array, string][] = [
+	[new Uint8Array(0), '0D6ADB776D017E08E0AC00827873FA3D'],
+];
+
+for (const [data, expect] of alt_seed_tests) {
+	tsts(`SpookyShort([${data.length}],altSeed)`, () => {
+		const hash = new SpookyShort(...altSeed);
+		hash.write(data);
+		const md = hash.sumIn();
+		assert.is(hex.fromBytes(md), expect);
+	});
+}
+
+tsts(`sum(13 +5K[0] bytes)`, () => {
+	const s = new SpookyShort();
+	s.write(Uint8Array.of(13));
+	for (let i = 0; i < 5; i++) s.write(b1K);
+	assert.is(hex.fromBytes(s.sum()), 'BDD0DC528D4B78887E20C6D221EB6BE0');
 });
 
-tsts(`newEmpty`,()=>{
-    const h=new SpookyShort(U64.fromInt(1));
-    const sumEmpty='0D6ADB776D017E08E0AC00827873FA3D';
-    const sum123='2EE37123EF83D6F7222E09E98D2D926E';
-
-    assert.is(hex.fromBytes(h.sum()),sumEmpty);
-
-    h.write(Uint8Array.of(1,2,3));
-    assert.is(hex.fromBytes(h.sum()),sum123);
-    assert.is(hex.fromBytes(h.sum()),sum123,'double sum doesn\'t mutate');
-
-    const h2=h.newEmpty();
-    assert.is(hex.fromBytes(h2.sum()),sumEmpty);
-
+tsts(`reading sum doesn't mutate state`, () => {
+	const s = new SpookyShort();
+	s.write(ascii_abcd);
+	assert.is(hex.fromBytes(s.sum()), sum_abcd, 'sum(abcd)');
+	s.write(ascii_efgh);
+	assert.is(hex.fromBytes(s.sum()), sum_abcdefgh, 'sum(abcdefgh)');
 });
 
 tsts.run();

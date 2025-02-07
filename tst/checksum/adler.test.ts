@@ -2,8 +2,12 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex, utf8 } from '../../src/codec';
 import { Adler32 } from '../../src/checksum/adler';
+import { ascii_abcd, ascii_efgh, b1K } from './_include.test';
 
-const tsts = suite('Adler/RFC 1950');
+const tsts = suite('Adler');
+
+const sum_abcd = 0x03d8018b;
+const sum_abcdefgh = 0x0e000325;
 
 //https://md5calc.com/hash/adler32
 const string_tests: [string, number][] = [
@@ -12,7 +16,7 @@ const string_tests: [string, number][] = [
 	//Others
 	['abcde', 0x05c801f0],
 	['abcdef', 0x081e0256],
-	['abcdefgh', 0x0e000325],
+	['abcdefgh', sum_abcdefgh],
 	['\x01', 0x20002],
 	['\x01\x02', 0x60004],
 	['\x01\x02\x03', 0xd0007],
@@ -22,7 +26,7 @@ const string_tests: [string, number][] = [
 	['a\x00\x00\x00', 0x01880062],
 	['ab', 0x012600c4],
 	['abc', 0x024d0127],
-	['abcd', 0x03d8018b],
+	['abcd', sum_abcd],
 	['f', 0x00670067],
 	['fo', 0x013d00d6],
 	['foo', 0x02820145],
@@ -32,6 +36,7 @@ const string_tests: [string, number][] = [
 	['123456789', 0x091e01de],
 	['foo bar baz٪☃🍣', 0x5c010a36],
 	['gnabgib', 0x0b4202cb],
+	['message digest',0x29750586],
 ];
 
 for (const [str, expect] of string_tests) {
@@ -72,10 +77,17 @@ tsts(`sum(13 +5K[0] bytes)`, () => {
 	//This tests the longer write code, but you'll need to manually decrease maxSpace
 	// in order for it to trigger (say 4000)
 	const s = new Adler32();
-	const b1K = new Uint8Array(1000);
 	s.write(Uint8Array.of(13));
 	for (let i = 0; i < 5; i++) s.write(b1K);
 	assert.is(s.sum32(), 294453262);
+});
+
+tsts(`reading sum doesn't mutate state`, () => {
+	const s = new Adler32();
+	s.write(ascii_abcd);
+	assert.is(s.sum32(), sum_abcd, 'sum(abcd)');
+	s.write(ascii_efgh);
+	assert.is(s.sum32(), sum_abcdefgh, 'sum(abcdefgh)');
 });
 
 // tsts(`Adler(70K bytes)`,()=>{

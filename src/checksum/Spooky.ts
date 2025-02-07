@@ -1,15 +1,10 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import type { IHash } from '../crypto/interfaces/IHash.js';
 import { asLE } from '../endian/platform.js';
-import { U64,U64MutArray } from '../primitive/number/U64.js';
-import { AChecksum32 } from './_AChecksum.js';
+import { U64, U64MutArray } from '../primitive/number/U64.js';
+import { AHashsum32 } from './_AHashsum.js';
 
-//[Wikipedia: Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function)
-//[SpookyHash: a 128-bit non-cryptographic hash](http://burtleburtle.net/bob/hash/spooky.html)
-//[SpookyV2.cpp](http://burtleburtle.net/bob/c/SpookyV2.cpp) (2012)
 //SpookyHash v2 was released shortly after V1, and improved on it, so no v1 implementation planned
-
 const sBlockSizeEls = 4;
 const sc = U64.fromI32s(0xdeadbeef, 0xdeadbeef);
 const lBlockSizeEls = 12;
@@ -17,18 +12,35 @@ const lBlockSizeBytes = lBlockSizeEls << 3; //96
 const sToL = lBlockSizeBytes << 1; //192
 
 /**
- * NOT Cryptographic
+ * [SpookyShort](https://en.wikipedia.org/wiki/Jenkins_hash_function#SpookyHash)
+ * generates a 128bit hashsum of a stream of data.  Described in
+ * [SpookyHash: a 128-bit non-cryptographic hash](http://burtleburtle.net/bob/hash/spooky.html).
+ *
+ * For data length:
+ * - `<192 bytes` use SpookyShort
+ * - `>=192 bytes` use {@link SpookyLong}
+ * - Unknown length use {@link Spooky}
+ * - Note SpookyShort & SpookyLong don't generate the same hashsum for the same input (and both can be used for other data lengths)
+ *
+ * Related:
+ * - [SpookyV2.cpp](http://burtleburtle.net/bob/c/SpookyV2.cpp) (2012)
+ *
+ * @example
+ * ```js
+ * import { SpookyShort } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
+ *
+ * const sum=new SpookyShort();
+ * sum.write(utf8.toBytes('message digest'));
+ * console.log(hex.fromBytes(sum.sum()));// 0xA087095CA5C2309692A1679D4F4344DB
+ * ```
  */
-export class SpookyShort extends AChecksum32 implements IHash {
+export class SpookyShort extends AHashsum32 {
 	/** Runtime state of the hash */
 	protected readonly _state = U64MutArray.fromLen(sBlockSizeEls);
 	/** Temp processing block */
 	private readonly _b64 = U64MutArray.fromBytes(this._b8.buffer);
 
-	/**
-	 * Build a new Spooky2Short (non-crypto) hash generator
-	 * @param seed
-	 */
 	constructor(
 		protected readonly seed = U64.zero,
 		protected readonly seed2 = U64.zero
@@ -44,7 +56,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 	/** aka Mix */
 	protected hash() {
 		//Make sure block is little-endian
-		asLE.i32(this._b8,0,sBlockSizeEls*2);
+		asLE.i32(this._b8, 0, sBlockSizeEls * 2);
 		//Add in data
 		this._state.at(0).addEq(this._b64.at(0));
 		this._state.at(1).addEq(this._b64.at(1));
@@ -94,7 +106,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 
 	private final() {
 		//Make sure block is little-endian
-		asLE.i32(this._b8,0,sBlockSizeEls*2);
+		asLE.i32(this._b8, 0, sBlockSizeEls * 2);
 		//Add in data
 		this._state.at(0).addEq(this._b64.at(0));
 		this._state.at(1).addEq(this._b64.at(1));
@@ -147,6 +159,15 @@ export class SpookyShort extends AChecksum32 implements IHash {
 		this._state.at(1).addEq(this._state.at(0));
 	}
 
+	clone() {
+		const ret = new SpookyShort(this.seed, this.seed2);
+		ret._state.set(this._state);
+		ret._b8.set(this._b8);
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
+		return ret;
+	}
+
 	sumIn() {
 		//In the bPos 1-15 range (remember it starts at 16 = 17-31 ingest%32) we need to zero
 		// up to 16, move AB->CD, and zero AB
@@ -158,7 +179,7 @@ export class SpookyShort extends AChecksum32 implements IHash {
 			this._b64.at(1).set(U64.zero);
 		} else {
 			//Zero the rest
-			this.fillBlock();
+			this._b8.fill(0, this._bPos);
 		}
 		//Add the length (<<56 = MSU32 << 24)
 		this._b64.at(3).addEq(U64.fromI32s(0, this._ingestBytes << 24));
@@ -171,47 +192,38 @@ export class SpookyShort extends AChecksum32 implements IHash {
 		const ret = this._state.toBytesBE().slice(0, 16);
 		return ret;
 	}
-
-	reset() {
-		this._state.at(0).set(this.seed);
-		this._state.at(1).set(this.seed2);
-		this._state.at(2).set(sc);
-		this._state.at(3).set(sc);
-
-		this._ingestBytes = 0;
-		this._bPos = 16;
-	}
-
-	newEmpty(): IHash {
-		return new SpookyShort(this.seed, this.seed2);
-	}
-
-	/** Create a copy of the current context (uses different memory) */
-	clone(): SpookyShort {
-		const ret = new SpookyShort(this.seed, this.seed2);
-		ret._state.set(this._state);
-		super._clone(ret);
-		return ret;
-	}
 }
 
 /**
- * NOT Cryptographic
+ * [SpookyLong](https://en.wikipedia.org/wiki/Jenkins_hash_function#SpookyHash)
+ * generates a 128bit hashsum of a stream of data.  Described in
+ * [SpookyHash: a 128-bit non-cryptographic hash](http://burtleburtle.net/bob/hash/spooky.html)
+ *
+ * For data length:
+ * - `<192 bytes` use {@link SpookyShort}
+ * - `>=192 bytes` use SpookyLong
+ * - Unknown length use {@link Spooky}
+ * - Note SpookyShort & SpookyLong don't generate the same hashsum for the same input (and both can be used for other data lengths)
+ *
+ * Related:
+ * - [SpookyV2.cpp](http://burtleburtle.net/bob/c/SpookyV2.cpp) (2012)
+ *
+ * @example
+ * ```js
+ * import { SpookyLong } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
+ *
+ * const sum=new SpookyLong();
+ * sum.write(utf8.toBytes('message digest'));
+ * console.log(hex.fromBytes(sum.sum()));// 0xF10C215CB70B03707A91096347D3D44C
+ * ```
  */
-export class SpookyLong extends AChecksum32 {
-	/**
-	 * Runtime state of the hash
-	 */
+export class SpookyLong extends AHashsum32 {
+	/** Runtime state of the hash */
 	private readonly _state = U64MutArray.fromLen(lBlockSizeEls);
-	/**
-	 * Temp processing block
-	 */
+	/** Temp processing block */
 	private readonly _b64 = U64MutArray.fromBytes(this._b8.buffer);
 
-	/**
-	 * Build a new Spooky2Short (non-crypto) hash generator
-	 * @param seed
-	 */
 	constructor(
 		protected readonly seed = U64.zero,
 		protected readonly seed2 = U64.zero
@@ -375,48 +387,44 @@ export class SpookyLong extends AChecksum32 {
 		this.finalPartial();
 	}
 
+	clone() {
+		const ret = new SpookyLong(this.seed, this.seed2);
+		ret._state.set(this._state);
+		ret._b8.set(this._b8);
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
+		return ret;
+	}
+
 	sumIn() {
-		this.fillBlock();
+		this._b8.fill(0, this._bPos);
 		this._b8[lBlockSizeBytes - 1] = this._ingestBytes % lBlockSizeBytes;
 		this.final();
 		const ret = this._state.toBytesBE().slice(0, 16);
 		return ret;
 	}
-
-	reset() {
-		this._state.at(0).set(this.seed);
-		this._state.at(1).set(this.seed2);
-		this._state.at(2).set(sc);
-		this._state.at(3).set(this.seed);
-		this._state.at(4).set(this.seed2);
-		this._state.at(5).set(sc);
-		this._state.at(6).set(this.seed);
-		this._state.at(7).set(this.seed2);
-		this._state.at(8).set(sc);
-		this._state.at(9).set(this.seed);
-		this._state.at(10).set(this.seed2);
-		this._state.at(11).set(sc);
-		super._reset();
-	}
-
-	newEmpty() {
-		return new SpookyLong(this.seed, this.seed2);
-	}
-
-	clone(): SpookyLong {
-		const ret = new SpookyLong(this.seed, this.seed2);
-		ret._state.set(this._state);
-		super._clone(ret);
-		return ret;
-	}
 }
 
 /**
- * NOT Cryptographic - It's better to use SpookyShort (<192 bytes) or SpookyLong (>=192 bytes)
- * directly if you know final length before you build, and if the first write isn't large
- * - While < 192 bytes both long and short will be written to (necessary to support the transition)
- * - Once >=192 bytes only long will be written to (so if the first write is large there's no performance penalty,
- *   but you might as well just use SpookyLong?)
+ * [Spooky](https://en.wikipedia.org/wiki/Jenkins_hash_function#SpookyHash)
+ * generates a 128bit hashsum of a stream of data.  When there's <192 bytes
+ * it uses {@link SpookyShort}, otherwise it uses {@link SpookyLong}.  In order
+ * to provide this feature when the input is short it generates both
+ * {@link SpookyShort |short} and {@link SpookyLong |long} hashsums, switching to the {@link SpookyLong |long}
+ * hashsum once the input is long enough - so *it's inefficient*.  You may want to
+ * instead use {@link SpookyLong} directly, which still works for shorter
+ * hashes.
+ *
+ * @example
+ * ```js
+ * import { Spooky } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
+ *
+ * const sum=new Spooky();
+ * sum.write(utf8.toBytes('message digest'));
+ * //Note this matches `SpookShort`
+ * console.log(hex.fromBytes(sum.sum()));// 0xA087095CA5C2309692A1679D4F4344DB
+ * ```
  */
 export class Spooky extends SpookyShort {
 	private _l: SpookyLong;
@@ -438,31 +446,23 @@ export class Spooky extends SpookyShort {
 		this._l.write(data);
 	}
 
+	clone(): Spooky {
+		const ret = new Spooky(this.seed, this.seed2);
+		ret._state.set(this._state);
+		ret._b8.set(this._b8);
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
+
+		ret._l = this._l.clone();
+		ret._long = this._long;
+		return ret;
+	}
+
 	sum(): Uint8Array {
 		return this._long ? this._l.sum() : super.sum();
 	}
 
 	sumIn(): Uint8Array {
 		return this._long ? this._l.sumIn() : super.sumIn();
-	}
-
-	reset() {
-		super.reset();
-		this._l.reset();
-		this._long = false;
-	}
-
-	newEmpty(): IHash {
-		return new Spooky(this.seed, this.seed2);
-	}
-
-	clone(): Spooky {
-		const ret = new Spooky(this.seed, this.seed2);
-		ret._state.set(this._state);
-		super._clone(ret);
-
-		ret._l = this._l.clone();
-		ret._long = this._long;
-		return ret;
 	}
 }

@@ -2,11 +2,26 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { Lrc } from '../../src/checksum/lrc';
 import { ascii_abcd, ascii_efgh, b1K } from './_include.test';
+import { utf8 } from '../../src/codec';
 
 const tsts = suite('Lrc');
 
 const sum_abcd = 0x76;
 const sum_abcdefgh = 0xdc;
+
+const string_tests:[string,number][]=[
+	['abcd',sum_abcd],
+	['abcdefgh',sum_abcdefgh],
+	['message digest',0x7B],
+];
+for (const [src, expect] of string_tests) {
+	tsts(`Lrc(${src})`, () => {
+		const s = new Lrc();
+		s.write(utf8.toBytes(src));
+		assert.is(s.sum()[0], expect);
+	});
+}
+
 
 //https://en.metools.info/encoding/ecod127.html
 const sum_tests: [Uint8Array, number][] = [
@@ -17,9 +32,7 @@ const sum_tests: [Uint8Array, number][] = [
 	[Uint8Array.of(0x02, 0x30, 0x30, 0x31, 0x23, 0x03), 71],
 	[Uint8Array.of(0xff, 0xee, 0xdd), 0x36],
 	[Uint8Array.of(51, 55, 49), 101],
-	[ascii_abcd, sum_abcd],
 ];
-
 for (const [data, expect] of sum_tests) {
 	tsts(`Lrc(${data})`, () => {
 		const s = new Lrc();

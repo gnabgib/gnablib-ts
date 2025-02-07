@@ -45,6 +45,17 @@ const crcTab=[
  *
  * Related:
  * - [Wikipedia: cksum](https://en.wikipedia.org/wiki/Cksum)
+ * 
+ * @example
+ * ```js
+ * import { Cksum } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
+ *
+ * const sum=new Cksum();
+ * sum.write(utf8.toBytes('message digest'));
+ * console.log(hex.fromBytes(sum.sum()));// 0xD934B396
+ * console.log(sum.sum32());// 3644109718
+ * ```
  */
 export class Cksum implements IChecksum {
 	private _crc = 0;

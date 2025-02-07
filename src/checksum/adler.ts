@@ -12,6 +12,18 @@ const maxSpace = 4294967295;
  *
  * Related:
  * - [Revisiting Fletcher and Adler Checksums (2006)](http://www.zlib.net/maxino06_fletcher-adler.pdf)
+ * - ⚠ In most cases the {@link Fletcher32 |Fletcher} checksum should be used instead of this
+ * 
+ * @example
+ * ```js
+ * import { Adler32 } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
+ *
+ * const sum=new Adler32();
+ * sum.write(utf8.toBytes('message digest'));
+ * console.log(hex.fromBytes(sum.sum()));// 0x29750586
+ * console.log(sum.sum32());// 695534982
+ * ```
  */
 export class Adler32 implements IChecksum {
 	private _modSpace = maxSpace; //0xffffffff * 0xfff1 (max sum value) still fits in 2^48 bits

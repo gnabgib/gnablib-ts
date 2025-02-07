@@ -1,21 +1,33 @@
 /*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 
-import type { IHash } from '../crypto/interfaces/IHash.js';
 import { asBE, asLE } from '../endian/platform.js';
-import { AChecksum32 } from './_AChecksum.js';
-
-//[Wikipedia: Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function)
-//["My Hash"](http://burtleburtle.net/bob/hash/doobs.html)
-//[lookup2.c](http://www.burtleburtle.net/bob/c/lookup2.c) (1996)
+import { AHashsum32 } from './_AHashsum.js';
 
 const A = 0,
 	B = 1,
 	C = 2;
 
 /**
- * NOT Cryptographic
+ * [Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)
+ * generates a 32bit hashsum of a stream of data.  Described in
+ * ["My hash"](http://burtleburtle.net/bob/hash/doobs.html)
+ *
+ * Related:
+ * - [lookup2.c](http://www.burtleburtle.net/bob/c/lookup2.c) (1996)
+ * - ⚠ Use {@link Spooky} instead of this
+ * 
+ * @example
+ * ```js
+ * import { Lookup2 } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
+ *
+ * const sum=new Lookup2();
+ * sum.write(utf8.toBytes('message digest'));
+ * console.log(hex.fromBytes(sum.sum()));// 0x4687CE02
+ * console.log(sum.sum32());// 1183305218
+ * ```
  */
-export class Lookup2 extends AChecksum32 implements IHash {
+export class Lookup2 extends AHashsum32 {
 	/** Runtime state of the hash */
 	private readonly _state = Uint32Array.of(0x9e3779b9, 0x9e3779b9, 0);
 	/** Starting seed, uint32 `[0 - 0xffffffff]` */
@@ -23,17 +35,13 @@ export class Lookup2 extends AChecksum32 implements IHash {
 	/** Temp processing block */
 	private readonly _b32 = new Uint32Array(this._b8.buffer);
 
-	/**
-	 * Build a new Lookup2 (non-crypto) hash generator
-	 * @param seed
-	 */
 	constructor(seed = 0) {
 		super(4, 12);
 		this._state[2] = seed;
 		this._seed = this._state[2];
 	}
 
-	protected hash() {
+	protected hash(): void {
 		//Make sure block is little-endian
 		asLE.i32(this._b8, 0, 3);
 		//Add in data
@@ -67,45 +75,30 @@ export class Lookup2 extends AChecksum32 implements IHash {
 		this._bPos = 0;
 	}
 
-	private _sum() {
-		this._state[2] += this._ingestBytes;
-		this.fillBlock();
-		this.hash();
+	clone() {
+		const ret = new Lookup2(this._seed);
+		ret._state.set(this._state);
+		ret._b32.set(this._b32);
+		ret._ingestBytes = this._ingestBytes;
+		ret._bPos = this._bPos;
+		return ret;
 	}
 
-	sumIn() {
-		this._sum();
+	sumIn(): Uint8Array {
+		this._state[2] += this._ingestBytes;
+		this._b8.fill(0, this._bPos);
+		this.hash();
+
 		const ret = new Uint8Array(this._state.slice(2).buffer);
 		//Wiki implies big-endian (since that's how we write numbers)
 		asBE.i32(ret);
 		return ret;
 	}
 
-	/**
-	 * Sum the hash with the all content written so far (does not mutate state)
-	 * @returns Sum as uint32
-	 */
+	/** Sum the hashsum with the all content written so far (does not mutate state) */
 	sum32(): number {
-		const ret = this.clone();
-		ret._sum();
-		return ret._state[2];
-	}
-
-	reset() {
-		this._state[A] = 0x9e3779b9;
-		this._state[B] = 0x9e3779b9;
-		this._state[C] = this._seed;
-		super._reset();
-	}
-
-	newEmpty() {
-		return new Lookup2(this._seed);
-	}
-
-	clone(): Lookup2 {
-		const ret = new Lookup2(this._seed);
-		ret._state.set(this._state);
-		super._clone(ret);
-		return ret;
+		const c = this.clone();
+		c.sumIn();
+		return c._state[2];
 	}
 }

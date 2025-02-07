@@ -9,8 +9,23 @@ const tsts = suite('Bcc');
 const sum_abcd = 4;
 const sum_abcdefgh = 8;
 
+const string_tests:[string,number][]=[
+	['',0],
+	['a',97],
+	['abcd',sum_abcd],
+	['abcdefgh',sum_abcdefgh],
+	['message digest',67],
+];
+for(const [src,expect] of string_tests) {
+	tsts(`Bcc(${src})`, () => {
+		const s = new Bcc();
+		s.write(utf8.toBytes(src));
+		const sum = s.sum();
+		assert.is(sum[0], expect);
+	});
+}
+
 const sum_tests: [Uint8Array, number][] = [
-	[new Uint8Array(0), 0],
 	[Uint8Array.of(101, 170, 204, 227), 224],
 	[Uint8Array.of(164, 55, 246, 248, 205), 80],
 	[Uint8Array.of(1, 2), 3],
@@ -23,11 +38,9 @@ const sum_tests: [Uint8Array, number][] = [
 	[Uint8Array.of(0x46, 0x72, 0x65, 0x64, 0x64, 0x79), 0x28],
 	[Uint8Array.of(0x65, 0xaa, 0xcc, 0xe3), 0xe0],
 	[Uint8Array.of(0x42, 0x43, 0x43, 0x58, 0x4f, 0x52), 0x07],
-	[ascii_abcd,sum_abcd],
-	[utf8.toBytes('abcdefgh'),sum_abcdefgh],
 ];
 for (const [data, expect] of sum_tests) {
-	tsts(`Sum([${data.length}])`, () => {
+	tsts(`Bcc([${data.length}])`, () => {
 		const s = new Bcc();
 		s.write(data);
 		const sum = s.sum();

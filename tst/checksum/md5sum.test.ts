@@ -16,6 +16,7 @@ const string_tests = [
 	['abcd', sum_abcd],
 	['efgh', '1F7690EBDD9B4CAF8FAB49CA1757BF27'],
 	['abcdefgh', sum_abcdefgh],
+	['message digest', 'F96B697D7CB7938D525A2F31AAF161D0'],
 ];
 
 //If you want to test on *nix: `echo -n 'a' | md5sum`

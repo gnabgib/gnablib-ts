@@ -27,7 +27,20 @@ function makeTable(poly: number): Uint32Array {
 const tblRp = makeTable(reversedPoly);
 
 /**
- * crc32 generates a 32bit checksum of a stream of data.  It uses the generator polynomial `0x04C11DB7`
+ * crc32 generates a 32bit checksum of a stream of data.  Described in 
+ * [IEEE 80802](https://www.iso.org/standard/78299.html), using the generator polynomial `0x04C11DB7`.
+ * Also found in SATA, MPEG-2, PKZIP, Gzip, Bzip2, PNG and ZMODEM specs.
+ * 
+ * @example
+ * ```js
+ * import { Crc32 } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
+ *
+ * const sum=new Crc32();
+ * sum.write(utf8.toBytes('message digest'));
+ * console.log(hex.fromBytes(sum.sum()));// 0x20159D7F
+ * console.log(sum.sum32());// 538287487
+ * ```
  */
 export class Crc32 implements IChecksum {
 	private _crc = 0xffffffff;

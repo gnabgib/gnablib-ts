@@ -16,12 +16,13 @@ const BIT24 = 0x1000000;
  *
  * @example
  * ```js
- * import { crc24 } from 'gnablib/checksum';
- * import { utf8 } from 'gnablib/codec';
+ * import { Crc24 } from 'gnablib/checksum';
+ * import { hex, utf8 } from 'gnablib/codec';
  *
  * const sum=new Crc24();
  * sum.write(utf8.toBytes('message digest'));
- * console.log(sum.sum24());//14414006 | 0xdbf0b6
+ * console.log(hex.fromBytes(sum.sum()));// 0xDBF0B6
+ * console.log(sum.sum24());// 14414006
  * ```
  */
 export class Crc24 implements IChecksum {

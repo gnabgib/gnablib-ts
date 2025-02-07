@@ -21,6 +21,7 @@ const sum_tests: [string, number][] = [
 	['\n', 3515105045],
 	['CRC helps with bit rot\n', 3193580682],
 	['I do not want to work\n', 17471322],
+	['message digest',3644109718],
 ];
 for (const [src, expect] of sum_tests) {
 	tsts(`cksum(${src})`, () => {

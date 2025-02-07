@@ -16,6 +16,7 @@ const string_tests = [
 	['abcd', sum_abcd],
 	['efgh', '2AED8AA9F826C21EF07D5EE15B48EEA06E9C8A62'],
 	['abcdefgh', sum_abcdefgh],
+	['message digest', 'C12252CEDA8BE8994D5FA0290A47231C1D16AAE3'],
 ];
 
 //If you want to test on *nix: `echo -n '<test>' | sha1sum`

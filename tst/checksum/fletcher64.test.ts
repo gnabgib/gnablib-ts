@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { Fletcher64 } from '../../src/checksum/fletcher';
+import { Fletcher64 } from '../../src/checksum/Fletcher64';
 import { hex, utf8 } from '../../src/codec';
 import { ascii_abcd, ascii_efgh, b1K } from './_include.test';
 
@@ -39,6 +39,7 @@ const sum_tests: [string, string][] = [
 	['123456789', '0D0803376C6A689F'],
 	['foo bar baz٪☃🍣', '5B253BF54182B4C6'],
 	['gnabgib', 'C525463562C3D7CE'],
+	['message digest', 'F9CD1314F940AAA5'],
 ];
 
 for (const [src, expectHex] of sum_tests) {
@@ -55,6 +56,12 @@ tsts(`sum`, () => {
 	const sum = s.sum();
 	assert.is(sum.length, s.size);
 	assert.is(hex.fromBytes(sum), '0000006100000061');
+});
+
+tsts(`sum64`, () => {
+	const s = new Fletcher64();
+	s.write(Uint8Array.of(97));
+	assert.is(s.sum64().toString(),'0000006100000061');
 });
 
 tsts(`sum(13 +5K[0] bytes)`, () => {

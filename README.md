@@ -24,7 +24,7 @@ Says not found in red.. like that's bad
 - [License](#license)
 - Features:
   - [Augmented Backus-Naur Form](#augmented-backus-naur-form-rfc5234)
-  - [Checksum/Hash](#checksumhash)
+  - [Checksum/Hashsum](#checksumhashsum)
   - [Command Line Interface](#command-line-interface-cli) (arguments, colour, text style)
   - [Codecs](#codec)
   - [Symmetric Encryption](#symmetric-encryption)
@@ -70,28 +70,39 @@ npm audit signatures
 - [Thomson NFA (1968)](https://dl.acm.org/doi/10.1145/363347.363387) solver
 
 
-### Checksum/Hash
+### Checksum/Hashsum
 
-A checksum; can be used to prevent/identify accidental changes.  A hash; maps some data to another, often
-used for hash tables, or to speed up comparison.
+A checksum; can be used to prevent/identify accidental changes.
+
+Name|Sum size bits
+-|-
+[Adler32](https://datatracker.ietf.org/doc/html/rfc1950)|32
+[Block Check Character](https://en.wikipedia.org/wiki/Block_check_character)|8
+[Cksum](https://en.wikipedia.org/wiki/Cksum)|32
+[CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)|24
+[CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)|32
+[Fletcher16](http://www.zlib.net/maxino06_fletcher-adler.pdf)|16
+[Fletcher32](http://www.zlib.net/maxino06_fletcher-adler.pdf)|32
+[Fletcher64](http://www.zlib.net/maxino06_fletcher-adler.pdf)|64
+[Longitudinal Redundancy Check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)|8
+
+The [Luhn](https://en.wikipedia.org/wiki/Luhn_algorithm) algorithm is also support, which only works on
+integers/numerical digits (eg. credit cards, SI numbers)
+
+
+A hash; maps some data to another, often used for hash tables, or to speed up comparison. We use the term
+hashsum to distinguish from cryptographic-hashes (although *MD5* and *SHA1* were once cryptographically safe)
 
 Name|Sum size bits|Optional parameters
 -------|----------------------|-------------------
-[Adler32](https://datatracker.ietf.org/doc/html/rfc1950)|32|
-[Block Check Character](https://en.wikipedia.org/wiki/Block_check_character)|8|
-[Cksum](https://en.wikipedia.org/wiki/Cksum)|32|
-[CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)|24|
-[CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)|32|
-[Fletcher](http://www.zlib.net/maxino06_fletcher-adler.pdf)|16, 32, 64|
-[Longitudinal Redundancy Check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)|8|
 [Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed
 [Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|seed
-[Luhn](https://en.wikipedia.org/wiki/Luhn_algorithm)|3.5|
 [MD5Sum](https://en.wikipedia.org/wiki/Md5sum)|128|
 [Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed
 [SHA1Sum](https://en.wikipedia.org/wiki/Sha1sum)|160|
 [Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|seed
-[xxHash](https://cyan4973.github.io/xxHash/)|32, 64|seed
+[xxHash32](https://cyan4973.github.io/xxHash/)|32|seed
+[xxHash64](https://cyan4973.github.io/xxHash/)|64|seed
 
 
 ### Command Line Interface (cli)

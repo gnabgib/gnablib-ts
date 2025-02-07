@@ -38,6 +38,7 @@ const sum_tests: [string, number][] = [
 	['foo bar baz٪☃🍣', 0x493f],
 	['gnabgib', 0x46cc],
 	['Z', 0x5a5a],
+    ['message digest', 0x908A],
 ];
 
 for (const [src, expect] of sum_tests) {
