@@ -628,42 +628,42 @@ for (const [aHex,bHex] of lt64Test) {
 	});
 
 
-	// //Constant time
-	// tsts(`${aHex} <=.ct ${bHex}`,()=>{
-	// 	assert.is(a.ctLte(b),true);
-	// });
-	// tsts(`! ${bHex} <=.ct ${aHex}`,()=>{
-	// 	assert.is(b.ctLte(a),false);
-	// });
+	//Constant time
+	tsts(`${aHex} <=.ct ${bHex}`,()=>{
+		assert.is(a.ctLte(b),true);
+	});
+	tsts(`! ${bHex} <=.ct ${aHex}`,()=>{
+		assert.is(b.ctLte(a),false);
+	});
 
-	// tsts(`${aHex} <.ct ${bHex}`,()=>{
-	// 	assert.is(a.ctLt(b),true);
-	// });
-	// tsts(`! ${bHex} <.ct ${aHex}`,()=>{
-	// 	assert.is(b.ctLt(a),false);
-	// });
+	tsts(`${aHex} <.ct ${bHex}`,()=>{
+		assert.is(a.ctLt(b),true);
+	});
+	tsts(`! ${bHex} <.ct ${aHex}`,()=>{
+		assert.is(b.ctLt(a),false);
+	});
 
 
-	// tsts(`${bHex} >=.ct ${aHex}`,()=>{
-	// 	assert.is(b.ctGte(a),true);
-	// });
-	// tsts(`! ${aHex} >=.ct ${bHex}`,()=>{
-	// 	assert.is(a.ctGte(b),false);
-	// });
+	tsts(`${bHex} >=.ct ${aHex}`,()=>{
+		assert.is(b.ctGte(a),true);
+	});
+	tsts(`! ${aHex} >=.ct ${bHex}`,()=>{
+		assert.is(a.ctGte(b),false);
+	});
 
-	// tsts(`${bHex} >.ct ${aHex}`,()=>{
-	// 	assert.is(b.ctGt(a),true);
-	// });
-	// tsts(`! ${aHex} >.ct ${bHex}`,()=>{
-	// 	assert.is(a.ctGt(b),false);
-	// });
+	tsts(`${bHex} >.ct ${aHex}`,()=>{
+		assert.is(b.ctGt(a),true);
+	});
+	tsts(`! ${aHex} >.ct ${bHex}`,()=>{
+		assert.is(a.ctGt(b),false);
+	});
 
-	// tsts(`! ${aHex} ==.ct ${bHex}`,()=>{
-	// 	assert.is(a.ctEq(b),false);
-	// });
-	// tsts(`! ${bHex} ==.ct ${aHex}`,()=>{
-	// 	assert.is(b.ctEq(a),false);
-	// });
+	tsts(`! ${aHex} ==.ct ${bHex}`,()=>{
+		assert.is(a.ctEq(b),false);
+	});
+	tsts(`! ${bHex} ==.ct ${aHex}`,()=>{
+		assert.is(b.ctEq(a),false);
+	});
 
 }
 
@@ -702,51 +702,54 @@ for (const aHex of eq64Test) {
 	});
 
 
-	// //Constant time
-	// tsts(`${aHex} ==.ct ${aHex}`,()=>{
-	// 	assert.is(a.ctEq(b),true);
-	// });
+	//Constant time
+	tsts(`${aHex} ==.ct ${aHex}`,()=>{
+		assert.is(a.ctEq(b),true);
+	});
 
-	// tsts(`${aHex} <=.ct ${aHex}`,()=>{
-	// 	assert.is(a.ctLte(b),true);
-	// });
+	tsts(`${aHex} <=.ct ${aHex}`,()=>{
+		assert.is(a.ctLte(b),true);
+	});
 
-	// tsts(`! ${aHex} <.ct ${aHex}`,()=>{
-	// 	assert.is(a.ctLt(b),false);
-	// });
+	tsts(`! ${aHex} <.ct ${aHex}`,()=>{
+		assert.is(a.ctLt(b),false);
+	});
 	
-	// tsts(`${aHex} >=.ct ${aHex}`,()=>{
-	// 	assert.is(a.ctGte(b),true);
-	// });
+	tsts(`${aHex} >=.ct ${aHex}`,()=>{
+		assert.is(a.ctGte(b),true);
+	});
 
-	// tsts(`! ${aHex} >.ct ${aHex}`,()=>{
-	// 	assert.is(a.ctGt(b),false);
-	// });
+	tsts(`! ${aHex} >.ct ${aHex}`,()=>{
+		assert.is(a.ctGt(b),false);
+	});
 }
 
-// tsts(`ctSelect`,()=>{
-// 	const aHex='0102030405060708';
-// 	const bHex='F0E0D0C0B0A09080';
-// 	const aBytes=hex.toBytes(aHex);
-// 	const bBytes=hex.toBytes(bHex);
-// 	const a=U64.fromBytesBE(aBytes);
-// 	const b=U64.fromBytesBE(bBytes);
+tsts(`ctSwitch(yes)`,()=>{
+	const aHex='0102030405060708';
+	const bHex='F0E0D0C0B0A09080';
+	const aBytes=hex.toBytes(aHex);
+	const bBytes=hex.toBytes(bHex);
+	const a=U64.fromBytesBE(aBytes);
+	const b=U64.fromBytesBE(bBytes);
 
-// 	assert.equal(U64.ctSelect(a,b,true).toBytesBE(),aBytes);
-// 	assert.equal(U64.ctSelect(a,b,false).toBytesBE(),bBytes);
-// })
+	const yesSwitch=a.ctSwitch(b,true);
+	assert.equal(yesSwitch.toBytesBE(),bBytes,'b was chosen');
+	assert.is.not(yesSwitch,b,'It\'s a copy');
+})
 
-// tsts(`ctSwitch`,()=>{
-// 	const aHex='0102030405060708';
-// 	const bHex='F0E0D0C0B0A09080';
-// 	const aBytes=hex.toBytes(aHex);
-// 	const bBytes=hex.toBytes(bHex);
-// 	const a=U64.fromBytesBE(aBytes);
-// 	const b=U64.fromBytesBE(bBytes);
+tsts(`ctSwitch(no)`,()=>{
+	const aHex='0102030405060708';
+	const bHex='F0E0D0C0B0A09080';
+	const aBytes=hex.toBytes(aHex);
+	const bBytes=hex.toBytes(bHex);
+	const a=U64.fromBytesBE(aBytes);
+	const b=U64.fromBytesBE(bBytes);
 
-// 	assert.equal(a.ctSwitch(b,true).toBytesBE(),bBytes);
-// 	assert.equal(a.ctSwitch(b,false).toBytesBE(),aBytes);
-// })
+	const noSwitch=a.ctSwitch(b,false);
+	assert.equal(noSwitch.toBytesBE(),aBytes,'a was chosen');
+	assert.is.not(noSwitch,a,'It\'s a copy');
+})
+
 
 // const toMinBytesTest:[string,Uint8Array,Uint8Array][]=[
 // 	['0000000000000000',Uint8Array.of(0),Uint8Array.of(0)],

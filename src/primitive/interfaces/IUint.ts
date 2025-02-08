@@ -81,15 +81,18 @@ interface IComparable<T> {
 	lte(o: T): boolean;
 }
 export interface ICtComparable<T> {
-	ctEq(n: T): boolean;
-	ctGt(n: T): boolean;
-	ctGte(n: T): boolean;
-	ctLt(n: T): boolean;
-	ctLte(n: T): boolean;
-}
-export interface ICtSelect<T> {
-	ctSwitch(n: T, yes: boolean): T;
-	ctSelect(a: T, b: T, first: boolean): T;
+	/** Whether `this` == `o` in **constant time** */
+	ctEq(o: T): boolean;
+	/** Whether `this` > `o` in **constant time** */
+	ctGt(o: T): boolean;
+	/** Whether `this` is >= `o` in **constant time** */
+	ctGte(o: T): boolean;
+	/** Whether `this` < `o` in **constant time** */
+	ctLt(o: T): boolean;
+	/** Whether `this` <= `o` in **constant time** */
+	ctLte(o: T): boolean;
+	/** Return a copy of `this` or `o` (if `other`) **constant time** */
+	ctSwitch(o: T, other: boolean): T;
 }
 interface IBasic<T> {
 	/** Number of 32bit elements required */

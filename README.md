@@ -369,4 +369,6 @@ MSVC (LCG)|-|4|16
 
 ## License
 
+Copyright &copy; 2022-2025 gnablib contributors
+
 [MPL-1.1](LICENSE)

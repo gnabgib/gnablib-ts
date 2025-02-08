@@ -3,7 +3,7 @@
 import { hex } from '../../codec/Hex.js';
 import { asBE, asLE } from '../../endian/platform.js';
 import { sLen } from '../../safe/safe.js';
-import { IUint, IUintMut } from '../interfaces/IUint.js';
+import { ICtComparable, IUint, IUintMut } from '../interfaces/IUint.js';
 import { AInt } from './_AInt.js';
 
 const consoleDebugSymbol = Symbol.for('nodejs.util.inspect.custom');
@@ -13,7 +13,7 @@ const size32 = 2;
 
 // max=  18446744073709551615
 
-export class U64 extends AInt implements IUint<U64> {
+export class U64 extends AInt implements IUint<U64>, ICtComparable<U64> {
 	protected constructor(arr: Uint32Array, pos: number, name = 'U64') {
 		super(arr, pos, size32, name);
 	}
@@ -91,16 +91,19 @@ export class U64 extends AInt implements IUint<U64> {
 		ret._lShiftEq(by);
 		return ret;
 	}
+
 	rShift(by: number) {
 		const ret = this.clone();
 		ret._rShiftEq(by);
 		return ret;
 	}
+
 	lRot(by: number) {
 		const ret = this.clone();
 		ret._lRotEq(by);
 		return ret;
 	}
+
 	rRot(by: number) {
 		const ret = this.clone();
 		ret._lRotEq(size8 * 8 - by);
@@ -114,16 +117,19 @@ export class U64 extends AInt implements IUint<U64> {
 		ret._xorEq(o);
 		return ret;
 	}
+
 	or(o: U64) {
 		const ret = this.clone();
 		ret._orEq(o);
 		return ret;
 	}
+
 	and(o: U64) {
 		const ret = this.clone();
 		ret._andEq(o);
 		return ret;
 	}
+
 	not() {
 		const ret = this.clone();
 		ret._notEq();
@@ -137,11 +143,13 @@ export class U64 extends AInt implements IUint<U64> {
 		ret._addEq(o);
 		return ret;
 	}
+
 	sub(o: U64) {
 		const ret = this.clone();
 		ret._subEq(o);
 		return ret;
 	}
+
 	mul(o: U64) {
 		const arr = this._mul(o);
 		return new U64(arr, 0);
@@ -152,17 +160,79 @@ export class U64 extends AInt implements IUint<U64> {
 	eq(o: U64) {
 		return super.eq(o);
 	}
+
 	gt(o: U64) {
 		return super.gt(o);
 	}
+
 	gte(o: U64) {
 		return super.gte(o);
 	}
+
 	lt(o: U64) {
 		return super.lt(o);
 	}
+
 	lte(o: U64) {
 		return super.lte(o);
+	}
+	//#endregion
+
+	//#region Constant time
+	ctEq(o: U64) {
+		const zero =
+			(this._arr[this._pos] ^ o._arr[o._pos]) |
+			(this._arr[this._pos + 1] ^ o._arr[o._pos + 1]);
+		return zero === 0;
+	}
+
+	ctGt(o: U64) {
+		const ll = (this._arr[this._pos] & 0xffff) - (o._arr[o._pos] & 0xffff) - 1;
+		const lh = (this._arr[this._pos] >>> 16) - (o._arr[o._pos] >>> 16) - 1;
+		const hl =
+			(this._arr[this._pos + 1] & 0xffff) - (o._arr[o._pos + 1] & 0xffff) - 1;
+		const hh =
+			(this._arr[this._pos + 1] >>> 16) - (o._arr[o._pos + 1] >>> 16) - 1;
+		return (ll & lh & hl & hh) >>> 31 === 0;
+	}
+
+	ctGte(o: U64) {
+		const ll = (o._arr[o._pos] & 0xffff) - (this._arr[this._pos] & 0xffff) - 1;
+		const lh = (o._arr[o._pos] >>> 16) - (this._arr[this._pos] >>> 16) - 1;
+		const hl =
+			(o._arr[o._pos + 1] & 0xffff) - (this._arr[this._pos + 1] & 0xffff) - 1;
+		const hh =
+			(o._arr[o._pos + 1] >>> 16) - (this._arr[this._pos + 1] >>> 16) - 1;
+		return (ll & lh & hl & hh) >>> 31 === 1;
+	}
+
+	ctLt(o: U64) {
+		const ll = (o._arr[o._pos] & 0xffff) - (this._arr[this._pos] & 0xffff) - 1;
+		const lh = (o._arr[o._pos] >>> 16) - (this._arr[this._pos] >>> 16) - 1;
+		const hl =
+			(o._arr[o._pos + 1] & 0xffff) - (this._arr[this._pos + 1] & 0xffff) - 1;
+		const hh =
+			(o._arr[o._pos + 1] >>> 16) - (this._arr[this._pos + 1] >>> 16) - 1;
+		return (ll & lh & hl & hh) >>> 31 === 0;
+	}
+
+	ctLte(o: U64) {
+		const ll = (this._arr[this._pos] & 0xffff) - (o._arr[o._pos] & 0xffff) - 1;
+		const lh = (this._arr[this._pos] >>> 16) - (o._arr[o._pos] >>> 16) - 1;
+		const hl =
+			(this._arr[this._pos + 1] & 0xffff) - (o._arr[o._pos + 1] & 0xffff) - 1;
+		const hh =
+			(this._arr[this._pos + 1] >>> 16) - (o._arr[o._pos + 1] >>> 16) - 1;
+		return (ll & lh & hl & hh) >>> 31 === 1;
+	}
+
+	ctSwitch(o: U64, other: boolean) {
+		// @ts-expect-error: We're casting bool->number on purpose
+		const oNum = (other | 0) - 1; //-1 or 0
+		return U64.fromI32s(
+			(~oNum & o._arr[o._pos]) | (oNum & this._arr[this._pos]),
+			(~oNum & o._arr[o._pos + 1]) | (oNum & this._arr[this._pos + 1])
+		);
 	}
 	//#endregion
 
