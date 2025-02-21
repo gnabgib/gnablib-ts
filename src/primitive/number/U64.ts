@@ -196,7 +196,7 @@ export class U64 extends AInt implements IUint<U64>, ICtComparable<U64> {
 		return (ll & lh & hl & hh) >>> 31 === 0;
 	}
 
-	ctGte(o: U64) {
+	ctGte(o: U64): boolean {
 		const ll = (o._arr[o._pos] & 0xffff) - (this._arr[this._pos] & 0xffff) - 1;
 		const lh = (o._arr[o._pos] >>> 16) - (this._arr[this._pos] >>> 16) - 1;
 		const hl =

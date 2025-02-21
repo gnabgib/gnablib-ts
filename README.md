@@ -125,6 +125,7 @@ Name|Sum size bits|Optional parameters
 - [Proquint](http://www.gnabgib.com/tools/proquint/)
 - [QuotedPrintable](https://datatracker.ietf.org/doc/html/rfc2045#section-6.7)
 - [ROT13, ROT13.5, ROT47 ](https://en.wikipedia.org/wiki/ROT13)
+- [Scream](https://xkcd.com/3054/)
 - [URI](https://datatracker.ietf.org/doc/html/rfc3986#page-11)
 - [UTF8](https://datatracker.ietf.org/doc/html/rfc3629)
 - [uuencode](https://en.wikipedia.org/wiki/Uuencoding)

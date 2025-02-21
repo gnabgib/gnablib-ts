@@ -313,7 +313,8 @@
 		"SFC64",
 		"GJRand32",
 		"GJRand64",
-		"Tychei"
+		"Tychei",
+		"Scream Cipher"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

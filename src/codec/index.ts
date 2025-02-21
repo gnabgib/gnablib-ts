@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
 /**
  * # Codec
  * 
@@ -50,6 +50,20 @@ export { quotedPrintable } from './QuotedPrintable.js';
 export { shift as rot13 } from './Rot13.js';
 export { shift as rot13_5 } from './Rot13_5.js';
 export { shift as rot47 } from './Rot47.js';
+/**
+ * [Scream Cipher](https://xkcd.com/3054/)
+ *
+ * XKCD only defines uppercase letter encoding, we extend that to assume lower-case encoding matches.
+ * Any letter (character code) not a-zA-Z will be left alone, which allows space and exclamation mark
+ * to pass through (as in the cartoon) but also could cause ambiguity if input includes a-diacritic
+ * values that are used in encoding (during encoding they will be left alone, however decoding will
+ * convert back to base character)
+ *
+ * - There is some support for whole-character values (vs a+diacritic values) in decoding
+ * - Some of the diacritics are value calls (eg. is z `a+Combining Short Solidus Overlay` or 
+ * `a+Combining Long Solidus Overlay` - we went with long)
+ */
+export * as scream from './Scream.js'
 export { uri } from './Uri.js';
 export { utf8 } from './Utf8.js';
 export { uucode } from './Uucode.js';
