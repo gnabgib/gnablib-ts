@@ -1,0 +1,46 @@
+import { suite } from 'uvu';
+import * as assert from 'uvu/assert';
+import { hex } from '../../../src/codec';
+import { Lea192 } from '../../../src/crypto/sym/Lea';
+
+
+const tsts = suite('LEA-192');
+
+const tests:[string,string,string][]=[
+    //https://en.wikipedia.org/wiki/LEA_(cipher)
+    ['0F1E2D3C4B5A69788796A5B4C3D2E1F0F0E1D2C3B4A59687','202122232425262728292A2B2C2D2E2F','6FB95E325AAD1B878CDCF5357674C6F2'],
+    //LEA192(ECB)KAT.txt (subset) | https://github.com/chearin/LEA/blob/main/LEA128(ECB)KAT.txt
+    //zero key, varying plain
+    ['000000000000000000000000000000000000000000000000','80000000000000000000000000000000','F0DE5F8374905BB31E0110ADF109EDD2'],
+    ['000000000000000000000000000000000000000000000000','C0000000000000000000000000000000','1657DF5183910346A1B6E5129C39038D'],
+    ['000000000000000000000000000000000000000000000000','E0000000000000000000000000000000','03E66E1A583357364A3D340193C1CFC0'],
+    ['000000000000000000000000000000000000000000000000','F0000000000000000000000000000000','28B3DE63EBB937A44612919138320874'],
+    ['000000000000000000000000000000000000000000000000','FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF','793AE0F13E152CD264EEEF7D88735FFB'],
+    
+    //zero plain, varying key
+    ['800000000000000000000000000000000000000000000000','00000000000000000000000000000000','694B918EB7F7DDABF49311CEB83C5D53'],
+    ['C00000000000000000000000000000000000000000000000','00000000000000000000000000000000','17B9134A35BA469F4F2EBFF8C1E168A8'],
+    ['E00000000000000000000000000000000000000000000000','00000000000000000000000000000000','701FEDC1BFFB13F93D67407393264589'],
+    ['F00000000000000000000000000000000000000000000000','00000000000000000000000000000000','2353E16E5608A7288E3BB7EC5438A148'],
+    ['FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF','00000000000000000000000000000000','147ECD0C84ABABB0B22F07C53B30FBA2'],
+];
+for (const [key,plain,enc] of tests) {
+    const c=new Lea192(hex.toBytes(key));
+    tsts(`b(${key}).encrypt(${plain})`, () => {
+        //Set found equal to plain-source-bytes
+        const found=hex.toBytes(plain);
+        //Encrypt a block (note the test vectors are all one block)
+        c.encryptBlock(found);
+        assert.is(hex.fromBytes(found),enc);
+    });
+    tsts(`b(${key}).decrypt(${enc})`, () => {
+        //Set found equal to encoded-source-bytes
+        const found=hex.toBytes(enc);
+        //Decrypt a block (note the test vectors are all one block)
+        c.decryptBlock(found);
+        assert.is(hex.fromBytes(found),plain);
+    });
+}
+
+
+tsts.run();
