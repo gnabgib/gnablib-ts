@@ -1,6 +1,6 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { hex } from '../../../src/codec';
+import { hex, utf8 } from '../../../src/codec';
 import {
 	pbkdf2,
 	pbkdf2_hmac_sha1,
@@ -101,5 +101,23 @@ tsts(`pbkdf2_hmac_sha512`, () => {
 //     // Prints derivedKey
 //     console.log(derivedKey.toString('hex'));
 //   });
+
+// tsts(`timing-run (FF)`,()=>{
+// 	const password=utf8.toBytes('password'); //aka password
+// 	const salt=new Uint8Array(); //crypto.randomBytes(128);
+
+// 	const st=performance.now();
+// 	const found = pbkdf2_hmac_sha512(
+// 		password,
+// 		salt,
+// 		1000,//210000,
+// 		64
+// 	);
+// 	console.log('Complete in '+(performance.now()-st));
+// 	console.log(hex.fromBytes(found));
+// })
+//node-native
+//Complete in 132.4843
+//5f2c64a161199d57f55bbeef4105f0679dbceaa0e036f656ad40248cdb620bad0b4743fe0ebaf455234e923e1292737ee8f2bd4dae896c131fa12b9c9ea60341
 
 tsts.run();

@@ -35,8 +35,14 @@ const encode_tests:[string,string][]=[
     ['gnabgib', 'a̋âaȧa̋ảȧ'],
     ['a̅h!','a̅a̰!'],//other dia on a survives
     ['zöe','a̸å̈á'],//dia on the o is double encoded
+    //If the input includes non-dia characters, they aren't touched
+    ['Côtes','A̧ôāáã'],
+    //Dia version (yes I know you can't tell in most editors)
+    ['Côtes','A̧å̂āáã'],
 
     //From the comic
+    ['HELLO','A̰ÁĂĂÅ'],
+    ['HI','A̰Ả'],
     ['AAAAAA A SCARY MONSTER AAAAAAA!','AAAAAA A ÃA̧AȂA̦ ǍÅÂÃĀÁȂ AAAAAAA!']
 ];
 for(const [plain,enc] of encode_tests) {
