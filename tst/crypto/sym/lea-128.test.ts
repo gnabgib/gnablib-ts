@@ -6,6 +6,7 @@ import { Lea128 } from '../../../src/crypto/sym/Lea';
 
 const tsts = suite('LEA-128');
 
+// prettier-ignore
 const tests:[string,string,string][]=[
     //https://en.wikipedia.org/wiki/LEA_(cipher)
     ['0F1E2D3C4B5A69788796A5B4C3D2E1F0','101112131415161718191A1B1C1D1E1F','9FC84E3528C6C6185532C7A704648BFD'],

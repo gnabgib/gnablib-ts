@@ -74,12 +74,27 @@ abstract class ALea {
 	}
 }
 
+/**
+ * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
+ * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
+ *
+ * First published: *2013*
+ * Block size: *16 bytes*
+ * Key Size: *16 bytes*
+ * Nonce size: *0 bytes*
+ * Rounds: *24*
+ *
+ * Specified in
+ * - [ISO/IEC 29192-2:2019](https://www.iso.org/standard/78477.html)
+ */
 export class Lea128 extends ALea implements IBlockCrypt {
-    constructor(key:Uint8Array) {
-        sLen('key',key).exactly(128/8).throwNot();
-        const rounds=24;
-        // keySchedule
-        const keys: Uint32Array[] = [];
+	constructor(key: Uint8Array) {
+		sLen('key', key)
+			.exactly(128 / 8)
+			.throwNot();
+		const rounds = 24;
+		// keySchedule
+		const keys: Uint32Array[] = [];
 		const t = new Uint32Array(
 			key.buffer,
 			key.byteOffset,
@@ -93,15 +108,31 @@ export class Lea128 extends ALea implements IBlockCrypt {
 			t[3] = U32.lRot(t[3] + U32.lRot(dm, i + 3), 11);
 			keys.push(Uint32Array.of(t[0], t[1], t[2], t[1], t[3], t[1]));
 		}
-        super(rounds,keys);
-    }
+		super(rounds, keys);
+	}
 }
+
+/**
+ * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
+ * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
+ *
+ * First published: *2013*
+ * Block size: *16 bytes*
+ * Key Size: *24 bytes*
+ * Nonce size: *0 bytes*
+ * Rounds: *28*
+ *
+ * Specified in
+ * - [ISO/IEC 29192-2:2019](https://www.iso.org/standard/78477.html)
+ */
 export class Lea192 extends ALea implements IBlockCrypt {
-    constructor(key:Uint8Array) {
-        sLen('key',key).exactly(192/8).throwNot();
-        const rounds=28;
-        // keySchedule
-        const keys: Uint32Array[] = [];
+	constructor(key: Uint8Array) {
+		sLen('key', key)
+			.exactly(192 / 8)
+			.throwNot();
+		const rounds = 28;
+		// keySchedule
+		const keys: Uint32Array[] = [];
 		const t = new Uint32Array(
 			key.buffer,
 			key.byteOffset,
@@ -113,113 +144,56 @@ export class Lea192 extends ALea implements IBlockCrypt {
 			t[1] = U32.lRot(t[1] + U32.lRot(dm, i + 1), 3);
 			t[2] = U32.lRot(t[2] + U32.lRot(dm, i + 2), 6);
 			t[3] = U32.lRot(t[3] + U32.lRot(dm, i + 3), 11);
-            t[4] = U32.lRot(t[4] + U32.lRot(dm, i + 4), 13);
-            t[5] = U32.lRot(t[5] + U32.lRot(dm, i + 5), 17);
+			t[4] = U32.lRot(t[4] + U32.lRot(dm, i + 4), 13);
+			t[5] = U32.lRot(t[5] + U32.lRot(dm, i + 5), 17);
 			keys.push(Uint32Array.of(t[0], t[1], t[2], t[3], t[4], t[5]));
 		}
-        super(rounds,keys);
-    }
+		super(rounds, keys);
+	}
 }
 
 /**
- * Lightweight Encryption Algorithm (LEA)
+ * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
  * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
  *
  * First published: *2013*
  * Block size: *16 bytes*
- * Key Size: *16, 24, 32 bytes* 2/3/4 32
+ * Key Size: *32 bytes*
  * Nonce size: *0 bytes*
- * Rounds: *24, 28, 32* (key size dependent)
+ * Rounds: *32*
  *
  * Specified in
  * - [ISO/IEC 29192-2:2019](https://www.iso.org/standard/78477.html)
  */
-export class Lea128a implements IBlockCrypt {
-	readonly blockSize = blockSize; //128bit
-	readonly #keys: Uint32Array[];
-	//readonly #key: Uint8Array;
-	readonly rounds: number;
-
+export class Lea256 extends ALea implements IBlockCrypt {
 	constructor(key: Uint8Array) {
-		//In theory check size of key for 16/24/32
-
-		// 16 -> 24, 24 -> 28, 32 -> 32
-		this.rounds = key.length + (32 - key.length) / 2;
-		this.#keys = Lea128._keySchedule128(this.rounds, key);
-	}
-
-	private static _keySchedule128(
-		rounds: number,
-		key: Uint8Array
-	): Uint32Array[] {
-		const ret: Uint32Array[] = [];
+		sLen('key', key)
+			.exactly(256 / 8)
+			.throwNot();
+		const rounds = 32;
+		// keySchedule
+		const keys: Uint32Array[] = [];
 		const t = new Uint32Array(
 			key.buffer,
 			key.byteOffset,
 			key.length / 4
 		).slice();
 		for (let i = 0; i < rounds; i++) {
-			const dm = k[i % 4];
-			t[0] = U32.lRot(t[0] + U32.lRot(dm, i), 1);
-			t[1] = U32.lRot(t[1] + U32.lRot(dm, i + 1), 3);
-			t[2] = U32.lRot(t[2] + U32.lRot(dm, i + 2), 6);
-			t[3] = U32.lRot(t[3] + U32.lRot(dm, i + 3), 11);
-			ret.push(Uint32Array.of(t[0], t[1], t[2], t[1], t[3], t[1]));
+			const dm = k[i % 8];
+			const i0 = (6 * i) % 8;
+			const i1 = (6 * i + 1) % 8;
+			const i2 = (6 * i + 2) % 8;
+			const i3 = (6 * i + 3) % 8;
+			const i4 = (6 * i + 4) % 8;
+			const i5 = (6 * i + 5) % 8;
+			t[i0] = U32.lRot(t[i0] + U32.lRot(dm, i), 1);
+			t[i1] = U32.lRot(t[i1] + U32.lRot(dm, i + 1), 3);
+			t[i2] = U32.lRot(t[i2] + U32.lRot(dm, i + 2), 6);
+			t[i3] = U32.lRot(t[i3] + U32.lRot(dm, i + 3), 11);
+			t[i4] = U32.lRot(t[i4] + U32.lRot(dm, i + 4), 13);
+			t[i5] = U32.lRot(t[i5] + U32.lRot(dm, i + 5), 17);
+			keys.push(Uint32Array.of(t[i0], t[i1], t[i2], t[i3], t[i4], t[i5]));
 		}
-		return ret;
-	}
-
-	private _encBlock(data: Uint8Array) {
-		const x = new Uint32Array(data.buffer, data.byteOffset, 4);
-		asLE.i32(data, 0, 4);
-		for (let r = 0; r < this.rounds; r++) {
-			const t = x[0];
-			x[0] = U32.lRot((x[0] ^ this.#keys[r][0]) + (x[1] ^ this.#keys[r][1]), 9);
-			x[1] = U32.rRot((x[1] ^ this.#keys[r][2]) + (x[2] ^ this.#keys[r][3]), 5);
-			x[2] = U32.rRot((x[2] ^ this.#keys[r][4]) + (x[3] ^ this.#keys[r][5]), 3);
-			x[3] = t;
-		}
-		asLE.i32(data, 0, 4);
-	}
-	private _decBlock(data: Uint8Array) {
-		const x = new Uint32Array(data.buffer, data.byteOffset, 4);
-		asLE.i32(data, 0, 4);
-		// prettier-ignore
-		for (let r = this.rounds - 1; r >= 0; r--) {
-			const cur = x.slice();
-			x[0] = cur[3];
-			x[1] = (U32.rRot(cur[0], 9) - (x[0] ^ this.#keys[r][0])) ^ this.#keys[r][1];
-			x[2] = (U32.lRot(cur[1], 5) - (x[1] ^ this.#keys[r][2])) ^ this.#keys[r][3];
-			x[3] = (U32.lRot(cur[2], 3) - (x[2] ^ this.#keys[r][4])) ^ this.#keys[r][5];
-		}
-		asLE.i32(data, 0, 4);
-	}
-
-	/**
-	 * {@inheritDoc interfaces.IBlockCrypt#decryptBlock}
-	 *
-	 * @throws {@link error.NotEnoughSpaceError}
-	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
-	 */
-	decryptBlock(block: Uint8Array, offset = 0): void {
-		const byteStart = offset * blockSize;
-		sLen('block', block)
-			.atLeast(byteStart + blockSize)
-			.throwNot();
-		this._decBlock(block.subarray(byteStart, byteStart + blockSize));
-	}
-
-	/**
-	 * {@inheritDoc interfaces.IBlockCrypt#encryptBlock}
-	 *
-	 * @throws {@link error.NotEnoughSpaceError}
-	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
-	 */
-	encryptBlock(block: Uint8Array, offset = 0): void {
-		const byteStart = offset * blockSize;
-		sLen('block', block)
-			.atLeast(byteStart + blockSize)
-			.throwNot();
-		this._encBlock(block.subarray(byteStart, byteStart + blockSize));
+		super(rounds, keys);
 	}
 }

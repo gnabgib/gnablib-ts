@@ -165,6 +165,7 @@ Name|Block size|Key size|Nonce size|Features
 [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)|8|4-56|0|
 [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)|64|16, 32|12
 [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)|64|32|12|AEAD
+[Lightweight Encryption Algorithm (LEA)](https://en.wikipedia.org/wiki/LEA_(cipher))|16|16, 24, 32|0|
 [Rabbit](https://www.ecrypt.eu.org/stream/rabbitp3.html)|16|16|0, 8|
 [Salsa20](http://cr.yp.to/snuffle/spec.pdf)|64|16, 32|8
 [Salsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305)|64|32|12|AEAD

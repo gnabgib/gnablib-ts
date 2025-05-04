@@ -314,7 +314,10 @@
 		"GJRand32",
 		"GJRand64",
 		"Tychei",
-		"Scream Cipher"
+		"Scream Cipher",
+		"Lea-128",
+		"Lea-192",
+		"Lea-256"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
