@@ -10,9 +10,11 @@ const blockSize = 16;
 const k=[0xc3efe9db, 0x44626b02, 0x79e27c8a, 0x78df30ec, 0x715ea49e, 0xc785da0a, 0xe04ef22a, 0xe5c40957];
 
 abstract class ALea {
+    /** Block size in bytes */
 	readonly blockSize = blockSize; //128bit
 	readonly #keys: Uint32Array[];
-	readonly rounds: number;
+    /** Number of rounds */
+    readonly rounds: number;
 	constructor(rounds: number, keys: Uint32Array[]) {
 		this.rounds = rounds;
 		this.#keys = keys;
@@ -78,10 +80,10 @@ abstract class ALea {
  * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
  * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
  *
- * First published: *2013*
- * Block size: *16 bytes*
- * Key Size: *16 bytes*
- * Nonce size: *0 bytes*
+ * First published: *2013*  
+ * Block size: *16 bytes*  
+ * Key Size: *16 bytes*  
+ * Nonce size: *0 bytes*  
  * Rounds: *24*
  *
  * Specified in
@@ -116,10 +118,10 @@ export class Lea128 extends ALea implements IBlockCrypt {
  * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
  * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
  *
- * First published: *2013*
- * Block size: *16 bytes*
- * Key Size: *24 bytes*
- * Nonce size: *0 bytes*
+ * First published: *2013*  
+ * Block size: *16 bytes*  
+ * Key Size: *24 bytes*  
+ * Nonce size: *0 bytes*  
  * Rounds: *28*
  *
  * Specified in
@@ -156,10 +158,10 @@ export class Lea192 extends ALea implements IBlockCrypt {
  * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
  * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
  *
- * First published: *2013*
- * Block size: *16 bytes*
- * Key Size: *32 bytes*
- * Nonce size: *0 bytes*
+ * First published: *2013*  
+ * Block size: *16 bytes*  
+ * Key Size: *32 bytes*  
+ * Nonce size: *0 bytes*  
  * Rounds: *32*
  *
  * Specified in
