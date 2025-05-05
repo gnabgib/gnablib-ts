@@ -86,8 +86,9 @@ const sb:Uint8Array[]=[
     )
 ];
 
-// https://www.rfc-editor.org/rfc/rfc5794 2.4.3 (diffusion layer) - updates d
+// https://www.rfc-editor.org/rfc/rfc5794 2.4.3 (diffusion layer)
 const tmp_diff = new Uint8Array(16);
+/** diffusion layer - updates d */
 function a(d: Uint8Array) {
 	tmp_diff[0] = d[3] ^ d[4] ^ d[6] ^ d[8] ^ d[9] ^ d[13] ^ d[14];
 	tmp_diff[1] = d[2] ^ d[5] ^ d[7] ^ d[8] ^ d[9] ^ d[12] ^ d[15];
@@ -109,6 +110,7 @@ function a(d: Uint8Array) {
 }
 
 //https://www.rfc-editor.org/rfc/rfc5794 2.4.2 (Substitution Layers) - updates d
+/** Substitution layer - updates d */
 function sl1(d: Uint8Array) {
 	d[0] = sb[0][d[0]];
 	d[1] = sb[1][d[1]];
@@ -127,7 +129,7 @@ function sl1(d: Uint8Array) {
 	d[14] = sb[2][d[14]];
 	d[15] = sb[3][d[15]];
 }
-//https://www.rfc-editor.org/rfc/rfc5794 2.4.2 (Substitution Layers) - updates d
+/** Substitution layer - updates d */
 function sl2(d: Uint8Array) {
 	d[0] = sb[2][d[0]];
 	d[1] = sb[3][d[1]];
@@ -148,12 +150,13 @@ function sl2(d: Uint8Array) {
 }
 
 //https://www.rfc-editor.org/rfc/rfc5794 2.4.1 (Round Functions) - updates d
+/** Round function - updates d */
 function fo(d: Uint8Array, rk: Uint8Array) {
 	for (let i = 0; i < 16; i++) d[i] ^= rk[i];
 	sl1(d);
 	a(d);
 }
-//https://www.rfc-editor.org/rfc/rfc5794 2.4.1 (Round Functions) - updates d
+/** Round function - updates d */
 function fe(d: Uint8Array, rk: Uint8Array) {
 	for (let i = 0; i < 16; i++) d[i] ^= rk[i];
 	sl2(d);
@@ -167,35 +170,26 @@ const c2=Uint8Array.of(0x6d,0xb1,0x4a,0xcc,0x9e,0x21,0xc8,0x20,0xff,0x28,0xb1,0x
 // prettier-ignore
 const c3=Uint8Array.of(0xdb,0x92,0x37,0x1d,0x21,0x26,0xe9,0x70,0x03,0x24,0x97,0x75,0x04,0xe8,0xc9,0x0e);
 
-/**
- * [ARIA](http://210.104.33.10/ARIA/index-e.html)
- * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
- *
- * First published: *2003*
- * Block size: *16 bytes*
- * Key size: *16, 24, 32 bytes*
- * Nonce size: *0 bytes*
- * Rounds: *12, 14, 16*
- *
- * Specified in:
- * - [RFC5794](https://www.rfc-editor.org/rfc/rfc5794)
- * -
- */
-export class Aria128 implements IBlockCrypt {
+abstract class AAria {
 	/** Block size in bytes */
 	readonly blockSize = blockSize; //128bit
+	/** Number of rounds */
+	readonly rounds: number;
 	readonly #ek: Uint8Array;
 	readonly #dk: Uint8Array;
 
-	constructor(key: Uint8Array) {
-		const ck1 = c1;
-		const ck2 = c2;
-		const ck3 = c3;
-
+	constructor(
+		rounds: number,
+		key: Uint8Array,
+		ck1: Uint8Array,
+		ck2: Uint8Array,
+		ck3: Uint8Array
+	) {
 		const w0 = U128.fromBytesBE(key);
 
-		const w1_b = key.slice();
+		const w1_b = key.slice(0, 16);
 		fo(w1_b, ck1);
+		for (let i = 0; i < 16; i++) w1_b[i] ^= key[i + 16];
 		const w1 = U128.fromBytesBE(w1_b);
 
 		const w2_b = w1.toBytesBE();
@@ -230,38 +224,44 @@ export class Aria128 implements IBlockCrypt {
 		ek.set(w0.mut().xorEq(w1.lRot(19)).toBytesBE(), 256);
 
 		const dk = new Uint8Array(272); //16*17);
-		dk.set(ek.subarray(12 * 16, 13 * 16));
-		for (let i = 11; i > 0; i--) {
-			dk.set(ek.subarray(i * 16, (i + 1) * 16), (12 - i) * 16);
-			a(dk.subarray((12 - i) * 16));
+		dk.set(ek.subarray(rounds * 16, (rounds + 1) * 16));
+		for (let i = rounds - 1; i > 0; i--) {
+			dk.set(ek.subarray(i * 16, (i + 1) * 16), (rounds - i) * 16);
+			a(dk.subarray((rounds - i) * 16));
 		}
-		dk.set(ek.subarray(0, 16), 12 * 16);
+		dk.set(ek.subarray(0, 16), rounds * 16);
+		this.rounds = rounds;
 		this.#ek = ek;
 		this.#dk = dk;
 	}
 
 	private _encBlock(data: Uint8Array) {
 		let r = 0;
+		const n = this.rounds - 2;
 		do {
 			fo(data, this.#ek.subarray(16 * r++));
 			fe(data, this.#ek.subarray(16 * r++));
-		} while (r < 10);
+		} while (r < n);
 		fo(data, this.#ek.subarray(16 * r++));
-		for (let i = 0; i < 16; i++) data[i] ^= this.#ek[11 * 16 + i];
+
+		for (let i = 0; i < 16; i++) data[i] ^= this.#ek[r * 16 + i];
 		sl2(data);
-		for (let i = 0; i < 16; i++) data[i] ^= this.#ek[12 * 16 + i];
+		r++;
+		for (let i = 0; i < 16; i++) data[i] ^= this.#ek[r * 16 + i];
 	}
 
 	private _decBlock(data: Uint8Array) {
 		let r = 0;
+		const n = this.rounds - 2;
 		do {
 			fo(data, this.#dk.subarray(16 * r++));
 			fe(data, this.#dk.subarray(16 * r++));
-		} while (r < 10);
+		} while (r < n);
 		fo(data, this.#dk.subarray(16 * r++));
-		for (let i = 0; i < 16; i++) data[i] ^= this.#dk[11 * 16 + i];
+		for (let i = 0; i < 16; i++) data[i] ^= this.#dk[r * 16 + i];
 		sl2(data);
-		for (let i = 0; i < 16; i++) data[i] ^= this.#dk[12 * 16 + i];
+		r++;
+		for (let i = 0; i < 16; i++) data[i] ^= this.#dk[r * 16 + i];
 	}
 
 	/**
@@ -290,5 +290,62 @@ export class Aria128 implements IBlockCrypt {
 			.atLeast(byteStart + blockSize)
 			.throwNot();
 		this._encBlock(block.subarray(byteStart, byteStart + blockSize));
+	}
+}
+
+/**
+ * [ARIA](http://210.104.33.10/ARIA/index-e.html)
+ * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
+ *
+ * First published: *2003*
+ * Block size: *16 bytes*
+ * Key size: *16 bytes*
+ * Nonce size: *0 bytes*
+ * Rounds: *12*
+ *
+ * Specified in:
+ * - [RFC5794](https://www.rfc-editor.org/rfc/rfc5794)
+ */
+export class Aria128 extends AAria implements IBlockCrypt {
+	constructor(key: Uint8Array) {
+		super(12, key, c1, c2, c3);
+	}
+}
+
+/**
+ * [ARIA](http://210.104.33.10/ARIA/index-e.html)
+ * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
+ *
+ * First published: *2003*
+ * Block size: *16 bytes*
+ * Key size: *24 bytes*
+ * Nonce size: *0 bytes*
+ * Rounds: *14*
+ *
+ * Specified in:
+ * - [RFC5794](https://www.rfc-editor.org/rfc/rfc5794)
+ */
+export class Aria192 extends AAria implements IBlockCrypt {
+	constructor(key: Uint8Array) {
+		super(14, key, c2, c3, c1);
+	}
+}
+
+/**
+ * [ARIA](http://210.104.33.10/ARIA/index-e.html)
+ * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
+ *
+ * First published: *2003*
+ * Block size: *16 bytes*
+ * Key size: *32 bytes*
+ * Nonce size: *0 bytes*
+ * Rounds: *16*
+ *
+ * Specified in:
+ * - [RFC5794](https://www.rfc-editor.org/rfc/rfc5794)
+ */
+export class Aria256 extends AAria implements IBlockCrypt {
+	constructor(key: Uint8Array) {
+		super(16, key, c3, c1, c2);
 	}
 }

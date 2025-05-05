@@ -317,7 +317,10 @@
 		"Scream Cipher",
 		"Lea-128",
 		"Lea-192",
-		"Lea-256"
+		"Lea-256",
+		"ARIA-128",
+		"ARIA-192",
+		"ARIA-256"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

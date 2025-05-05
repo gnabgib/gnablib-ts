@@ -159,6 +159,7 @@ ECB should not be used.
 Name|Block size|Key size|Nonce size|Features
 -|-|-|-|-
 [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)|16|16, 24, 32|0|
+[ARIA](http://210.104.33.10/ARIA/index-e.html)|16|16, 24, 32|0|
 [Ascon-128](https://ascon.iaik.tugraz.at/index.html)|8|16|16|AEAD
 [Ascon-128a](https://ascon.iaik.tugraz.at/index.html)|16|16|16|AEAD
 [Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)|8|20|16|AEAD, Resistance to quantum adversary

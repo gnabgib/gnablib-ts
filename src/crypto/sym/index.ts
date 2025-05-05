@@ -1,5 +1,6 @@
 //Symmetric encryption barrel file
 export { Aes } from './Aes.js';
+export { Aria128, Aria192, Aria256 } from './Aria.js';
 export { Ascon128, Ascon128a, Ascon80pq } from './Ascon.js';
 export { Blowfish } from './Blowfish.js';
 export { ChaCha20 } from './ChaCha.js';
