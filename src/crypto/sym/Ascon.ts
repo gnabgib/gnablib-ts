@@ -299,8 +299,9 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 			this.state[this.blockSize + i] ^= this.#key[i];
 		//pA
 		this.p(this.aRound);
-		//Xor up to 16 bytes of key at end of state
-		const n = this.#key.length < 16 ? this.#key.length : 16;
+		//Xor up to 16 bytes of key at end of state, but key is always 16,20
+		//const n = this.#key.length < 16 ? this.#key.length : 16;
+		const n=16;
 		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
 			this.state[i++] ^= this.#key[j++];
 
@@ -320,8 +321,9 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 			this.state[this.blockSize + i] ^= this.#key[i];
 		//pA
 		this.p(this.aRound);
-		//Xor up to 16 bytes of key at end of state
-		const n = this.#key.length < 16 ? this.#key.length : 16;
+		//Xor up to 16 bytes of key at end of state, but key is always 16, 20
+		//const n = this.#key.length < 16 ? this.#key.length : 16;
+		const n=16;
 		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
 			this.state[i++] ^= this.#key[j++];
 		//Return last 16 bytes of state

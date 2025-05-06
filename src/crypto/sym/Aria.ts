@@ -294,7 +294,7 @@ abstract class AAria {
 }
 
 /**
- * [ARIA](http://210.104.33.10/ARIA/index-e.html)
+ * [ARIA 128](http://210.104.33.10/ARIA/index-e.html)
  * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
  * 
  * ARIA is a general-purpose involutional SPN block cipher algorithm, 
@@ -317,7 +317,7 @@ export class Aria128 extends AAria implements IBlockCrypt {
 }
 
 /**
- * [ARIA](http://210.104.33.10/ARIA/index-e.html)
+ * [ARIA 192](http://210.104.33.10/ARIA/index-e.html)
  * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
  *
  * ARIA is a general-purpose involutional SPN block cipher algorithm, 
@@ -340,7 +340,7 @@ export class Aria192 extends AAria implements IBlockCrypt {
 }
 
 /**
- * [ARIA](http://210.104.33.10/ARIA/index-e.html)
+ * [ARIA 256](http://210.104.33.10/ARIA/index-e.html)
  * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
  *
  * ARIA is a general-purpose involutional SPN block cipher algorithm, 
