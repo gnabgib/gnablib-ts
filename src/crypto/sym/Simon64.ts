@@ -4,7 +4,6 @@ import { U32 } from '../../primitive/number/U32Static.js';
 import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
-// https://nsacyber.github.io/simon-speck/implementations/ImplementationGuide1.1.pdf
 //https://eprint.iacr.org/2013/404.pdf
 // - has an implementation mistake saying the key has two 06 bytes, when the second should be a 07
 
@@ -171,12 +170,3 @@ export class Simon64_128 extends Simon32bit implements IBlockCrypt {
 		//for(let i=0;i<rounds;i++) console.log(`rk[${i}]=${hex.fromI32(rk[i]).toLowerCase()}`);
 	}
 }
-
-/**
- * [Speckn](https://nsacyber.github.io/simon-speck/implementations/ImplementationGuide1.1.pdf)
- * ([Wiki](https://en.wikipedia.org/wiki/Speck_(cipher)))
- *
- * Specified in:
- * - [ISO/29167-22](https://www.iso.org/standard/70389.html)
- */
-// export class Speck {}

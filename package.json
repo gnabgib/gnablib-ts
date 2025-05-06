@@ -320,7 +320,17 @@
 		"LEA-256",
 		"ARIA-128",
 		"ARIA-192",
-		"ARIA-256"
+		"ARIA-256",
+		"Simon64/96",
+		"Simon64/128",
+		"Simon128/128",
+		"Simon128/192",
+		"Simon128/256",
+		"Speck64/96",
+		"Speck64/128",
+		"Speck128/128",
+		"Speck128/192",
+		"Speck128/256"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
