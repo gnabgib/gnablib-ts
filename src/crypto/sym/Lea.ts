@@ -79,6 +79,10 @@ abstract class ALea {
 /**
  * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
  * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
+ * 
+ * A 128-bit block cipher developed by South Korea in 2013 to provide confidentiality 
+ * in high-speed environments such as big data and cloud computing, as well as 
+ * lightweight environments such as IoT devices and mobile devices.
  *
  * First published: *2013*  
  * Block size: *16 bytes*  
@@ -117,6 +121,10 @@ export class Lea128 extends ALea implements IBlockCrypt {
 /**
  * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
  * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
+ * 
+ * A 128-bit block cipher developed by South Korea in 2013 to provide confidentiality 
+ * in high-speed environments such as big data and cloud computing, as well as 
+ * lightweight environments such as IoT devices and mobile devices.
  *
  * First published: *2013*  
  * Block size: *16 bytes*  
@@ -156,7 +164,11 @@ export class Lea192 extends ALea implements IBlockCrypt {
 
 /**
  * [Lightweight Encryption Algorithm (LEA)](https://seed.kisa.or.kr/kisa/Board/20/detailView.do)
- * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)))
+ * ([Wiki](https://en.wikipedia.org/wiki/LEA_(cipher)) )
+ * 
+ * A 128-bit block cipher developed by South Korea in 2013 to provide confidentiality 
+ * in high-speed environments such as big data and cloud computing, as well as 
+ * lightweight environments such as IoT devices and mobile devices.
  *
  * First published: *2013*  
  * Block size: *16 bytes*  

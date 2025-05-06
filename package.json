@@ -315,9 +315,9 @@
 		"GJRand64",
 		"Tychei",
 		"Scream Cipher",
-		"Lea-128",
-		"Lea-192",
-		"Lea-256",
+		"LEA-128",
+		"LEA-192",
+		"LEA-256",
 		"ARIA-128",
 		"ARIA-192",
 		"ARIA-256"

@@ -9,6 +9,7 @@ export { Lea128, Lea192, Lea256 } from './Lea.js';
 export { Rabbit } from './Rabbit.js';
 export { Salsa20 } from './Salsa.js';
 export { Salsa20_Poly1305 } from '../mac/Poly1305.js';
+export { Simon64_96, Simon64_128 } from './Simon.js';
 export { Twofish } from './Twofish.js';
 export { XChaCha20 } from './ChaCha.js';
 export { XChaCha20_Poly1305 } from '../mac/Poly1305.js';

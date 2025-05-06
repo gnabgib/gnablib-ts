@@ -296,6 +296,9 @@ abstract class AAria {
 /**
  * [ARIA](http://210.104.33.10/ARIA/index-e.html)
  * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
+ * 
+ * ARIA is a general-purpose involutional SPN block cipher algorithm, 
+ * optimized for lightweight environments and hardware implementation.
  *
  * First published: *2003*
  * Block size: *16 bytes*
@@ -304,6 +307,7 @@ abstract class AAria {
  * Rounds: *12*
  *
  * Specified in:
+ * - [ARIA Spec v1.0](http://210.104.33.10/ARIA/doc/ARIA-specification-e.pdf)
  * - [RFC5794](https://www.rfc-editor.org/rfc/rfc5794)
  */
 export class Aria128 extends AAria implements IBlockCrypt {
@@ -316,6 +320,9 @@ export class Aria128 extends AAria implements IBlockCrypt {
  * [ARIA](http://210.104.33.10/ARIA/index-e.html)
  * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
  *
+ * ARIA is a general-purpose involutional SPN block cipher algorithm, 
+ * optimized for lightweight environments and hardware implementation.
+ * 
  * First published: *2003*
  * Block size: *16 bytes*
  * Key size: *24 bytes*
@@ -323,6 +330,7 @@ export class Aria128 extends AAria implements IBlockCrypt {
  * Rounds: *14*
  *
  * Specified in:
+ * - [ARIA Spec v1.0](http://210.104.33.10/ARIA/doc/ARIA-specification-e.pdf)
  * - [RFC5794](https://www.rfc-editor.org/rfc/rfc5794)
  */
 export class Aria192 extends AAria implements IBlockCrypt {
@@ -335,6 +343,9 @@ export class Aria192 extends AAria implements IBlockCrypt {
  * [ARIA](http://210.104.33.10/ARIA/index-e.html)
  * ([Wiki](https://en.wikipedia.org/wiki/ARIA_(cipher)))
  *
+ * ARIA is a general-purpose involutional SPN block cipher algorithm, 
+ * optimized for lightweight environments and hardware implementation.
+ * 
  * First published: *2003*
  * Block size: *16 bytes*
  * Key size: *32 bytes*
@@ -342,6 +353,7 @@ export class Aria192 extends AAria implements IBlockCrypt {
  * Rounds: *16*
  *
  * Specified in:
+ * - [ARIA Spec v1.0](http://210.104.33.10/ARIA/doc/ARIA-specification-e.pdf)
  * - [RFC5794](https://www.rfc-editor.org/rfc/rfc5794)
  */
 export class Aria256 extends AAria implements IBlockCrypt {

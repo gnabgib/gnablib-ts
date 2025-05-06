@@ -160,9 +160,8 @@ Name|Block size|Key size|Nonce size|Features
 -|-|-|-|-
 [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)|16|16, 24, 32|0|
 [ARIA](http://210.104.33.10/ARIA/index-e.html)|16|16, 24, 32|0|
-[Ascon-128](https://ascon.iaik.tugraz.at/index.html)|8|16|16|AEAD
-[Ascon-128a](https://ascon.iaik.tugraz.at/index.html)|16|16|16|AEAD
-[Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)|8|20|16|AEAD, Resistance to quantum adversary
+[Ascon-128](https://ascon.iaik.tugraz.at/index.html)|8, 16|16|16|AEAD
+[Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)|8|20|16|+Resistance to quantum adversary
 [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)|8|4-56|0|
 [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)|64|16, 32|12
 [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)|64|32|12|AEAD
@@ -257,7 +256,7 @@ Name|Capacities|Optional parameters
 
 Big endian is closer to the way we write numbers left-to-right in English.  `1726 = 1x1000, 7x100, 2x10, 6x1`
 
-Little endian is the dominant ordering for processor architectures including; [x86](https://en.wikipedia.org/wiki/X86) and [RISC-V](https://en.wikipedia.org/wiki/RISC-V), [ARM](https://en.wikipedia.org/wiki/Endianness) can be either but defaults to little.  Famous big endian processors include [PDP-10](https://en.wikipedia.org/wiki/PDP-10), Motorola [68000 series](https://en.wikipedia.org/wiki/Motorola_68000_series) (early Macintosh, Amiga, Atari, Sega), [IBM Z](https://en.wikipedia.org/wiki/Z/Architecture) and [SPARC](https://en.wikipedia.org/wiki/SPARC), which can be either but defaults to big.
+Little endian is the dominant ordering for processor architectures including; [x86](https://en.wikipedia.org/wiki/X86) and [RISC-V](https://en.wikipedia.org/wiki/RISC-V), [ARM](https://en.wikipedia.org/wiki/Endianness) can be either but defaults to little.  Famous big endian processors include [PDP-10](https://en.wikipedia.org/wiki/PDP-10), Motorola [68000 series](https://en.wikipedia.org/wiki/Motorola_68000_series) (early Macintosh, Amiga, Atari, Sega), [IBM Z](https://en.wikipedia.org/wiki/Z/Architecture) and [SPARC](https://en.wikipedia.org/wiki/SPARC), which can be either but default to big.
 
 ### Primitive
 
