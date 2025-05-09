@@ -5,8 +5,20 @@ import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
 const rounds = 72;
-/** Seemingly arbitrary constant C */
+// Seemingly arbitrary constant C
 const C = U64.fromI32s(0xa9fc1a22, 0x1bd11bda);
+// Used for swapping
+const t = U64Mut.fromInt(0);
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function uLog(u: U64MutArray, prefix = '') {
+    //This is style to look closer to golang's to allow inter-lang comparison
+    //(Why do some langs write hex in lowercase?!)
+	if (prefix.length > 0) prefix += '=';
+	for (let i = 0; i < u.length; i++)
+		prefix += u.at(i).toString().toLowerCase()+' ';
+	console.log(prefix);
+}
 
 abstract class AThreefish {
 	/** Block size in bytes */
@@ -56,13 +68,11 @@ abstract class AThreefish {
 			rk.push(l);
 		}
 		this.#rk = rk;
-		// console.log(`k=${k.at(0).toString().toLowerCase()} ${k.at(1).toString().toLowerCase()} ${k.at(2).toString().toLowerCase()} ${k.at(3).toString().toLowerCase()} ${k.at(4).toString().toLowerCase()}`)
-		// console.log(`t=${t.at(0).toString().toLowerCase()} ${t.at(1).toString().toLowerCase()} ${t.at(2).toString().toLowerCase()}`)
+
+		// uLog(k,'k');
+		// uLog(t,'t');
 		// for(let i=0;i<rk.length;i++) {
-		//     let ret='';
-		//     for(let j=0;j<rk[i].length;j++)
-		//         ret+=rk[i].at(j).toString()+' ';
-		//     console.log(`[${ret}]`)
+		//     uLog(rk[i]);
 		// }
 		//console.log(rk);
 	}
@@ -72,12 +82,24 @@ abstract class AThreefish {
 		d.at(1).addEq(this.#rk[idx].at(1));
 		d.at(2).addEq(this.#rk[idx].at(2));
 		d.at(3).addEq(this.#rk[idx].at(3));
+		if (d.length == 4) return;
+		d.at(4).addEq(this.#rk[idx].at(4));
+		d.at(5).addEq(this.#rk[idx].at(5));
+		d.at(6).addEq(this.#rk[idx].at(6));
+		d.at(7).addEq(this.#rk[idx].at(7));
+		if (d.length == 8) return;
 	}
 	protected subRk(d: U64MutArray, idx: number) {
 		d.at(0).subEq(this.#rk[idx].at(0));
 		d.at(1).subEq(this.#rk[idx].at(1));
 		d.at(2).subEq(this.#rk[idx].at(2));
 		d.at(3).subEq(this.#rk[idx].at(3));
+		if (d.length == 4) return;
+		d.at(4).subEq(this.#rk[idx].at(4));
+		d.at(5).subEq(this.#rk[idx].at(5));
+		d.at(6).subEq(this.#rk[idx].at(6));
+		d.at(7).subEq(this.#rk[idx].at(7));
+		if (d.length == 8) return;
 	}
 
 	protected abstract _encBlock(data: Uint8Array): void;
@@ -117,173 +139,209 @@ export class Threefish256 extends AThreefish implements IBlockCrypt {
 		super(32, key, tweak);
 	}
 
+	private swap(d: U64MutArray) {
+		//1=3, 3=1
+		t.set(d.at(1));
+		d.at(1).set(d.at(3));
+		d.at(3).set(t);
+	}
+	private mixPerm(d: U64MutArray, l0: number, l1: number) {
+		d.at(0).addEq(d.at(1));
+		d.at(1).lRotEq(l0).xorEq(d.at(0));
+		d.at(2).addEq(d.at(3));
+		d.at(3).lRotEq(l1).xorEq(d.at(2));
+		this.swap(d);
+		///*DBUG*/ uLog(d);
+	}
+	private permUnmix(d: U64MutArray, r0: number, r1: number) {
+		//No need for unswap (it's symmetric)
+		this.swap(d);
+		d.at(3).xorEq(d.at(2)).rRotEq(r0);
+		d.at(2).subEq(d.at(3));
+		d.at(1).xorEq(d.at(0)).rRotEq(r1);
+		d.at(0).subEq(d.at(1));
+		///*DBUG*/ uLog(d);
+	}
+
 	protected _encBlock(data: Uint8Array) {
 		const d64 = U64MutArray.mount(
 			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
 		);
-		const t = U64Mut.fromInt(0);
-		const swap13 = () => {
-			t.set(d64.at(1));
-			d64.at(1).set(d64.at(3));
-			d64.at(3).set(t);
-		};
-		///*DBUG*/const log=()=>console.log(d64.at(0).toString().toLowerCase()+' '+d64.at(1).toString().toLowerCase()+' '+d64.at(2).toString().toLowerCase()+' '+d64.at(3).toString().toLowerCase());
 		const rn = rounds / 4;
 		let r = 0;
 		do {
 			//Even round
-			//Add roundkey
 			this.addRk(d64, r++);
 			///*DBUG*/log();
 
-			//Mix and permute
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(14).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(16).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
-
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(52).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(57).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
-
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(23).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(40).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
-
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(5).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(37).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
+			this.mixPerm(d64, 14, 16);
+			this.mixPerm(d64, 52, 57);
+			this.mixPerm(d64, 23, 40);
+			this.mixPerm(d64, 5, 37);
 
 			//Odd Round
-			//Add roundkey
 			this.addRk(d64, r++);
-			///*DBUG*/log();
+			///*DBUG*/ uLog(d64);
 
-			//Mix and permute
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(25).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(33).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
-
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(46).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(12).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
-
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(58).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(22).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
-
-			d64.at(0).addEq(d64.at(1));
-			d64.at(1).lRotEq(32).xorEq(d64.at(0));
-			d64.at(2).addEq(d64.at(3));
-			d64.at(3).lRotEq(32).xorEq(d64.at(2));
-			swap13();
-			///*DBUG*/log();
-			///*DBUG*/console.log(" ");
+			this.mixPerm(d64, 25, 33);
+			this.mixPerm(d64, 46, 12);
+			this.mixPerm(d64, 58, 22);
+			this.mixPerm(d64, 32, 32);
+			///*DBUG*/ console.log(" ");
 		} while (r < rn);
-		//Final round key
 		this.addRk(d64, r);
-		///*DBUG*/log();
+		///*DBUG*/ uLog(d64);
 	}
 
 	protected _decBlock(data: Uint8Array) {
 		const d64 = U64MutArray.mount(
 			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
 		);
-		const t = U64Mut.fromInt(0);
-		///*DBUG*/const log=()=>console.log(d64.at(0).toString().toLowerCase()+' '+d64.at(1).toString().toLowerCase()+' '+d64.at(2).toString().toLowerCase()+' '+d64.at(3).toString().toLowerCase());
-		const swap13 = () => {
-			t.set(d64.at(1));
-			d64.at(1).set(d64.at(3));
-			d64.at(3).set(t);
-		};
 		let r = rounds / 4;
 		this.subRk(d64, r--);
 		do {
-			// Four rounds of permute and unmix
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(32);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(32);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
-
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(22);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(58);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
-
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(12);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(46);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
-
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(33);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(25);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
-
-			// Subtract round key
-			this.subRk(d64, r--);
-			///*DBUG*/log();
-
-			// Four rounds of permute and unmix
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(37);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(5);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
-
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(40);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(23);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
-
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(57);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(52);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
-
-			swap13();
-			d64.at(3).xorEq(d64.at(2)).rRotEq(16);
-			d64.at(2).subEq(d64.at(3));
-			d64.at(1).xorEq(d64.at(0)).rRotEq(14);
-			d64.at(0).subEq(d64.at(1));
-			///*DBUG*/log();
+			//Odd round
+			this.permUnmix(d64, 32, 32);
+			this.permUnmix(d64, 22, 58);
+			this.permUnmix(d64, 12, 46);
+			this.permUnmix(d64, 33, 25);
 
 			this.subRk(d64, r--);
-			///*DBUG*/log();
+			///*DBUG*/ uLog(d64);
+
+			//Even round
+			this.permUnmix(d64, 37, 5);
+			this.permUnmix(d64, 40, 23);
+			this.permUnmix(d64, 57, 52);
+			this.permUnmix(d64, 16, 14);
+
+			this.subRk(d64, r--);
+			///*DBUG*/ uLog(d64);
 			///*DBUG*/console.log('');
+		} while (r >= 0);
+	}
+}
+
+export class Threefish512 extends AThreefish implements IBlockCrypt {
+	constructor(key: Uint8Array, tweak: Uint8Array) {
+		super(64, key, tweak);
+	}
+
+	private swap(d: U64MutArray) {
+		//0=2, 2=4, 4=6, 6=0
+		t.set(d.at(0));
+		d.at(0).set(d.at(2));
+		d.at(2).set(d.at(4));
+		d.at(4).set(d.at(6));
+		d.at(6).set(t);
+		//3=7, 7=3
+		t.set(d.at(3));
+		d.at(3).set(d.at(7));
+		d.at(7).set(t);
+	}
+	private unswap(d: U64MutArray) {
+		//0=6, 6=4, 4=2, 2=0
+		t.set(d.at(0));
+		d.at(0).set(d.at(6));
+		d.at(6).set(d.at(4));
+		d.at(4).set(d.at(2));
+		d.at(2).set(t);
+		//3=7, 7=3
+		t.set(d.at(3));
+		d.at(3).set(d.at(7));
+		d.at(7).set(t);
+	}
+	private mixPerm(
+		d: U64MutArray,
+		l0: number,
+		l1: number,
+		l2: number,
+		l3: number
+	) {
+		d.at(0).addEq(d.at(1));
+		d.at(1).lRotEq(l0).xorEq(d.at(0));
+		d.at(2).addEq(d.at(3));
+		d.at(3).lRotEq(l1).xorEq(d.at(2));
+		d.at(4).addEq(d.at(5));
+		d.at(5).lRotEq(l2).xorEq(d.at(4));
+		d.at(6).addEq(d.at(7));
+		d.at(7).lRotEq(l3).xorEq(d.at(6));
+		this.swap(d);
+		///*DBUG*/ uLog(d);
+	}
+	private permUnmix(
+		d: U64MutArray,
+		r0: number,
+		r1: number,
+		r2: number,
+		r3: number
+	) {
+		this.unswap(d);
+		d.at(7).xorEq(d.at(6)).rRotEq(r0);
+		d.at(6).subEq(d.at(7));
+		d.at(5).xorEq(d.at(4)).rRotEq(r1);
+		d.at(4).subEq(d.at(5));
+		d.at(3).xorEq(d.at(2)).rRotEq(r2);
+		d.at(2).subEq(d.at(3));
+		d.at(1).xorEq(d.at(0)).rRotEq(r3);
+		d.at(0).subEq(d.at(1));
+		///*DBUG*/ uLog(d);
+	}
+
+	protected _encBlock(data: Uint8Array) {
+		const d64 = U64MutArray.mount(
+			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
+		);
+		const rn = rounds / 4;
+		let r = 0;
+		do {
+			//Even round
+			this.addRk(d64, r++);
+			///*DBUG*/ uLog(d64);
+
+			this.mixPerm(d64, 46, 36, 19, 37);
+			this.mixPerm(d64, 33, 27, 14, 42);
+			this.mixPerm(d64, 17, 49, 36, 39);
+			this.mixPerm(d64, 44, 9, 54, 56);
+
+			//Odd Round
+			this.addRk(d64, r++);
+			///*DBUG*/ uLog(d64);
+
+			this.mixPerm(d64, 39, 30, 34, 24);
+			this.mixPerm(d64, 13, 50, 10, 17);
+			this.mixPerm(d64, 25, 29, 39, 43);
+			this.mixPerm(d64, 8, 35, 56, 22);
+			///*DBUG*/ console.log(' ');
+		} while (r < rn);
+		this.addRk(d64, r);
+		///*DBUG*/ uLog(d64);
+	}
+
+	protected _decBlock(data: Uint8Array) {
+		const d64 = U64MutArray.mount(
+			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
+		);
+		let r = rounds / 4;
+		this.subRk(d64, r--);
+		///*DBUG*/ uLog(d64);
+		do {
+			this.permUnmix(d64, 22, 56, 35, 8);
+			this.permUnmix(d64, 43, 39, 29, 25);
+			this.permUnmix(d64, 17, 10, 50, 13);
+			this.permUnmix(d64, 24, 34, 30, 39);
+
+			this.subRk(d64, r--);
+			///*DBUG*/ uLog(d64);
+
+			this.permUnmix(d64, 56, 54, 9, 44);
+			this.permUnmix(d64, 39, 36, 49, 17);
+			this.permUnmix(d64, 42, 14, 27, 33);
+			this.permUnmix(d64, 37, 19, 36, 46);
+
+			this.subRk(d64, r--);
+			///*DBUG*/ uLog(d64);
+			///*DBUG*/ console.log('');
 		} while (r >= 0);
 	}
 }
