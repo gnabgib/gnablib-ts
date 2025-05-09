@@ -4,6 +4,8 @@ import { U32 } from '../../primitive/number/U32Static.js';
 import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
+//Very well written spec
+
 class Speck32bit {
 	/** Block size in bytes */
 	readonly blockSize = 8;

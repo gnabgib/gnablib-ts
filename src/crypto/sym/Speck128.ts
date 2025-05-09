@@ -4,6 +4,8 @@ import { U64, U64MutArray } from '../../primitive/number/U64.js';
 import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
+//Very well written spec
+
 class Speck64bit {
 	/** Block size in bytes */
 	readonly blockSize = 16;

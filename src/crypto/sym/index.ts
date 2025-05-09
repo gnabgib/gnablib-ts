@@ -9,6 +9,7 @@ export { Lea128, Lea192, Lea256 } from './Lea.js';
 export { Rabbit } from './Rabbit.js';
 export { Salsa20 } from './Salsa.js';
 export { Salsa20_Poly1305 } from '../mac/Poly1305.js';
+export { Serpent_128, Serpent_192, Serpent_256 } from "./Serpent.js";
 export { Simon64_96, Simon64_128 } from './Simon64.js';
 export { Simon128_128, Simon128_192, Simon128_256 } from './Simon128.js';
 export { Speck64_96, Speck64_128 } from './Speck64.js';

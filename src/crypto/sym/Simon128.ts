@@ -4,6 +4,8 @@ import { U64, U64Mut, U64MutArray } from '../../primitive/number/U64.js';
 import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
+//Very well written spec
+
 const f64 = (x: U64) =>
 	x
 		.mut()

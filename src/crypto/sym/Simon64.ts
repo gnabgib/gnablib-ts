@@ -4,6 +4,7 @@ import { U32 } from '../../primitive/number/U32Static.js';
 import { sLen } from '../../safe/safe.js';
 import { IBlockCrypt } from '../interfaces/IBlockCrypt.js';
 
+//Very well written spec
 //https://eprint.iacr.org/2013/404.pdf
 // - has an implementation mistake saying the key has two 06 bytes, when the second should be a 07
 

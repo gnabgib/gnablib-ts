@@ -169,6 +169,7 @@ Name|Block size|Key size|Nonce size|Features
 [Rabbit](https://www.ecrypt.eu.org/stream/rabbitp3.html)|16|16|0, 8|
 [Salsa20](http://cr.yp.to/snuffle/spec.pdf)|64|16, 32|8
 [Salsa20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#Salsa20-Poly1305_and_XSalsa20-Poly1305)|64|32|12|AEAD
+[Serpent](https://www.cl.cam.ac.uk/~rja14/serpent.html)|16|16, 24, 32|0|
 [Simon64](https://nsacyber.github.io/simon-speck/)|8|12, 16|0|
 [Simon128](https://nsacyber.github.io/simon-speck/)|16|16, 24, 32|0|
 [Speck64](https://nsacyber.github.io/simon-speck/)|8|12, 16|0|

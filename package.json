@@ -330,7 +330,10 @@
 		"Speck64/128",
 		"Speck128/128",
 		"Speck128/192",
-		"Speck128/256"
+		"Speck128/256",
+		"Serpent/128",
+		"Serpent/192",
+		"Serpent/256"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
