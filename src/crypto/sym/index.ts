@@ -14,6 +14,7 @@ export { Simon64_96, Simon64_128 } from './Simon64.js';
 export { Simon128_128, Simon128_192, Simon128_256 } from './Simon128.js';
 export { Speck64_96, Speck64_128 } from './Speck64.js';
 export { Speck128_128, Speck128_256 } from './Speck128.js';
+export { Threefish256, Threefish512, Threefish1024 } from './Threefish.js';
 export { Twofish } from './Twofish.js';
 export { XChaCha20 } from './ChaCha.js';
 export { XChaCha20_Poly1305 } from '../mac/Poly1305.js';

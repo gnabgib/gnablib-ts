@@ -40,6 +40,9 @@ Says not found in red.. like that's bad
   - [RegExp tools](#regexp)
   - [Run time tools](#run-time) (environment vars, logging, stack traces)
 
+Ƃ = Bytes  
+b = bits
+
 
 ## Installation
 
@@ -74,17 +77,17 @@ npm audit signatures
 
 A checksum; can be used to prevent/identify accidental changes.
 
-Name|Sum size bits
+Name|Sum size Ƃ
 -|-
-[Adler32](https://datatracker.ietf.org/doc/html/rfc1950)|32
-[Block Check Character](https://en.wikipedia.org/wiki/Block_check_character)|8
-[Cksum](https://en.wikipedia.org/wiki/Cksum)|32
-[CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)|24
-[CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)|32
-[Fletcher16](http://www.zlib.net/maxino06_fletcher-adler.pdf)|16
-[Fletcher32](http://www.zlib.net/maxino06_fletcher-adler.pdf)|32
-[Fletcher64](http://www.zlib.net/maxino06_fletcher-adler.pdf)|64
-[Longitudinal Redundancy Check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)|8
+[Adler32](https://datatracker.ietf.org/doc/html/rfc1950)|4
+[Block Check Character](https://en.wikipedia.org/wiki/Block_check_character)|1
+[Cksum](https://en.wikipedia.org/wiki/Cksum)|4
+[CRC24](https://datatracker.ietf.org/doc/html/rfc4880#section-6.1)|3
+[CRC32](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks#CRC-32_algorithm)|4
+[Fletcher16](http://www.zlib.net/maxino06_fletcher-adler.pdf)|2
+[Fletcher32](http://www.zlib.net/maxino06_fletcher-adler.pdf)|4
+[Fletcher64](http://www.zlib.net/maxino06_fletcher-adler.pdf)|8
+[Longitudinal Redundancy Check](https://en.wikipedia.org/wiki/Longitudinal_redundancy_check)|1
 
 The [Luhn](https://en.wikipedia.org/wiki/Luhn_algorithm) algorithm is also support, which only works on
 integers/numerical digits (eg. credit cards, SI numbers)
@@ -93,16 +96,16 @@ integers/numerical digits (eg. credit cards, SI numbers)
 A hash; maps some data to another, often used for hash tables, or to speed up comparison. We use the term
 hashsum to distinguish from cryptographic-hashes (although *MD5* and *SHA1* were once cryptographically safe)
 
-Name|Sum size bits|Optional parameters
+Name|Sum size Ƃ|Optional parameters
 -------|----------------------|-------------------
-[Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|32|seed
-[Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|32+32/64|seed
-[MD5Sum](https://en.wikipedia.org/wiki/Md5sum)|128|
-[Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|32|seed
-[SHA1Sum](https://en.wikipedia.org/wiki/Sha1sum)|160|
-[Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|128|seed
-[xxHash32](https://cyan4973.github.io/xxHash/)|32|seed
-[xxHash64](https://cyan4973.github.io/xxHash/)|64|seed
+[Lookup2](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup2)|4|seed
+[Lookup3](https://en.wikipedia.org/wiki/Jenkins_hash_function#lookup3)|4+4/8|seed
+[MD5Sum](https://en.wikipedia.org/wiki/Md5sum)|16|
+[Murmur3](https://en.wikipedia.org/wiki/MurmurHash#MurmurHash3)|4|seed
+[SHA1Sum](https://en.wikipedia.org/wiki/Sha1sum)|20|
+[Spooky v2](http://burtleburtle.net/bob/hash/spooky.html)|16|seed
+[xxHash32](https://cyan4973.github.io/xxHash/)|4|seed
+[xxHash64](https://cyan4973.github.io/xxHash/)|8|seed
 
 
 ### Command Line Interface (cli)
@@ -156,12 +159,12 @@ ECB should not be used.
 
 #### Symmetric Encryption
 
-Name|Block size|Key size|Nonce size|Features
+Name|Block Ƃ|Key Ƃ|Nonce Ƃ|Features
 -|-|-|-|-
 [Advanced Encryption Standard (AES)](https://www.nist.gov/publications/advanced-encryption-standard-aes)|16|16, 24, 32|0|
 [ARIA](http://210.104.33.10/ARIA/index-e.html)|16|16, 24, 32|0|
 [Ascon-128](https://ascon.iaik.tugraz.at/index.html)|8, 16|16|16|AEAD
-[Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)|8|20|16|+Resistance to quantum adversary
+[Ascon-80pq](https://ascon.iaik.tugraz.at/index.html)|8|20|16|+Quantum resistance
 [Blowfish](https://www.schneier.com/academic/archives/1994/09/description_of_a_new.html)|8|4-56|0|
 [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant)|64|16, 32|12
 [ChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305)|64|32|12|AEAD
@@ -174,6 +177,9 @@ Name|Block size|Key size|Nonce size|Features
 [Simon128](https://nsacyber.github.io/simon-speck/)|16|16, 24, 32|0|
 [Speck64](https://nsacyber.github.io/simon-speck/)|8|12, 16|0|
 [Speck128](https://nsacyber.github.io/simon-speck/)|16|16, 24, 32|0|
+[Threefish256](https://www.schneier.com/academic/skein/threefish/)|16|16|~16|Tweak (nonce/AEAD)
+[Threefish512](https://www.schneier.com/academic/skein/threefish/)|32|32|~16|Tweak (nonce/AEAD)
+[Threefish1024](https://www.schneier.com/academic/skein/threefish/)|64|64|~16|Tweak (nonce/AEAD)
 [Twofish](https://www.schneier.com/academic/twofish/)|16|16, 24, 32|0|
 [XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)|64|32|24|
 [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)|64|32|24|AEAD
@@ -186,22 +192,22 @@ Cryptography hash functions that have the properties:
 - Finding an input string that matches a hash value (*pre-image*) is hard
 - Finding a pair of messages that generate the same hash value (*collision*) is hard
 
-Name|Digest sizes|Optional parameters
+Name|Digest Ƃ|Optional parameters
 -------|----------------------|-------------------
-[Ascon-Hash, Ascon-HashA](https://ascon.iaik.tugraz.at/index.html)|256|-
-[Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function))|256, 512|salt
-[Blake2b](https://www.blake2.net/)|8-512, 256, 384, 512|key, salt, personalization
-[Blake2s](https://www.blake2.net/)|8-256, 224, 256|key, salt, personalization
-[Keccak](https://keccak.team/keccak.html)|8-512, 224, 256, 384, 512|capacity
-[MD4†](https://datatracker.ietf.org/doc/html/rfc1320)|128†|-
-[MD5†](https://datatracker.ietf.org/doc/html/rfc1321)|128†|-
-[ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)|8-512|block size, customization
-[RipeMD†](https://en.wikipedia.org/wiki/RIPEMD)|128†, 160†, 256, 320|-
-[SHA-1†](https://datatracker.ietf.org/doc/html/rfc3174)|160†|-
-[SHA-2](https://en.wikipedia.org/wiki/SHA-2)|224, 256, 384, 512, 512/224, 512/256|-
-[SHA-3](https://en.wikipedia.org/wiki/SHA-3)|224, 256, 384, 512|-
-[TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128, 256)|8-512|customization
-[Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)|512|-
+[Ascon-Hash, Ascon-HashA](https://ascon.iaik.tugraz.at/index.html)|32|-
+[Blake](https://en.wikipedia.org/wiki/BLAKE_(hash_function))|32, 64|salt
+[Blake2b](https://www.blake2.net/)|1-64, 32, 48, 64|key, salt, personalization
+[Blake2s](https://www.blake2.net/)|1-32, 28, 32|key, salt, personalization
+[Keccak](https://keccak.team/keccak.html)|1-64, 28, 32, 48, 64|capacity
+[MD4†](https://datatracker.ietf.org/doc/html/rfc1320)|16†|-
+[MD5†](https://datatracker.ietf.org/doc/html/rfc1321)|16†|-
+[ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)|1-64|block size, customization
+[RipeMD†](https://en.wikipedia.org/wiki/RIPEMD)|16†, 20†, 32, 40|-
+[SHA-1†](https://datatracker.ietf.org/doc/html/rfc3174)|20†|-
+[SHA-2](https://en.wikipedia.org/wiki/SHA-2)|28, 32, 48, 64, 64/28, 64/32|-
+[SHA-3](https://en.wikipedia.org/wiki/SHA-3)|28, 32, 48, 64|-
+[TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128, 256)|1-64|customization
+[Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)|64|-
 
 † No longer considered cryptographically safe
 
@@ -216,7 +222,7 @@ A cryptographic algorithm that derives one or more secret keys from a secret val
 
 Also known as an authentication tag, a short piece of information to authenticate a message.  Protect integrity, and authenticity.
 
-Name|Tag Size
+Name|Tag Ƃ
 -|-
 [CMAC](https://datatracker.ietf.org/doc/rfc4493/)|16 (AES)
 [HMAC](https://en.wikipedia.org/wiki/HMAC)|Depends on hash (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
@@ -228,16 +234,16 @@ Name|Tag Size
 
 A secure hash that can produce output of any desired length.
 
-Name|Capacities|Optional parameters
+Name|Capacity Ƃ|Optional parameters
 -------|-----------|-------------------
-[Ascon-Xof, Ascon-XofA](https://ascon.iaik.tugraz.at/index.html)|256|digest size
-[cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, function name, customization
-[KangarooTwelve](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|128|digest size, customization
-[KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, key, customization
-[ParallelHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|block size, digest size, customization
-[Shake](https://en.wikipedia.org/wiki/SHAKE128)|128, 256|digest size
-[TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|128, 256|digest size, customization
-[TurboSHAKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|128, 256|digest size, customization
+[Ascon-Xof, Ascon-XofA](https://ascon.iaik.tugraz.at/index.html)|32|digest size
+[cShake](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|digest size, function name, customization
+[KangarooTwelve](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|16|digest size, customization
+[KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|digest size, key, customization
+[ParallelHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|block size, digest size, customization
+[Shake](https://en.wikipedia.org/wiki/SHAKE128)|16, 32|digest size
+[TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|digest size, customization
+[TurboSHAKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|16, 32|digest size, customization
 
 ### DateTime
 
@@ -273,12 +279,12 @@ Little endian is the dominant ordering for processor architectures including; [x
 - Scaling TypedArray
 - StringBuilder
 - WindowStr
-- *16 bit*: uint (U16)
-- *32 bit*: uint (U32), mutable uint (U32Mut), mutable uint array (U32MutArray)
-- *64 bit*: int (I64), uint (U64), mutable int (I64Mut), mutable uint (U64Mut), mutable uint array (U64MutArray)
-- *128 bit*: uint (U128), mutable uint (U128Mut)
-- *256 bit*: uint (U256)
-- *512 bit*: uint (U512)
+- *16 bit*: uint (U16) **2Ƃ**
+- *32 bit*: uint (U32), mutable uint (U32Mut), mutable uint array (U32MutArray) **4Ƃ**
+- *64 bit*: int (I64), uint (U64), mutable int (I64Mut), mutable uint (U64Mut), mutable uint array (U64MutArray) **8Ƃ**
+- *128 bit*: uint (U128), mutable uint (U128Mut) **16Ƃ**
+- *256 bit*: uint (U256) **32Ƃ**
+- *512 bit*: uint (U512) **64Ƃ**
 
 #### Extensions:
 
@@ -293,9 +299,9 @@ Little endian is the dominant ordering for processor architectures including; [x
 
 #### Good PRNGs
 
-Use one of these if you can, alphabetically sorted.  *gjrand32b* is only somewhat official and doesn't have a lot of testing. B=Bytes, b=bits
+Use one of these if you can, alphabetically sorted.  *gjrand32b* is only somewhat official and doesn't have a lot of testing.
 
-Name|Year|Variant|State B| |Out b|Safe b
+Name|Year|Variant|State Ƃ| |Out b|Safe b
 -|-:|-|-:|-|-:|-:|
 [GJRand](https://gjrand.sourceforge.net/)|2005|~gjrand32b|16||32|〃
 |||gjrand64|32|‡|64|〃
@@ -337,9 +343,9 @@ U64
 
 Best not to use these, there are some dragons in these waters (so if you're choosing, be aware of the limitations).  However, you might have a compatibility constraint (or love the name "Mersenne Twister").
 
-Name|Year|Variant|State B|Out b
+Name|Year|Variant|State Ƃ|Out b
 -|-:|-|-:|-:
-[ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|1997|arc4|32|8
+[ARC4/RC4/Arcfour/Arc4random](https://en.wikipedia.org/wiki/RC4)|1997|arc4|258|8
 [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister)|1998|mt19937|2496|32
 [MulBerry32](https://gist.github.com/tommyettinger/46a874533244883189143505d203312c)|2017|mulberry32|4|32
 [XorShift](https://www.jstatsoft.org/article/view/v008i14)|2003|xorshift128|16|32
@@ -350,7 +356,7 @@ If you're curious about the lineage, or need for compatibility with an old decis
 If you're already using one of these, consider migrating.
 
 
-Name|Variant|State B|Out b
+Name|Variant|State Ƃ|Out b
 -|-|-:|-:
 [Lehmer/LCG/MCG 1988](https://en.wikipedia.org/wiki/Lehmer_random_number_generator)|all|4|31
 [Marsaglia](https://groups.google.com/g/sci.math/c/6BIYd0cafQo/m/Ucipn_5T_TMJ?hl=en)|-|1|4

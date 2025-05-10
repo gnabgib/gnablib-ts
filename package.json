@@ -333,7 +333,10 @@
 		"Speck128/256",
 		"Serpent/128",
 		"Serpent/192",
-		"Serpent/256"
+		"Serpent/256",
+		"Threefish256",
+		"Threefish512",
+		"Threefish1024"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [
