@@ -175,6 +175,7 @@ Name|Block Ƃ|Key Ƃ|Nonce Ƃ|Features
 [Serpent](https://www.cl.cam.ac.uk/~rja14/serpent.html)|16|16, 24, 32|0|
 [Simon64](https://nsacyber.github.io/simon-speck/)|8|12, 16|0|
 [Simon128](https://nsacyber.github.io/simon-speck/)|16|16, 24, 32|0|
+[SM4](https://en.wikipedia.org/wiki/SM4_(cipher))|16|16|0|
 [Speck64](https://nsacyber.github.io/simon-speck/)|8|12, 16|0|
 [Speck128](https://nsacyber.github.io/simon-speck/)|16|16, 24, 32|0|
 [Threefish256](https://www.schneier.com/academic/skein/threefish/)|16|16|~16|Tweak (nonce/AEAD)
