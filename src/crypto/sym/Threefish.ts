@@ -9,17 +9,6 @@ const C = U64.fromI32s(0xa9fc1a22, 0x1bd11bda);
 // Used for swapping
 const t = U64Mut.fromInt(0);
 
-/* c8 ignore next 9 */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function uLog(u: U64MutArray, prefix = '') {
-	//This is style to look closer to golang's to allow inter-lang comparison
-	//(Why do some langs write hex in lowercase?!)
-	if (prefix.length > 0) prefix += '=';
-	for (let i = 0; i < u.length; i++)
-		prefix += u.at(i).toString().toLowerCase() + ' ';
-	console.log(prefix);
-}
-
 abstract class AThreefish {
 	/** Rounds/4 */
 	protected readonly qr: number;

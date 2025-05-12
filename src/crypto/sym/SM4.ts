@@ -1,6 +1,5 @@
 /*! Copyright 2025 the gnablib contributors MPL-1.1 */
 
-import { hex } from '../../codec/Hex.js';
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32Static.js';
 import { sLen } from '../../safe/safe.js';
@@ -21,6 +20,7 @@ const ck=Uint32Array.of(
 	0x10171e25, 0x2c333a41, 0x484f565d, 0x646b7279,
 );
 // prettier-ignore
+/** sBox based on multiplicative inverse over GF(2^8)*/
 const sBox=Uint8Array.of(
 	0xd6, 0x90, 0xe9, 0xfe, 0xcc, 0xe1, 0x3d, 0xb7, 0x16, 0xb6, 0x14, 0xc2, 0x28, 0xfb, 0x2c, 0x05,
 	0x2b, 0x67, 0x9a, 0x76, 0x2a, 0xbe, 0x04, 0xc3, 0xaa, 0x44, 0x13, 0x26, 0x49, 0x86, 0x06, 0x99,
@@ -39,37 +39,23 @@ const sBox=Uint8Array.of(
 	0x89, 0x69, 0x97, 0x4a, 0x0c, 0x96, 0x77, 0x7e, 0x65, 0xb9, 0xf1, 0x09, 0xc5, 0x6e, 0xc6, 0x84,
 	0x18, 0xf0, 0x7d, 0xec, 0x3a, 0xdc, 0x4d, 0x20, 0x79, 0xee, 0x5f, 0x3e, 0xd7, 0xcb, 0x39, 0x48,
 );
+/** Nonlinear Transform (6.2.1) */
 const tao = (a: number) =>
 	sBox[0xff & a] |
 	(sBox[0xff & (a >>> 8)] << 8) |
 	(sBox[0xff & (a >>> 16)] << 16) |
 	(sBox[a >>> 24] << 24);
-const kl = (b: number) => b ^ U32.lRot(b, 13) ^ U32.lRot(b, 23);
-const kt = (x: number) => kl(tao(x));
+/** Linear transform L 6.2.2 */
 const l = (b: number) =>
 	b ^ U32.lRot(b, 2) ^ U32.lRot(b, 10) ^ U32.lRot(b, 18) ^ U32.lRot(b, 24);
-const t = (x: number) => l(tao(x));
-const f = (x0: number, x1: number, x2: number, x3: number, rk: number) =>
-	x0 ^ t(x1 ^ x2 ^ x3 ^ rk);
-
-/* c8 ignore next 9 */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function uLog32(u: Uint32Array, prefix = '') {
-	//This is style to look closer to golang's to allow inter-lang comparison
-	//(Why do some langs write hex in lowercase?!)
-	if (prefix.length > 0) prefix += '=';
-	for (let i = 0; i < u.length; i++)
-		prefix += hex.fromI32(u[i]).toLowerCase() + ' ';
-	console.log(prefix);
-}
 
 /**
  * [ShangMi4 (SM4)](https://web.archive.org/web/20160919072646/http://www.cnnic.cn/gcjsyj/qyjsyj/mmsfbz/sm4/201312/t20131204_43341.htm)
  * ( [Wiki](https://en.wikipedia.org/wiki/SM4_(cipher)) )
- * 
- * ShāngMì 4 (SM4, 商密4) (formerly SMS4) is a block cipher, standardised for 
- * commercial ryptography in China. It is used in the Chinese National 
- * Standard for Wireless LAN WAPI (WLAN Authentication and Privacy 
+ *
+ * ShāngMì 4 (SM4, 商密4) (formerly SMS4) is a block cipher, standardised for
+ * commercial ryptography in China. It is used in the Chinese National
+ * Standard for Wireless LAN WAPI (WLAN Authentication and Privacy
  * Infrastructure), and with Transport Layer Security.
  *
  * First Published: *2006*  
@@ -102,7 +88,10 @@ export class Sm4 implements IBlockCrypt {
 		///*DBUG*/uLog32(k32);
 
 		for (let r = 0; r < rounds; r++) {
-			rk[r] = k32[0] ^ kt(k32[1] ^ k32[2] ^ k32[3] ^ ck[r]);
+			const ktao = tao(k32[1] ^ k32[2] ^ k32[3] ^ ck[r]);
+			// Linear transform L' 6.2.2 = T'(tao)
+			const kt = ktao ^ U32.lRot(ktao, 13) ^ U32.lRot(ktao, 23);
+			rk[r] = k32[0] ^ kt;
 			k32[0] = k32[1];
 			k32[1] = k32[2];
 			k32[2] = k32[3];
@@ -114,30 +103,32 @@ export class Sm4 implements IBlockCrypt {
 
 	private _encBlock(data: Uint8Array) {
 		const d32 = new Uint32Array(data.buffer, data.byteOffset, data.length / 4);
-        asBE.i32(data, 0, 4);
+		asBE.i32(data, 0, 4);
 		for (let r = 0; r < rounds; r++) {
-			const X = f(d32[0], d32[1], d32[2], d32[3], this.#rk[r]);
+            // Round function (6.1)
+            const X = d32[0] ^ l(tao(d32[1] ^ d32[2] ^ d32[3] ^ this.#rk[r]));
 			d32[0] = d32[1];
 			d32[1] = d32[2];
 			d32[2] = d32[3];
 			d32[3] = X;
 			///*DBUG*/ uLog32(d32);
 		}
-     	data.reverse();
+		data.reverse();
 	}
 
 	private _decBlock(data: Uint8Array) {
 		const d32 = new Uint32Array(data.buffer, data.byteOffset, data.length / 4);
 		asBE.i32(data, 0, 4);
 		for (let r = rounds - 1; r >= 0; r--) {
-			const X = f(d32[0], d32[1], d32[2], d32[3], this.#rk[r]);
-			d32[0] = d32[1];
+            // Round function (6.1)
+            const X = d32[0] ^ l(tao(d32[1] ^ d32[2] ^ d32[3] ^ this.#rk[r]));
+		    d32[0] = d32[1];
 			d32[1] = d32[2];
 			d32[2] = d32[3];
 			d32[3] = X;
 			///*DBUG*/ uLog32(d32);
 		}
-        asBE.i32(data, 0, 4);
+		asBE.i32(data, 0, 4);
 		d32.reverse();
 	}
 
