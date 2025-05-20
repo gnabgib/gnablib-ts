@@ -178,7 +178,7 @@ Name|Block Ƃ|Key Ƃ|Nonce Ƃ|Features
 [SM4](https://en.wikipedia.org/wiki/SM4_(cipher))|16|16|0|
 [Speck64](https://nsacyber.github.io/simon-speck/)|8|12, 16|0|
 [Speck128](https://nsacyber.github.io/simon-speck/)|16|16, 24, 32|0|
-[Threefish](https://www.schneier.com/academic/skein/threefish/)|16, 32, 64|16, 32, 64|~16|Tweak (nonce/AEAD)
+[Threefish](https://www.schneier.com/academic/skein/threefish/)|32, 64, 128|32, 64, 128|~16|Tweak (nonce/AEAD)
 [Twofish](https://www.schneier.com/academic/twofish/)|16|16, 24, 32|0|
 [XChaCha20](https://en.wikipedia.org/wiki/Salsa20#XChaCha)|64|32|24|
 [XChaCha20-Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305#XChaCha20-Poly1305_%E2%80%93_extended_nonce_variant)|64|32|24|AEAD
@@ -205,10 +205,13 @@ Name|Digest Ƃ|Optional parameters
 [SHA-1†](https://datatracker.ietf.org/doc/html/rfc3174)|20†|-
 [SHA-2](https://en.wikipedia.org/wiki/SHA-2)|28, 32, 48, 64, 64/28, 64/32|-
 [SHA-3](https://en.wikipedia.org/wiki/SHA-3)|28, 32, 48, 64|-
+[Skein256](https://www.schneier.com/academic/skein/)|32|-
 [TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128, 256)|1-64|customization
 [Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)|64|-
 
 † No longer considered cryptographically safe
+
+*Note* Keccak was announced as the SHA-3 winner, but the different parameters are used in Keccak vs SHA3 mode (the hashes will differ even for matching digest size)
 
 #### Key Derivation Function (KDF)
 

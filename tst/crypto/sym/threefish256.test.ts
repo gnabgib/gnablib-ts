@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
-import { Threefish256 } from '../../../src/crypto/sym/Threefish';
+import { Key, Threefish256, Tweak } from '../../../src/crypto/sym/Threefish';
 
 const tsts = suite('Threefish256');
 
@@ -22,7 +22,7 @@ const tests:[string,string,string,string][]=[
         '000102030405060708090A0B0C0D0E0F',
 
         'FFFEFDFCFBFAF9F8F7F6F5F4F3F2F1F0EFEEEDECEBEAE9E8E7E6E5E4E3E2E1E0',
-		
+
         'E0D091FF0EEA8FDFC98192E62ED80AD59D865D08588DF476657056B5955E97DF'],
 ];
 for (const [key, tweak, plain, enc] of tests) {
@@ -41,6 +41,38 @@ for (const [key, tweak, plain, enc] of tests) {
 		c.decryptBlock(found);
 		assert.is(hex.fromBytes(found), plain);
 	});
+}
+for (const [key, tweak, plain, enc] of tests) {
+	const k=Key.fromKey(hex.toBytes(key));
+	const t=new Tweak(hex.toBytes(tweak));
+	const c = new Threefish256(k,t);
+	tsts(`Threefish256B(${key},${tweak}).encrypt(${plain})`, () => {
+		//Set found equal to plain-source-bytes
+		const found = hex.toBytes(plain);
+		//Encrypt a block (note the test vectors are all one block)
+		c.encryptBlock(found);
+		assert.is(hex.fromBytes(found), enc);
+	});
+	tsts(`Threefish256B(${key},${tweak}).decrypt(${enc})`, () => {
+		//Set found equal to encoded-source-bytes
+		const found = hex.toBytes(enc);
+		//Decrypt a block (note the test vectors are all one block)
+		c.decryptBlock(found);
+		assert.is(hex.fromBytes(found), plain);
+	});
+}
+
+const providedTweakTests:[string,string][]=[
+	['','000000000000000000000000000000000000000000000000'],
+	['00000000000000000000000000000000','000000000000000000000000000000000000000000000000'],
+	['000102030405060708090A0B0C0D0E0F','07060504030201000F0E0D0C0B0A09080808080808080808'],
+];
+for(const [tweak,expect] of providedTweakTests) {
+	tsts(`Tweak(${tweak})`,()=>{
+		const t=new Tweak(hex.toBytes(tweak));
+		t.lock=true;
+		assert.is(t.t64.toString(),expect);
+	})
 }
 
 tsts.run();

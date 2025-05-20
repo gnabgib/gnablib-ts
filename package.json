@@ -304,7 +304,8 @@
 		"Speck128",
 		"Serpent",
 		"Threefish",
-		"SM4"
+		"SM4",
+		"Skein256"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

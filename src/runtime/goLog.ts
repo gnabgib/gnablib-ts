@@ -27,19 +27,29 @@ export function uLog32(u: Uint32Array) {
         line += hex.fromI32(u[i++]).toLowerCase() + ' ';
     console.log(line);
 }
-export function uLog64(u: U64MutArray) {
-    let line='';
 
-    const safeLen=Math.floor(u.length/2)*2;
+export function uLog64(u: U64MutArray,name='') {
+    let line=' ';
+    console.log(`${name} = [`);
+    const safeLen=Math.floor(u.length/4)*4;
     let i=0;
 	for (; i < safeLen; ) {
-        line += u.at(i++).toString().toLowerCase() + ' ';
-        console.log(line+u.at(i++).toString().toLowerCase() + ' ');
-        line='';
+        console.log(
+            line +
+            ' '+u.at(i++).toString().toLowerCase() +
+            ' '+u.at(i++).toString().toLowerCase() +
+            ' '+u.at(i++).toString().toLowerCase() +
+            ' '+u.at(i++).toString().toLowerCase()
+        );
+        line=' ';
     }
-    if (i==u.length) return;
-    //Can only be off by one
-    console.log(u.at(i++).toString().toLowerCase() + ' ');
+    if (i!=u.length) {
+        for(;i<u.length;) {
+            line+=' '+u.at(i++).toString().toLowerCase();
+        }
+        console.log(line);
+    }
+    console.log(']');
 }
 
 /* c8 ignore stop */

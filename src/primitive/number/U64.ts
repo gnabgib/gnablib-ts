@@ -412,8 +412,19 @@ export class U64MutArray {
 	set(src: U64MutArray, thisOffset = 0, srcOffset = 0): void {
 		//Note because the buffers are 2x the size, the offsets need to be doubled (added twice)
 		this.buf.set(
-			src.buf.subarray(src.bufPos + srcOffset + srcOffset),
-			this.bufPos + thisOffset + thisOffset
+			src.buf.subarray(src.bufPos + 2*srcOffset),
+			this.bufPos + 2*thisOffset
+		);
+	}
+
+	/**
+	 * A new U64MutArray on the same memory
+	 * @param start First element to include (inclusive) default 0
+	 * @param end Last element exclusive default length
+	 */
+	subarray(start=0,end?:number) {
+		return new U64MutArray(
+			this.buf.subarray(start*2,end?end*2:undefined)
 		);
 	}
 
