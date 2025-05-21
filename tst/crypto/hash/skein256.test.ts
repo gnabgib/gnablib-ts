@@ -3,9 +3,9 @@ import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { Skein256 } from '../../../src/crypto/hash/Skein';
 
-const tsts = suite('Skein 256');
+const tsts = suite('Skein256');
 
-const test_256_bytes: [string, string][] = [
+const test_bytes: [string, string][] = [
 	// https://en.wikipedia.org/wiki/Skein_%28hash_function%29
 	['', 'C8877087DA56E072870DAA843F176E9453115929094C3A40C463A196C29BF7BA'],
 	//https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf
@@ -21,7 +21,7 @@ const test_256_bytes: [string, string][] = [
 		'DF28E916630D0B44C4A849DC9A02F07A07CB30F732318256B15D865AC4AE162F',
 	],
 ];
-for (const [source, expect] of test_256_bytes) {
+for (const [source, expect] of test_bytes) {
 	tsts(`Skein-256-256(x${source})`, () => {
 		const hash = new Skein256();
 		hash.write(hex.toBytes(source));
@@ -30,7 +30,7 @@ for (const [source, expect] of test_256_bytes) {
 	});
 }
 
-const test_256_size: [string, number, string][] = [
+const test_size: [string, number, string][] = [
 	// //github.com/aead/skein/skein256
 	[
 		'FBD17C26B61A82E12E125F0D459B96C91AB4837DFF22B39B78439430CDFC5DC8' +
@@ -75,7 +75,7 @@ const test_256_size: [string, number, string][] = [
         '0EA7409960A708C1DBAA90E86389DF254ABC763639BB8CDF7FB663B29D9557C3',
 	],
 ];
-for (const [source, size, expect] of test_256_size) {
+for (const [source, size, expect] of test_size) {
 	tsts(`Skein-256-${size}(x${source})`, () => {
 		const hash = new Skein256(size);
 		hash.write(hex.toBytes(source));

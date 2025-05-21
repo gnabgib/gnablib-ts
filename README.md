@@ -205,7 +205,7 @@ Name|Digest Ƃ|Optional parameters
 [SHA-1†](https://datatracker.ietf.org/doc/html/rfc3174)|20†|-
 [SHA-2](https://en.wikipedia.org/wiki/SHA-2)|28, 32, 48, 64, 64/28, 64/32|-
 [SHA-3](https://en.wikipedia.org/wiki/SHA-3)|28, 32, 48, 64|-
-[Skein256](https://www.schneier.com/academic/skein/)|32|-
+[Skein](https://www.schneier.com/academic/skein/)|32, 64|-
 [TupleHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128, 256)|1-64|customization
 [Whirlpool](https://web.archive.org/web/20171129084214/http://www.larc.usp.br/~pbarreto/WhirlpoolPage.html)|64|-
 

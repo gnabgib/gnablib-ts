@@ -188,8 +188,6 @@ abstract class AThreefish {
 	) {
 		this.blockSize = key.length;
 		this.#k = key;
-		key.lock = true;
-		t.lock = true;
 	}
 
 	protected addRk(d: U64MutArray, r: number) {
@@ -253,6 +251,8 @@ abstract class AThreefish {
 		sLen('block', block)
 			.atLeast(byteStart + this.blockSize)
 			.throwNot();
+        this.#k.lock=true;
+        this.t.lock=true;
 		this._encBlock(block.subarray(byteStart, byteStart + this.blockSize));
 	}
 	/**
@@ -266,7 +266,9 @@ abstract class AThreefish {
 		sLen('block', block)
 			.atLeast(byteStart + this.blockSize)
 			.throwNot();
-		this._decBlock(block.subarray(byteStart, byteStart + this.blockSize));
+        this.#k.lock=true;
+        this.t.lock=true;
+        this._decBlock(block.subarray(byteStart, byteStart + this.blockSize));
 	}
 }
 
