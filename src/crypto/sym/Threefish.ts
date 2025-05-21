@@ -32,7 +32,7 @@ export class Tweak {
 	set isFirst(value: boolean) {
 		if (value) this.t8[15] |= 0x40;
 		else this.t8[15] &= ~0x40;
-        this._lock=false;
+		this._lock = false;
 	}
 
 	/** Whether this is the last block */
@@ -43,7 +43,7 @@ export class Tweak {
 	set isLast(value: boolean) {
 		if (value) this.t8[15] |= 0x80;
 		else this.t8[15] &= ~0x80;
-        this._lock=false;
+		this._lock = false;
 	}
 
 	set lock(value: boolean) {
@@ -54,81 +54,81 @@ export class Tweak {
 		} else this._lock = value;
 	}
 
-    /** Increase the counter */
-    incr(by:number) {
-        // console.log(`increment tweak ${this.t64.at(0)}+${by}`)
-        this.t64.at(0).addEq(U64.fromInt(by));
-        this._lock=false;
-    }
+	/** Increase the counter */
+	incr(by: number) {
+		// console.log(`increment tweak ${this.t64.at(0)}+${by}`)
+		this.t64.at(0).addEq(U64.fromInt(by));
+		this._lock = false;
+	}
 
-    /** Convert into a message block (will reset counter) */
-    makeMsg() {
-        this.t64.at(0).zero();
-        this.t64.at(1).zero();
-        //last=0, first=1, type=48, bitpad=0, treelevel=0, position=0
-        this.t8[15]=48|0x40;
-        this._lock=false;
-    }
+	/** Convert into a message block (will reset counter) */
+	makeMsg() {
+		this.t64.at(0).zero();
+		this.t64.at(1).zero();
+		//last=0, first=1, type=48, bitpad=0, treelevel=0, position=0
+		this.t8[15] = 48 | 0x40;
+		this._lock = false;
+	}
 
-    /** Convert into a key block (will reset counter) */
-    makeKey() {
-        this.t64.at(0).zero();
-        this.t64.at(1).zero();
-        //last=0, first=0, type=0, bitpad=0, treelevel=0, position=0
-        this._lock=false;
-    }
+	/** Convert into a key block (will reset counter) */
+	makeKey() {
+		this.t64.at(0).zero();
+		this.t64.at(1).zero();
+		//last=0, first=0, type=0, bitpad=0, treelevel=0, position=0
+		this._lock = false;
+	}
 
-    /** Convert into an output block */
-    makeOut() {
-        this.t64.at(0).zero();
-        this.t64.at(1).zero();
-        this.t8[0]=8;//Not sure why
-        this.t8[15]=63|0xC0;
-        //last=1, first=1, type=63, bitpad=0, treelevel=0, position=0
-        this._lock=false;
-    }
+	/** Convert into an output block */
+	makeOut() {
+		this.t64.at(0).zero();
+		this.t64.at(1).zero();
+		this.t8[0] = 8; //Not sure why
+		this.t8[15] = 63 | 0xc0;
+		//last=1, first=1, type=63, bitpad=0, treelevel=0, position=0
+		this._lock = false;
+	}
 
 	/** Create a config block */
-	static NewCfg(blockSize:number) {
+	static NewCfg(blockSize: number) {
 		const r = new Tweak();
 		r.t8[15] = 4;
-        //A config block is always a first and final block
-        r.t8[15] |= 0xC0;
+		//A config block is always a first and final block
+		r.t8[15] |= 0xc0;
 
-        r.t64.at(0).set(U64.fromInt(blockSize));
+		r.t64.at(0).set(U64.fromInt(blockSize));
 		return r;
 	}
-    /** Create a personalization block */
+	/** Create a personalization block */
 	static NewPrs() {
 		const r = new Tweak();
 		r.t8[15] = 8;
 		return r;
 	}
-    /** Create a public key block */
+	/** Create a public key block */
 	static NewPk() {
 		const r = new Tweak();
 		r.t8[15] = 12;
 		return r;
 	}
-    /** Create a key identifier block */
+	/** Create a key identifier block */
 	static NewKdf() {
 		const r = new Tweak();
 		r.t8[15] = 16;
 		return r;
 	}
-    /** Create a nonce block */
+	/** Create a nonce block */
 	static NewNon() {
 		const r = new Tweak();
 		r.t8[15] = 20;
 		return r;
 	}
-    /** Create a message block */
+	/** Create a message block */
 	static NewMsg() {
 		const r = new Tweak();
 		r.t8[15] = 48;
 		return r;
 	}
-    /** Create an output block */
+	/** Create an output block */
 	static NewOut() {
 		const r = new Tweak();
 		r.t8[15] = 63;
@@ -140,7 +140,7 @@ export class Key {
 	readonly k64: U64MutArray;
 	private _lock = false;
 
-	private constructor(private readonly k8:Uint8Array) {
+	private constructor(private readonly k8: Uint8Array) {
 		const k32 = new Uint32Array(k8.buffer);
 		this.k64 = U64MutArray.mount(k32);
 	}
@@ -162,18 +162,18 @@ export class Key {
 		} else this._lock = value;
 	}
 
-    static fromSize(size:number) {
-        const k=new Uint8Array(size+8);
-        return new Key(k);
-    }
-    static fromKey(key:Uint8Array) {
-        const k=new Uint8Array(key.length+8);
-        k.set(key);
-        return new Key(k);
-    }
+	static fromSize(size: number) {
+		const k = new Uint8Array(size + 8);
+		return new Key(k);
+	}
+	static fromKey(key: Uint8Array) {
+		const k = new Uint8Array(key.length + 8);
+		k.set(key);
+		return new Key(k);
+	}
 }
 
-abstract class AThreefish2 {
+abstract class AThreefish {
 	/** Block size in bytes */
 	readonly blockSize: number;
 	/** Key */
@@ -188,175 +188,60 @@ abstract class AThreefish2 {
 	) {
 		this.blockSize = key.length;
 		this.#k = key;
-        key.lock=true;
-        t.lock=true;
+		key.lock = true;
+		t.lock = true;
 	}
 
 	protected addRk(d: U64MutArray, r: number) {
+		d.at(d.length - 3).addEq(this.t.t64.at(r % 3));
+		d.at(d.length - 2).addEq(this.t.t64.at((r + 1) % 3));
+		d.at(d.length - 1).addEq(U64.fromInt(r));
+
 		d.at(0).addEq(this.#k.k64.at(r % this.#k.k64.length));
-		d.at(1)
-			.addEq(this.#k.k64.at((r + 1) % this.#k.k64.length))
-			.addEq(this.t.t64.at(r % 3));
-		d.at(2)
-			.addEq(this.#k.k64.at((r + 2) % this.#k.k64.length))
-			.addEq(this.t.t64.at((r + 1) % 3));
-		d.at(3)
-			.addEq(this.#k.k64.at((r + 3) % this.#k.k64.length))
-			.addEq(U64.fromInt(r));
+		d.at(1).addEq(this.#k.k64.at((r + 1) % this.#k.k64.length));
+		d.at(2).addEq(this.#k.k64.at((r + 2) % this.#k.k64.length));
+		d.at(3).addEq(this.#k.k64.at((r + 3) % this.#k.k64.length));
 		if (d.length == 4) return;
-		throw new Error('derp');
+		d.at(4).addEq(this.#k.k64.at((r + 4) % this.#k.k64.length));
+		d.at(5).addEq(this.#k.k64.at((r + 5) % this.#k.k64.length));
+		d.at(6).addEq(this.#k.k64.at((r + 6) % this.#k.k64.length));
+		d.at(7).addEq(this.#k.k64.at((r + 7) % this.#k.k64.length));
+		if (d.length == 8) return;
+		d.at(8).addEq(this.#k.k64.at((r + 8) % this.#k.k64.length));
+		d.at(9).addEq(this.#k.k64.at((r + 9) % this.#k.k64.length));
+		d.at(10).addEq(this.#k.k64.at((r + 10) % this.#k.k64.length));
+		d.at(11).addEq(this.#k.k64.at((r + 11) % this.#k.k64.length));
+		d.at(12).addEq(this.#k.k64.at((r + 12) % this.#k.k64.length));
+		d.at(13).addEq(this.#k.k64.at((r + 13) % this.#k.k64.length));
+		d.at(14).addEq(this.#k.k64.at((r + 14) % this.#k.k64.length));
+		d.at(15).addEq(this.#k.k64.at((r + 15) % this.#k.k64.length));
 	}
-    protected subRk(d: U64MutArray, r: number) {
+	protected subRk(d: U64MutArray, r: number) {
+		d.at(d.length - 3).subEq(this.t.t64.at(r % 3));
+		d.at(d.length - 2).subEq(this.t.t64.at((r + 1) % 3));
+		d.at(d.length - 1).subEq(U64.fromInt(r));
+
 		d.at(0).subEq(this.#k.k64.at(r % this.#k.k64.length));
-		d.at(1)
-			.subEq(this.#k.k64.at((r + 1) % this.#k.k64.length))
-			.subEq(this.t.t64.at(r % 3));
-		d.at(2)
-			.subEq(this.#k.k64.at((r + 2) % this.#k.k64.length))
-			.subEq(this.t.t64.at((r + 1) % 3));
-		d.at(3)
-			.subEq(this.#k.k64.at((r + 3) % this.#k.k64.length))
-			.subEq(U64.fromInt(r));
+		d.at(1).subEq(this.#k.k64.at((r + 1) % this.#k.k64.length));
+		d.at(2).subEq(this.#k.k64.at((r + 2) % this.#k.k64.length));
+		d.at(3).subEq(this.#k.k64.at((r + 3) % this.#k.k64.length));
 		if (d.length == 4) return;
-		throw new Error('derp');
-	}
-	protected abstract _encBlock(data: Uint8Array): void;
-    protected abstract _decBlock(data: Uint8Array): void;
-	/**
-	 * {@inheritDoc interfaces.IBlockCrypt#encryptBlock}
-	 *
-	 * @throws {@link error.NotEnoughSpaceError}
-	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
-	 */
-	encryptBlock(block: Uint8Array, offset = 0): void {
-		const byteStart = offset * this.blockSize;
-		sLen('block', block)
-			.atLeast(byteStart + this.blockSize)
-			.throwNot();
-		this._encBlock(block.subarray(byteStart, byteStart + this.blockSize));
-	}
-    /**
-	 * {@inheritDoc interfaces.IBlockCrypt#decryptBlock}
-	 *
-	 * @throws {@link error.NotEnoughSpaceError}
-	 * If there's not enough bytes in `block` (`offset+1`*`blockSize`)
-	 */
-	decryptBlock(block: Uint8Array, offset = 0): void {
-		const byteStart = offset * this.blockSize;
-		sLen('block', block)
-			.atLeast(byteStart + this.blockSize)
-			.throwNot();
-		this._decBlock(block.subarray(byteStart, byteStart + this.blockSize));
-	}
-}
-
-abstract class AThreefish {
-	/** Rounds/4 */
-	protected readonly qr: number;
-	/** Block size in bytes */
-	readonly blockSize: number;
-	/** Round Key */
-	readonly #rk: U64MutArray[];
-
-	constructor(
-		blockSize: number,
-		rounds: number,
-		key: Uint8Array,
-		tweak: Uint8Array
-	) {
-		this.qr = rounds / 4;
-		this.blockSize = blockSize;
-		sLen('key', key).exactly(blockSize).throwNot();
-		sLen('tweak', tweak).exactly(16).throwNot();
-
-		const k32 = new Uint32Array(key.buffer, key.byteOffset, key.length / 4);
-		const k64 = U64MutArray.mount(k32);
-		const n = blockSize / 8;
-		const k = U64MutArray.fromLen(n+1);
-		k.set(k64);
-
-		const parity = k.at(k64.length);
-		for (let i = 0; i < k64.length; i++) parity.xorEq(k.at(i));
-		parity.xorEq(C);
-		// uLog64(k, 'k');
-
-		const t32 = new Uint32Array(tweak.buffer, tweak.byteOffset, 4);
-		const t64 = U64MutArray.mount(t32);
-		const t = U64MutArray.fromLen(3);
-		t.set(t64);
-		t.at(2).set(t.at(1)).xorEq(t.at(0));
-
-		const rk: U64MutArray[] = [];
-		const rkn = this.qr;
-		for (let s = 0; s <= rkn; s++) {
-			const l = U64MutArray.fromLen(n);
-			for (let i = 0; i < n; i++) {
-				l.at(i).set(k.at((s + i) % (n + 1)));
-				switch (i) {
-					case n - 3:
-						l.at(i).addEq(t.at(s % 3));
-						break;
-					case n - 2:
-						l.at(i).addEq(t.at((s + 1) % 3));
-						break;
-					case n - 1:
-						l.at(i).addEq(U64.fromInt(s));
-						break;
-				}
-			}
-			rk.push(l);
-		}
-		this.#rk = rk;
-		// uLog(k,'k');
-		// uLog(t,'t');
-		// for(let i=0;i<rk.length;i++) {
-		//     uLog(rk[i]);
-		// }
-	}
-
-	protected addRk(d: U64MutArray, i: number) {
-		d.at(0).addEq(this.#rk[i].at(0));
-		d.at(1).addEq(this.#rk[i].at(1));
-		d.at(2).addEq(this.#rk[i].at(2));
-		d.at(3).addEq(this.#rk[i].at(3));
-		if (d.length == 4) return;
-		d.at(4).addEq(this.#rk[i].at(4));
-		d.at(5).addEq(this.#rk[i].at(5));
-		d.at(6).addEq(this.#rk[i].at(6));
-		d.at(7).addEq(this.#rk[i].at(7));
+		d.at(4).subEq(this.#k.k64.at((r + 4) % this.#k.k64.length));
+		d.at(5).subEq(this.#k.k64.at((r + 5) % this.#k.k64.length));
+		d.at(6).subEq(this.#k.k64.at((r + 6) % this.#k.k64.length));
+		d.at(7).subEq(this.#k.k64.at((r + 7) % this.#k.k64.length));
 		if (d.length == 8) return;
-		d.at(8).addEq(this.#rk[i].at(8));
-		d.at(9).addEq(this.#rk[i].at(9));
-		d.at(10).addEq(this.#rk[i].at(10));
-		d.at(11).addEq(this.#rk[i].at(11));
-		d.at(12).addEq(this.#rk[i].at(12));
-		d.at(13).addEq(this.#rk[i].at(13));
-		d.at(14).addEq(this.#rk[i].at(14));
-		d.at(15).addEq(this.#rk[i].at(15));
-	}
-	protected subRk(d: U64MutArray, iix: number) {
-		d.at(0).subEq(this.#rk[iix].at(0));
-		d.at(1).subEq(this.#rk[iix].at(1));
-		d.at(2).subEq(this.#rk[iix].at(2));
-		d.at(3).subEq(this.#rk[iix].at(3));
-		if (d.length == 4) return;
-		d.at(4).subEq(this.#rk[iix].at(4));
-		d.at(5).subEq(this.#rk[iix].at(5));
-		d.at(6).subEq(this.#rk[iix].at(6));
-		d.at(7).subEq(this.#rk[iix].at(7));
-		if (d.length == 8) return;
-		d.at(8).subEq(this.#rk[iix].at(8));
-		d.at(9).subEq(this.#rk[iix].at(9));
-		d.at(10).subEq(this.#rk[iix].at(10));
-		d.at(11).subEq(this.#rk[iix].at(11));
-		d.at(12).subEq(this.#rk[iix].at(12));
-		d.at(13).subEq(this.#rk[iix].at(13));
-		d.at(14).subEq(this.#rk[iix].at(14));
-		d.at(15).subEq(this.#rk[iix].at(15));
+		d.at(8).subEq(this.#k.k64.at((r + 8) % this.#k.k64.length));
+		d.at(9).subEq(this.#k.k64.at((r + 9) % this.#k.k64.length));
+		d.at(10).subEq(this.#k.k64.at((r + 10) % this.#k.k64.length));
+		d.at(11).subEq(this.#k.k64.at((r + 11) % this.#k.k64.length));
+		d.at(12).subEq(this.#k.k64.at((r + 12) % this.#k.k64.length));
+		d.at(13).subEq(this.#k.k64.at((r + 13) % this.#k.k64.length));
+		d.at(14).subEq(this.#k.k64.at((r + 14) % this.#k.k64.length));
+		d.at(15).subEq(this.#k.k64.at((r + 15) % this.#k.k64.length));
 	}
 	protected abstract _encBlock(data: Uint8Array): void;
 	protected abstract _decBlock(data: Uint8Array): void;
-
 	/**
 	 * {@inheritDoc interfaces.IBlockCrypt#encryptBlock}
 	 *
@@ -370,7 +255,6 @@ abstract class AThreefish {
 			.throwNot();
 		this._encBlock(block.subarray(byteStart, byteStart + this.blockSize));
 	}
-
 	/**
 	 * {@inheritDoc interfaces.IBlockCrypt#decryptBlock}
 	 *
@@ -397,10 +281,10 @@ abstract class AThreefish {
  * with exclusive ORs. In that respect, it is similar to Salsa20, TEA,
  * and the SHA-3 candidates CubeHash and BLAKE.
  *
- * First Published: *2008*
- * Block size: *32 bytes*
- * Key Size: *32 bytes*
- * Nonce size: ~*16 bytes*†
+ * First Published: *2008*  
+ * Block size: *32 bytes*  
+ * Key Size: *32 bytes*  
+ * Nonce size: ~*16 bytes*†  
  * Rounds: *72*
  *
  * †Threefish accepts a *16 byte* "tweak" value, which could be considered
@@ -409,101 +293,15 @@ abstract class AThreefish {
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  */
-export class Threefish256 extends AThreefish2 implements IBlockCrypt {
-    constructor(key:Key|Uint8Array,tweak:Tweak|Uint8Array) {
-        const rounds=72;
-        const blockSize=32;
-        sLen('key', key).exactly(blockSize).throwNot();
-        if (key instanceof Uint8Array) key=Key.fromKey(key);
-        if (tweak instanceof Uint8Array) tweak=new Tweak(tweak);
-        super(rounds/4,key,tweak);
-    }
-    private swap(d: U64MutArray) {
-		//1=3, 3=1
-		t.set(d.at(1));
-		d.at(1).set(d.at(3));
-		d.at(3).set(t);
+export class Threefish256 extends AThreefish implements IBlockCrypt {
+	constructor(key: Key | Uint8Array, tweak: Tweak | Uint8Array) {
+		const rounds = 72;
+		const blockSize = 32;
+		sLen('key', key).exactly(blockSize).throwNot();
+		if (key instanceof Uint8Array) key = Key.fromKey(key);
+		if (tweak instanceof Uint8Array) tweak = new Tweak(tweak);
+		super(rounds / 4, key, tweak);
 	}
-	private mixPerm(d: U64MutArray, l0: number, l1: number) {
-		d.at(0).addEq(d.at(1));
-		d.at(1).lRotEq(l0).xorEq(d.at(0));
-		d.at(2).addEq(d.at(3));
-		d.at(3).lRotEq(l1).xorEq(d.at(2));
-		this.swap(d);
-		///*DBUG*/ uLog(d);
-	}
-    private permUnmix(d: U64MutArray, r0: number, r1: number) {
-		//No need for unswap (it's symmetric)
-		this.swap(d);
-		d.at(3).xorEq(d.at(2)).rRotEq(r0);
-		d.at(2).subEq(d.at(3));
-		d.at(1).xorEq(d.at(0)).rRotEq(r1);
-		d.at(0).subEq(d.at(1));
-		///*DBUG*/ uLog(d);
-	}
-    protected _encBlock(data: Uint8Array) {
-		const d64 = U64MutArray.mount(
-			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
-		);
-		let r = 0;
-		do {
-			//Even round
-			this.addRk(d64, r++);
-            ///*DBUG*/uLog64(d64, '+rk');
-
-			this.mixPerm(d64, 14, 16);
-			this.mixPerm(d64, 52, 57);
-			this.mixPerm(d64, 23, 40);
-			this.mixPerm(d64, 5, 37);
-            
-
-			//Odd Round
-			this.addRk(d64, r++);
-            ///*DBUG*/uLog64(d64, '+rk');
-
-			this.mixPerm(d64, 25, 33);
-			this.mixPerm(d64, 46, 12);
-			this.mixPerm(d64, 58, 22);
-			this.mixPerm(d64, 32, 32);
-		} while (r < this.qr);
-		this.addRk(d64, r);
-        ///*DBUG*/uLog64(d64, '+rk');
-	}
-    protected _decBlock(data: Uint8Array) {
-		const d64 = U64MutArray.mount(
-			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
-		);
-		let r = this.qr;
-		this.subRk(d64, r--);
-        ///*DBUG*/uLog64(d64, '-rk');
-		do {
-			//Odd round
-			this.permUnmix(d64, 32, 32);
-			this.permUnmix(d64, 22, 58);
-			this.permUnmix(d64, 12, 46);
-			this.permUnmix(d64, 33, 25);
-
-			this.subRk(d64, r--);
-			///*DBUG*/uLog64(d64, '-rk');
-
-
-			//Even round
-			this.permUnmix(d64, 37, 5);
-			this.permUnmix(d64, 40, 23);
-			this.permUnmix(d64, 57, 52);
-			this.permUnmix(d64, 16, 14);
-
-			this.subRk(d64, r--);
-            ///*DBUG*/uLog64(d64, '-rk');
-		} while (r >= 0);
-	}
-}
-
-class Threefish256Old extends AThreefish implements IBlockCrypt {
-	constructor(key: Uint8Array, tweak: Uint8Array) {
-		super(32, 72, key, tweak);
-	}
-
 	private swap(d: U64MutArray) {
 		//1=3, 3=1
 		t.set(d.at(1));
@@ -527,7 +325,6 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
 		d.at(0).subEq(d.at(1));
 		///*DBUG*/ uLog(d);
 	}
-
 	protected _encBlock(data: Uint8Array) {
 		const d64 = U64MutArray.mount(
 			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
@@ -536,7 +333,7 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
 		do {
 			//Even round
 			this.addRk(d64, r++);
-            ///*DBUG*/uLog64(d64, '+rk');
+			///*DBUG*/uLog64(d64, '+rk');
 
 			this.mixPerm(d64, 14, 16);
 			this.mixPerm(d64, 52, 57);
@@ -545,7 +342,7 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
 
 			//Odd Round
 			this.addRk(d64, r++);
-            ///*DBUG*/uLog64(d64, '+rk');
+			///*DBUG*/uLog64(d64, '+rk');
 
 			this.mixPerm(d64, 25, 33);
 			this.mixPerm(d64, 46, 12);
@@ -553,16 +350,15 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
 			this.mixPerm(d64, 32, 32);
 		} while (r < this.qr);
 		this.addRk(d64, r);
-        ///*DBUG*/uLog64(d64, '+rk');
+		///*DBUG*/uLog64(d64, '+rk');
 	}
-
 	protected _decBlock(data: Uint8Array) {
 		const d64 = U64MutArray.mount(
 			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
 		);
 		let r = this.qr;
 		this.subRk(d64, r--);
-        ///*DBUG*/uLog64(d64, '-rk');
+		///*DBUG*/uLog64(d64, '-rk');
 		do {
 			//Odd round
 			this.permUnmix(d64, 32, 32);
@@ -571,7 +367,7 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
 			this.permUnmix(d64, 33, 25);
 
 			this.subRk(d64, r--);
-            ///*DBUG*/uLog64(d64, '-rk');
+			///*DBUG*/uLog64(d64, '-rk');
 
 			//Even round
 			this.permUnmix(d64, 37, 5);
@@ -580,7 +376,7 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
 			this.permUnmix(d64, 16, 14);
 
 			this.subRk(d64, r--);
-            ///*DBUG*/uLog64(d64, '-rk');
+			///*DBUG*/uLog64(d64, '-rk');
 		} while (r >= 0);
 	}
 }
@@ -596,10 +392,10 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
  * with exclusive ORs. In that respect, it is similar to Salsa20, TEA,
  * and the SHA-3 candidates CubeHash and BLAKE.
  *
- * First Published: *2008*
- * Block size: *64 bytes*
- * Key Size: *64 bytes*
- * Nonce size: ~*16 bytes*†
+ * First Published: *2008*  
+ * Block size: *64 bytes*  
+ * Key Size: *64 bytes*  
+ * Nonce size: ~*16 bytes*†  
  * Rounds: *72*
  *
  * †Threefish accepts a *16 byte* "tweak" value, which could be considered
@@ -609,8 +405,13 @@ class Threefish256Old extends AThreefish implements IBlockCrypt {
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  */
 export class Threefish512 extends AThreefish implements IBlockCrypt {
-	constructor(key: Uint8Array, tweak: Uint8Array) {
-		super(64, 72, key, tweak);
+	constructor(key: Key | Uint8Array, tweak: Tweak | Uint8Array) {
+		const rounds = 72;
+		const blockSize = 64;
+		sLen('key', key).exactly(blockSize).throwNot();
+		if (key instanceof Uint8Array) key = Key.fromKey(key);
+		if (tweak instanceof Uint8Array) tweak = new Tweak(tweak);
+		super(rounds / 4, key, tweak);
 	}
 
 	private swap(d: U64MutArray) {
@@ -673,7 +474,6 @@ export class Threefish512 extends AThreefish implements IBlockCrypt {
 		d.at(0).subEq(d.at(1));
 		///*DBUG*/ uLog(d);
 	}
-
 	protected _encBlock(data: Uint8Array) {
 		const d64 = U64MutArray.mount(
 			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
@@ -702,7 +502,6 @@ export class Threefish512 extends AThreefish implements IBlockCrypt {
 		this.addRk(d64, r);
 		///*DBUG*/ uLog(d64);
 	}
-
 	protected _decBlock(data: Uint8Array) {
 		const d64 = U64MutArray.mount(
 			new Uint32Array(data.buffer, data.byteOffset, data.length / 4)
@@ -742,10 +541,10 @@ export class Threefish512 extends AThreefish implements IBlockCrypt {
  * with exclusive ORs. In that respect, it is similar to Salsa20, TEA,
  * and the SHA-3 candidates CubeHash and BLAKE.
  *
- * First Published: *2008*
- * Block size: *128 bytes*
- * Key Size: *128 bytes*
- * Nonce size: ~*16 bytes*†
+ * First Published: *2008*  
+ * Block size: *128 bytes*  
+ * Key Size: *128 bytes*  
+ * Nonce size: ~*16 bytes*†  
  * Rounds: *80*
  *
  * †Threefish accepts a *16 byte* "tweak" value, which could be considered
@@ -755,8 +554,14 @@ export class Threefish512 extends AThreefish implements IBlockCrypt {
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  */
 export class Threefish1024 extends AThreefish implements IBlockCrypt {
-	constructor(key: Uint8Array, tweak: Uint8Array) {
-		super(128, 80, key, tweak);
+	constructor(key: Key | Uint8Array, tweak: Tweak | Uint8Array) {
+		//super(128, 80, key, tweak);
+		const rounds = 80;
+		const blockSize = 128;
+		sLen('key', key).exactly(blockSize).throwNot();
+		if (key instanceof Uint8Array) key = Key.fromKey(key);
+		if (tweak instanceof Uint8Array) tweak = new Tweak(tweak);
+		super(rounds / 4, key, tweak);
 	}
 
 	private swap(d: U64MutArray) {
