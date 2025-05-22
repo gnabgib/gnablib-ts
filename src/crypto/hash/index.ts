@@ -30,7 +30,7 @@ export {
 	Sha512_224,
 	Sha512_256,
 } from './Sha2.js';
-export { Skein256, Skein512 } from './Skein.js';
+export { Skein256, Skein512, Skein1024 } from './Skein.js';
 export { Sha3_224, Sha3_256, Sha3_384, Sha3_512 } from './Keccak.js';
 //Streebog512 - WIP
 export { TupleHash128, TupleHash256 } from './Keccak.js';
