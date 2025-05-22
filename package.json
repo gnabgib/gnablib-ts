@@ -1,6 +1,6 @@
 {
 	"name": "gnablib",
-	"version": "0.7.25",
+	"version": "0.7.26",
 	"description": "A lean, zero dependency library to provide a useful base for your project.",
 	"type": "module",
 	"scripts": {
