@@ -430,3 +430,63 @@ export class SkeinMac1024 extends Skein1024Core {
 		super(128, key);
 	}
 }
+
+/**
+ * [Skein XOF](https://www.schneier.com/academic/skein/) 256
+ * 
+ * When outputSize<=32, this produces the same result as Skein256 (hash), 
+ * but it can also produce output up to 536870912 bytes.
+ *
+ * First Published: *2008*  
+ * Block size: *32 bytes*  
+ * Output size: *1-536870912 bytes*
+ *
+ * Specified in:
+ * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
+ */
+export class SkeinXof256 extends Skein256Core {
+    constructor(outputSize:number) {
+		sInt('outputSize', outputSize).atLeast(1).atMost(536870912).throwNot();
+		super(outputSize, zeroU8);
+	}
+}
+
+/**
+ * [Skein XOF](https://www.schneier.com/academic/skein/) 512
+ * 
+ * When outputSize<=64, this produces the same result as Skein512 (hash), 
+ * but it can also produce output up to 536870912 bytes.
+ *
+ * First Published: *2008*  
+ * Block size: *64 bytes*  
+ * Output size: *1-536870912 bytes*
+ *
+ * Specified in:
+ * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
+ */
+export class SkeinXof512 extends Skein512Core {
+    constructor(outputSize:number) {
+		sInt('outputSize', outputSize).atLeast(1).atMost(536870912).throwNot();
+		super(outputSize, zeroU8);
+	}
+}
+
+/**
+ * [Skein XOF](https://www.schneier.com/academic/skein/) 1024
+ * 
+ * When outputSize<=128, this produces the same result as Skein1024 (hash), 
+ * but it can also produce output up to 536870912 bytes.
+ *
+ * First Published: *2008*  
+ * Block size: *128 bytes*  
+ * Output size: *1-536870912 bytes*
+ *
+ * Specified in:
+ * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
+ */
+export class SkeinXof1024 extends Skein1024Core {
+    constructor(outputSize:number) {
+		sInt('outputSize', outputSize).atLeast(1).atMost(536870912).throwNot();
+		super(outputSize, zeroU8);
+	}
+}

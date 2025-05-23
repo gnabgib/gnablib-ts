@@ -245,6 +245,7 @@ Name|Capacity Ƃ|Optional parameters
 [KmacXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|digest size, key, customization
 [ParallelHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|block size, digest size, customization
 [Shake](https://en.wikipedia.org/wiki/SHAKE128)|16, 32|digest size
+[SkeinXOF](https://www.schneier.com/academic/skein/)|32, 64, 128|digest size
 [TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|digest size, customization
 [TurboSHAKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|16, 32|digest size, customization
 

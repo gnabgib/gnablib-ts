@@ -94,14 +94,6 @@ export class Tweak {
         return r;
     }
 
-	// /** Create a config block */
-	// static NewCfg(blockSize: number) {
-	// 	const r = new Tweak();
-	// 	//A config block is always a first and final block
-	// 	r.t8[15] = 4 |0xc0;
-	// 	r.t64.at(0).set(U64.fromInt(blockSize));
-	// 	return r;
-	// }
 	// /** Create a personalization block */
 	// static NewPrs() {
 	// 	const r = new Tweak();
