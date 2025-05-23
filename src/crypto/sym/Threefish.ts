@@ -25,10 +25,6 @@ export class Tweak {
 		//this.t64.at(2).set(this.t64.at(0)).xorEq(this.t64.at(1));
 	}
 	/** Whether this is the first block */
-	get isFirst() {
-		//62nd bit, or 7th bit of MSB
-		return (this.t8[15] & 0x40) == 0x40;
-	}
 	set isFirst(value: boolean) {
 		if (value) this.t8[15] |= 0x40;
 		else this.t8[15] &= ~0x40;
@@ -36,10 +32,6 @@ export class Tweak {
 	}
 
 	/** Whether this is the last block */
-	get isLast() {
-		//63nd bit, or 8th bit of MSB
-		return (this.t8[15] & 0x80) == 0x80;
-	}
 	set isLast(value: boolean) {
 		if (value) this.t8[15] |= 0x80;
 		else this.t8[15] &= ~0x80;
@@ -61,79 +53,85 @@ export class Tweak {
 		this._lock = false;
 	}
 
+    /** Convert into a cfg block (will reset counter) */
+    makeCfg(blockSize: number) {
+        this.t8.fill(0);
+        //A config block is always a first and final block
+        this.t8[15] = 4 |0xc0;
+        this.t64.at(0).set(U64.fromInt(blockSize));
+        this._lock = false;
+    }
+
 	/** Convert into a message block (will reset counter) */
 	makeMsg() {
-		this.t64.at(0).zero();
-		this.t64.at(1).zero();
+		this.t8.fill(0);
 		//last=0, first=1, type=48, bitpad=0, treelevel=0, position=0
 		this.t8[15] = 48 | 0x40;
 		this._lock = false;
 	}
 
-	/** Convert into a key block (will reset counter) */
-	makeKey() {
-		this.t64.at(0).zero();
-		this.t64.at(1).zero();
-		//last=0, first=0, type=0, bitpad=0, treelevel=0, position=0
-		this._lock = false;
-	}
+	// /** Convert into a key block (will reset counter) */
+	// makeKey() {
+	// 	this.t8.fill(0);
+	// 	//last=0, first=0, type=0, bitpad=0, treelevel=0, position=0
+	// 	this._lock = false;
+	// }
 
 	/** Convert into an output block */
 	makeOut() {
-		this.t64.at(0).zero();
-		this.t64.at(1).zero();
+		this.t8.fill(0);
 		this.t8[0] = 8; //Not sure why
 		this.t8[15] = 63 | 0xc0;
 		//last=1, first=1, type=63, bitpad=0, treelevel=0, position=0
 		this._lock = false;
 	}
 
-	/** Create a config block */
-	static NewCfg(blockSize: number) {
-		const r = new Tweak();
-		r.t8[15] = 4;
-		//A config block is always a first and final block
-		r.t8[15] |= 0xc0;
+    /** Create a Key block (used in MAC) */
+    static NewKey()  {
+        const r=new Tweak();
+        //Identifier is 0 (nop), but we'll set first block
+        r.t8[15] = 0x40;
+        return r;
+    }
 
-		r.t64.at(0).set(U64.fromInt(blockSize));
-		return r;
-	}
-	/** Create a personalization block */
-	static NewPrs() {
-		const r = new Tweak();
-		r.t8[15] = 8;
-		return r;
-	}
-	/** Create a public key block */
-	static NewPk() {
-		const r = new Tweak();
-		r.t8[15] = 12;
-		return r;
-	}
-	/** Create a key identifier block */
-	static NewKdf() {
-		const r = new Tweak();
-		r.t8[15] = 16;
-		return r;
-	}
-	/** Create a nonce block */
-	static NewNon() {
-		const r = new Tweak();
-		r.t8[15] = 20;
-		return r;
-	}
-	/** Create a message block */
-	static NewMsg() {
-		const r = new Tweak();
-		r.t8[15] = 48;
-		return r;
-	}
-	/** Create an output block */
-	static NewOut() {
-		const r = new Tweak();
-		r.t8[15] = 63;
-		return r;
-	}
+	// /** Create a config block */
+	// static NewCfg(blockSize: number) {
+	// 	const r = new Tweak();
+	// 	//A config block is always a first and final block
+	// 	r.t8[15] = 4 |0xc0;
+	// 	r.t64.at(0).set(U64.fromInt(blockSize));
+	// 	return r;
+	// }
+	// /** Create a personalization block */
+	// static NewPrs() {
+	// 	const r = new Tweak();
+	// 	r.t8[15] = 8;
+	// 	return r;
+	// }
+	// /** Create a public key block */
+	// static NewPk() {
+	// 	const r = new Tweak();
+	// 	r.t8[15] = 12;
+	// 	return r;
+	// }
+	// /** Create a key identifier block */
+	// static NewKdf() {
+	// 	const r = new Tweak();
+	// 	r.t8[15] = 16;
+	// 	return r;
+	// }
+	// /** Create a nonce block */
+	// static NewNon() {
+	// 	const r = new Tweak();
+	// 	r.t8[15] = 20;
+	// 	return r;
+	// }
+	// /** Create a message block */
+	// static NewMsg() {
+	// 	const r = new Tweak();
+	// 	r.t8[15] = 48;
+	// 	return r;
+	// }
 }
 
 export class Key {
@@ -149,9 +147,6 @@ export class Key {
 		return this.k8.length - 8;
 	}
 
-	get lock() {
-		return this._lock;
-	}
 	set lock(value: boolean) {
 		if (value && !this._lock) {
 			//Calc parity

@@ -227,10 +227,11 @@ Also known as an authentication tag, a short piece of information to authenticat
 Name|Tag Ƃ
 -|-
 [CMAC](https://datatracker.ietf.org/doc/rfc4493/)|16 (AES)
-[HMAC](https://en.wikipedia.org/wiki/HMAC)|Depends on hash (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Whirlpool)
+[HMAC](https://en.wikipedia.org/wiki/HMAC)|Depends on hash (Blake, Blake2, cShake, Keccak, MD4, MD5, RipeMD, Sha1, Sha2, Sha3, Shake, Skein, Whirlpool)
 [HopMAC](https://www.ietf.org/archive/id/draft-irtf-cfrg-kangarootwelve-10.html#name-security-considerations)|16 (Kangaroo Twelve)
 [KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32 (Keccak)
 [Poly1305](https://datatracker.ietf.org/doc/html/rfc7539#autoid-14)|16
+[SkeinMAC](https://www.schneier.com/academic/skein/)|32, 64, 128
 
 #### EXtendable-Output Function (XOF)
 
