@@ -309,7 +309,8 @@
 		"Skein512",
 		"Skein1024",
 		"SkeinMAC",
-		"SkeinXOF"
+		"SkeinXOF",
+		"SkeinKDF"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

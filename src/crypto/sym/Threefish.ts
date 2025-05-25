@@ -62,6 +62,14 @@ export class Tweak {
         this._lock = false;
     }
 
+    /** Convert to a KDF block (key-id, or.. salt?) */
+    makeKdf() {
+        this.t8.fill(0);
+		//last=0, first=1, type=16, bitpad=0, treelevel=0, position=0
+		this.t8[15] = 16 | 0x40;
+        this._lock=false;
+    }
+
 	/** Convert into a message block (will reset counter) */
 	makeMsg() {
 		this.t8.fill(0);

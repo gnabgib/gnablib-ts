@@ -219,6 +219,7 @@ A cryptographic algorithm that derives one or more secret keys from a secret val
 
 - [HKDF](https://en.wikipedia.org/wiki/HKDF)
 - [PBKDF2](https://www.rfc-editor.org/rfc/rfc8018#section-5.2) pbkdf2_hmac_sha1, pbkdf2_hmac_sha256, pbkdf2_hmac_sha512
+- [SkeinKDF](https://www.schneier.com/academic/skein/)
 
 #### Message Authentication Code (MAC)
 

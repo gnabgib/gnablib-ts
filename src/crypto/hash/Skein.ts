@@ -41,7 +41,8 @@ class SkeinCore {
 		blockSize: number,
 		digestSize: number,
 		ctor: threefishConstructor,
-		key: Uint8Array
+		key: Uint8Array,
+        kdf: Uint8Array
 	) {
 		this.blockSize = blockSize;
 		this.size = digestSize;
@@ -78,10 +79,16 @@ class SkeinCore {
 
 		///*DBUG*/uLog64(this._tweak.t64,"tweak")
 		this.ubi();
+        this._bPos = 0;
+
+        if (kdf.length>0) {
+            this._tweak.makeKdf();
+            this.write(kdf);
+            this.finalize();
+        }
 
 		//We backup this hVal so that we can reset the hash
 		this._cfgBackup = this._hVal.k64.clone();
-		this._bPos = 0;
 		this._tweak.makeMsg();
 		this._hasData = false;
 		///*DBUG*/uLog64(this._hVal.k64,"hVal")
@@ -152,7 +159,8 @@ class SkeinCore {
 			this.blockSize,
 			this.size,
 			this._tfConstructor,
-			zeroU8
+			zeroU8,
+            zeroU8
 		);
 		r._hasData = this._hasData;
 		r._block.set(this._block);
@@ -223,23 +231,24 @@ class SkeinCore {
 			this.blockSize,
 			this.size,
 			this._tfConstructor,
-			zeroU8
+			zeroU8,
+            zeroU8
 		);
 	}
 }
 class Skein256Core extends SkeinCore implements IHash {
 	constructor(digestSize: number, key: Uint8Array) {
-		super(32, digestSize, Threefish256, key);
+		super(32, digestSize, Threefish256, key, zeroU8);
 	}
 }
 class Skein512Core extends SkeinCore implements IHash {
 	constructor(digestSize: number, key: Uint8Array) {
-		super(64, digestSize, Threefish512, key);
+		super(64, digestSize, Threefish512, key, zeroU8);
 	}
 }
 class Skein1024Core extends SkeinCore implements IHash {
 	constructor(digestSize: number, key: Uint8Array) {
-		super(128, digestSize, Threefish1024, key);
+		super(128, digestSize, Threefish1024, key, zeroU8);
 	}
 }
 
@@ -488,5 +497,53 @@ export class SkeinXof1024 extends Skein1024Core {
     constructor(outputSize:number) {
 		sInt('outputSize', outputSize).atLeast(1).atMost(536870912).throwNot();
 		super(outputSize, zeroU8);
+	}
+}
+
+/**
+ * [Skein KDF](https://www.schneier.com/academic/skein/) 256
+ * 
+ * First Published: *2008*  
+ * Block size: *32 bytes*  
+ * Output size: *1-536870912 bytes*
+ *
+ * Specified in:
+ * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf) section 4.7
+ */
+export class SkeinKdf256 extends SkeinCore implements IHash {
+    constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
+		super(32, len, Threefish256, ikm, salt);
+	}
+}
+
+/**
+ * [Skein KDF](https://www.schneier.com/academic/skein/) 512
+ * 
+ * First Published: *2008*  
+ * Block size: *64 bytes*  
+ * Output size: *1-536870912 bytes*
+ *
+ * Specified in:
+ * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf) section 4.7
+ */
+export class SkeinKdf512 extends SkeinCore implements IHash {
+    constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
+		super(64, len, Threefish512, ikm, salt);
+	}
+}
+
+/**
+ * [Skein KDF](https://www.schneier.com/academic/skein/) 1024
+ * 
+ * First Published: *2008*  
+ * Block size: *128 bytes*  
+ * Output size: *1-536870912 bytes*
+ *
+ * Specified in:
+ * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf) section 4.7
+ */
+export class SkeinKdf1024 extends SkeinCore implements IHash {
+    constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
+		super(128, len, Threefish1024, ikm, salt);
 	}
 }
