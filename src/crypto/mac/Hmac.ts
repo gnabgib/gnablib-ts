@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
 
@@ -126,5 +126,10 @@ export class Hmac implements IHash {
 	 */
 	get blockSize(): number {
 		return this._iHash.blockSize;
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'HMAC';
 	}
 }

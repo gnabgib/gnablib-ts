@@ -1,4 +1,4 @@
-/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -83,7 +83,10 @@ class Blake2_32bit implements IHash {
 	 */
 	private _bPos = 0;
 
-	constructor(key: Uint8Array, private readonly params: Uint8Array) {
+	constructor(
+		key: Uint8Array,
+		private readonly params: Uint8Array,
+	) {
 		sLen('key', key).atMost(32).throwNot();
 		this.#key = key;
 		this.reset();
@@ -135,7 +138,7 @@ class Blake2_32bit implements IHash {
 		c: number,
 		d: number,
 		v: Uint32Array,
-		sigma: number[]
+		sigma: number[],
 	): void {
 		//Also referred to as "g" in docs
 		const a = i & 3, //%4
@@ -343,7 +346,10 @@ class Blake2_64bit implements IHash {
 	 */
 	private _bPos = 0;
 
-	constructor(key: Uint8Array, private readonly params: Uint8Array) {
+	constructor(
+		key: Uint8Array,
+		private readonly params: Uint8Array,
+	) {
 		sLen('key', key).atMost(64).throwNot();
 		this.#key = key;
 		this.p32 = new Uint32Array(params.buffer);
@@ -392,7 +398,7 @@ class Blake2_64bit implements IHash {
 		c: number,
 		d: number,
 		v: U64MutArray,
-		sigma: number[]
+		sigma: number[],
 	): void {
 		//Also referred to as "g" in docs
 		const a = i & 3, //%4
@@ -537,64 +543,64 @@ class Blake2_64bit implements IHash {
 			.set(
 				U64.fromI32s(
 					iv[1] ^ U32.fromBytesLE(this.params, 0),
-					iv[0] ^ U32.fromBytesLE(this.params, 4)
-				)
+					iv[0] ^ U32.fromBytesLE(this.params, 4),
+				),
 			);
 		this.#state
 			.at(1)
 			.set(
 				U64.fromI32s(
 					iv[3] ^ U32.fromBytesLE(this.params, 8),
-					iv[2] ^ U32.fromBytesLE(this.params, 12)
-				)
+					iv[2] ^ U32.fromBytesLE(this.params, 12),
+				),
 			);
 		this.#state
 			.at(2)
 			.set(
 				U64.fromI32s(
 					iv[5] ^ U32.fromBytesLE(this.params, 16),
-					iv[4] ^ U32.fromBytesLE(this.params, 20)
-				)
+					iv[4] ^ U32.fromBytesLE(this.params, 20),
+				),
 			);
 		this.#state
 			.at(3)
 			.set(
 				U64.fromI32s(
 					iv[7] ^ U32.fromBytesLE(this.params, 24),
-					iv[6] ^ U32.fromBytesLE(this.params, 28)
-				)
+					iv[6] ^ U32.fromBytesLE(this.params, 28),
+				),
 			);
 		this.#state
 			.at(4)
 			.set(
 				U64.fromI32s(
 					iv[9] ^ U32.fromBytesLE(this.params, 32),
-					iv[8] ^ U32.fromBytesLE(this.params, 36)
-				)
+					iv[8] ^ U32.fromBytesLE(this.params, 36),
+				),
 			);
 		this.#state
 			.at(5)
 			.set(
 				U64.fromI32s(
 					iv[11] ^ U32.fromBytesLE(this.params, 40),
-					iv[10] ^ U32.fromBytesLE(this.params, 44)
-				)
+					iv[10] ^ U32.fromBytesLE(this.params, 44),
+				),
 			);
 		this.#state
 			.at(6)
 			.set(
 				U64.fromI32s(
 					iv[13] ^ U32.fromBytesLE(this.params, 48),
-					iv[12] ^ U32.fromBytesLE(this.params, 52)
-				)
+					iv[12] ^ U32.fromBytesLE(this.params, 52),
+				),
 			);
 		this.#state
 			.at(7)
 			.set(
 				U64.fromI32s(
 					iv[15] ^ U32.fromBytesLE(this.params, 56),
-					iv[14] ^ U32.fromBytesLE(this.params, 60)
-				)
+					iv[14] ^ U32.fromBytesLE(this.params, 60),
+				),
 			);
 
 		//Reset ingest count
@@ -643,7 +649,7 @@ export class Blake2s extends Blake2_32bit {
 		/** 8 bytes or empty, defaults to all zeros */
 		salt?: Uint8Array,
 		/** 8 bytes or empty, defaults to all zeros */
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize32);
@@ -686,7 +692,7 @@ export class Blake2s extends Blake2_32bit {
 		digestSizeBytes: number,
 		key?: Uint8Array,
 		salt?: Uint8Array,
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	): Blake2s {
 		return new Blake2s(
 			digestSizeBytes,
@@ -698,8 +704,13 @@ export class Blake2s extends Blake2_32bit {
 			0,
 			key,
 			salt,
-			personalization
+			personalization,
 		);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE2s';
 	}
 }
 
@@ -716,7 +727,7 @@ export class Blake2b extends Blake2_64bit {
 		/** 16 bytes or empty, defaults to all zeros */
 		salt?: Uint8Array,
 		/** 16 bytes or empty, defaults to all zeros */
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	) {
 		key = key ?? new Uint8Array(0);
 		const p = new Uint8Array(paramSize64);
@@ -755,7 +766,7 @@ export class Blake2b extends Blake2_64bit {
 			throw new LengthError(
 				saltSize64,
 				'personalization',
-				personalization.length
+				personalization.length,
 			);
 		} else {
 			bw.write(personalization);
@@ -766,7 +777,7 @@ export class Blake2b extends Blake2_64bit {
 		digestSizeBytes: number,
 		key?: Uint8Array,
 		salt?: Uint8Array,
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	): Blake2b {
 		return new Blake2b(
 			digestSizeBytes,
@@ -778,8 +789,13 @@ export class Blake2b extends Blake2_64bit {
 			0,
 			key,
 			salt,
-			personalization
+			personalization,
 		);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE2b';
 	}
 }
 
@@ -793,9 +809,14 @@ export class Blake2s_224 extends Blake2s {
 	constructor(
 		key?: Uint8Array,
 		salt?: Uint8Array,
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	) {
 		super(28, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE2s-224';
 	}
 }
 
@@ -809,9 +830,14 @@ export class Blake2s_256 extends Blake2s {
 	constructor(
 		key?: Uint8Array,
 		salt?: Uint8Array,
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	) {
 		super(32, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE2s-256';
 	}
 }
 
@@ -825,9 +851,14 @@ export class Blake2b_256 extends Blake2b {
 	constructor(
 		key?: Uint8Array,
 		salt?: Uint8Array,
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	) {
 		super(32, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE2b-256';
 	}
 }
 
@@ -841,9 +872,14 @@ export class Blake2b_384 extends Blake2b {
 	constructor(
 		key?: Uint8Array,
 		salt?: Uint8Array,
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	) {
 		super(48, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE2b-384';
 	}
 }
 
@@ -857,8 +893,13 @@ export class Blake2b_512 extends Blake2b {
 	constructor(
 		key?: Uint8Array,
 		salt?: Uint8Array,
-		personalization?: Uint8Array
+		personalization?: Uint8Array,
 	) {
 		super(64, 1, 1, 0, U64.zero, 0, 0, key, salt, personalization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE2b-512';
 	}
 }

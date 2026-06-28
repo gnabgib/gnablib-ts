@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 import { hex } from '../../../src/codec';
 import { SkeinKdf512 } from '../../../src/crypto/hash/Skein';
 
-const tsts = suite('SkeinKDF 256');
+const tsts = suite('SkeinKDF 512');
 
 const tests:[number,string,string,string,string][]=[
     //Todo find a better source than another impl

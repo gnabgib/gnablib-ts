@@ -1,4 +1,4 @@
-/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
 import { utf8 } from '../../codec/Utf8.js';
@@ -114,7 +114,7 @@ class KeccakCore implements IHash {
 		suffix: number,
 		digestSizeBytes: number,
 		capacityBytes = 0,
-		roundStart = 0
+		roundStart = 0,
 	) {
 		sNum('capacityBytes', capacityBytes)
 			.unsigned()
@@ -277,7 +277,7 @@ class KeccakCore implements IHash {
 			this.suffix,
 			this.size,
 			(maxBlockSizeBytes - this.blockSize) / 2,
-			this.#roundStart
+			this.#roundStart,
 		);
 	}
 
@@ -290,7 +290,7 @@ class KeccakCore implements IHash {
 			this.suffix,
 			this.size,
 			(maxBlockSizeBytes - this.blockSize) / 2,
-			this.#roundStart
+			this.#roundStart,
 		);
 		ret.state.set(this.state);
 		ret.block.set(this.block);
@@ -313,6 +313,11 @@ export class Keccak extends KeccakCore {
 	constructor(digestSize: number, capacityBytes = 0) {
 		super(keccak_suffix, digestSize, capacityBytes);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Keccak';
+	}
 }
 export class Keccak224 extends KeccakCore {
 	/**
@@ -321,6 +326,11 @@ export class Keccak224 extends KeccakCore {
 	 */
 	constructor(capacityBytes = 0) {
 		super(keccak_suffix, 28 /*224/8*/, capacityBytes);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Keccak[224]';
 	}
 }
 export class Keccak256 extends KeccakCore {
@@ -331,6 +341,11 @@ export class Keccak256 extends KeccakCore {
 	constructor(capacityBytes = 0) {
 		super(keccak_suffix, 32 /*256/8*/, capacityBytes);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Keccak[256]';
+	}
 }
 export class Keccak384 extends KeccakCore {
 	/**
@@ -339,6 +354,11 @@ export class Keccak384 extends KeccakCore {
 	 */
 	constructor(capacityBytes = 0) {
 		super(keccak_suffix, 48 /*384/8*/, capacityBytes);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Keccak[384]';
 	}
 }
 export class Keccak512 extends KeccakCore {
@@ -349,6 +369,11 @@ export class Keccak512 extends KeccakCore {
 	constructor(capacityBytes = 0) {
 		super(keccak_suffix, 64 /*512/8*/, capacityBytes);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Keccak[512]';
+	}
 }
 
 export class Sha3_224 extends KeccakCore {
@@ -358,6 +383,11 @@ export class Sha3_224 extends KeccakCore {
 	constructor() {
 		super(sha3_suffix, 28 /*224/8*/);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA3-224';
+	}
 }
 export class Sha3_256 extends KeccakCore {
 	/**
@@ -365,6 +395,11 @@ export class Sha3_256 extends KeccakCore {
 	 */
 	constructor() {
 		super(sha3_suffix, 32 /*256/8*/);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA3-256';
 	}
 }
 export class Sha3_384 extends KeccakCore {
@@ -374,6 +409,11 @@ export class Sha3_384 extends KeccakCore {
 	constructor() {
 		super(sha3_suffix, 48 /*384/8*/);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA3-384';
+	}
 }
 export class Sha3_512 extends KeccakCore {
 	/**
@@ -381,6 +421,11 @@ export class Sha3_512 extends KeccakCore {
 	 */
 	constructor() {
 		super(sha3_suffix, 64 /*512/8*/);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA3-512';
 	}
 }
 
@@ -392,6 +437,11 @@ export class Shake128 extends KeccakCore {
 	constructor(digestSize: number) {
 		super(shake_suffix, digestSize, 16 /*128/8*/);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHAKE128';
+	}
 }
 export class Shake256 extends KeccakCore {
 	/**
@@ -400,6 +450,11 @@ export class Shake256 extends KeccakCore {
 	 */
 	constructor(digestSize: number) {
 		super(shake_suffix, digestSize, 32 /*256/8*/);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHAKE256';
 	}
 }
 
@@ -439,8 +494,8 @@ function encodeString(x?: string | Uint8Array): Uint8Array {
 		x == undefined
 			? new Uint8Array(0)
 			: x instanceof Uint8Array
-			? x
-			: utf8.toBytes(x);
+				? x
+				: utf8.toBytes(x);
 	const l = leftEncode(s.length << 3);
 	const ret = new Uint8Array(l.length + s.length);
 	ret.set(l);
@@ -479,7 +534,7 @@ class CShake implements IHash {
 		digestSize: number,
 		/** function name */
 		protected functionName = '',
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		if (
 			functionName.length == 0 &&
@@ -495,14 +550,14 @@ class CShake implements IHash {
 				customization == undefined
 					? new Uint8Array(0)
 					: customization instanceof Uint8Array
-					? customization
-					: utf8.toBytes(customization);
+						? customization
+						: utf8.toBytes(customization);
 			this._keccak.write(
 				bytePad(
 					this.pad,
 					encodeString(this.functionName),
-					encodeString(this.customization)
-				)
+					encodeString(this.customization),
+				),
 			);
 		}
 	}
@@ -535,8 +590,8 @@ class CShake implements IHash {
 				bytePad(
 					this.pad,
 					encodeString(this.functionName),
-					encodeString(this.customization)
-				)
+					encodeString(this.customization),
+				),
 			);
 		}
 	}
@@ -549,7 +604,7 @@ class CShake implements IHash {
 			this.pad,
 			this.size,
 			this.functionName,
-			this.customization
+			this.customization,
 		);
 	}
 	/**
@@ -562,7 +617,7 @@ class CShake implements IHash {
 			this.pad,
 			this.size,
 			this.functionName,
-			this.customization
+			this.customization,
 		);
 		this._cloneHelp(ret);
 		return ret;
@@ -593,9 +648,14 @@ export class CShake128 extends CShake {
 	constructor(
 		digestSize: number,
 		functionName = '',
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(cap128, pad128, digestSize, functionName, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'cSHAKE128';
 	}
 }
 export class CShake256 extends CShake {
@@ -608,6 +668,11 @@ export class CShake256 extends CShake {
 	constructor(digestSize: number, functionName = '', customization = '') {
 		super(cap256, pad256, digestSize, functionName, customization);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'cSHAKE256';
+	}
 }
 
 class KmacCore extends CShake {
@@ -619,7 +684,7 @@ class KmacCore extends CShake {
 		pad: number,
 		digestSize: number,
 		key?: Uint8Array | string,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(cap, pad, digestSize, kMacFn, customization);
 		this.write(bytePad(pad, encodeString(key)));
@@ -643,7 +708,7 @@ class KmacCore extends CShake {
 			this.pad,
 			this.size,
 			this.functionName,
-			this.customization
+			this.customization,
 		);
 		super._cloneHelp(ret);
 		return ret;
@@ -660,9 +725,14 @@ export class Kmac128 extends KmacCore {
 	constructor(
 		digestSize = 32,
 		key?: Uint8Array | string,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(true, cap128, pad128, digestSize, key, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'KMAC128';
 	}
 }
 export class Kmac256 extends KmacCore {
@@ -676,9 +746,14 @@ export class Kmac256 extends KmacCore {
 	constructor(
 		digestSize = 64,
 		key?: Uint8Array | string,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(true, cap256, pad256, digestSize, key, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'KMAC256';
 	}
 }
 export class KmacXof128 extends KmacCore {
@@ -691,9 +766,14 @@ export class KmacXof128 extends KmacCore {
 	constructor(
 		digestSize: number,
 		key?: Uint8Array | string,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(false, cap128, pad128, digestSize, key, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'KMACXOF128';
 	}
 }
 export class KmacXof256 extends KmacCore {
@@ -706,9 +786,14 @@ export class KmacXof256 extends KmacCore {
 	constructor(
 		digestSize: number,
 		key?: Uint8Array | string,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(false, cap256, pad256, digestSize, key, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'KMACXOF256';
 	}
 }
 
@@ -720,7 +805,7 @@ class TupleHashCore extends CShake {
 		cap: number,
 		pad: number,
 		digestSize: number,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(cap, pad, digestSize, tupleHashFn, customization);
 	}
@@ -750,7 +835,7 @@ class TupleHashCore extends CShake {
 			this.cap,
 			this.pad,
 			this.size,
-			this.customization
+			this.customization,
 		);
 		super._cloneHelp(ret);
 		return ret;
@@ -765,6 +850,11 @@ export class TupleHash128 extends TupleHashCore {
 	constructor(digestSize = 32, customization?: Uint8Array | string) {
 		super(true, cap128, pad128, digestSize, customization);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'TupleHash128';
+	}
 }
 export class TupleHash256 extends TupleHashCore {
 	/**
@@ -774,6 +864,11 @@ export class TupleHash256 extends TupleHashCore {
 	 */
 	constructor(digestSize = 64, customization?: Uint8Array | string) {
 		super(true, cap256, pad256, digestSize, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'TupleHash256';
 	}
 }
 export class TupleHashXof128 extends TupleHashCore {
@@ -785,6 +880,11 @@ export class TupleHashXof128 extends TupleHashCore {
 	constructor(digestSize: number, customization?: Uint8Array | string) {
 		super(false, cap128, pad128, digestSize, customization);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'TupleHashXOF128';
+	}
 }
 export class TupleHashXof256 extends TupleHashCore {
 	/**
@@ -794,6 +894,11 @@ export class TupleHashXof256 extends TupleHashCore {
 	 */
 	constructor(digestSize: number, customization?: Uint8Array | string) {
 		super(false, cap256, pad256, digestSize, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'TupleHashXOF256';
 	}
 }
 
@@ -811,7 +916,7 @@ class ParallelHashCore extends CShake {
 		pad: number,
 		blockSize: number,
 		digestSize: number,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(cap, pad, digestSize, parallelHashFn, customization);
 		this.#outBlock = new Uint8Array(blockSize);
@@ -839,7 +944,7 @@ class ParallelHashCore extends CShake {
 			}
 			this.#outBlock.set(
 				data.subarray(dPos, dPos + this.#outBlock.length),
-				this._obPos
+				this._obPos,
 			);
 			this._obPos += space;
 
@@ -892,7 +997,7 @@ class ParallelHashCore extends CShake {
 			this.pad,
 			this.#outBlock.length,
 			this.size,
-			this.customization
+			this.customization,
 		);
 		this._cloneHelp(ret);
 		return ret;
@@ -915,9 +1020,14 @@ export class ParallelHash128 extends ParallelHashCore {
 	constructor(
 		blockSize: number,
 		digestSize = 32,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(true, cap128, pad128, blockSize, digestSize, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'ParallelHash128';
 	}
 }
 export class ParallelHash256 extends ParallelHashCore {
@@ -930,9 +1040,14 @@ export class ParallelHash256 extends ParallelHashCore {
 	constructor(
 		blockSize: number,
 		digestSize = 64,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(true, cap256, pad256, blockSize, digestSize, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'ParallelHash256';
 	}
 }
 export class ParallelHashXof128 extends ParallelHashCore {
@@ -945,9 +1060,14 @@ export class ParallelHashXof128 extends ParallelHashCore {
 	constructor(
 		blockSize: number,
 		digestSize: number,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(false, cap128, pad128, blockSize, digestSize, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'ParallelHashXOF128';
 	}
 }
 export class ParallelHashXof256 extends ParallelHashCore {
@@ -960,9 +1080,14 @@ export class ParallelHashXof256 extends ParallelHashCore {
 	constructor(
 		blockSize: number,
 		digestSize: number,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(false, cap256, pad256, blockSize, digestSize, customization);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'ParallelHashXOF256';
 	}
 }
 
@@ -977,6 +1102,11 @@ export class TurboShake128 extends KeccakCore {
 		super(domainSep, digestSize, 16 /*128/8*/, k12RoundStart);
 		//console.log(`${this.blockSize}`);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'TurboSHAKE128';
+	}
 }
 export class TurboShake256 extends KeccakCore {
 	//https://eprint.iacr.org/2023/342.pdf
@@ -988,6 +1118,11 @@ export class TurboShake256 extends KeccakCore {
 	constructor(digestSize: number, domainSep = 0x1f) {
 		super(domainSep, digestSize, 32 /*128/8*/, k12RoundStart);
 		//console.log(`${this.blockSize}`);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'TurboSHAKE256';
 	}
 }
 
@@ -1023,8 +1158,8 @@ export class KangarooTwelve extends KeccakCore {
 			customization == undefined
 				? new Uint8Array(0)
 				: customization instanceof Uint8Array
-				? customization
-				: utf8.toBytes(customization);
+					? customization
+					: utf8.toBytes(customization);
 	}
 
 	/**
@@ -1091,6 +1226,11 @@ export class KangarooTwelve extends KeccakCore {
 		ret._chunks = this._chunks; //It's ok that these are sharing memory
 		ret._ingestBlockBytes = this._ingestBlockBytes;
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'KangarooTwelve';
+	}
 }
 
 // MarsupilamiFourteen seems to have been deprecated
@@ -1116,7 +1256,7 @@ export class HopMac extends KangarooTwelve {
 	constructor(
 		digestSize: number,
 		key: Uint8Array | string,
-		customization?: Uint8Array | string
+		customization?: Uint8Array | string,
 	) {
 		super(32, customization);
 		this._outerSize = digestSize;
@@ -1150,5 +1290,10 @@ export class HopMac extends KangarooTwelve {
 		const ret = new HopMac(this._outerSize, this.#key, this.customization);
 		this._cloneHelp(ret);
 		return ret;
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'HopMac';
 	}
 }

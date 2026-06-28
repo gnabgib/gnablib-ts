@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
 import { U64, U64Mut } from '../../primitive/number/U64.js';
@@ -271,6 +271,11 @@ export class Poly1305 implements IHash {
 		const key = new Uint8Array(c.blockSize);
 		c.encryptInto(key, key);
 		return new Poly1305(key.subarray(0, 32));
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Poly1305';
 	}
 }
 

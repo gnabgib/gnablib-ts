@@ -1,4 +1,4 @@
-/*! Copyright 2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2025-2026 the gnablib contributors MPL-1.1 */
 
 import { U64, U64MutArray } from '../../primitive/number/U64.js';
 // import { uLog64 } from '../../runtime/goLog.js';
@@ -42,7 +42,7 @@ class SkeinCore {
 		digestSize: number,
 		ctor: threefishConstructor,
 		key: Uint8Array,
-        kdf: Uint8Array
+		kdf: Uint8Array,
 	) {
 		this.blockSize = blockSize;
 		this.size = digestSize;
@@ -79,13 +79,13 @@ class SkeinCore {
 
 		///*DBUG*/uLog64(this._tweak.t64,"tweak")
 		this.ubi();
-        this._bPos = 0;
+		this._bPos = 0;
 
-        if (kdf.length>0) {
-            this._tweak.makeKdf();
-            this.write(kdf);
-            this.finalize();
-        }
+		if (kdf.length > 0) {
+			this._tweak.makeKdf();
+			this.write(kdf);
+			this.finalize();
+		}
 
 		//We backup this hVal so that we can reset the hash
 		this._cfgBackup = this._hVal.k64.clone();
@@ -160,7 +160,7 @@ class SkeinCore {
 			this.size,
 			this._tfConstructor,
 			zeroU8,
-            zeroU8
+			zeroU8,
 		);
 		r._hasData = this._hasData;
 		r._block.set(this._block);
@@ -232,7 +232,7 @@ class SkeinCore {
 			this.size,
 			this._tfConstructor,
 			zeroU8,
-            zeroU8
+			zeroU8,
 		);
 	}
 }
@@ -259,8 +259,8 @@ class Skein1024Core extends SkeinCore implements IHash {
  * Skein is a cryptographic hash function and one of five finalists in the NIST
  * hash function competition (to become SHA-3).  It ultimately lost to Keccak.
  *
- * First Published: *2008*  
- * Block size: *32 bytes*  
+ * First Published: *2008*
+ * Block size: *32 bytes*
  * Output size: *16/20/28/32 bytes* or *1-32 bytes* (32 default)
  *
  * Specified in:
@@ -292,6 +292,11 @@ export class Skein256 extends Skein256Core {
 	static New256() {
 		return new Skein256(32);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Skein-256';
+	}
 }
 
 /**
@@ -301,8 +306,8 @@ export class Skein256 extends Skein256Core {
  * Skein is a cryptographic hash function and one of five finalists in the NIST
  * hash function competition (to become SHA-3).  It ultimately lost to Keccak.
  *
- * First Published: *2008*  
- * Block size: *64 bytes*  
+ * First Published: *2008*
+ * Block size: *64 bytes*
  * Output size: *16/20/28/32/48/64 bytes* or *1-64 bytes* (64 default)
  *
  * Specified in:
@@ -344,6 +349,11 @@ export class Skein512 extends Skein512Core {
 	static New512() {
 		return new Skein512(64);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Skein-512';
+	}
 }
 
 /**
@@ -353,8 +363,8 @@ export class Skein512 extends Skein512Core {
  * Skein is a cryptographic hash function and one of five finalists in the NIST
  * hash function competition (to become SHA-3).  It ultimately lost to Keccak.
  *
- * First Published: *2008*  
- * Block size: *128 bytes*  
+ * First Published: *2008*
+ * Block size: *128 bytes*
  * Output size: *48/64/128 bytes* or *1-128 bytes* (128 default)
  *
  * Specified in:
@@ -381,169 +391,219 @@ export class Skein1024 extends Skein1024Core {
 	static New1024() {
 		return new Skein1024(128);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Skein-1024';
+	}
 }
 
 /**
  * [Skein MAC](https://www.schneier.com/academic/skein/) 256
- * 
- * First Published: *2008*  
- * Block size: *32 bytes*  
+ *
+ * First Published: *2008*
+ * Block size: *32 bytes*
  * Output size: *32 bytes*
- * 
+ *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  * section 2.6
  */
 export class SkeinMac256 extends Skein256Core {
-    /** Build with a key 1-n bytes */
+	/** Build with a key 1-n bytes */
 	constructor(key: Uint8Array) {
-        sLen('key',key).atLeast(1).throwNot();
+		sLen('key', key).atLeast(1).throwNot();
 		super(32, key);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinMac-256';
 	}
 }
 
 /**
  * [Skein MAC](https://www.schneier.com/academic/skein/) 512
- * 
- * First Published: *2008*  
- * Block size: *64 bytes*  
+ *
+ * First Published: *2008*
+ * Block size: *64 bytes*
  * Output size: *64 bytes*
- * 
+ *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  * section 2.6
  */
 export class SkeinMac512 extends Skein512Core {
-    /** Build with a key 1-n bytes */
+	/** Build with a key 1-n bytes */
 	constructor(key: Uint8Array) {
-        sLen('key',key).atLeast(1).throwNot();
+		sLen('key', key).atLeast(1).throwNot();
 		super(64, key);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinMac-512';
 	}
 }
 
 /**
  * [Skein MAC](https://www.schneier.com/academic/skein/) 512
- * 
- * First Published: *2008*  
- * Block size: *128 bytes*  
+ *
+ * First Published: *2008*
+ * Block size: *128 bytes*
  * Output size: *128 bytes*
- * 
+ *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  * section 2.6
  */
 export class SkeinMac1024 extends Skein1024Core {
-    /** Build with a key 1-n bytes */
+	/** Build with a key 1-n bytes */
 	constructor(key: Uint8Array) {
-        sLen('key',key).atLeast(1).throwNot();
+		sLen('key', key).atLeast(1).throwNot();
 		super(128, key);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinMac-1024';
 	}
 }
 
 /**
  * [Skein XOF](https://www.schneier.com/academic/skein/) 256
- * 
- * When outputSize<=32, this produces the same result as Skein256 (hash), 
+ *
+ * When outputSize<=32, this produces the same result as Skein256 (hash),
  * but it can also produce output up to 536870912 bytes.
  *
- * First Published: *2008*  
- * Block size: *32 bytes*  
+ * First Published: *2008*
+ * Block size: *32 bytes*
  * Output size: *1-536870912 bytes*
  *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  */
 export class SkeinXof256 extends Skein256Core {
-    constructor(outputSize:number) {
+	constructor(outputSize: number) {
 		sInt('outputSize', outputSize).atLeast(1).atMost(536870912).throwNot();
 		super(outputSize, zeroU8);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinXOF-256';
 	}
 }
 
 /**
  * [Skein XOF](https://www.schneier.com/academic/skein/) 512
- * 
- * When outputSize<=64, this produces the same result as Skein512 (hash), 
+ *
+ * When outputSize<=64, this produces the same result as Skein512 (hash),
  * but it can also produce output up to 536870912 bytes.
  *
- * First Published: *2008*  
- * Block size: *64 bytes*  
+ * First Published: *2008*
+ * Block size: *64 bytes*
  * Output size: *1-536870912 bytes*
  *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  */
 export class SkeinXof512 extends Skein512Core {
-    constructor(outputSize:number) {
+	constructor(outputSize: number) {
 		sInt('outputSize', outputSize).atLeast(1).atMost(536870912).throwNot();
 		super(outputSize, zeroU8);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinXOF-512';
 	}
 }
 
 /**
  * [Skein XOF](https://www.schneier.com/academic/skein/) 1024
- * 
- * When outputSize<=128, this produces the same result as Skein1024 (hash), 
+ *
+ * When outputSize<=128, this produces the same result as Skein1024 (hash),
  * but it can also produce output up to 536870912 bytes.
  *
- * First Published: *2008*  
- * Block size: *128 bytes*  
+ * First Published: *2008*
+ * Block size: *128 bytes*
  * Output size: *1-536870912 bytes*
  *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf)
  */
 export class SkeinXof1024 extends Skein1024Core {
-    constructor(outputSize:number) {
+	constructor(outputSize: number) {
 		sInt('outputSize', outputSize).atLeast(1).atMost(536870912).throwNot();
 		super(outputSize, zeroU8);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinXOF-1024';
 	}
 }
 
 /**
  * [Skein KDF](https://www.schneier.com/academic/skein/) 256
- * 
- * First Published: *2008*  
- * Block size: *32 bytes*  
+ *
+ * First Published: *2008*
+ * Block size: *32 bytes*
  * Output size: *1-536870912 bytes*
  *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf) section 4.7
  */
 export class SkeinKdf256 extends SkeinCore implements IHash {
-    constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
+	constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
 		super(32, len, Threefish256, ikm, salt);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinKDF-256';
 	}
 }
 
 /**
  * [Skein KDF](https://www.schneier.com/academic/skein/) 512
- * 
- * First Published: *2008*  
- * Block size: *64 bytes*  
+ *
+ * First Published: *2008*
+ * Block size: *64 bytes*
  * Output size: *1-536870912 bytes*
  *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf) section 4.7
  */
 export class SkeinKdf512 extends SkeinCore implements IHash {
-    constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
+	constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
 		super(64, len, Threefish512, ikm, salt);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinKDF-512';
 	}
 }
 
 /**
  * [Skein KDF](https://www.schneier.com/academic/skein/) 1024
- * 
- * First Published: *2008*  
- * Block size: *128 bytes*  
+ *
+ * First Published: *2008*
+ * Block size: *128 bytes*
  * Output size: *1-536870912 bytes*
  *
  * Specified in:
  * - [Skein Hash Function Family](https://web.archive.org/web/20140824053109/http://www.skein-hash.info/sites/default/files/skein1.3.pdf) section 4.7
  */
 export class SkeinKdf1024 extends SkeinCore implements IHash {
-    constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
+	constructor(len: number, ikm: Uint8Array, salt: Uint8Array) {
 		super(128, len, Threefish1024, ikm, salt);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SkeinKDF-1024';
 	}
 }

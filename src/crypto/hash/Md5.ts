@@ -1,4 +1,4 @@
-/*! Copyright 2022-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2026 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -72,7 +72,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[0] +
 					0xd76aa478,
-				round0col0
+				round0col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -82,7 +82,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[1] +
 					0xe8c7b756,
-				round0col1
+				round0col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -92,7 +92,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[2] +
 					0x242070db,
-				round0col2
+				round0col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -102,7 +102,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[3] +
 					0xc1bdceee,
-				round0col3
+				round0col3,
 			);
 
 		this.#state[0] =
@@ -113,7 +113,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[4] +
 					0xf57c0faf,
-				round0col0
+				round0col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -123,7 +123,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[5] +
 					0x4787c62a,
-				round0col1
+				round0col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -133,7 +133,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[6] +
 					0xa8304613,
-				round0col2
+				round0col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -143,7 +143,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[7] +
 					0xfd469501,
-				round0col3
+				round0col3,
 			);
 
 		this.#state[0] =
@@ -154,7 +154,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[8] +
 					0x698098d8,
-				round0col0
+				round0col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -164,7 +164,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[9] +
 					0x8b44f7af,
-				round0col1
+				round0col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -174,7 +174,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[10] +
 					0xffff5bb1,
-				round0col2
+				round0col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -184,7 +184,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[11] +
 					0x895cd7be,
-				round0col3
+				round0col3,
 			);
 
 		this.#state[0] =
@@ -195,7 +195,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[12] +
 					0x6b901122,
-				round0col0
+				round0col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -205,7 +205,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[13] +
 					0xfd987193,
-				round0col1
+				round0col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -215,7 +215,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[14] +
 					0xa679438e,
-				round0col2
+				round0col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -225,7 +225,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[15] +
 					0x49b40821,
-				round0col3
+				round0col3,
 			);
 
 		/* Round 2. */
@@ -243,7 +243,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[1] +
 					0xf61e2562,
-				round1col0
+				round1col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -253,7 +253,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[6] +
 					0xc040b340,
-				round1col1
+				round1col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -263,7 +263,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[11] +
 					0x265e5a51,
-				round1col2
+				round1col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -273,7 +273,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[0] +
 					0xe9b6c7aa,
-				round1col3
+				round1col3,
 			);
 
 		this.#state[0] =
@@ -284,7 +284,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[5] +
 					0xd62f105d,
-				round1col0
+				round1col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -294,7 +294,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[10] +
 					0x02441453,
-				round1col1
+				round1col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -304,7 +304,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[15] +
 					0xd8a1e681,
-				round1col2
+				round1col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -314,7 +314,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[4] +
 					0xe7d3fbc8,
-				round1col3
+				round1col3,
 			);
 
 		this.#state[0] =
@@ -325,7 +325,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[9] +
 					0x21e1cde6,
-				round1col0
+				round1col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -335,7 +335,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[14] +
 					0xc33707d6,
-				round1col1
+				round1col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -345,7 +345,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[3] +
 					0xf4d50d87,
-				round1col2
+				round1col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -355,7 +355,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[8] +
 					0x455a14ed,
-				round1col3
+				round1col3,
 			);
 
 		this.#state[0] =
@@ -366,7 +366,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[13] +
 					0xa9e3e905,
-				round1col0
+				round1col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -376,7 +376,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[2] +
 					0xfcefa3f8,
-				round1col1
+				round1col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -386,7 +386,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[7] +
 					0x676f02d9,
-				round1col2
+				round1col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -396,7 +396,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[12] +
 					0x8d2a4c8a,
-				round1col3
+				round1col3,
 			);
 
 		/* Round 3. */
@@ -413,7 +413,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[5] +
 					0xfffa3942,
-				round2col0
+				round2col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -422,7 +422,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[8] +
 					0x8771f681,
-				round2col1
+				round2col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -431,7 +431,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[11] +
 					0x6d9d6122,
-				round2col2
+				round2col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -440,7 +440,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[14] +
 					0xfde5380c,
-				round2col3
+				round2col3,
 			);
 
 		this.#state[0] =
@@ -450,7 +450,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[1] +
 					0xa4beea44,
-				round2col0
+				round2col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -459,7 +459,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[4] +
 					0x4bdecfa9,
-				round2col1
+				round2col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -468,7 +468,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[7] +
 					0xf6bb4b60,
-				round2col2
+				round2col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -477,7 +477,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[10] +
 					0xbebfbc70,
-				round2col3
+				round2col3,
 			);
 
 		this.#state[0] =
@@ -487,7 +487,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[13] +
 					0x289b7ec6,
-				round2col0
+				round2col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -496,7 +496,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[0] +
 					0xeaa127fa,
-				round2col1
+				round2col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -505,7 +505,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[3] +
 					0xd4ef3085,
-				round2col2
+				round2col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -514,7 +514,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[6] +
 					0x04881d05,
-				round2col3
+				round2col3,
 			);
 
 		this.#state[0] =
@@ -524,7 +524,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[9] +
 					0xd9d4d039,
-				round2col0
+				round2col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -533,7 +533,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[12] +
 					0xe6db99e5,
-				round2col1
+				round2col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -542,7 +542,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[15] +
 					0x1fa27cf8,
-				round2col2
+				round2col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -551,7 +551,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[2] +
 					0xc4ac5665,
-				round2col3
+				round2col3,
 			);
 
 		/* Round 4. */
@@ -568,7 +568,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[0] +
 					0xf4292244,
-				round3col0
+				round3col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -577,7 +577,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[7] +
 					0x432aff97,
-				round3col1
+				round3col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -586,7 +586,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[14] +
 					0xab9423a7,
-				round3col2
+				round3col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -595,7 +595,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[5] +
 					0xfc93a039,
-				round3col3
+				round3col3,
 			);
 
 		this.#state[0] =
@@ -605,7 +605,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[12] +
 					0x655b59c3,
-				round3col0
+				round3col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -614,7 +614,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[3] +
 					0x8f0ccc92,
-				round3col1
+				round3col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -623,7 +623,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[10] +
 					0xffeff47d,
-				round3col2
+				round3col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -632,7 +632,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[1] +
 					0x85845dd1,
-				round3col3
+				round3col3,
 			);
 
 		this.#state[0] =
@@ -642,7 +642,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[8] +
 					0x6fa87e4f,
-				round3col0
+				round3col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -651,7 +651,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[15] +
 					0xfe2ce6e0,
-				round3col1
+				round3col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -660,7 +660,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[6] +
 					0xa3014314,
-				round3col2
+				round3col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -669,7 +669,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[13] +
 					0x4e0811a1,
-				round3col3
+				round3col3,
 			);
 
 		this.#state[0] =
@@ -679,7 +679,7 @@ export class Md5 implements IHash {
 					this.#state[0] +
 					this.#block32[4] +
 					0xf7537e82,
-				round3col0
+				round3col0,
 			);
 		this.#state[3] =
 			this.#state[0] +
@@ -688,7 +688,7 @@ export class Md5 implements IHash {
 					this.#state[3] +
 					this.#block32[11] +
 					0xbd3af235,
-				round3col1
+				round3col1,
 			);
 		this.#state[2] =
 			this.#state[3] +
@@ -697,7 +697,7 @@ export class Md5 implements IHash {
 					this.#state[2] +
 					this.#block32[2] +
 					0x2ad7d2bb,
-				round3col2
+				round3col2,
 			);
 		this.#state[1] =
 			this.#state[2] +
@@ -706,7 +706,7 @@ export class Md5 implements IHash {
 					this.#state[1] +
 					this.#block32[9] +
 					0xeb86d391,
-				round3col3
+				round3col3,
 			);
 
 		this.#state[0] += aa;
@@ -825,5 +825,10 @@ export class Md5 implements IHash {
 		ret._ingestBytes = this._ingestBytes;
 		ret._bPos = this._bPos;
 		return ret;
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'MD5';
 	}
 }

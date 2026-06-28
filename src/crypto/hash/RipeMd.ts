@@ -1,4 +1,4 @@
-/*! Copyright 2022-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2026 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -260,18 +260,23 @@ export class RipeMd128 extends RipeMd {
 		for (let j = 0; j < 64; j++) {
 			const round = j >> 4;
 			t = U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = d), (d = c), (c = b), (b = t);
+			((a = d), (d = c), (c = b), (b = t));
 			t = U32.lRot(
 				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
+				ss[j],
 			);
-			(aa = dd), (dd = cc), (cc = bb), (bb = t);
+			((aa = dd), (dd = cc), (cc = bb), (bb = t));
 		}
-		(t = v[1] + c + dd),
+		((t = v[1] + c + dd),
 			(v[1] = v[2] + d + aa),
 			(v[2] = v[3] + a + bb),
 			(v[3] = v[0] + b + cc),
-			(v[0] = t);
+			(v[0] = t));
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'RIPEMD-128';
 	}
 }
 
@@ -310,20 +315,25 @@ export class RipeMd160 extends RipeMd {
 		for (let j = 0; j < 80; j++) {
 			const round = Math.floor(j / 16);
 			t = e + U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t);
+			((a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t));
 			t =
 				ee +
 				U32.lRot(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t);
+			((aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t));
 		}
 
 		t = v[1] + c + dd;
 		//Using the rare , to show this is a big swap
-		(v[1] = v[2] + d + ee),
+		((v[1] = v[2] + d + ee),
 			(v[2] = v[3] + e + aa),
 			(v[3] = v[4] + a + bb),
 			(v[4] = v[0] + b + cc),
-			(v[0] = t);
+			(v[0] = t));
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'RIPEMD-160';
 	}
 }
 
@@ -365,53 +375,58 @@ export class RipeMd256 extends RipeMd {
 		let round = 0;
 		for (; j < 16; j++) {
 			t = U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = d), (d = c), (c = b), (b = t);
+			((a = d), (d = c), (c = b), (b = t));
 			t = U32.lRot(
 				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
+				ss[j],
 			);
-			(aa = dd), (dd = cc), (cc = bb), (bb = t);
+			((aa = dd), (dd = cc), (cc = bb), (bb = t));
 		}
-		(t = a), (a = aa), (aa = t);
+		((t = a), (a = aa), (aa = t));
 
 		round = 1;
 		for (; j < 32; j++) {
 			t = U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = d), (d = c), (c = b), (b = t);
+			((a = d), (d = c), (c = b), (b = t));
 			t = U32.lRot(
 				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
+				ss[j],
 			);
-			(aa = dd), (dd = cc), (cc = bb), (bb = t);
+			((aa = dd), (dd = cc), (cc = bb), (bb = t));
 		}
-		(t = b), (b = bb), (bb = t);
+		((t = b), (b = bb), (bb = t));
 
 		round = 2;
 		for (; j < 48; j++) {
 			t = U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = d), (d = c), (c = b), (b = t);
+			((a = d), (d = c), (c = b), (b = t));
 			t = U32.lRot(
 				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
+				ss[j],
 			);
-			(aa = dd), (dd = cc), (cc = bb), (bb = t);
+			((aa = dd), (dd = cc), (cc = bb), (bb = t));
 		}
-		(t = c), (c = cc), (cc = t);
+		((t = c), (c = cc), (cc = t));
 
 		round = 3;
 		for (; j < 64; j++) {
 			t = U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = d), (d = c), (c = b), (b = t);
+			((a = d), (d = c), (c = b), (b = t));
 			t = U32.lRot(
 				aa + f[3 - round](bb, cc, dd) + x[rr[j]] + kk128[round],
-				ss[j]
+				ss[j],
 			);
-			(aa = dd), (dd = cc), (cc = bb), (bb = t);
+			((aa = dd), (dd = cc), (cc = bb), (bb = t));
 		}
-		(t = d), (d = dd), (dd = t);
+		((t = d), (d = dd), (dd = t));
 
-		(v[0] += a), (v[1] += b), (v[2] += c), (v[3] += d);
-		(v[4] += aa), (v[5] += bb), (v[6] += cc), (v[7] += dd);
+		((v[0] += a), (v[1] += b), (v[2] += c), (v[3] += d));
+		((v[4] += aa), (v[5] += bb), (v[6] += cc), (v[7] += dd));
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'RIPEMD-256';
 	}
 }
 
@@ -457,59 +472,64 @@ export class RipeMd320 extends RipeMd {
 		let round = 0;
 		for (; j < 16; j++) {
 			t = e + U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t);
+			((a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t));
 			t =
 				ee +
 				U32.lRot(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t);
+			((aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t));
 		}
-		(t = b), (b = bb), (bb = t);
+		((t = b), (b = bb), (bb = t));
 
 		round = 1;
 		for (; j < 32; j++) {
 			t = e + U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t);
+			((a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t));
 			t =
 				ee +
 				U32.lRot(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t);
+			((aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t));
 		}
-		(t = d), (d = dd), (dd = t);
+		((t = d), (d = dd), (dd = t));
 
 		round = 2;
 		for (; j < 48; j++) {
 			t = e + U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t);
+			((a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t));
 			t =
 				ee +
 				U32.lRot(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t);
+			((aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t));
 		}
-		(t = a), (a = aa), (aa = t);
+		((t = a), (a = aa), (aa = t));
 
 		round = 3;
 		for (; j < 64; j++) {
 			t = e + U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t);
+			((a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t));
 			t =
 				ee +
 				U32.lRot(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t);
+			((aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t));
 		}
-		(t = c), (c = cc), (cc = t);
+		((t = c), (c = cc), (cc = t));
 
 		round = 4;
 		for (; j < 80; j++) {
 			t = e + U32.lRot(a + f[round](b, c, d) + x[r[j]] + k[round], s[j]);
-			(a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t);
+			((a = e), (e = d), (d = U32.lRot(c, 10)), (c = b), (b = t));
 			t =
 				ee +
 				U32.lRot(aa + f[4 - round](bb, cc, dd) + x[rr[j]] + kk[round], ss[j]);
-			(aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t);
+			((aa = ee), (ee = dd), (dd = U32.lRot(cc, 10)), (cc = bb), (bb = t));
 		}
-		(t = e), (e = ee), (ee = t);
+		((t = e), (e = ee), (ee = t));
 
-		(v[0] += a), (v[1] += b), (v[2] += c), (v[3] += d), (v[4] += e);
-		(v[5] += aa), (v[6] += bb), (v[7] += cc), (v[8] += dd), (v[9] += ee);
+		((v[0] += a), (v[1] += b), (v[2] += c), (v[3] += d), (v[4] += e));
+		((v[5] += aa), (v[6] += bb), (v[7] += cc), (v[8] += dd), (v[9] += ee));
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'RIPEMD-320';
 	}
 }

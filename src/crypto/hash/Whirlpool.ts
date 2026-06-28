@@ -1,4 +1,4 @@
-/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { U64Mut, U64MutArray } from '../../primitive/number/U64.js';
@@ -300,5 +300,10 @@ export class Whirlpool implements IHash {
 		ret._ingestBytes.set(this._ingestBytes);
 		ret._bPos = this._bPos;
 		return ret;
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Whirlpool';
 	}
 }

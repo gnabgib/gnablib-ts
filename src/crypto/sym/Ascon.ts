@@ -1,4 +1,4 @@
-/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -25,7 +25,7 @@ function xor64(
 	a: Uint32Array,
 	aPos64: number,
 	b: Uint32Array,
-	bPos64: number
+	bPos64: number,
 ): void {
 	aPos64 <<= 1; //*2
 	bPos64 <<= 1; //*2
@@ -53,7 +53,7 @@ function and64(
 	a: Uint32Array,
 	aPos64: number,
 	b: Uint32Array,
-	bPos64: number
+	bPos64: number,
 ): void {
 	aPos64 <<= 1; //*2
 	bPos64 <<= 1; //*2
@@ -101,7 +101,7 @@ abstract class AAscon {
 	constructor(
 		readonly blockSize: number,
 		readonly aRound: number,
-		readonly bRound: number
+		readonly bRound: number,
 	) {}
 
 	/** Permutation 2.6 */
@@ -176,7 +176,7 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		nonce: Uint8Array,
 		rate: number,
 		aRound: number,
-		bRound: number
+		bRound: number,
 	) {
 		super(rate, aRound, bRound);
 		//We don't need to test key here since the implementations do
@@ -301,7 +301,7 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		this.p(this.aRound);
 		//Xor up to 16 bytes of key at end of state, but key is always 16,20
 		//const n = this.#key.length < 16 ? this.#key.length : 16;
-		const n=16;
+		const n = 16;
 		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
 			this.state[i++] ^= this.#key[j++];
 
@@ -323,7 +323,7 @@ class _AsconAead extends AAscon implements IAeadCrypt {
 		this.p(this.aRound);
 		//Xor up to 16 bytes of key at end of state, but key is always 16, 20
 		//const n = this.#key.length < 16 ? this.#key.length : 16;
-		const n=16;
+		const n = 16;
 		for (let i = 40 - n, j = this.#key.length - n; i < 40; )
 			this.state[i++] ^= this.#key[j++];
 		//Return last 16 bytes of state
@@ -422,7 +422,7 @@ class _AsconHash extends AAscon implements IHash {
 		aRound: number,
 		bRound: number,
 		readonly size: number,
-		private readonly xof: boolean
+		private readonly xof: boolean,
 	) {
 		super(rate, aRound, bRound);
 		this.state[1] = rate << 3;
@@ -486,7 +486,7 @@ class _AsconHash extends AAscon implements IHash {
 			this.aRound,
 			this.bRound,
 			this.size,
-			this.xof
+			this.xof,
 		);
 	}
 
@@ -496,7 +496,7 @@ class _AsconHash extends AAscon implements IHash {
 			this.aRound,
 			this.bRound,
 			this.size,
-			this.xof
+			this.xof,
 		);
 		ret.state.set(this.state);
 		ret._sPos = this._sPos;
@@ -522,6 +522,11 @@ export class AsconHash extends _AsconHash {
 	constructor() {
 		super(8, 12, 12, 32, false);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Ascon-128';
+	}
 }
 
 /**
@@ -542,10 +547,15 @@ export class AsconHashA extends _AsconHash {
 	constructor() {
 		super(8, 12, 8, 32, false);
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Ascon-128a';
+	}
 }
 
 /**
- * [Ascon-HashA](https://ascon.iaik.tugraz.at/index.html)
+ * [Ascon-XOF128](https://ascon.iaik.tugraz.at/index.html)
  *
  * Ascon is a family of lightweight authenticated ciphers, based on a sponge construction along the lines
  * of SpongeWrap and MonkeyDuplex. This design makes it easy to reuse Ascon in multiple ways (as a cipher, hash, or a MAC)
@@ -561,6 +571,11 @@ export class AsconHashA extends _AsconHash {
 export class AsconXof extends _AsconHash {
 	constructor(digestSize: number) {
 		super(8, 12, 12, digestSize, true);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Ascon-XOF128';
 	}
 }
 
@@ -583,5 +598,10 @@ export class AsconXofA extends _AsconHash {
 		super(8, 12, 8, digestSize, true);
 		//X: super(8,12,12,?,true);
 		//Xa: super(8,12,8,?,true);
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'Ascon-XOF128a';
 	}
 }

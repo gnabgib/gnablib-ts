@@ -1,4 +1,4 @@
-/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import { Aes } from '../sym/Aes.js';
 import type { IHash } from '../interfaces/IHash.js';
@@ -127,5 +127,10 @@ export class Cmac implements IHash {
 		ret.#block.set(this.#block);
 		ret._bPos = this._bPos;
 		return ret;
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'CMAC';
 	}
 }

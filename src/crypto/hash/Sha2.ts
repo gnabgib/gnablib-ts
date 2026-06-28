@@ -1,4 +1,4 @@
-/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import type { IHash } from '../interfaces/IHash.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -150,14 +150,14 @@ class Sha2_32bit implements IHash {
 
 			// Rare use of comma!  Make it clear there's a swap going on
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-			(h = g),
+			((h = g),
 				(g = f),
 				(f = e),
 				(e = d + temp1),
 				(d = c),
 				(c = b),
 				(b = a),
-				(a = temp1 + temp2);
+				(a = temp1 + temp2));
 		}
 
 		this.#state[0] += a;
@@ -356,14 +356,14 @@ class Sha2_64bit implements IHash {
 
 			// Rare use of comma!  Make it clear there's a swap going on
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-			(h = g),
+			((h = g),
 				(g = f),
 				(f = e),
 				(e = d.mut().addEq(temp1)),
 				(d = c),
 				(c = b),
 				(b = a),
-				(a = temp1.addEq(temp2));
+				(a = temp1.addEq(temp2)));
 		}
 
 		this.#state.at(0).addEq(a);
@@ -536,6 +536,11 @@ export class Sha224 extends Sha2_32bit {
 		state[6] = iv384[13];
 		state[7] = iv384[15];
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA224';
+	}
 }
 
 export class Sha256 extends Sha2_32bit {
@@ -556,6 +561,11 @@ export class Sha256 extends Sha2_32bit {
 		state[5] = iv512[10];
 		state[6] = iv512[12];
 		state[7] = iv512[14];
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA256';
 	}
 }
 
@@ -578,6 +588,11 @@ export class Sha384 extends Sha2_64bit {
 		state.at(6).set(U64.fromI32s(iv384[13], iv384[12]));
 		state.at(7).set(U64.fromI32s(iv384[15], iv384[14]));
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA384';
+	}
 }
 
 export class Sha512 extends Sha2_64bit {
@@ -598,6 +613,11 @@ export class Sha512 extends Sha2_64bit {
 		state.at(5).set(U64.fromI32s(iv512[11], iv512[10]));
 		state.at(6).set(U64.fromI32s(iv512[13], iv512[12]));
 		state.at(7).set(U64.fromI32s(iv512[15], iv512[14]));
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA512';
 	}
 }
 
@@ -620,6 +640,11 @@ export class Sha512_224 extends Sha2_64bit {
 		state.at(6).set(U64.fromI32s(init512_224[13], init512_224[12]));
 		state.at(7).set(U64.fromI32s(init512_224[15], init512_224[14]));
 	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA512/224';
+	}
 }
 
 export class Sha512_256 extends Sha2_64bit {
@@ -640,5 +665,10 @@ export class Sha512_256 extends Sha2_64bit {
 		state.at(5).set(U64.fromI32s(init512_256[11], init512_256[10]));
 		state.at(6).set(U64.fromI32s(init512_256[13], init512_256[12]));
 		state.at(7).set(U64.fromI32s(init512_256[15], init512_256[14]));
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA512/256';
 	}
 }

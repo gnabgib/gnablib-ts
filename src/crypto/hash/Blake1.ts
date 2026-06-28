@@ -1,4 +1,4 @@
-/*! Copyright 2023-2024 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -103,7 +103,7 @@ class Blake1_32bit implements IHash {
 		c: number,
 		d: number,
 		v: Uint32Array,
-		sigma: number[]
+		sigma: number[],
 	): void {
 		const a = i & 3, //% 4
 			i2 = i << 1,
@@ -356,7 +356,7 @@ class Blake1_64bit implements IHash {
 		c: number,
 		d: number,
 		v: U64MutArray,
-		sigma: number[]
+		sigma: number[],
 	): void {
 		const a = i & 3, //% 4
 			i2 = i << 1,
@@ -390,7 +390,7 @@ class Blake1_64bit implements IHash {
 		countOverride = countOverride ?? this._ingestBytes;
 		const count64a = U64Mut.fromI32s(
 			countOverride << 3,
-			countOverride / 0x20000000
+			countOverride / 0x20000000,
 		);
 		//const count64b=0;//The counter can never be > a JS number (53 bits) so this will always be 0
 		const v = U64MutArray.fromLen(16);
@@ -506,7 +506,7 @@ class Blake1_64bit implements IHash {
 		this.#block64
 			.at(ss64 + 1)
 			.set(
-				U64Mut.fromI32s(this._ingestBytes << 3, this._ingestBytes / 0x20000000)
+				U64Mut.fromI32s(this._ingestBytes << 3, this._ingestBytes / 0x20000000),
 			);
 		//Note hash also applies asBE to the block.  We call it twice because we want this value to be LE
 		asBE.i64(this.#block, sizeSpace + 8);
@@ -563,6 +563,12 @@ export class Blake32 extends Blake1_32bit {
 	constructor(salt?: Uint32Array) {
 		super(salt, b32rounds);
 	}
+
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE-32';
+	}
 }
 
 export class Blake256 extends Blake1_32bit {
@@ -572,6 +578,12 @@ export class Blake256 extends Blake1_32bit {
 	 */
 	constructor(salt?: Uint32Array) {
 		super(salt, b256rounds);
+	}
+
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE-256';
 	}
 }
 
@@ -583,6 +595,12 @@ export class Blake64 extends Blake1_64bit {
 	constructor(salt?: U64MutArray) {
 		super(salt, b64rounds);
 	}
+
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE-64';
+	}
 }
 
 export class Blake512 extends Blake1_64bit {
@@ -592,5 +610,11 @@ export class Blake512 extends Blake1_64bit {
 	 */
 	constructor(salt?: U64MutArray) {
 		super(salt, b512rounds);
+	}
+
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'BLAKE-512';
 	}
 }

@@ -1,4 +1,4 @@
-/*! Copyright 2022-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2022-2026 the gnablib contributors MPL-1.1 */
 
 import { asBE } from '../../endian/platform.js';
 import { U32 } from '../../primitive/number/U32Static.js';
@@ -70,36 +70,36 @@ export class Sha1 implements IHash {
 			// (b&c)|((~b)&d) - Same as MD4-r1
 			t = U32.lRot(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
 			// Rare use of comma!  Make it clear there's a 5 stage swap going on
-			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+			((e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t));
 		}
 		for (; j < 20; j++) {
 			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			// (b&c)|((~b)&d) - Same as MD4-r1
 			t = U32.lRot(a, 5) + (d ^ (b & (c ^ d))) + e + w[j] + rc[0];
-			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+			((e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t));
 		}
 		for (; j < 40; j++) {
 			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
 			t = U32.lRot(a, 5) + (b ^ c ^ d) + e + w[j] + rc[1];
-			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+			((e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t));
 		}
 		for (; j < 60; j++) {
 			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r2
 			t = U32.lRot(a, 5) + (((b | c) & d) | (b & c)) + e + w[j] + rc[2];
-			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+			((e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t));
 		}
 		for (; j < 80; j++) {
 			w[j] = U32.lRot(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
 			//Same as MD4-r3
 			t = U32.lRot(a, 5) + (b ^ c ^ d) + e + w[j] + rc[3];
-			// eslint-disable-next-line @typescript-eslint/no-unused-expressions 
-			(e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t);
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+			((e = d), (d = c), (c = U32.lRot(b, 30)), (b = a), (a = t));
 		}
 
 		this.#state[0] += a;
@@ -220,5 +220,10 @@ export class Sha1 implements IHash {
 		ret._ingestBytes = this._ingestBytes;
 		ret._bPos = this._bPos;
 		return ret;
+	}
+	/* c8 ignore next 4*/
+	/** @hidden */
+	get [Symbol.toStringTag](): string {
+		return 'SHA1';
 	}
 }
