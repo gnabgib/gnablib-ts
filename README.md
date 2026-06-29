@@ -143,7 +143,7 @@ Name|Sum size Ƃ|Optional parameters
 - [Cipher Block Chaining (CBC)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_block_chaining_(CBC))
 - [Cipher FeedBack (CFB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_feedback_(CFB))
 - [Counter (CTR)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Counter_(CTR))
-- [Electronic CodeBook (ECB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_codebook_(ECB))
+- [Electronic CodeBook (ECB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_codebook_(ECB))†
 - [Output FeedBack (OFB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_feedback_(CFB))
 
 CBC or CTR are recommended by [Niels Ferguson](https://en.wikipedia.org/wiki/Niels_Ferguson) and [Bruce Schneier](https://www.schneier.com/blog/about/). 
@@ -200,7 +200,7 @@ Name|Digest Ƃ|Optional parameters
 [Keccak](https://keccak.team/keccak.html)|1-64, 28, 32, 48, 64|capacity
 [MD4†](https://datatracker.ietf.org/doc/html/rfc1320)|16†|-
 [MD5†](https://datatracker.ietf.org/doc/html/rfc1321)|16†|-
-[ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128,256)|1-64|block size, customization
+[ParallelHash](https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf) (128, 256)|1-64|block size, customization
 [RipeMD†](https://en.wikipedia.org/wiki/RIPEMD)|16†, 20†, 32, 40|-
 [SHA-1†](https://datatracker.ietf.org/doc/html/rfc3174)|20†|-
 [SHA-2](https://en.wikipedia.org/wiki/SHA-2)|28, 32, 48, 64, 64/28, 64/32|-
@@ -249,6 +249,27 @@ Name|Capacity Ƃ|Optional parameters
 [SkeinXOF](https://www.schneier.com/academic/skein/)|32, 64, 128|digest size
 [TupleHashXof](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf)|16, 32|digest size, customization
 [TurboSHAKE](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kangarootwelve/)|16, 32|digest size, customization
+
+#### One-time passwords (OTP)
+
+Implementation of HMAC-based OTP ([RFC-4226 (2005)](https://datatracker.ietf.org/doc/html/rfc4226)), and 
+Time-based OTP ([RFC-6238 (2011)](http://tools.ietf.org/html/rfc6238)).
+
+*Both:*
+- Support for 6-10 digit OTP (10th digit is low entropy/somewhat pointless)
+- Support for SHA1, SHA256, SHA512 hash algorithms (custom algorithms can be used to, but may not be recognized by other apps)
+- Support for issuer & account name in URI
+- Support for periods other than 30s (TOTP)
+- Support for counters other than 0 (HOTP)
+
+*Client:*
+- Parse [sharing URI](https://github.com/google/google-authenticator/wiki/Key-Uri-Format)
+- Calculate the next OTP (based on counter for HOTP, and system-time for TOTP)
+
+*Server:*
+- Create from secure random source
+- Generate [sharing URI](https://github.com/google/google-authenticator/wiki/Key-Uri-Format)
+- Validate OTP with backward/forward window control
 
 ### DateTime
 

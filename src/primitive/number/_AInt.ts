@@ -11,7 +11,7 @@ export abstract class AInt {
 		protected _pos: number,
 		/** Number of 32bit elements required */
 		readonly size32: number,
-		protected readonly _name: string
+		protected readonly _name: string,
 	) {}
 
 	protected _setValue(n: AInt) {
@@ -63,7 +63,7 @@ export abstract class AInt {
 	protected static _fromBytesBE(
 		size8: number,
 		src: Uint8Array,
-		pos: number
+		pos: number,
 	): Uint32Array {
 		const end = pos + size8;
 		sLen('src', src).atLeast(end).throwNot();
@@ -74,7 +74,7 @@ export abstract class AInt {
 	protected static _fromBytesLE(
 		size8: number,
 		src: Uint8Array,
-		pos: number
+		pos: number,
 	): Uint32Array {
 		const end = pos + size8;
 		sLen('src', src).atLeast(end).throwNot();
@@ -274,7 +274,7 @@ export abstract class AInt {
 		const t16 = new Uint16Array(
 			this._arr.buffer,
 			this._pos * 4,
-			this.size32 * 2
+			this.size32 * 2,
 		);
 		const o16 = new Uint16Array(o._arr.buffer, o._pos * 4, this.size32 * 2);
 		const m16 = new Uint16Array(t16.length);
@@ -315,31 +315,22 @@ export abstract class AInt {
 		// /*DEBUG*/console.log(d);
 		return new Uint32Array(m16.buffer);
 	}
-	protected _div32(o:number):Uint32Array {
+	protected _div32(o: number): Uint32Array {
 		//todo: This assumes u32 is LE
-		const t16=new Uint16Array(
+		const t16 = new Uint16Array(
 			this._arr.buffer,
-			this._pos*4,
-			this.size32*2
+			this._pos * 4,
+			this.size32 * 2,
 		);
-		//low=t16[0], midl=t16[1],hl=t16[2],h=t16[3]
-		const d16=new Uint16Array(t16.length);
-		let tmp:number;
-		//todo: convert this into long-division (right now assumes U64)
-		d16[3]=t16[3]/o;//dividend  = high / divisor;
-		tmp=((t16[3]%o)<<16)+t16[2];//mid_high += (high % divisor) << 16;
-		d16[2]=tmp/o;//dividend  = (dividend << 16) + mid_high / divisor;
-		tmp=((tmp%o)<<16)+t16[1];//mid_low  += (mid_high % divisor) << 16;
-		d16[1]=tmp/o;//dividend  = (dividend << 16) + mid_low / divisor;
-		tmp=((tmp%o)<<16)+t16[0];
-		d16[0]=tmp/o;//low+= (mid_low % divisor) << 16;
-	
-		// let i=0;
-		// do {
-		// 	d16[4]=
-		// 	let d=t16[0]
-		// } while (++i<this.size32);
-
+		const d16 = new Uint16Array(t16.length);
+		let rem = 0;
+		let i = t16.length;
+		while (--i > 0) {
+			rem += t16[i];
+			d16[i] = rem / o;
+			rem = (rem % o) << 16;
+		}
+		d16[0] = (t16[0] + rem) / o;
 		return new Uint32Array(d16.buffer);
 	}
 	//#endregion
@@ -394,7 +385,7 @@ export abstract class AInt {
 	/** Create a **copy** of internal value as a big-endian stream of bytes */
 	toBytesBE(): Uint8Array {
 		const ret = new Uint8Array(
-			this._arr.slice(this._pos, this._pos + this.size32).buffer
+			this._arr.slice(this._pos, this._pos + this.size32).buffer,
 		);
 		//We store in u32 LE (first is least), so we should make each byte quad LE and
 		// then global-reverse.
@@ -406,7 +397,7 @@ export abstract class AInt {
 	/** Create a **copy** of internal value as a little-endian stream of bytes */
 	toBytesLE(): Uint8Array {
 		const ret = new Uint8Array(
-			this._arr.slice(this._pos, this._pos + this.size32).buffer
+			this._arr.slice(this._pos, this._pos + this.size32).buffer,
 		);
 		asLE.i32(ret, 0, this.size32);
 		return ret;
@@ -432,8 +423,8 @@ export abstract class AInt {
 	}
 
 	/** Decimal version (in ASCII) of this value, might exceed U52 */
-	toDecStr():string {
-		const b=BigInt(`0x${hex.fromBytes(this.toBytesBE())}`);
+	toDecStr(): string {
+		const b = BigInt(`0x${hex.fromBytes(this.toBytesBE())}`);
 		return b.toString();
 	}
 

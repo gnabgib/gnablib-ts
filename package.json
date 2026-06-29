@@ -310,7 +310,9 @@
 		"Skein1024",
 		"SkeinMAC",
 		"SkeinXOF",
-		"SkeinKDF"
+		"SkeinKDF",
+		"HOTP",
+		"TOTP"
 	],
 	"author": "gnabgib (https://www.gnabgib.com)",
 	"contributors": [

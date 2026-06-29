@@ -49,6 +49,23 @@ tsts('array copy by El',()=>{
     assert.is(hex.fromBytes(b.toBytesBE()),'000000000000000B'+'000000000000000D'+'0000000000000011');
 })
 
+tsts(`subarray`,()=>{
+	const u32= Uint32Array.of(0xff,0xffff,0xffffff,0xffffffff,0xf,0xfff,0xfffff,0xfffffff);
+    const a=U64MutArray.fromBytes(u32.buffer);
+    assert.is(hex.fromBytes(a.toBytesBE()),'0000FFFF000000FFFFFFFFFF00FFFFFF'+'00000FFF0000000F0FFFFFFF000FFFFF');
+    const b=a.subarray(0,1);
+    assert.is(hex.fromBytes(b.toBytesBE()),'0000FFFF000000FF');
+    b.at(0).set(U64.zero);
+    assert.is(hex.fromBytes(b.toBytesBE()),'0000000000000000');
+    //Confirm a mutated too
+    assert.is(hex.fromBytes(a.toBytesBE()),'0000000000000000FFFFFFFF00FFFFFF'+'00000FFF0000000F0FFFFFFF000FFFFF');
+    const c=a.subarray(3);
+    assert.is(hex.fromBytes(c.toBytesBE()),'0FFFFFFF000FFFFF');
+    c.at(0).set(U64.zero);
+    //Confirm a mutated too
+    assert.is(hex.fromBytes(a.toBytesBE()),'0000000000000000FFFFFFFF00FFFFFF'+'00000FFF0000000F0000000000000000');
+});
+
 tsts('array clone',()=>{
     const u32= Uint32Array.of(0xff,0xffff,0xffffff,0xffffffff,0xf,0xfff,0xfffff,0xfffffff);
     const a=U64MutArray.fromBytes(u32.buffer,8);
