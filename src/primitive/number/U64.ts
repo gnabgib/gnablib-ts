@@ -356,6 +356,11 @@ export class U64Mut extends U64 implements IUintMut<U64Mut, U64> {
 		this._arr.set(arr, this._pos);
 		return this;
 	}
+	divEq32(o:number) {
+		const arr=this._div32(o);
+		this._arr.set(arr,this._pos);
+		return this;
+	}
 	//#endregion
 }
 
@@ -517,7 +522,7 @@ export class U64MutArray {
 	 * @returns
 	 */
 	static fromBytes(
-		buffer: ArrayBuffer,
+		buffer: ArrayBufferLike,
 		bytePos = 0,
 		byteLen?: number
 	): U64MutArray {

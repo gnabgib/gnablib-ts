@@ -1,4 +1,4 @@
-/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2026 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../endian/platform.js';
 import { U64, U64MutArray } from '../primitive/number/U64.js';
@@ -56,7 +56,7 @@ export class XorShift128p extends AXorShift128p_ {
 		// Which in U32 little-endian follows
 		return new XorShift128p(
 			U64MutArray.fromBytes(
-				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
+				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a).buffer
 			),
 			saveable
 		);
@@ -117,7 +117,7 @@ export class XorShift128pV8 extends AXorShift128p_ {
 		// Which in U32 little-endian follows
 		return new XorShift128pV8(
 			U64MutArray.fromBytes(
-				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
+				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a).buffer
 			),
 			saveable
 		);

@@ -445,7 +445,7 @@ export class ReadonlyTyped<T extends IReadTyped<T>>
 		startEl?: number,
 		lengthEls?: number
 	) {
-		let d: ArrayBuffer | undefined;
+		let d: ArrayBufferLike | undefined;
 		if (data instanceof base) {
 			d = data.buffer;
 		} else {
@@ -517,7 +517,7 @@ export class FixedTyped<T extends IWriteTyped<T>>
 		start?: number,
 		length?: number
 	) {
-		let d: ArrayBuffer | undefined;
+		let d: ArrayBufferLike | undefined;
 		if (data instanceof base) {
 			d = data.buffer;
 		} else {

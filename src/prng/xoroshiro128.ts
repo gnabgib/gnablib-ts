@@ -1,4 +1,4 @@
-/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2026 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../endian/platform.js';
 import { U64, U64MutArray } from '../primitive/number/U64.js';
@@ -60,7 +60,7 @@ export class Xoroshiro128p extends AXoroshiro128 {
 		// Which in U32 little-endian follows
 		return new Xoroshiro128p(
 			U64MutArray.fromBytes(
-				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
+				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a).buffer
 			),
 			saveable
 		);
@@ -123,7 +123,7 @@ export class Xoroshiro128p_2016 extends Xoroshiro128p {
 		// Which in U32 little-endian follows
 		return new Xoroshiro128p_2016(
 			U64MutArray.fromBytes(
-				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
+				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a).buffer
 			),
 			saveable
 		);
@@ -192,7 +192,7 @@ export class Xoroshiro128pp extends AXoroshiro128 {
 		// Which in U32 little-endian follows
 		return new Xoroshiro128pp(
 			U64MutArray.fromBytes(
-				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
+				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a).buffer
 			),
 			saveable
 		);
@@ -259,7 +259,7 @@ export class Xoroshiro128ss extends AXoroshiro128 {
 		// Which in U32 little-endian follows
 		return new Xoroshiro128ss(
 			U64MutArray.fromBytes(
-				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a)
+				Uint32Array.of(0x7b1dcdaf, 0xe220a839, 0xa1b965f4, 0x6e789e6a).buffer
 			),
 			saveable
 		);

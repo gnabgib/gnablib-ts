@@ -51,7 +51,7 @@ export function expand(
 	const safeN = Math.floor(lenBytes / hash.size);
 	const ret = new Uint8Array(lenBytes);
 	const msg = new Uint8Array(hash.size + 1 + info.length);
-	let t = new Uint8Array(0);
+	let t:Uint8Array<ArrayBufferLike> = new Uint8Array(0);
 	let i = 1;
 	let pos = 0;
 	let mPos = 0;

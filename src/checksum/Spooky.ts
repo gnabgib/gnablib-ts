@@ -1,4 +1,4 @@
-/*! Copyright 2023-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2023-2026 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../endian/platform.js';
 import { U64, U64MutArray } from '../primitive/number/U64.js';
@@ -168,7 +168,7 @@ export class SpookyShort extends AHashsum32 {
 		return ret;
 	}
 
-	sumIn() {
+	sumIn():Uint8Array {
 		//In the bPos 1-15 range (remember it starts at 16 = 17-31 ingest%32) we need to zero
 		// up to 16, move AB->CD, and zero AB
 		if (this._bPos >= 1 && this._bPos < 16) {

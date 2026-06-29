@@ -1,4 +1,4 @@
-/*! Copyright 2024-2025 the gnablib contributors MPL-1.1 */
+/*! Copyright 2024-2026 the gnablib contributors MPL-1.1 */
 
 import { asLE } from '../endian/platform.js';
 import { U64, U64MutArray } from '../primitive/number/U64.js';
@@ -59,7 +59,7 @@ export class Xoshiro256p extends AXoshiro256 {
 					0xa1b965f4,0x6e789e6a,
 					0x8009454f,0x06c45d18,
 					0x724c81ec,0xf88bb8a8
-				)
+				).buffer
 			),
 			saveable
 		);
@@ -135,7 +135,7 @@ export class Xoshiro256pp extends AXoshiro256 {
 					0xa1b965f4,0x6e789e6a,
 					0x8009454f,0x06c45d18,
 					0x724c81ec,0xf88bb8a8
-				)
+				).buffer
 			),
 			saveable
 		);
@@ -215,7 +215,7 @@ export class Xoshiro256ss extends AXoshiro256 {
 					0xa1b965f4,0x6e789e6a,
 					0x8009454f,0x06c45d18,
 					0x724c81ec,0xf88bb8a8
-				)
+				).buffer
 			),
 			saveable
 		);

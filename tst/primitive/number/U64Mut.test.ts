@@ -496,6 +496,28 @@ for (const [a,b,expect] of mulTest) {
 	});
 }
 
+//Note integer-division floors the number (since FP isn't supported)
+// so 3/2=1 (+r1)
+const div32Test:[string,number,string][]=[
+	['0000000000000002',2,'0000000000000001'],
+	['0000000000000003',2,'0000000000000001'],
+	['0000000000000004',2,'0000000000000002'],
+	['000000000000000A',2,'0000000000000005'],
+	['0000000200000000',2,'0000000100000000'],
+	['0000000100000000',2,'0000000080000000'],
+	['000000000000003B',30,'0000000000000001'],//3b=59
+	['000000000000003C',30,'0000000000000002'],//3c=60
+	['00000004A817C800',30,'0000000027BC86AA']
+];
+for(const [a,b,expect] of div32Test) {
+	tsts(`${a} /= ${b}`,()=>{
+		const aBytes=hex.toBytes(a);
+		const aUint = U64Mut.fromBytesBE(aBytes);
+		aUint.divEq32(b);
+		assert.is(hex.fromBytes(aUint.toBytesBE()), expect);
+	})
+}
+
 tsts(`clone`,()=>{
 	const a=U64Mut.fromInt(1);
 	const b=a.clone();

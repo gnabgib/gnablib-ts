@@ -315,6 +315,33 @@ export abstract class AInt {
 		// /*DEBUG*/console.log(d);
 		return new Uint32Array(m16.buffer);
 	}
+	protected _div32(o:number):Uint32Array {
+		//todo: This assumes u32 is LE
+		const t16=new Uint16Array(
+			this._arr.buffer,
+			this._pos*4,
+			this.size32*2
+		);
+		//low=t16[0], midl=t16[1],hl=t16[2],h=t16[3]
+		const d16=new Uint16Array(t16.length);
+		let tmp:number;
+		//todo: convert this into long-division (right now assumes U64)
+		d16[3]=t16[3]/o;//dividend  = high / divisor;
+		tmp=((t16[3]%o)<<16)+t16[2];//mid_high += (high % divisor) << 16;
+		d16[2]=tmp/o;//dividend  = (dividend << 16) + mid_high / divisor;
+		tmp=((tmp%o)<<16)+t16[1];//mid_low  += (mid_high % divisor) << 16;
+		d16[1]=tmp/o;//dividend  = (dividend << 16) + mid_low / divisor;
+		tmp=((tmp%o)<<16)+t16[0];
+		d16[0]=tmp/o;//low+= (mid_low % divisor) << 16;
+	
+		// let i=0;
+		// do {
+		// 	d16[4]=
+		// 	let d=t16[0]
+		// } while (++i<this.size32);
+
+		return new Uint32Array(d16.buffer);
+	}
 	//#endregion
 
 	//#region Comparable
@@ -402,6 +429,12 @@ export abstract class AInt {
 	/** String version of this value, as hex, in big endian */
 	toString(): string {
 		return hex.fromBytes(this.toBytesBE());
+	}
+
+	/** Decimal version (in ASCII) of this value, might exceed U52 */
+	toDecStr():string {
+		const b=BigInt(`0x${hex.fromBytes(this.toBytesBE())}`);
+		return b.toString();
 	}
 
 	/** @hidden */
